@@ -19,9 +19,9 @@
 - [x] S10 — Lab & Diagnostic Tests
 - [x] S11 — Blood Services Page
 - [x] S12 — Emergency System
-- [ ] S13 — Health Magazine · Articles
-- [ ] S14 — Q&A Community
-- [ ] S15 — Polls · Reports · User Submissions
+- [x] S13 — Health Magazine · Articles
+- [x] S14 — Q&A Community
+- [x] S15 — Polls · Reports · User Submissions
 - [ ] S16 — More Page (Hamburger Menu)
 - [ ] S17 — User Account (Profile · Favorites · History)
 - [ ] S18 — Settings (Language · Location · Notifications · Privacy)
@@ -889,6 +889,167 @@ standalone ambulance providers (not hospital-affiliated) are expected
 `emergency_page_view, emergency_call_click{number_type}` — number_type
 distinguishes national vs local vs ambulance, useful for understanding
 real-world usage patterns and validating which numbers matter most.
+
+---
+
+## S13 — HEALTH MAGAZINE · ARTICLES
+
+### List Page (`/community/articles`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]      স্বাস্থ্য ম্যাগাজিন                     │
+├─────────────────────────────────────────────────┤
+│ [সব] [ডায়াবেটিস] [শিশু স্বাস্থ্য] [পুষ্টি] [→] │  ← category chips
+├─────────────────────────────────────────────────┤
+│ [FEATURED ARTICLE — large card, 16:9 cover]     │
+│ [Article Card] [Article Card]  ← 2-col grid      │
+│ [Article Card] [Article Card]                    │
+│ ... infinite scroll, 10/page                     │
+└─────────────────────────────────────────────────┘
+```
+Card: cover image, category pill, title (2-line clamp), author +
+read-time meta, publish date. Grid: 2-column on mobile, cards ~168px
+wide. Category chips filter client-side (dataset paginated server-side
+per category via `?category=` param).
+
+### Article Detail (`/community/articles/[slug]`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]                                   [🔗][⋯]   │
+│ [COVER IMAGE — full width, 16:9]                │
+│ ডায়াবেটিস টিপস                                   │  ← category tag
+│ ডায়াবেটিস নিয়ন্ত্রণে যা করবেন ও করবেন না       │  ← H1, 22px 700
+│ ✍️ ডা. রহিম উদ্দিন  ·  ৩ মিনিট পড়া  ·  ২ দিন আগে│
+│ ─────────────────────────────────────────────── │
+│ [Rich text body — headings, paragraphs, images,  │
+│  bullet lists, rendered from stored HTML/MDX]    │
+│ ─────────────────────────────────────────────── │
+│ 🏷️ ট্যাগ: [ডায়াবেটিস] [পুষ্টি] [জীবনযাত্রা]      │
+│ ─────────────────────────────────────────────── │
+│ সম্পর্কিত আর্টিকেল                                │
+│ [Related Card] [Related Card]                    │
+└─────────────────────────────────────────────────┘
+```
+Body content: sanitized HTML (server-side sanitization mandatory,
+admin-authored via rich text editor in Admin Panel — see ADMIN
+section). Typography uses `--text-body-lg` (16px/1.6) for readability.
+Author can optionally link to a `doctors` record (byline becomes
+tappable → doctor profile) or be plain text (guest contributor/editorial
+team). SEO: SSG+ISR(1hr), full OG tags, `Article`/`MedicalWebPage`
+JSON-LD schema. Share sheet identical pattern to Doctor Profile (S07).
+
+### Analytics
+`article_view, article_read_complete (scroll≥90%), article_share,
+related_article_click`.
+
+---
+
+## S14 — Q&A COMMUNITY
+
+### Feature Flag Gate
+Entire module gated behind `app_settings.features.community_qa`
+(admin toggle) — if disabled, all routes 404 gracefully and nav
+entries hide (Home teaser, More menu item).
+
+### List Page (`/community/qa`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]    প্রশ্নোত্তর               [+ প্রশ্ন করুন]│
+├─────────────────────────────────────────────────┤
+│ [সব] [উত্তর দেওয়া হয়েছে] [অনুত্তরিত]           │
+├─────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────┐     │
+│ │ ডায়াবেটিস থাকলে কি আম খাওয়া যাবে?      │     │
+│ │ ⬆ ১২   💬 ৩ উত্তর   🏷️ ডায়াবেটিস        │     │
+│ │ ✅ Dr. Sumana Das উত্তর দিয়েছেন           │     │
+│ └─────────────────────────────────────────┘     │
+│ ... infinite scroll                              │
+└─────────────────────────────────────────────────┘
+```
+Sort: newest / most-upvoted / unanswered-first (surfaces questions
+needing doctor attention). Question card: upvote count (⬆, tap to
+vote — one vote per device via localStorage id, or per-user if
+signed-in), answer count, topic tag, "✅ answered by verified doctor"
+indicator (only doctor-role answers get the checkmark; community
+answers shown separately, unbadged).
+
+### Ask a Question (Modal/Sheet)
+```
+┌─────────────────────────────────────────────────┐
+│ ✕            প্রশ্ন করুন                          │
+│ শিরোনাম * [___________________________]         │
+│ বিস্তারিত  [___________________________]         │
+│ বিভাগ * [ডায়াবেটিস ▾]                            │
+│ ☐ নাম গোপন রাখুন (বেনামে জিজ্ঞাসা করুন)          │
+│ [প্রশ্ন জমা দিন]                                  │
+│ প্রশ্নটি অনুমোদনের পর প্রকাশিত হবে।              │
+└─────────────────────────────────────────────────┘
+```
+Anonymous option important for sensitive health topics (sexual health,
+mental health) — stores `is_anonymous=true`, displays "একজন ব্যবহারকারী"
+instead of name. All questions moderated (`status='pending'`) before
+publish, same pattern as reviews (S07).
+
+### Question Detail (`/community/qa/[id]`)
+Question body → answer list (doctor answers pinned top with ✅ Verified
+Doctor badge + doctor's specialty + link to their profile; community
+answers below, chronological) → "উত্তর দিন" input at bottom (requires
+sign-in — soft-gate). Doctor answers come from a doctor-facing
+mechanism (out of scope for user-app; doctors answer via a future
+doctor portal or admin manually posts on their behalf — **flagged as
+scope decision for Admin Panel**).
+
+### Analytics
+`question_view, question_submit, question_upvote, answer_submit`.
+
+---
+
+## S15 — POLLS · REPORTS · USER SUBMISSIONS
+
+### Polls (`/community/polls`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]         স্বাস্থ্য জরিপ                       │
+├─────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────┐     │
+│ │ আপনি কি নিয়মিত স্বাস্থ্য পরীক্ষা করান?    │     │
+│ │ ○ হ্যাঁ, বছরে একবার          ▓▓▓▓▓ ৪৫%  │     │
+│ │ ○ মাঝে মাঝে                  ▓▓▓ ৩০%    │     │
+│ │ ○ কখনো করাইনি                ▓▓ ২৫%    │     │
+│ │ মোট ভোট: ৫৬৮   ·   ৩ দিন বাকি            │     │
+│ └─────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────┘
+```
+Single-select radio, one vote per device (localStorage poll_id list)
+or per-account if signed in — prevents duplicate voting without
+requiring login (device-level dedup acceptable for engagement polls,
+not a security-critical feature). Results bar reveals + animates
+immediately after voting (optimistic UI, then reconciled with server
+count). Admin creates polls with `expires_at`; expired polls show
+results-only, no voting UI.
+
+### Reports (User-Flagged Data Corrections)
+Not a standalone page — a **cross-cutting action** available on Doctor
+Profile, Hospital Detail (⋯ menu → "তথ্য ভুল আছে?"):
+```
+┌─────────────────────────────────────────────────┐
+│ ✕      ভুল তথ্য জানান                            │
+│ কোন তথ্যে সমস্যা? *                              │
+│ ○ ফোন নম্বর ভুল    ○ ঠিকানা ভুল                 │
+│ ○ সময়সূচি ভুল      ○ বন্ধ হয়ে গেছে             │
+│ ○ অন্যান্য                                       │
+│ বিস্তারিত (ঐচ্ছিক) [_______________________]     │
+│ [জমা দিন]                                        │
+└─────────────────────────────────────────────────┘
+```
+Submits to a `data_reports` table (entity_type, entity_id, reason,
+detail, status='open') — surfaces in Admin Panel as a moderation queue,
+NOT auto-applied (prevents vandalism; admin verifies then edits source
+record). No login required — this is a trust/data-quality safety valve
+essential for a crowd-sourced-feeling directory at scale.
+
+### Analytics
+`poll_view, poll_vote, data_report_submit{entity_type, reason}`.
 
 ---
 
