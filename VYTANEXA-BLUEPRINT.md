@@ -15,7 +15,7 @@
 - [x] S06 — Doctor List Page · Filters · Sort
 - [x] S07 — Doctor Profile Page (Hero · Tabs · Lead Capture · Share)
 - [x] S08 — Hospital List · Hospital Detail
-- [ ] S09 — Symptoms Page · Symptom Detail
+- [x] S09 — Symptoms Page · Symptom Detail
 - [ ] S10 — Lab & Diagnostic Tests
 - [ ] S11 — Blood Services Page
 - [ ] S12 — Emergency System
@@ -524,6 +524,119 @@ review_submit, tab_view` events.
 
 **OG/SEO:** JSON-LD `Hospital` schema type, address+geo coordinates,
 `amenityFeature` array from facilities.
+
+---
+
+## S09 — SYMPTOMS PAGE · SYMPTOM DETAIL · EMERGENCY FLAGGING
+
+### Symptoms List Page (`/symptoms`)
+Grid page (2-col), no location filter (symptoms are universal, only
+the matched doctor list is location-filtered downstream).
+
+```
+┌─────────────────────────────────────────────────┐
+│  [←]  উপসর্গ দেখে ডাক্তার খুঁজুন                │
+├─────────────────────────────────────────────────┤
+│  🚨 জরুরি উপসর্গ                                 │
+│  ┌──────────────┐  ┌──────────────┐             │
+│  │ 🚨[PHOTO]    │  │ 🚨[PHOTO]    │             │
+│  │ বুকে ব্যথা   │  │ শ্বাসকষ্ট    │             │
+│  └──────────────┘  └──────────────┘             │
+│  ─────────────────────────────────────────────  │
+│  সাধারণ উপসর্গ                                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+│  │[PHOTO]   │ │[PHOTO]   │ │[PHOTO]   │         │
+│  │জ্বর,সর্দি│ │মাথাব্যথা │ │পেটব্যথা │         │
+│  └──────────┘ └──────────┘ └──────────┘         │
+│  ... (grouped by category)                       │
+└─────────────────────────────────────────────────┘
+```
+
+**Emergency section (always pinned top):** cards w/ 2px emergency-600
+border + 🚨 badge, `is_emergency=true` from `symptoms` table. Visually
+separated from general grid with its own labeled section + subtle
+emergency-50 background band.
+
+**General grid:** 2-column, grouped by `symptoms.category` (জ্বর ও
+সংক্রমণ / পেট ও হজম / হাড় ও জয়েন্ট / মানসিক স্বাস্থ্য etc.), each group
+has a section header, cards within use standard styling.
+
+**Symptom Card:** image (16:10), gradient overlay, label bottom-left
+white text, `radius-lg`, press scale(0.95). Same visual language as
+S04 SEC-09 mini-cards but larger (grid, not horizontal scroll).
+
+**Search-within-page:** small search bar at top, filters grid client-
+side across all loaded symptoms (dataset small enough to be SSG'd
+entirely, no server round-trip needed).
+
+### Symptom Detail Page (`/symptoms/[slug]`)
+
+```
+┌─────────────────────────────────────────────────┐
+│  [←]         বুকে ব্যথা                    [🔗] │
+├─────────────────────────────────────────────────┤
+│  [COVER IMAGE 16:9]                              │
+│                                                 │
+│  🚨 জরুরি সতর্কতা                                │  ← only if emergency
+│  ┌─────────────────────────────────────────┐   │
+│  │ এই লক্ষণ গুরুতর হতে পারে। দেরি না করে   │   │
+│  │ নিকটস্থ হাসপাতালে যান বা ১০২ নম্বরে      │   │
+│  │ কল করুন।                                │   │
+│  │      [🚨 জরুরি সেবা দেখুন →]             │   │
+│  └─────────────────────────────────────────┘   │
+│                                                 │
+│  বিবরণ                                          │
+│  ─────────────────────────────────────────────  │
+│  বুকে ব্যথা বিভিন্ন কারণে হতে পারে — হৃদরোগ,    │
+│  গ্যাস্ট্রিক, মাংসপেশির টান ইত্যাদি...           │
+│                                                 │
+│  সাধারণ কারণ                                    │
+│  ─────────────────────────────────────────────  │
+│  • হৃদরোগ সংক্রান্ত সমস্যা                       │
+│  • গ্যাস্ট্রিক ও অ্যাসিডিটি                      │
+│  • মাংসপেশির টান বা আঘাত                        │
+│  • উদ্বেগজনিত কারণ                               │
+│                                                 │
+│  কখন ডাক্তার দেখাবেন                            │
+│  ─────────────────────────────────────────────  │
+│  ✓ ব্যথা ৫ মিনিটের বেশি স্থায়ী হলে              │
+│  ✓ শ্বাসকষ্ট বা ঘামের সাথে ব্যথা হলে             │
+│                                                 │
+│  ── এই বিশেষজ্ঞ দেখুন ──                        │
+│  ┌──────────┐  ┌──────────┐                    │
+│  │🫀হৃদরোগ  │  │⚕️মেডিসিন │                    │
+│  │ ৫ জন     │  │ ১৮ জন    │                    │
+│  └──────────┘  └──────────┘                    │
+│                                                 │
+│  ┌─────────────────────────────────────────┐   │
+│  │     সংশ্লিষ্ট বিশেষজ্ঞ ডাক্তার খুঁজুন →   │   │
+│  └─────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────┘
+```
+
+**Emergency Banner** (only if `is_emergency=true`): emergency-50 bg,
+2px emergency-600 left border, warning icon, direct CTA to `/emergency`
+— this is the single most important visual escalation in the whole app,
+positioned immediately below the cover image, above all other content.
+
+**Content sections** (from `symptoms` table fields, each auto-hidden
+if empty): description, common_causes[], when_to_see_doctor[],
+related_specialties[] (rendered as tappable specialty chips w/ live
+doctor count for current location).
+
+**Bottom CTA:** primary button → `/doctors?specialty=[matched]&
+district=[current]` — pre-filtered, the core conversion action of this
+entire page.
+
+**Data model note:** `related_specialties` is an array (a symptom can
+map to multiple specialties — e.g. chest pain → cardiology AND
+medicine), each rendered as its own chip with independent doctor count
+and independent tap-through.
+
+**SEO:** SSG at build time (symptom list is admin-managed, low churn),
+ISR revalidate 6hr. JSON-LD `MedicalSymptom` schema type.
+
+**Analytics:** `symptom_view, specialty_chip_click, cta_click` events.
 
 ---
 
