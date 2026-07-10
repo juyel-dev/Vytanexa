@@ -14,7 +14,7 @@
 - [x] S05 — Universal Search · Autocomplete · Voice Input
 - [x] S06 — Doctor List Page · Filters · Sort
 - [x] S07 — Doctor Profile Page (Hero · Tabs · Lead Capture · Share)
-- [ ] S08 — Hospital List · Hospital Detail
+- [x] S08 — Hospital List · Hospital Detail
 - [ ] S09 — Symptoms Page · Symptom Detail
 - [ ] S10 — Lab & Diagnostic Tests
 - [ ] S11 — Blood Services Page
@@ -425,6 +425,105 @@ doctor.
 ### Analytics Events
 `doctor_view, call_click, whatsapp_click, lead_submit, share,
 review_submit, tab_view` — all logged to `analytics_events`.
+
+---
+
+## S08 — HOSPITAL LIST · HOSPITAL DETAIL PAGE
+
+### Hospital List Page (`/hospitals`)
+Same shell pattern as Doctor List (S06): Topbar → Location chip → Type
+filter chips (সব/হাসপাতাল/ডায়াগনস্টিক/ক্লিনিক/নার্সিং হোম) → result
+count+sort bar → infinite-scroll card list.
+
+**Hospital Card (full, list variant):**
+```
+┌─────────────────────────────────────────────────┐
+│  [COVER IMAGE 16:9]                    [🚨 জরুরি]│
+│  ─────────────────────────────────────────────  │
+│  কোচবিহার মেডিকেল কলেজ হাসপাতাল      [✅ Verified]│
+│  🏥 সরকারি হাসপাতাল                              │
+│  ⭐ 4.3 (৫৬ রিভিউ)   📍 কোচবিহার সদর            │
+│  🩺 ICU  🚑 Ambulance  🧪 Lab  🩸 Blood Bank      │
+│  [📞 কল করুন] [🗺️ দিকনির্দেশনা] [বিস্তারিত →]   │
+└─────────────────────────────────────────────────┘
+```
+Cover image 16:9, radius-xl top. Type badge color-coded (govt=brand,
+diagnostic=life, clinic=accent, nursing_home=neutral). Facility pill
+row: icons pulled from `hospitals.facilities[]` array — dynamic, only
+existing facilities shown. Emergency badge (🚨) top-right of image if
+`has_emergency=true`.
+
+**Filter Sheet:** District, Type (multi-select), Facilities (multi-
+select checkboxes: ICU/Ambulance/Blood Bank/Lab/Emergency/24×7),
+Rating. Same sheet mechanics as S06.
+
+**Sort:** সেরা রেটিং · নিকটতম · সবচেয়ে বেশি রিভিউ (no fee sort — hospitals
+don't have single fee).
+
+### Hospital Detail Page (`/hospitals/[slug]`)
+
+**Structure:** Transparent→solid topbar → Image gallery (swipeable,
+dot indicators) → Hero info block → Sticky tab bar (তথ্য/ডাক্তার/সেবা/
+রিভিউ) → Sticky bottom bar (call + directions).
+
+**Hero Info Block:**
+```
+কোচবিহার মেডিকেল কলেজ হাসপাতাল          [✅ Verified] [🚨 জরুরি সেবা]
+🏥 সরকারি হাসপাতাল · প্রতিষ্ঠিত ১৯৬৩
+⭐ 4.3  (৫৬ রিভিউ)
+📍 ফুলবাড়ি রোড, কোচবিহার সদর, পশ্চিমবঙ্গ
+📞 ০৩৫৮২-২২০১৭১   🕐 ২৪ ঘণ্টা খোলা
+```
+
+**Tab 1 — তথ্য (Info):** About text (expandable), facilities grid
+(icon+label, e.g. 🩺ICU 🚑Ambulance 🧪Lab 🩸Blood Bank 💊Pharmacy
+🅿️Parking), visiting hours, insurance/scheme acceptance chips (if
+applicable — Ayushman Bharat etc.), full address + embedded static map
+thumbnail (tap → opens directions).
+
+**Tab 2 — ডাক্তার (Available Doctors):** Reverse of S07 Tab 4 — list
+of doctors linked via `doctor_hospital_links` who visit this hospital,
+using compact Doctor Card variant (same as S06), each with role label
+(Visiting Consultant / Resident). Empty state: "এখনো কোনো ডাক্তারের
+তথ্য যোগ হয়নি।"
+
+**Tab 3 — সেবা (Services & Tests):** Grid/list of `hospitals.services[]`
+and `hospitals.tests[]` — grouped by category (Pathology, Radiology,
+Cardiology tests etc.), each item shows test name + price (if set) +
+"অন্যান্য তথ্যের জন্য কল করুন" fallback if no price. This tab is what
+powers S10 Lab Test search matching.
+
+**Tab 4 — রিভিউ:** Identical mechanics to S07 Tab 3 (summary,
+distribution bars, sort, review cards, submission modal), scoped to
+`hospital_id` instead of `doctor_id`.
+
+**Image Gallery:**
+Swipeable, 16:9, dot pagination, tap → full-screen lightbox w/
+pinch-zoom, source: `hospitals.gallery_images[]`. Single image → no
+swipe/dots, static.
+
+**Sticky Bottom Bar:**
+```
+[📞 কল করুন]              [🗺️ দিকনির্দেশনা]
+```
+Two equal-width buttons (no fee display — hospitals don't have single
+appointment fee like doctors). No lead-capture form here — hospitals
+are contact-direct only in Phase 1.
+
+**Emergency Visual Treatment:**
+If `has_emergency=true`: hero shows red "🚨 জরুরি সেবা ২৪×৭" pill,
+emergency contact number displayed prominently in emergency-50 tinted
+box above the fold, separate from general contact number if different.
+
+**Empty/Error States:** Same 3-state pattern as S06/S07 (not found →
+404 redirect to hospital list; unverified hospitals never publicly
+queryable via RLS).
+
+**Analytics:** `hospital_view, call_click, directions_click, share,
+review_submit, tab_view` events.
+
+**OG/SEO:** JSON-LD `Hospital` schema type, address+geo coordinates,
+`amenityFeature` array from facilities.
 
 ---
 
