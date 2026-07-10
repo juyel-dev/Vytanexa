@@ -16,9 +16,9 @@
 - [x] S07 — Doctor Profile Page (Hero · Tabs · Lead Capture · Share)
 - [x] S08 — Hospital List · Hospital Detail
 - [x] S09 — Symptoms Page · Symptom Detail
-- [ ] S10 — Lab & Diagnostic Tests
-- [ ] S11 — Blood Services Page
-- [ ] S12 — Emergency System
+- [x] S10 — Lab & Diagnostic Tests
+- [x] S11 — Blood Services Page
+- [x] S12 — Emergency System
 - [ ] S13 — Health Magazine · Articles
 - [ ] S14 — Q&A Community
 - [ ] S15 — Polls · Reports · User Submissions
@@ -637,6 +637,258 @@ and independent tap-through.
 ISR revalidate 6hr. JSON-LD `MedicalSymptom` schema type.
 
 **Analytics:** `symptom_view, specialty_chip_click, cta_click` events.
+
+---
+
+## S10 — LAB & DIAGNOSTIC TESTS (`/health/lab-tests`)
+
+### Purpose
+Separate from symptom→doctor flow. User knows the *test name* (CBC,
+X-Ray, USG, Thyroid Profile) and wants to find *which nearby facility*
+offers it — a distinct search intent from doctor discovery.
+
+### Layout
+```
+┌─────────────────────────────────────────────────┐
+│ [←]      ল্যাব ও ডায়াগনস্টিক টেস্ট                │
+├─────────────────────────────────────────────────┤
+│ [🔍 টেস্টের নাম লিখুন (CBC, X-Ray, USG...)    ]  │
+├─────────────────────────────────────────────────┤
+│ 📍 কোচবিহার                                [▾]  │
+├─────────────────────────────────────────────────┤
+│ জনপ্রিয় টেস্ট:                                   │
+│ [CBC] [X-Ray] [USG] [Thyroid] [Blood Sugar]      │
+│ [ECG] [Urine Test] [Lipid Profile]               │
+├─────────────────────────────────────────────────┤
+│ "CBC" এর জন্য ৫টি সেন্টার পাওয়া গেছে             │
+│                                                 │
+│ [Diagnostic Center Card]                        │
+│ [Diagnostic Center Card]                        │
+│ ...                                             │
+└─────────────────────────────────────────────────┘
+```
+
+### Search Behavior
+Input matches against `hospitals.services[]` / a dedicated
+`diagnostic_tests` join table (test name normalized + aliases, e.g.
+"CBC" = "Complete Blood Count" = "সিবিসি"). Debounce 300ms, min 2 chars.
+Empty state before typing: popular-test chip grid (admin-curated,
+`is_popular=true` on tests master list) — tapping a chip = instant
+search, no typing required (critical for low-literacy UX).
+
+### Result Card (Diagnostic Center)
+```
+┌─────────────────────────────────────────────────┐
+│ [🏢 56px] প্রান্ত ডায়াগনস্টিক সেন্টার            │
+│  🔬 ডায়াগনস্টিক সেন্টার  ·  📍 কোচবিহার সদর     │
+│  ✅ এই টেস্ট পাওয়া যায়: CBC                     │
+│  🕐 সকাল ৮টা - রাত ৮টা                          │
+│  📞 03582-XXXXXX                                │
+│  [📞 কল করুন]      [বিস্তারিত →]                │
+└─────────────────────────────────────────────────┘
+```
+Same card system as Hospital compact card (S08) with one addition: a
+confirmation line showing which searched test is available there
+(pulled from matched `services[]` entry), builds trust the result is
+relevant not just a generic hospital listing.
+
+### No Results
+"এই টেস্ট এখনো কোনো কেন্দ্রে যোগ হয়নি এই এলাকায়" + "সব ডায়াগনস্টিক
+সেন্টার দেখুন →" fallback (drops test filter, shows all diagnostic-type
+hospitals in district) + WhatsApp "জানান" CTA (same pattern as Search
+no-results, S05).
+
+### Data Model Note
+Tests are NOT a separate content type with detail pages — they exist
+only as a *search index* into hospital services. This keeps admin
+workload minimal (no separate test CMS) while still enabling the
+search UX. Admin manages a master `test_catalog` (name_en, name_bn,
+aliases[], is_popular) that hospitals reference when tagging their
+`services[]`.
+
+### Analytics
+`test_search { query, results_count }` — critical for admin to see
+which tests are searched-but-unavailable in a district (expansion
+signal for outreach to new diagnostic centers).
+
+---
+
+## S11 — BLOOD SERVICES PAGE (`/health/blood-services`)
+
+### Purpose
+High-emotion, high-urgency traffic (someone searching this is usually
+in crisis for themselves or family). Design principle: **zero friction,
+maximum speed-to-phone-number.**
+
+### Layout
+```
+┌─────────────────────────────────────────────────┐
+│ [←]         ব্লাড সার্ভিস                        │
+├─────────────────────────────────────────────────┤
+│ 📍 কোচবিহার                                [▾]  │
+├─────────────────────────────────────────────────┤
+│ আপনার রক্তের গ্রুপ বেছে নিন                      │
+│ [A+][A-][B+][B-][O+][O-][AB+][AB-][সবগুলো]      │
+├─────────────────────────────────────────────────┤
+│ 🩸 রক্তদান করতে চান?                             │
+│ [+ রক্তদাতা হিসেবে নাম লেখান]                    │
+├─────────────────────────────────────────────────┤
+│ কোচবিহারের ব্লাড ব্যাংক (৪টি)                    │
+│                                                 │
+│ [Blood Bank Card]                               │
+│ [Blood Bank Card]                               │
+│                                                 │
+│ ─────── রক্তদাতা তালিকা ───────                 │
+│ [Donor Card — opt-in, phone masked until tap]   │
+└─────────────────────────────────────────────────┘
+```
+
+### Blood Group Filter Chips
+8 chips + "সবগুলো" — filters both blood bank stock display (if bank
+reports inventory) and donor list. Selected = emergency-600 bg/white
+text (red theme fits urgency, distinct from brand-blue elsewhere).
+
+### Blood Bank Card
+```
+┌─────────────────────────────────────────────────┐
+│ 🏥 কোচবিহার জেলা হাসপাতাল ব্লাড ব্যাংক           │
+│ 📍 কোচবিহার সদর  ·  🕐 ২৪ ঘণ্টা খোলা             │
+│ স্টক (যদি রিপোর্ট করা থাকে):                     │
+│ A+✅ A-⚠️ B+✅ B-❌ O+✅ O-⚠️ AB+✅ AB-❌         │
+│ [📞 এখনই কল করুন]                                │
+└─────────────────────────────────────────────────┘
+```
+Stock indicator (✅ available / ⚠️ low / ❌ unavailable) is **optional**
+— only rendered if `blood_bank_inventory` record exists and was updated
+within 48hrs (stale data hidden entirely rather than shown wrong,
+prevents false trust in emergency).
+
+### Donor Registration (Opt-in Directory)
+```
+┌─────────────────────────────────────────────────┐
+│ ✕         রক্তদাতা হিসেবে নাম লেখান              │
+│ ─────────────────────────────────────────────── │
+│ নাম *            [____________________]         │
+│ মোবাইল নম্বর *   [🇮🇳+91 __________]            │
+│ রক্তের গ্রুপ *    [O+ ▾]                         │
+│ জেলা *           [কোচবিহার ▾]                    │
+│ ☑ শেষ রক্তদান ৩ মাসের বেশি আগে হয়েছে            │
+│    (WHO নির্দেশিকা অনুযায়ী)                      │
+│ ☑ আমি জরুরি প্রয়োজনে যোগাযোগ পেতে সম্মত         │
+│ [নিবন্ধন করুন]                                   │
+└─────────────────────────────────────────────────┘
+```
+Donor phone numbers are **never shown in plaintext publicly** —
+donor list shows name + blood group + area only; phone revealed via
+"📞 যোগাযোগ করুন" tap which triggers `tel:` intent directly (number
+never rendered as visible text, prevents scraping/spam harvesting).
+Donor consent checkbox is mandatory (`consent_contact=true`), donors
+can self-deactivate via SMS/WhatsApp link (future) or admin removal.
+
+### Data Model Note
+`blood_donors` table separate from `users` — donor registration does
+NOT require app account/login (guest-submittable), maximizing donor
+pool size. Rate-limited 1 registration per phone per 90 days
+(matches WHO donation interval, also anti-spam).
+
+### Emergency FAB Integration
+This page is also directly reachable from the Emergency FAB's
+"🩸 ব্লাড সার্ভিস" option — FAB tap opens a *condensed* bottom-sheet
+version (blood-bank phone numbers only, no donor registration) for
+fastest possible access; full page reached via "সব দেখুন →" in that
+sheet.
+
+### Analytics
+`blood_page_view, blood_group_filter, donor_contact_click,
+donor_register_submit`.
+
+---
+
+## S12 — EMERGENCY SYSTEM (FAB + `/emergency` Full Page)
+
+### Design Principle
+Emergency access must work in **under 2 taps from anywhere in the app**,
+even on a slow connection, even for a panicking user. This overrides
+normal navigation patterns — the FAB is global (renders in root layout,
+survives route changes without remount).
+
+### FAB Recap (full spec in S02 §2.3)
+Global bottom-right FAB → expands to 3 options (Nearest Hospital /
+Blood / Ambulance) → each option opens a **condensed bottom-sheet**
+first (fastest path to a phone number), with "সব দেখুন →" escalating
+to the full `/emergency` page only if user needs more.
+
+### Condensed Sheets (from FAB tap)
+```
+🚑 AMBULANCE SHEET:
+┌─────────────────────────────────────────────────┐
+│ ↓  অ্যাম্বুলেন্স                                 │
+│ [📞 ১০২ — জাতীয় অ্যাম্বুলেন্স সেবা]              │  ← always first,
+│ [📞 কোচবিহার জেলা হাসপাতাল]                      │    hardcoded
+│ [📞 প্রান্ত প্রাইভেট অ্যাম্বুলেন্স]                │
+│ সব জরুরি নম্বর দেখুন →                           │
+└─────────────────────────────────────────────────┘
+```
+Each row = single tap → `tel:` intent directly (no confirmation dialog,
+speed is the priority). National number (102 / 108, state-dependent)
+always pinned first regardless of local data — hardcoded fallback that
+never depends on DB/network availability.
+
+### Full Emergency Page (`/emergency`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]         জরুরি সেবা                           │
+├─────────────────────────────────────────────────┤
+│ 📍 কোচবিহার                                [▾]  │
+├─────────────────────────────────────────────────┤
+│ 🚨 জাতীয় জরুরি নম্বর                             │
+│ [📞 ১০২ অ্যাম্বুলেন্স] [📞 ১০০ পুলিশ]            │
+│ [📞 ১০১ ফায়ার সার্ভিস] [📞 ১০৯১ নারী হেল্পলাইন]│
+├─────────────────────────────────────────────────┤
+│ 🏥 জরুরি বিভাগ (কাছের হাসপাতাল)                  │
+│ [Hospital Card — emergency=true only, phone      │
+│  + distance/area, sorted by is_featured then      │
+│  district match]                                 │
+├─────────────────────────────────────────────────┤
+│ 🩸 ব্লাড ব্যাংক                                  │
+│ [condensed blood bank list → full page link]     │
+├─────────────────────────────────────────────────┤
+│ 🚑 অ্যাম্বুলেন্স সার্ভিস                          │
+│ [Local ambulance providers, from hospitals or     │
+│  dedicated ambulance_services table]              │
+└─────────────────────────────────────────────────┘
+```
+
+### National Numbers (Hardcoded, Not DB-Dependent)
+```
+১০২ — Ambulance (National)     ১০০ — Police
+১০১ — Fire Service              ১০৮ — Emergency (state-var, alt ambulance)
+১০৯১ — Women's Helpline         ১০৯৮ — Child Helpline
+১৪৪১৬ — Mental Health (Kiran)   ১৯৩০ — Cyber Crime
+```
+These render even with zero network connectivity (bundled in app
+shell / service worker cache) — this is the one page in the app that
+**must** work offline.
+
+### Offline Behavior
+`/emergency` page shell + national numbers are precached via next-pwa
+service worker on first visit. If offline: national numbers still
+fully functional (tel: links work without network); local
+hospital/blood-bank data shows last-cached version with "শেষ আপডেট: X
+আগে" timestamp, or graceful "ইন্টারনেট সংযোগ দরকার" note only on the
+sections that need fresh data.
+
+### Data Model Note
+Hospital emergency card only shows hospitals WHERE
+`has_emergency_dept=true`. Ambulance-specific entries may come from
+`hospitals` (type filter) or need a lightweight dedicated table if
+standalone ambulance providers (not hospital-affiliated) are expected
+— **flagged as an open schema question**, resolved in the DB section.
+
+### Analytics
+`emergency_page_view, emergency_call_click{number_type}` — number_type
+distinguishes national vs local vs ambulance, useful for understanding
+real-world usage patterns and validating which numbers matter most.
 
 ---
 
