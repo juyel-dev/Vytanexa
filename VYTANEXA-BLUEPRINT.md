@@ -22,9 +22,9 @@
 - [x] S13 — Health Magazine · Articles
 - [x] S14 — Q&A Community
 - [x] S15 — Polls · Reports · User Submissions
-- [ ] S16 — More Page (Hamburger Menu)
-- [ ] S17 — User Account (Profile · Favorites · History)
-- [ ] S18 — Settings (Language · Location · Notifications · Privacy)
+- [x] S16 — More Page (Hamburger Menu)
+- [x] S17 — User Account (Profile · Favorites · History)
+- [x] S18 — Settings (Language · Location · Notifications · Privacy)
 - [ ] S19 — Custom Pages / Block Builder
 - [ ] S20 — Notifications Center · Announcement Banner
 - [ ] S21 — SEO Landing Pages (State/District/Specialty)
@@ -1050,6 +1050,219 @@ essential for a crowd-sourced-feeling directory at scale.
 
 ### Analytics
 `poll_view, poll_vote, data_report_submit{entity_type, reason}`.
+
+---
+
+## S16 — MORE PAGE (`/more`) — Hamburger Menu
+
+### Design Principle
+This page is the **overflow container** for everything that doesn't
+fit in the 5-tab bottom nav — but it must never feel like a dumping
+ground. Grouped into clear sections, admin-extensible without a code
+release (custom pages auto-appear here).
+
+### Layout
+```
+┌─────────────────────────────────────────────────┐
+│  [👤 Avatar]  স্বাগতম, করিম!         [সাইন ইন] │  ← account header
+│               +91 98765-43210                    │    (or CTA if guest)
+├─────────────────────────────────────────────────┤
+│  আমার অ্যাকাউন্ট                                 │
+│  ❤️ পছন্দের তালিকা          👤 প্রোফাইল          │
+│  📋 অ্যাপয়েন্টমেন্ট হিস্টরি                       │
+├─────────────────────────────────────────────────┤
+│  স্বাস্থ্য টুলস                                   │
+│  🩺 উপসর্গ দেখুন            🧪 ল্যাব টেস্ট        │
+│  🩸 ব্লাড সার্ভিস            🚨 জরুরি সেবা        │
+├─────────────────────────────────────────────────┤
+│  কমিউনিটি                                        │
+│  📰 স্বাস্থ্য ম্যাগাজিন       🙋 প্রশ্নোত্তর       │
+│  📊 জরিপ                                         │
+├─────────────────────────────────────────────────┤
+│  [Custom admin-added pages appear here           │
+│   automatically — icon+title from admin CMS]     │
+│  📄 আমাদের সম্পর্কে                               │
+├─────────────────────────────────────────────────┤
+│  সেটিংস                                          │
+│  🌐 ভাষা: বাংলা              📍 অবস্থান: কোচবিহার│
+│  🔔 নোটিফিকেশন               🔒 প্রাইভেসি         │
+├─────────────────────────────────────────────────┤
+│  সহায়তা                                          │
+│  💬 সাপোর্ট                  📜 শর্তাবলী          │
+│  🔐 গোপনীয়তা নীতি                                │
+├─────────────────────────────────────────────────┤
+│         [সাইন আউট]  (only if signed in)          │
+│                                                 │
+│  Vytanexa v1.0.0                                │
+└─────────────────────────────────────────────────┘
+```
+
+### Account Header
+Signed-in: avatar (photo or initials), name, masked phone, tappable →
+`/account`. Guest: "সাইন ইন করুন" pill button, brand-50 bg, opens
+`/auth/login`. This single header replaces the need for a separate
+profile-icon anywhere else in the app.
+
+### Menu Row Component
+```
+Height: 52px | Icon: 22px in 36px circle (category-tinted bg) |
+Label: 15px 500 neutral-800 | Right: chevron-right 16px neutral-300 |
+Press: neutral-50 bg flash, 100ms
+```
+Grid: 2-column for compact rows (icon+label pairs) within each
+section, full-width single-column for settings rows that show a
+current-value (language, location).
+
+### Custom Pages Injection (Admin God Mode)
+Rendered from `custom_pages WHERE show_in_menu=true ORDER BY
+menu_order`. Each entry: `{icon (emoji or SVG key), title, slug}` →
+routes to `/page/[slug]`. This is the mechanism referenced in S02 —
+admin adds a page in Admin Panel, it appears here with **zero app
+redeploy**, fully data-driven menu.
+
+### Notification Badge
+Small red dot on "নোটিফিকেশন" row if unread notifications exist
+(mirrors bottom-nav bell badge state, single source of truth from
+`notifications_read_status`).
+
+### Sign Out Confirmation
+Tap "সাইন আউট" → simple confirm dialog ("আপনি কি সাইন আউট করতে
+চান?") → clears session, resets to guest state, stays on `/more`
+(does not force navigation).
+
+---
+
+## S17 — USER ACCOUNT (`/account/*`) — Auth-Guarded
+
+### Account Home (`/account`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]          আমার অ্যাকাউন্ট                     │
+├─────────────────────────────────────────────────┤
+│  [👤 Avatar 64px]  করিম উদ্দিন                   │
+│                    +91 98765-43210               │
+│                    [✏️ সম্পাদনা করুন]             │
+├─────────────────────────────────────────────────┤
+│  ❤️ পছন্দের তালিকা                        (৮) → │
+│  📋 অ্যাপয়েন্টমেন্ট অনুরোধ হিস্টরি        (৩) → │
+│  🙋 আমার প্রশ্ন ও উত্তর                    (২) → │
+│  ⭐ আমার রিভিউ                              (৫) → │
+├─────────────────────────────────────────────────┤
+│  [অ্যাকাউন্ট মুছে ফেলুন]  ← muted, bottom, small │
+└─────────────────────────────────────────────────┘
+```
+Each row → dedicated sub-page, count badge shows live total.
+
+### Profile Edit (`/account/profile`)
+Name, phone (read-only, verified via OTP — changing requires
+re-verification flow), email (optional), preferred language shortcut
+(mirrors Settings), default location shortcut. Save button, inline
+field validation, toast confirmation on save.
+
+### Favorites (`/account/favorites`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]         পছন্দের তালিকা                       │
+├─────────────────────────────────────────────────┤
+│ [ডাক্তার (৫)] [হাসপাতাল (৩)]     ← tabs         │
+├─────────────────────────────────────────────────┤
+│ [Doctor Card — full variant, with ❤️ filled       │
+│  top-right, tap to unfavorite w/ confirm toast    │
+│  "সরানো হয়েছে ↩️ পূর্বাবস্থায় ফেরান"]            │
+│ ...                                              │
+└─────────────────────────────────────────────────┘
+```
+Empty state: "এখনো কোনো পছন্দ যোগ করেননি" + "ডাক্তার খুঁজুন →" CTA.
+Heart-icon toggle available globally on Doctor/Hospital cards
+everywhere in the app (list, search, home) — writes to
+`user_favorites (user_id, entity_type, entity_id)`; guest users tapping
+heart → inline prompt "সাইন ইন করে সেভ করুন" (soft-gate, not a hard
+redirect, preserves their place in the flow).
+
+### Appointment History (`/account/history`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]      অ্যাপয়েন্টমেন্ট হিস্টরি                  │
+├─────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────┐     │
+│ │ Dr. Priyanka Das — মেডিসিন                │     │
+│ │ 📅 ২ দিন আগে অনুরোধ করা হয়েছে             │     │
+│ │ 🟡 অপেক্ষমাণ  /  🟢 যোগাযোগ করা হয়েছে      │     │
+│ │ [আবার যোগাযোগ করুন]                       │     │
+│ └─────────────────────────────────────────┘     │
+└─────────────────────────────────────────────────┘
+```
+Read-only log of the user's own `leads` submissions (status: new →
+contacted → completed/cancelled, set by chamber/admin side — no
+patient self-update). Sets correct expectation: this is a request
+log, not a live booking calendar (matches the disclaimer set in S07).
+
+### Account Deletion
+Confirmation flow (type "মুছুন" to confirm, or simple double-confirm
+dialog) → soft-deletes account (anonymizes PII, retains aggregate
+analytics per data-retention policy) → signs out → toast confirmation.
+
+---
+
+## S18 — SETTINGS (`/settings`) — Not Auth-Gated
+
+### Layout
+```
+┌─────────────────────────────────────────────────┐
+│ [←]            সেটিংস                            │
+├─────────────────────────────────────────────────┤
+│  🌐 ভাষা                          বাংলা      → │
+│  📍 ডিফল্ট অবস্থান              কোচবিহার      → │
+├─────────────────────────────────────────────────┤
+│  🔔 নোটিফিকেশন                                    │
+│  সাধারণ ঘোষণা                        [●━━]      │
+│  জরুরি সতর্কতা                        [●━━] লক  │  ← always-on, disabled
+│  স্বাস্থ্য টিপস ও আর্টিকেল             [━━○]      │
+├─────────────────────────────────────────────────┤
+│  🔒 প্রাইভেসি                                     │
+│  📜 শর্তাবলী দেখুন                              → │
+│  🔐 গোপনীয়তা নীতি দেখুন                          → │
+│  আমার ডেটা ডাউনলোড করুন                          → │
+├─────────────────────────────────────────────────┤
+│  ℹ️ অ্যাপ সম্পর্কে                                │
+│  ভার্সন                          1.0.0            │
+│  ক্যাশ পরিষ্কার করুন                             → │
+└─────────────────────────────────────────────────┘
+```
+
+### Language Row
+Tap → same Language Selection sheet as onboarding (S03), applies
+instantly (no app restart), updates cookie/localStorage, re-fetches
+translated content client-side where already loaded.
+
+### Default Location Row
+Tap → same Location Picker sheet (S03/S02) — updates the global
+location used across Home/Doctors/Hospitals filtering.
+
+### Notification Toggles
+Granular opt-out for non-critical notification types. "জরুরি সতর্কতা"
+(emergency alerts, e.g. dengue outbreak warnings) is **non-togglable**
+by design — a locked/disabled switch state communicates this is a
+safety broadcast, not marketing. Toggle changes call
+`PATCH /api/user/notification-prefs`, optimistic UI update.
+
+### Privacy Section
+Static content links (Terms/Privacy render `(static)` route group
+pages — S22). "আমার ডেটা ডাউনলোড করুন" — GDPR/data-portability-style
+export request (queues a job, emails/WhatsApps a data export link;
+lightweight compliance feature, low priority but included for
+completeness of privacy posture).
+
+### Clear Cache
+Clears service-worker cache + IndexedDB offline data (does NOT clear
+account session or preferences) — useful escape hatch for users
+reporting stale content, framed simply as "যদি অ্যাপ ঠিকমতো কাজ না
+করে" helper text.
+
+### Guest vs Signed-in
+Settings page fully functional for guests (language/location/privacy
+all work) — only the notification toggles are irrelevant for guests
+(hidden, replaced with "নোটিফিকেশন পেতে সাইন ইন করুন" prompt row).
 
 ---
 
