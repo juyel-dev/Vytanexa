@@ -25,9 +25,9 @@
 - [x] S16 — More Page (Hamburger Menu)
 - [x] S17 — User Account (Profile · Favorites · History)
 - [x] S18 — Settings (Language · Location · Notifications · Privacy)
-- [ ] S19 — Custom Pages / Block Builder
-- [ ] S20 — Notifications Center · Announcement Banner
-- [ ] S21 — SEO Landing Pages (State/District/Specialty)
+- [x] S19 — Custom Pages / Block Builder
+- [x] S20 — Notifications Center · Announcement Banner
+- [x] S21 — SEO Landing Pages (State/District/Specialty)
 - [ ] S22 — Offline Page · PWA · Next.js Architecture · i18n
 - [ ] DB  — Complete Database Schema (Supabase/PostgreSQL)
 - [ ] ADMIN — Admin Panel (Ultra God Mode) Full Design
@@ -1263,6 +1263,233 @@ reporting stale content, framed simply as "যদি অ্যাপ ঠিক�
 Settings page fully functional for guests (language/location/privacy
 all work) — only the notification toggles are irrelevant for guests
 (hidden, replaced with "নোটিফিকেশন পেতে সাইন ইন করুন" prompt row).
+
+---
+
+## S19 — CUSTOM PAGES / BLOCK BUILDER (`/page/[slug]`)
+
+### Purpose
+This is the user-app-side rendering half of Admin God Mode's page
+builder (admin authoring UI specified in ADMIN section). Any page
+admin creates — About Us, a health campaign, a Poll roundup, a
+Magazine-style feature, a static announcement — renders here through
+ONE generic route, driven entirely by stored block data. No code
+release needed to publish a new page.
+
+### Route Behavior
+```
+/page/[slug] → fetch custom_pages WHERE slug=[slug] AND is_published=true
+             → render blocks[] array in order
+             → 404 if not found or unpublished
+```
+
+### Supported Block Types (renders any combination, any order)
+```
+┌─────────────────────────────────────────────────┐
+│ BLOCK: hero                                     │
+│ [Full-width image + title + subtitle overlay]   │
+├─────────────────────────────────────────────────┤
+│ BLOCK: rich_text                                │
+│ [Formatted paragraph content — same renderer     │
+│  as Article body, S13]                          │
+├─────────────────────────────────────────────────┤
+│ BLOCK: image                                     │
+│ [Single image, optional caption]                 │
+├─────────────────────────────────────────────────┤
+│ BLOCK: poll                                      │
+│ [Embeds an existing poll from S15, by poll_id]   │
+├─────────────────────────────────────────────────┤
+│ BLOCK: qa_embed                                  │
+│ [Embeds a specific Q&A thread, by question_id]   │
+├─────────────────────────────────────────────────┤
+│ BLOCK: report_form                               │
+│ [A structured submission form — admin defines    │
+│  fields: text/select/checkbox — submissions       │
+│  land in a generic `page_submissions` table]      │
+├─────────────────────────────────────────────────┤
+│ BLOCK: magazine_grid                             │
+│ [Article card grid, filtered by category/tag —    │
+│  same ArticleCard component as S13]              │
+├─────────────────────────────────────────────────┤
+│ BLOCK: doctor_grid / hospital_grid                │
+│ [Curated list of specific doctor/hospital IDs —   │
+│  same Card components as S06/S08, admin hand-      │
+│  picks entities, e.g. "Camp Doctors" feature page] │
+├─────────────────────────────────────────────────┤
+│ BLOCK: cta_banner                                 │
+│ [Full-width colored banner, headline + button     │
+│  linking anywhere internal or external]           │
+├─────────────────────────────────────────────────┤
+│ BLOCK: faq_accordion                              │
+│ [Question/answer expandable list]                 │
+├─────────────────────────────────────────────────┤
+│ BLOCK: spacer / divider                           │
+│ [Layout utility — vertical gap or visual rule]     │
+└─────────────────────────────────────────────────┘
+```
+
+### Block Data Shape (Reference)
+```json
+{
+  "slug": "about-us",
+  "title": "আমাদের সম্পর্কে",
+  "show_in_menu": true,
+  "menu_icon": "📄",
+  "menu_order": 5,
+  "is_published": true,
+  "blocks": [
+    { "type": "hero", "image": "...", "title": "...", "subtitle": "..." },
+    { "type": "rich_text", "content_html": "..." },
+    { "type": "doctor_grid", "doctor_ids": ["uuid1","uuid2"], "heading": "..." }
+  ]
+}
+```
+Stored as JSONB (`custom_pages.blocks`) — each block type maps
+1:1 to a React component in a `BlockRenderer` switch, keeping the
+user-app fully declarative and admin-driven. Unknown/future block
+types render nothing (fail-safe, doesn't crash page) rather than
+erroring, so admin can add new block types over time without breaking
+already-published pages built with the older set.
+
+### SEO
+Each custom page gets its own meta title/description (admin-editable
+fields, separate from `title`), OG image (first `hero` or `image`
+block used as fallback), SSR (not SSG, since content changes without
+redeploy and freshness matters more than build-time caching here) with
+short ISR revalidate (~60s) for near-instant admin-edit reflection.
+
+---
+
+## S20 — NOTIFICATIONS CENTER · ANNOUNCEMENT BANNER
+
+### Announcement Banner
+Already specified in Home (S04 SEC-01) — reused verbatim wherever
+`notifications WHERE type IN ('general','emergency') AND is_active`
+needs surfacing. No separate spec needed here beyond that reference.
+
+### Notifications Center (`/notifications`)
+```
+┌─────────────────────────────────────────────────┐
+│ [←]         নোটিফিকেশন            [সব পড়া হয়েছে]│
+├─────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────┐     │
+│ │ ● 🚨 ডেঙ্গু সতর্কতা                       │     │  ← unread = dot +
+│ │   জ্বর হলে দেরি না করে ডাক্তার দেখান।     │     │    subtle bg tint
+│ │   ২ ঘণ্টা আগে                             │     │
+│ ├─────────────────────────────────────────┤     │
+│ │   ℹ️ কোচবিহার মেডিকেলে স্বাস্থ্য ক্যাম্প   │     │  ← read = plain
+│ │   ১ দিন আগে                                │     │
+│ ├─────────────────────────────────────────┤     │
+│ │ ● 💬 আপনার প্রশ্নের উত্তর এসেছে            │     │  ← personal type
+│ │   Dr. Sumana Das আপনার প্রশ্নের উত্তর       │     │
+│ │   দিয়েছেন                                 │     │
+│ │   ৩ দিন আগে                                │     │
+│ └─────────────────────────────────────────┘     │
+│                                                 │
+│         [আর কোনো নোটিফিকেশন নেই]                │  ← end of list
+└─────────────────────────────────────────────────┘
+```
+
+### Notification Types & Routing
+```
+general       → tap opens linked custom page or external URL, or
+                just marks read if no target (informational only)
+emergency     → same, typically links to /emergency or a health-alert
+                custom page
+personal      → account-specific (e.g. "your question was answered",
+                "your lead was contacted") → deep-links to the
+                relevant entity (Q&A thread, appointment history)
+```
+Personal notifications require sign-in to exist (tied to `user_id`);
+general/emergency broadcast to all users regardless of auth state
+(read-state tracked via localStorage `read_notification_ids[]` for
+guests, DB `notification_reads` table for signed-in users).
+
+### List Behavior
+Reverse-chronological, infinite scroll, unread items visually
+distinct (bold text + accent dot + subtle brand-50 row tint). "সব পড়া
+হয়েছে" marks all visible as read in one tap. Empty state: "কোনো
+নোটিফিকেশন নেই" + friendly illustration. Badge count (bottom-nav bell,
+More-page row) = live unread count, capped display at "9+".
+
+### Push Notification Note (Future Phase)
+This spec covers the in-app notification center (always required).
+Browser/PWA push notifications (via Web Push API + service worker) are
+a natural Phase 2 extension of this same data model — `notifications`
+table already supports it, no schema rework needed later, but push
+delivery mechanics are out of scope for this launch spec.
+
+---
+
+## S21 — SEO LANDING PAGES (`/[state]/[district]/[specialty]`)
+
+### Purpose
+Programmatic SEO — capture long-tail local search intent like
+"কোচবিহারে হৃদরোগ বিশেষজ্ঞ ডাক্তার" or "cardiologist in Cooch Behar"
+directly from Google, funneling into the same doctor-list experience
+but with a content-rich, crawlable landing shell around it.
+
+### URL Hierarchy
+```
+/[state]                          → State health hub
+/[state]/[district]               → District health hub
+/[state]/[district]/[specialty]   → District + specialty landing (most
+                                     valuable long-tail SEO target)
+```
+Generated via `generateStaticParams()` from DB (states × districts ×
+active specialties with ≥1 doctor) — SSG at build time for existing
+combinations, ISR (`revalidate: 21600` / 6hr) for freshness, with
+`dynamicParams: true` so new district/specialty combos (added later
+by admin) render on-demand on first request then get cached.
+
+### District + Specialty Page Layout
+```
+┌─────────────────────────────────────────────────┐
+│  [Standard app chrome: topbar + bottom nav]      │
+├─────────────────────────────────────────────────┤
+│  কোচবিহারে হৃদরোগ বিশেষজ্ঞ ডাক্তার              │  ← H1, SEO-crafted
+│  কোচবিহার জেলায় ৫ জন অভিজ্ঞ হৃদরোগ বিশেষজ্ঞ     │  ← intro paragraph,
+│  খুঁজে পান। ভেরিফাইড প্রোফাইল, রিভিউ ও সরাসরি    │    admin-templated,
+│  যোগাযোগের সুবিধা।                               │    auto-filled vars
+├─────────────────────────────────────────────────┤
+│  Breadcrumb: পশ্চিমবঙ্গ › কোচবিহার › হৃদরোগ      │  ← BreadcrumbList
+├─────────────────────────────────────────────────┤
+│  [Doctor Card] [Doctor Card] [Doctor Card] ...   │  ← SAME doctor list
+│                                                   │    query as S06,
+│                                                   │    pre-filtered
+├─────────────────────────────────────────────────┤
+│  কোচবিহারে হৃদরোগ বিশেষজ্ঞ সম্পর্কে প্রায়শই       │
+│  জিজ্ঞাসিত প্রশ্ন (FAQ accordion — admin-authored │
+│  generic FAQ template + variable substitution)    │
+├─────────────────────────────────────────────────┤
+│  আশেপাশের এলাকা: [তুফানগঞ্জ] [দিনহাটা] [→]        │  ← internal linking
+│  অন্যান্য বিভাগ: [শিশু রোগ] [চর্মরোগ] [→]         │    to related pages
+└─────────────────────────────────────────────────┘
+```
+
+### Content Generation Strategy
+Title/H1/intro/FAQ use **admin-defined templates with variable
+substitution** (`{district}`, `{specialty}`, `{doctor_count}`) rather
+than fully unique hand-written copy per page (impossible to scale to
+thousands of combinations) — while the doctor list itself is genuinely
+unique real data per page, satisfying both SEO thin-content concerns
+and practical content-ops reality.
+
+### Technical SEO
+Full meta title/description per page, canonical URL, `hreflang`
+alternates (bn default, en), `BreadcrumbList` + `MedicalBusiness`/
+`ItemList` JSON-LD, XML sitemap auto-generated (`/sitemap.xml` route
+handler queries all state/district/specialty combos + doctor/hospital
+slugs), internal linking footer (nearby districts, other specialties)
+to build crawl depth without orphaned pages.
+
+### Guardrail — No Empty SEO Pages
+`generateStaticParams()` only includes combinations with
+`doctor_count >= 1` — a district/specialty pairing with zero doctors
+never gets a public URL (avoids Google indexing empty/thin pages,
+which would hurt overall site SEO trust). As doctors get added, new
+valid combos appear and get picked up on next ISR cycle / on-demand
+render.
 
 ---
 
