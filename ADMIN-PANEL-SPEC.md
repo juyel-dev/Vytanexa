@@ -11,7 +11,7 @@ everything), and never require touching code to change the live app.
 
 - [x] A01 — Admin Design System · Component Philosophy (data-dense, desktop-first)
 - [x] A02 — Information Architecture · Navigation · Auth & Roles
-- [ ] A03 — Dashboard Home · Unified Moderation Queue Pattern
+- [x] A03 — Dashboard Home · Unified Moderation Queue Pattern
 - [ ] A04 — Locations Manager · Categories Manager
 - [ ] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
 - [ ] A06 — Hospitals Manager + Ambulance + Blood Bank Management
@@ -347,4 +347,134 @@ ready without any schema or code change, just assigning roles in A14.
 
 ---
 
-_(File continues — A03: Dashboard Home & Unified Moderation Queue Pattern, in next commit)_
+## A03 — DASHBOARD HOME · UNIFIED MODERATION QUEUE PATTERN
+
+### Dashboard Home (`/`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  স্বাগতম, জুয়েল 👋                          শনিবার, ১১ জুলাই │
+├─────────────────────────────────────────────────────────────┤
+│  ⏳ আজ যা মনোযোগ দরকার                                        │
+│  ┌───────────┐┌───────────┐┌───────────┐┌───────────┐       │
+│  │ ⭐ ৮ টি   ││ 🙋 ৩ টি   ││ 🚩 ২ টি   ││ 📋 ৫ টি   │       │
+│  │ রিভিউ     ││ প্রশ্ন     ││ রিপোর্ট    ││ নতুন লিড   │       │
+│  │ অপেক্ষমাণ  ││ অপেক্ষমাণ  ││ খোলা      ││            │       │
+│  │ [দেখুন →] ││ [দেখুন →] ││ [দেখুন →] ││ [দেখুন →] │       │
+│  └───────────┘└───────────┘└───────────┘└───────────┘       │
+├─────────────────────────────────────────────────────────────┤
+│  📊 এই মাসের সংক্ষিপ্ত চিত্র                                  │
+│  ┌─────────────────────┐  ┌─────────────────────┐           │
+│  │ মোট ডাক্তার: ২৪৩     │  │ মোট হাসপাতাল: ৬৮     │           │
+│  │ ↑ ১২ নতুন এই মাসে    │  │ ↑ ৩ নতুন এই মাসে     │           │
+│  └─────────────────────┘  └─────────────────────┘           │
+│  ┌─────────────────────┐  ┌─────────────────────┐           │
+│  │ পেজ ভিউ (৩০ দিন)      │  │ টপ সার্চ (এই সপ্তাহে) │           │
+│  │ [Line chart]          │  │ ১. মেডিসিন ডাক্তার    │           │
+│  │ ৪২,১৮০ ভিউ            │  │ ২. হৃদরোগ বিশেষজ্ঞ    │           │
+│  └─────────────────────┘  └─────────────────────┘           │
+├─────────────────────────────────────────────────────────────┤
+│  🕐 সাম্প্রতিক অ্যাডমিন কার্যকলাপ                              │
+│  • আপনি Dr. রহিম উদ্দিন কে ভেরিফাই করেছেন — ২ ঘণ্টা আগে       │
+│  • আপনি হোমপেজে নতুন ব্যানার যোগ করেছেন — ৫ ঘণ্টা আগে         │
+│  [পুরো অডিট লগ দেখুন →]                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Design Intent
+Dashboard answers ONE question first: **"আজ আমার কী করা দরকার?"** —
+the attention-needed row (pending queues) sits above the vanity-metrics
+row (totals/charts), reversed from typical admin dashboards that lead
+with charts. For a solo non-technical operator, "8 reviews waiting"
+is actionable; a line chart is not — so it's positioned as
+secondary/contextual, not the hero.
+
+### Attention Cards
+Each card: count (large, 28px bold), label, colored left-border
+matching urgency (reports=emergency-500, reviews/QA=accent-500,
+leads=brand-600), "দেখুন →" jumps directly into that queue with
+filters pre-applied (e.g. leads card → `/leads?status=new`). Card
+count = 0 → card auto-hides (no "0 pending" clutter), and if ALL
+queues are empty, the whole attention row collapses to a friendly
+"✅ সব কিছু আপ টু ডেট!" single-line state.
+
+### Recent Admin Activity
+Reads directly from `audit_logs` (DB Part 5), last 5 entries,
+human-readable action descriptions generated from
+`{action, entity_type, entity_id}` via a small formatter map — full
+detail lives in A14's dedicated Audit Log viewer.
+
+---
+
+## UNIFIED MODERATION QUEUE PATTERN
+> Reviews, Q&A, and Data Reports (three separate DB tables, three
+> separate routes: `/moderation/reviews`, `/moderation/qa`,
+> `/moderation/reports`) share ONE interaction pattern end-to-end.
+> Documenting it once here; each route is a thin data-binding on top
+> of this shared `<ModerationQueue>` component — avoids re-specifying
+> near-identical UI three times, and guarantees the operator learns
+> the pattern once and reuses it everywhere.
+
+### Shared Layout
+```
+┌─────────────────────────────────────────────────────────────┐
+│  রিভিউ মডারেশন                                                │
+├─────────────────────────────────────────────────────────────┤
+│  [অপেক্ষমাণ (৮)] [অনুমোদিত] [প্রত্যাখ্যাত]      🔍[খুঁজুন...]  │  ← status tabs
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ ⭐⭐⭐⭐⭐  Dr. Priyanka Das এর জন্য                     │    │
+│  │ "ওনার চিকিৎসা অনেক ভালো। ধৈর্য সহকারে..."              │    │
+│  │ — মো. করিম উদ্দিন  ·  ২ ঘণ্টা আগে                       │    │
+│  │ [✅ অনুমোদন করুন]  [❌ প্রত্যাখ্যান করুন]  [প্রোফাইল দেখুন]│    │
+│  └─────────────────────────────────────────────────────┘    │
+│  ... (repeats per pending item)                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Interaction Rules (Apply to All 3 Queues)
+```
+Approve tap:      instant action (not a form) — status → 'approved',
+                  triggers the relevant recalc trigger (rating, upvote/
+                  answer count) automatically at the DB layer (no admin-
+                  side calculation needed, per DB Part 4 design)
+                  Row fades out of "pending" list, toast: "অনুমোদিত ✅"
+
+Reject tap:       opens small inline reason field (optional, for
+                  internal record only, not shown to submitter) →
+                  status → 'rejected', row fades out
+
+Admin reply       (Reviews only, per S07 spec): inline textarea appears
+(reviews):        under approved reviews, saves to reviews.admin_reply
+
+Bulk actions:     checkbox-select multiple pending rows → sticky bar
+                  "৩ টি নির্বাচিত  [✅ সব অনুমোদন করুন] [❌ সব প্রত্যাখ্যান]"
+                  — critical for a solo operator facing a backlog after
+                  a busy day; approving one-by-one doesn't scale
+
+Context link:     every queue item links to the parent entity ("Dr.
+                  Priyanka Das" tappable → opens that doctor's edit
+                  page in a new tab) — moderation decisions often need
+                  quick context-checking without losing queue position
+
+Data Reports      "মার্ক রিজলভড" replaces approve/reject — reports
+(variant):        don't have content to approve, they flag something
+                  needing a manual fix elsewhere (e.g. admin reads the
+                  report, jumps to the entity, fixes the phone number,
+                  THEN marks report resolved) — resolved_by/resolved_at
+                  captured automatically (DB Part 5)
+```
+
+### Empty & Zero-State
+"🎉 এই মুহূর্তে অনুমোদনের অপেক্ষায় কিছু নেই" — friendly, not clinical,
+reinforces that an empty queue is a good outcome worth acknowledging
+for a solo operator's morale.
+
+### Why This Pattern Matters for "5-Year Thinking"
+Any FUTURE moderatable content type (e.g. if doctor-submitted content
+or a new UGC feature is added later) can adopt this exact
+`<ModerationQueue>` component with a new data adapter — this is the
+extensibility payoff of designing the pattern once, deliberately, now.
+
+---
+
+_(File continues — A04: Locations Manager · Categories Manager, in next commit)_
