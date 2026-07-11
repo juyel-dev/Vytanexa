@@ -28,7 +28,7 @@
 - [x] S19 — Custom Pages / Block Builder
 - [x] S20 — Notifications Center · Announcement Banner
 - [x] S21 — SEO Landing Pages (State/District/Specialty)
-- [ ] S22 — Offline Page · PWA · Next.js Architecture · i18n
+- [x] S22 — Offline Page · PWA · Next.js Architecture · i18n
 - [ ] DB  — Complete Database Schema (Supabase/PostgreSQL)
 - [ ] ADMIN — Admin Panel (Ultra God Mode) Full Design
 
@@ -1493,4 +1493,140 @@ render.
 
 ---
 
-_(File continues — next sections appended in subsequent commits)_
+## S22 — OFFLINE PAGE · PWA · NEXT.JS ARCHITECTURE · i18n
+
+### Offline Page (`/offline`)
+```
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│           [OFFLINE ILLUSTRATION — SVG]           │
+│                                                 │
+│         ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না          │
+│                                                 │
+│    কিছু তথ্য অফলাইনেও দেখা যেতে পারে।           │
+│                                                 │
+│         [🚨 জরুরি নম্বর দেখুন]                   │  ← always works,
+│                                                  │    precached (S12)
+│         [🔄 আবার চেষ্টা করুন]                    │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+This is the service-worker fallback route — served automatically by
+`next-pwa` when a navigation request fails with no network AND no
+cache match exists for that route. Emergency page + national numbers
+are the one guaranteed-functional path shown prominently here.
+
+### PWA Configuration
+```
+next.config.js (next-pwa):
+  - Precache: app shell, root layout chrome, /emergency route,
+    core fonts, logo/icon assets, offline.html fallback
+  - Runtime cache strategies:
+    • Doctor/Hospital profile pages    → StaleWhileRevalidate
+    • Home page                         → NetworkFirst (5s timeout,
+                                           falls back to cache)
+    • Images (next/image optimized)     → CacheFirst, 30-day expiry
+    • API routes (/api/search etc.)     → NetworkOnly (never stale)
+    • Static assets (fonts, icons)      → CacheFirst, 1-year expiry
+
+manifest.ts (Next.js generated):
+  name: "Vytanexa", short_name: "Vytanexa"
+  theme_color: brand-600 (#1756C8)
+  background_color: #FFFFFF
+  display: "standalone"
+  orientation: "portrait"
+  icons: [192px, 512px, maskable variant]
+  start_url: "/"
+```
+
+### Install Prompt
+Already specified in Home SEC-13 (S04) — triggers on visit≥2, uses the
+native `beforeinstallprompt` event captured in a top-level provider,
+deferred and replayed on user tap.
+
+### Next.js App Architecture Summary
+```
+Framework:        Next.js 14+ App Router, TypeScript strict mode
+Rendering mix:     SSR (lists, search) · SSG+ISR (profiles, SEO pages,
+                   articles) · CSR (search interactions, account,
+                   settings, onboarding)
+Data fetching:      Server Components query Supabase directly (service
+                   role for admin-only reads, anon/RLS-scoped key for
+                   public reads) · Client Components use a thin
+                   fetch wrapper hitting Route Handlers for mutations
+State management:   Zustand for cross-page client state (onboarding,
+                   location, filters-in-progress) · URL search params
+                   as source of truth for shareable list/filter state
+                   · React Server Component props for initial SSR data
+Styling:            Tailwind CSS, design tokens from S01 mapped into
+                   tailwind.config.ts theme.extend
+Forms/validation:   react-hook-form + Zod schemas shared between
+                   client validation and Route Handler server-side
+                   validation (single source of truth per form)
+Image handling:     next/image throughout, Supabase Storage as origin,
+                   responsive sizes per component (documented inline
+                   per component in S04-S09)
+```
+
+### Folder Structure (High-Level)
+```
+app/               ← routes (full map in S02 §3.1)
+components/
+  ui/              ← atoms (Button, Badge, Chip, Input...)
+  shared/          ← molecules/organisms (DoctorCard, HospitalCard...)
+  layout/          ← BottomNav, TopBar variants, FAB, LocationChip
+lib/
+  supabase/        ← client.ts (browser), server.ts (RSC), admin.ts
+  validations/      ← Zod schemas per form/entity
+  utils/            ← formatters (fee, date, phone), schedule grouping
+messages/           ← bn.json, en.json, hi.json (next-intl)
+stores/             ← Zustand slices (onboarding, filters, ui)
+types/              ← generated Supabase types + shared interfaces
+```
+
+### i18n Implementation (next-intl)
+Cookie-based locale (no URL prefix, rationale in S02 §7). Static UI
+strings from `messages/{locale}.json`. Dynamic DB content resolved via
+a helper `getLocalizedField(record, 'name', locale)` reading the
+`*_translations` JSONB column with fallback chain: requested locale →
+`bn` (default) → `en` → first available key — guarantees no blank
+text ever renders even if a translation is missing for a given
+language, which will happen often early on since admin won't backfill
+every language for every record immediately.
+
+### Performance Budgets (Design Constraint, Referenced Throughout)
+```
+Target device baseline:   low-end Android, 3G/4G intermittent network
+                         (North Bengal + broader India rural reality)
+LCP target:               < 2.5s on Home (SSR + minimal JS above fold)
+JS bundle (initial):      route-based code splitting, no single route
+                         bundle > 150KB gzipped
+Images:                    WebP/AVIF via next/image, aggressive
+                         lazy-loading below fold (already specified
+                         per-component in S04, S06, S08)
+Fonts:                     next/font self-hosted (no external Google
+                         Fonts network request), font-display: swap
+```
+
+---
+
+## ✅ SCREEN-BY-SCREEN DESIGN SPEC — COMPLETE (S01–S22)
+
+All 22 sections of the user-facing app are now fully specified and
+committed to this repository. Every screen, component, state (loading/
+empty/error), interaction, animation, and data-binding contract has
+been documented to implementation-ready precision.
+
+**Next phases (upcoming commits, same repository):**
+1. **Database Schema** — complete Supabase/PostgreSQL schema covering
+   every table referenced throughout S01-S22 (locations hierarchy,
+   doctors/chambers/hospitals, leads, subscriptions, custom_pages,
+   notifications, Q&A/polls/reports, i18n JSONB columns, RLS policies)
+2. **Admin Panel — Ultra God Mode** — full screen-by-screen spec for
+   the Next.js admin application: layout control, content control,
+   business control, theme control, and the custom page/block builder
+   authoring UI that powers S19.
+
+---
+
+_(File continues — Database Schema section begins next)_
