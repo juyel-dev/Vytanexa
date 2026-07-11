@@ -23,7 +23,7 @@ everything), and never require touching code to change the live app.
 - [x] A12 — Subscription Plans Manager · Ads Manager
 - [x] A13 — Leads Inbox
 - [x] A14 — Admin Users/Roles · Audit Log Viewer
-- [ ] A15 — Analytics Dashboard · General Settings
+- [x] A15 — Analytics Dashboard · General Settings
 
 ---
 
@@ -1512,4 +1512,62 @@ un-deletable from the UI (matches its zero-RLS-access design, DB Part 5).
 
 ---
 
-_(File continues — A15: Analytics Dashboard · General Settings — FINAL admin panel section — in next commit)_
+## A15 — ANALYTICS DASHBOARD · GENERAL SETTINGS (Final Section)
+
+### Analytics Dashboard (`/analytics`)
+```
+[তারিখ পরিসীমা: গত ৩০ দিন ▾]
+┌─────────────┐┌─────────────┐┌─────────────┐┌─────────────┐
+│পেজ ভিউ       ││কল ক্লিক      ││WhatsApp ক্লিক││নতুন লিড      │
+│৪২,১৮০ ↑১২%  ││১,২৪০ ↑৮%    ││৮৯০ ↑১৫%     ││১৫৬ ↑৫%      │
+└─────────────┘└─────────────┘└─────────────┘└─────────────┘
+[Line chart: daily traffic]
+টপ ডাক্তার (ভিউ অনুযায়ী)      টপ সার্চ কোয়েরি
+১. Dr. Priyanka — ২,৪০০      ১. মেডিসিন ডাক্তার
+２. Dr. Rahul — ১,৮৯০         ২. হৃদরোগ বিশেষজ্ঞ
+এলাকা অনুযায়ী ট্রাফিক (মানচিত্র/তালিকা)
+```
+All cards read from `analytics_events` (DB Part 5) via aggregation
+queries — this screen is purely read-only reporting, no writes. Given
+the table's monthly-partition design, date-range queries stay fast
+even at year-3/year-5 data volumes. Export-to-CSV button on every
+table for offline reporting/investor updates.
+
+### General Settings (`/settings`)
+```
+অ্যাপের নাম, ডিফল্ট ভাষা, সমর্থিত ভাষাসমূহ [বাংলা✓ English✓ हिन्दी✓ +যোগ করুন]
+  ← adding a new locale here is the trigger point for a NEW
+    messages/{locale}.json file needing translation (app-code-side
+    task) — this screen registers the intent, translation work follows
+SEO ডিফল্ট (site-wide meta fallback)
+```
+Deliberately thin — most "settings" already live in their dedicated
+God Mode screens (A07/A08); this page holds only the few remaining
+singleton fields that don't fit elsewhere. `super_admin` only.
+
+---
+
+## ✅ ADMIN PANEL SPEC — COMPLETE (A01–A15)
+
+**15 sections, full God Mode control surface specified** — every
+piece of the live user app (S01-S22) now has a corresponding
+non-technical, safety-netted admin screen: entity CRUD, moderation,
+homepage/theme/footer/menu control, block-based page authoring,
+content publishing, business/monetization tools, and system
+accountability (roles, audit log).
+
+**Repo status:** `juyel-dev/Vytanexa` now holds three complete,
+implementation-ready documents — `VYTANEXA-BLUEPRINT.md` (user app,
+S01-S22), `DATABASE-SCHEMA.md` (37 tables, Parts 1-5),
+`ADMIN-PANEL-SPEC.md` (A01-A15). This is a full production-ready
+specification package, ready to hand to a coding agent/Claude Code
+for implementation.
+
+**Natural next steps (your call, not started yet):**
+1. Implementation — scaffold the Next.js user app + admin app +
+   Supabase project from these three documents
+2. A lightweight `IMPLEMENTATION-ROADMAP.md` — phased build order
+   (DB first → user app core → admin core → god-mode → polish)
+3. Fill the two open items noted along the way: standalone-ambulance
+   decision (resolved), payment gateway choice (still open, fine to
+   defer)
