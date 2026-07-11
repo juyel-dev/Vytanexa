@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Theme CSS variable bridge.
+ * Defaults here mirror packages/config/design-tokens.js. At runtime,
+ * the root layout reads `app_settings.theme_colors` (DATABASE-SCHEMA.md
+ * § 1.5) and injects overrides for these same variable names — this is
+ * how the Admin Panel's Theme Editor (ADMIN-PANEL-SPEC.md § A07) takes
+ * effect instantly with no redeploy. Wired up in Phase 2 (S01/S04);
+ * placeholder defaults only for now.
+ */
+:root {
+  --color-brand-600: #1756c8;
+  --color-life-600: #0caf74;
+  --color-emergency-600: #dc2626;
+  --color-accent-500: #f59e0b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-neutral-50 text-neutral-900;
+  font-family: var(--font-sans, 'Plus Jakarta Sans'), sans-serif;
+}
