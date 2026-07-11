@@ -16,7 +16,7 @@ everything), and never require touching code to change the live app.
 - [x] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
 - [x] A06 — Hospitals Manager + Ambulance + Blood Bank Management
 - [x] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
-- [ ] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
+- [x] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
 - [ ] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
 - [ ] A10 — Articles CMS · Q&A Management
 - [ ] A11 — Polls Composer · Notifications/Announcement Composer
@@ -948,4 +948,110 @@ for the performance benefit ISR gives everywhere else.
 
 ---
 
-_(File continues — A08: Footer/Social/Contact Editor · Feature Flags · Menu Manager, in next commit)_
+## A08 — FOOTER/SOCIAL/CONTACT EDITOR · FEATURE FLAGS · MENU MANAGER
+
+### Footer & Social & Contact (`/god-mode/footer`)
+Lower blast-radius than A07 (no live-iframe preview needed — simpler
+form, instant clarity), but still `super_admin`-only per A02, still
+writes to `app_settings`.
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ফুটার, সোশ্যাল ও যোগাযোগ                      [সংরক্ষণ করুন]│
+├─────────────────────────────────────────────────────────────┤
+│  ট্যাগলাইন                                                    │
+│  [আপনার স্বাস্থ্য, আপনার সংযোগ_______________]                │
+├─────────────────────────────────────────────────────────────┤
+│  সোশ্যাল লিংক                                                 │
+│  📘 Facebook  [___________________]                          │
+│  📸 Instagram [___________________]                          │
+│  🐦 Twitter/X [___________________]                          │
+│  ▶️ YouTube    [___________________]                          │
+│  (blank = icon hidden from footer entirely — no dead links)   │
+├─────────────────────────────────────────────────────────────┤
+│  যোগাযোগ তথ্য                                                 │
+│  ফোন     [___________]  ইমেইল [___________]                  │
+│  WhatsApp [___________]                                       │
+│  ← THIS is the single source that populates the "সাপোর্ট" /    │
+│    contact touchpoints referenced throughout S16, S22          │
+├─────────────────────────────────────────────────────────────┤
+│  কুইক লিংক (ফুটারে দেখাবে)          [+ লিংক যোগ করুন]         │
+│  [⠿] শর্তাবলী       → /terms              [✏️][🗑️]           │
+│  [⠿] গোপনীয়তা নীতি  → /privacy            [✏️][🗑️]           │
+│  [⠿] আমাদের সম্পর্কে → /page/about-us      [✏️][🗑️]           │
+│  ← can link to (static) routes OR any custom_pages slug        │
+│    (dropdown picker, not free-text URL, prevents typos/404s)   │
+└─────────────────────────────────────────────────────────────┘
+```
+Every field here maps directly to a named column/key in `app_settings`
+(DB Part 1: `social_links`, `contact_phone/email/whatsapp`,
+`footer_links`) — this is the most direct "form-over-a-JSON-column"
+screen in the whole panel, deliberately kept boring/simple since it's
+low-risk, high-frequency-edit content (contact info changes, a social
+link gets added) that shouldn't need the ceremony of A07's preview
+step.
+
+---
+
+### Feature Flags (`/god-mode/flags`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ফিচার ফ্ল্যাগ                                                │
+├─────────────────────────────────────────────────────────────┤
+│  🙋 কমিউনিটি প্রশ্নোত্তর (Q&A)              [○────] বন্ধ      │
+│     চালু করলে ইউজাররা প্রশ্ন করতে ও উত্তর দেখতে পারবে,        │
+│     এবং হোমপেজে/মেনুতে এই ফিচার দেখা যাবে।                    │
+│                                                               │
+│  📊 জরিপ (Polls)                            [────●] চালু     │
+│  📰 স্বাস্থ্য আর্টিকেল                       [────●] চালু     │
+│  🩸 ব্লাড সার্ভিস                            [────●] চালু     │
+│  🎙️ ভয়েস সার্চ                              [────●] চালু     │
+└─────────────────────────────────────────────────────────────┘
+```
+Each toggle = one key in `app_settings.features` JSONB (DB Part 1).
+**This is the extensibility point we designed for** — when a NEW
+feature is built later (per your "5-year" instruction), it only needs
+ONE new JSON key + ONE new toggle row here; no schema migration, no
+redeploy to turn it on/off. Every toggle's description text explains
+the DOWNSTREAM effect in plain language (what the user sees change) —
+critical for a non-technical operator to toggle confidently rather
+than guessing.
+
+Toggling OFF a feature that has existing content (e.g. turning off
+Q&A when questions already exist) does NOT delete anything — content
+stays in the DB, simply stops rendering/routing in the user app until
+re-enabled. Confirmed safe, reversible, matches soft-delete philosophy
+throughout.
+
+---
+
+### Menu Manager (`/god-mode/menu`)
+> This screen is really a **filtered view into Custom Pages** (A09) —
+> specifically the `show_in_menu` / `menu_icon` / `menu_order` fields
+> — surfaced here as its own screen because "what shows in the
+> hamburger menu" (S16) is a distinct mental task from "authoring page
+> content," even though it's the same underlying table.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  মেনু ম্যানেজার (হ্যামবার্গ মেনুতে যা দেখাবে)                  │
+├─────────────────────────────────────────────────────────────┤
+│  স্ট্যাটিক আইটেম (কোড থেকে আসে, ক্রম পরিবর্তনযোগ্য নয়)         │
+│  আমার অ্যাকাউন্ট, স্বাস্থ্য টুলস, কমিউনিটি, সেটিংস, সহায়তা      │
+│  ─────────────────────────────────────────────────────────  │
+│  কাস্টম পেজ (আপনার তৈরি করা, এখানে সাজান)                      │
+│  [⠿] 📄 আমাদের সম্পর্কে         মেনুতে দেখাবে ☑    [✏️]      │
+│  [⠿] 📄 স্বাস্থ্য ক্যাম্প ২০২৬    মেনুতে দেখাবে ☑    [✏️]      │
+│  [⠿] 📄 বার্ষিক প্রতিবেদন        মেনুতে দেখাবে ☐    [✏️]      │
+│  [+ নতুন কাস্টম পেজ তৈরি করুন →]  (jumps to A09 builder)       │
+└─────────────────────────────────────────────────────────────┘
+```
+Drag-reorders `menu_order` among custom pages only (the 5 static
+S16 groups are structurally fixed in the app code — reordering THOSE
+would require touching S02's navigation architecture, correctly out
+of scope for a content-level admin control). Checkbox = `show_in_menu`
+toggle, instant effect on next S16 page load for all users (same
+5-minute-ISR-worst-case as theme changes).
+
+---
+
+_(File continues — A09: Custom Page / Block Builder  ★ Biggest Single Screen ★, in next commit)_
