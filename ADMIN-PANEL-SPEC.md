@@ -17,7 +17,7 @@ everything), and never require touching code to change the live app.
 - [x] A06 — Hospitals Manager + Ambulance + Blood Bank Management
 - [x] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
 - [x] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
-- [ ] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
+- [x] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
 - [ ] A10 — Articles CMS · Q&A Management
 - [ ] A11 — Polls Composer · Notifications/Announcement Composer
 - [ ] A12 — Subscription Plans Manager · Ads Manager
@@ -1054,4 +1054,131 @@ toggle, instant effect on next S16 page load for all users (same
 
 ---
 
-_(File continues — A09: Custom Page / Block Builder  ★ Biggest Single Screen ★, in next commit)_
+## A09 — CUSTOM PAGE / BLOCK BUILDER ★ Biggest Single Screen ★
+
+> Authors `custom_pages.blocks` JSONB (DB Part 1) that S19 renders on
+> the user app via `/page/[slug]`. This is where "কিভাবে custom page
+> add করব" (your original question) gets its full answer.
+
+### Page List (`/pages`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  কাস্টম পেজ                                [+ নতুন পেজ তৈরি]│
+├─────────────────────────────────────────────────────────────┤
+│ শিরোনাম          │স্ট্যাটাস  │মেনুতে│শেষ সম্পাদনা│একশন       │
+│ আমাদের সম্পর্কে   │✅প্রকাশিত│✓    │২ দিন আগে   │✏️ ⋯       │
+│ স্বাস্থ্য ক্যাম্প  │📝খসড়া   │✗    │১ ঘণ্টা আগে │✏️ ⋯       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### New Page — Minimal Start Modal
+```
+┌─────────────────────────────────────────────┐
+│  নতুন পেজ তৈরি করুন                            │
+│  শিরোনাম* [___________________________]     │
+│  URL (স্লাগ) [auto-generated: /page/____]    │
+│  [তৈরি করুন → বিল্ডারে যান]                   │
+└─────────────────────────────────────────────┘
+```
+Title + slug only — everything else happens inside the builder. Slug
+auto-generates from title (editable), validated unique against
+`custom_pages.slug` live as-you-type.
+
+### The Builder — 3-Column Workspace
+```
+┌──────────┬───────────────────────────────┬──────────────────┐
+│ ব্লক যোগ │         CANVAS                │  [👁️প্রিভিউ][প্রকাশ]│
+│ করুন     │  (page renders top→bottom,     │                  │
+│          │   exactly as it will appear)   │  ▸ পেজ সেটিংস     │
+│ [🖼️Hero] │ ┌───────────────────────────┐ │    (meta title,   │
+│ [📝Text] │ │ HERO BLOCK        [⠿][✏️][🗑️]│ │     description,  │
+│ [🖼️Image]│ │ [thumbnail preview of the  │ │     OG image)     │
+│ [📊Poll] │ │  actual hero image+title]  │ │                  │
+│ [🙋Q&A]  │ └───────────────────────────┘ │  ▾ নির্বাচিত ব্লক  │
+│ [📋Form] │ ┌───────────────────────────┐ │    সম্পাদনা         │
+│ [📰Mag]  │ │ RICH TEXT      [⠿][✏️][🗑️]│ │    (property panel│
+│ [👨‍⚕️Doc] │ │ "কোচবিহার মেডিকেলে..."     │ │     for whichever  │
+│ [🏥Hosp] │ └───────────────────────────┘ │     block is       │
+│ [📢CTA]  │ ┌───────────────────────────┐ │     currently      │
+│ [❓FAQ]  │ │ + এখানে ব্লক যোগ করুন      │ │     selected —     │
+│ [➖Space]│ └───────────────────────────┘ │     see below)     │
+└──────────┴───────────────────────────────┘ └──────────────────┘
+```
+
+### Left Panel — Block Library
+Click any block type → inserts at the end of canvas (or at a specific
+"+ এখানে যোগ করুন" drop-zone between existing blocks, if clicked
+there instead) with sensible empty defaults. Each library item shows
+a tiny icon + 1-line description on hover ("Hero: বড় ছবি ও শিরোনাম
+দিয়ে পেজ শুরু করুন") — helps a non-technical operator pick the right
+block without jargon.
+
+### Canvas — WYSIWYG-ish Block List
+Each block renders as an **actual mini-preview** of its real content
+(not a generic gray placeholder) — reinforces "what you see is what
+publishes." Per-block hover controls: `[⠿ drag-reorder] [✏️ edit] [🗑️
+delete]`. Clicking a block (not just its edit icon) selects it and
+opens its property panel on the right — single-click-to-edit, no
+modal-within-modal nesting.
+
+### Right Panel — Block Property Editors (Per Type)
+```
+HERO:          ছবি [MediaUploader], শিরোনাম, সাবটাইটেল
+RICH_TEXT:     [RichTextEditor from A01 — constrained toolbar]
+IMAGE:         ছবি [MediaUploader], ক্যাপশন (ঐচ্ছিক)
+POLL:          বিদ্যমান জরিপ বেছে নিন [dropdown, searches polls table]
+                or [+ নতুন জরিপ তৈরি করুন → jumps to A11]
+QA_EMBED:      বিদ্যমান প্রশ্ন বেছে নিন [dropdown, searches questions]
+REPORT_FORM:   ফর্ম শিরোনাম, ফিল্ড যোগ করুন:
+                [+ টেক্সট ফিল্ড] [+ ড্রপডাউন] [+ চেকবক্স]
+                each added field: লেবেল*, আবশ্যক? ☐
+                ← generates the field-shape consumed by
+                  page_submissions.submission_data (DB Part 1)
+MAGAZINE_GRID: বিভাগ ফিল্টার (ঐচ্ছিক) [dropdown], শিরোনাম টেক্সট
+DOCTOR_GRID:   ডাক্তার বেছে নিন [multi-select searchable picker,
+                same pattern as A06's test-catalog picker], শিরোনাম
+HOSPITAL_GRID: (same pattern as Doctor Grid)
+CTA_BANNER:    শিরোনাম, বাটন টেক্সট, লিংক [internal page picker OR
+                external URL toggle], রঙ [brand/life/emergency preset]
+FAQ_ACCORDION: [+ প্রশ্ন যোগ করুন] → প্রশ্ন + উত্তর pairs, reorderable
+SPACER:        উচ্চতা [ছোট/মাঝারি/বড়]
+```
+Every property editor is a **plain form — never raw JSON** (A01's
+`JSONPreview` philosophy: an "advanced" toggle can reveal the
+underlying JSON for transparency/debugging, but is never required).
+
+### Autosave + Draft/Publish (Critical for This Screen Specifically)
+Given this is the longest, most failure-prone-to-lose-work screen in
+the panel (per A01's stated principle): **autosaves every 30 seconds**
+to `custom_pages.blocks` with `is_published` left untouched — meaning
+work-in-progress is never lost to a closed tab, AND never accidentally
+goes live mid-edit, because publish state is independent of save state.
+```
+[👁️ প্রিভিউ]  → opens live-iframe preview (same mechanism as A07),
+               rendered from the DRAFT blocks state, not yet public
+[প্রকাশ করুন]  → sets is_published = true, ConfirmDialog:
+               "এই পেজ এখন সবার জন্য দেখা যাবে এই লিংকে: vytanexa.app/
+               page/about-us — প্রকাশ করবেন?"
+```
+Once published, further edits continue autosaving to the SAME row
+(no separate draft/live copy — simpler mental model for a
+non-technical operator, at the cost of a brief edit-to-effect gap
+matching the app's ISR window, same trade-off as A07/A08). If an
+operator wants to stage a big edit to an already-live page without
+disrupting it, the practical workaround is documented as a tooltip:
+"বড় পরিবর্তন করার আগে, পেজটি ডুপ্লিকেট করে খসড়ায় কাজ করুন" — pointing
+at a **Duplicate Page** action in the list view's `⋯` menu, a
+lightweight escape hatch rather than building full page-versioning
+(deliberately out of scope for launch — noted as a Phase 2 candidate
+if the need proves real).
+
+### Delete Safety
+Deleting a page with `page_submissions` (report_form responses
+already collected) warns: "এই পেজে ৩টি সাবমিশন জমা পড়েছে। পেজ
+মুছলে সেগুলো দেখা যাবে না।" — soft-delete either way (data isn't
+destroyed, per global convention), but the warning prevents an
+operator from losing sight of collected responses unknowingly.
+
+---
+
+_(File continues — A10: Articles CMS · Q&A Management, in next commit)_
