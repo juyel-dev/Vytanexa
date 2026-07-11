@@ -18,7 +18,7 @@ everything), and never require touching code to change the live app.
 - [x] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
 - [x] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
 - [x] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
-- [ ] A10 — Articles CMS · Q&A Management
+- [x] A10 — Articles CMS · Q&A Management
 - [ ] A11 — Polls Composer · Notifications/Announcement Composer
 - [ ] A12 — Subscription Plans Manager · Ads Manager
 - [ ] A13 — Leads Inbox
@@ -1181,4 +1181,94 @@ operator from losing sight of collected responses unknowingly.
 
 ---
 
-_(File continues — A10: Articles CMS · Q&A Management, in next commit)_
+## A10 — ARTICLES CMS · Q&A MANAGEMENT
+
+### Articles List (`/articles`)
+Standard `DataTable`: cover thumbnail, title, category, author, status
+(খসড়া/প্রকাশিত), views, published date. Filters: status, category.
+
+### Create/Edit Article
+```
+▾ মূল বিষয়বস্তু
+  কভার ছবি [MediaUploader, 16:9, auto-crop]
+  শিরোনাম (বাংলা/English/हिन्दी)*
+  বিভাগ [ডায়াবেটিস টিপস ▾]  ট্যাগ [multi-input chips]
+  বিষয়বস্তু* [RichTextEditor — full width, primary focus of screen]
+  আনুমানিক পড়ার সময়: ৩ মিনিট  ← auto-calculated from word count,
+                                  editable override
+▾ লেখক
+  ○ কোনো ডাক্তার লিংক করুন [🔍 ডাক্তার খুঁজুন...]
+    ← byline becomes tappable → doctor profile (S13 spec)
+  ○ শুধু নাম লিখুন [___________]  ← guest/editorial byline, no link
+▸ SEO                                             [collapsed]
+  meta_title, meta_description
+[খসড়া সংরক্ষণ]  [প্রকাশ করুন]
+```
+Autosave every 30s (A01 pattern, same rationale as A09 — long-form
+writing is exactly the failure mode autosave protects against).
+`editor` role (A02 matrix) can create/edit but only reaches "খসড়া
+সংরক্ষণ" — publish button is disabled with tooltip "প্রকাশ করার
+অনুমতি নেই, admin-কে জানান" for that role, enforced both client-hidden
+and server-rechecked (A02's defense-in-depth pattern).
+
+### Delete Safety
+Soft-delete only; if article has meaningful `view_count` (>0), a
+gentle note: "এই আর্টিকেলটি ইতিমধ্যে ৪২৮ বার দেখা হয়েছে" — informational,
+not a block, just context before an operator deletes something with
+real traffic.
+
+---
+
+### Q&A Management (`/moderation/qa` handles approve/reject per A03's
+unified pattern — THIS screen, `/qa-management`, is the separate
+**"answer on behalf of a doctor"** workflow referenced as an open
+scope decision back in S14)
+
+### The Scope Decision, Resolved
+S14 flagged: doctor answers need *some* mechanism since there's no
+doctor-facing portal at launch. Resolution: **admin posts answers on
+behalf of verified doctors** here, with the doctor's identity properly
+attributed (`answers.doctor_id` set) so the ✅ Verified Doctor badge
+and specialty link render correctly on the live app — this requires
+zero new infrastructure (no doctor login system) while still
+delivering the credibility signal S14's design depends on. Real
+doctor self-service answering becomes a natural Phase 2 (the schema
+already supports it — `answers.doctor_id` doesn't care whether a
+human-admin or a future doctor-login set it).
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  প্রশ্নোত্তর ম্যানেজমেন্ট                                       │
+├─────────────────────────────────────────────────────────────┤
+│  [অনুত্তরিত (৫)] [সব প্রশ্ন]                                   │
+├─────────────────────────────────────────────────────────────┤
+│  ❓ ডায়াবেটিস থাকলে কি আম খাওয়া যাবে?                          │
+│     বিভাগ: ডায়াবেটিস  ·  ২ দিন আগে জিজ্ঞাসা করা হয়েছে           │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │  উত্তর দিন এই ডাক্তারের পক্ষ থেকে:                        │
+│  │  [🔍 ডাক্তার খুঁজুন... Dr. Sumana Das]                    │
+│  │  ┌─────────────────────────────────────────────────┐   │   │
+│  │  │ [RichTextEditor — answer body]                   │   │   │
+│  │  └─────────────────────────────────────────────────┘   │   │
+│  │  [উত্তর প্রকাশ করুন]                                     │
+│  └───────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+Doctor picker requires selecting a `verification_status='verified'`
+doctor — an unverified doctor cannot be attributed an answer (prevents
+the credibility badge from ever appearing on an unvetted profile,
+consistent with the RLS enforcement point from DB Part 2).
+Answers posted here are inserted with `status='approved'` directly
+(admin-authored content skips the moderation queue it would otherwise
+need — admin IS the moderator in this flow) and `answer_count`
+auto-updates via the existing DB trigger (Part 4).
+
+**Practical workflow note:** since there's no doctor login yet, the
+real-world process is: doctor answers via phone/WhatsApp to you (the
+admin) → you transcribe/paraphrase into this form → publish. This is
+manual by necessity at launch scale, and the UI doesn't pretend
+otherwise — it's built for exactly this human-in-the-loop reality.
+
+---
+
+_(File continues — A11: Polls Composer · Notifications/Announcement Composer, in next commit)_
