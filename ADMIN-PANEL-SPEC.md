@@ -10,7 +10,7 @@ everything), and never require touching code to change the live app.
 ## TABLE OF CONTENTS
 
 - [x] A01 — Admin Design System · Component Philosophy (data-dense, desktop-first)
-- [ ] A02 — Information Architecture · Navigation · Auth & Roles
+- [x] A02 — Information Architecture · Navigation · Auth & Roles
 - [ ] A03 — Dashboard Home · Unified Moderation Queue Pattern
 - [ ] A04 — Locations Manager · Categories Manager
 - [ ] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
@@ -179,4 +179,172 @@ Autosave drafts:        long forms (Custom Page builder, Article editor)
 
 ---
 
-_(File continues — A02: Information Architecture, Navigation, Auth & Roles, in next commit)_
+## A02 — INFORMATION ARCHITECTURE · NAVIGATION · AUTH & ROLES
+
+### Sidebar Navigation Map
+```
+📊 ড্যাশবোর্ড
+─────────────────────────
+এন্টিটি ম্যানেজমেন্ট
+  👨‍⚕️ ডাক্তার
+  🏥 হাসপাতাল
+  📍 এলাকা (Locations)
+  🏷️ বিভাগ (Categories)
+  🩸 ব্লাড ব্যাংক
+  🚑 অ্যাম্বুলেন্স
+─────────────────────────
+মডারেশন
+  ⭐ রিভিউ                    [count badge]
+  🙋 প্রশ্নোত্তর               [count badge]
+  🚩 তথ্য রিপোর্ট             [count badge]
+─────────────────────────
+কন্টেন্ট
+  📰 আর্টিকেল
+  📊 জরিপ (Polls)
+  📄 কাস্টম পেজ
+  🔔 নোটিফিকেশন
+─────────────────────────
+বিজনেস
+  📋 লিড ইনবক্স                [count badge]
+  💳 সাবস্ক্রিপশন প্ল্যান
+  📢 বিজ্ঞাপন
+─────────────────────────
+গড মোড কন্ট্রোল
+  🏠 হোমপেজ সেকশন
+  🎨 থিম এডিটর
+  📱 ফুটার ও সোশ্যাল
+  🚩 ফিচার ফ্ল্যাগ
+  ☰ মেনু ম্যানেজার
+─────────────────────────
+সিস্টেম
+  📈 অ্যানালিটিক্স
+  👤 অ্যাডমিন ও রোল
+  📜 অডিট লগ
+  ⚙️ সেটিংস
+─────────────────────────
+[Admin Avatar]  নাম, রোল       [সাইন আউট]
+```
+
+### Sidebar Grouping Rationale
+6 groups, not a flat 20-item list — matches how the underlying schema
+is organized (Parts 1-5) so the mental model stays consistent between
+"what admin panel section am I in" and "which DB tables am I touching."
+**"গড মোড কন্ট্রোল"** is its own distinct group (not buried in Content)
+because these are the highest-leverage, highest-blast-radius screens —
+visually separated to make the operator pause and be deliberate.
+
+### Route Map (Next.js App Router — Separate App from User App)
+```
+admin/app/
+├── (auth)/
+│   └── login/page.tsx              ← /login, no sidebar
+├── (dashboard)/                    ← sidebar shell layout
+│   ├── layout.tsx                  ← auth guard + role check + sidebar
+│   ├── page.tsx                    ← / → Dashboard Home
+│   ├── doctors/
+│   │   ├── page.tsx                ← list
+│   │   ├── new/page.tsx            ← create
+│   │   └── [id]/page.tsx           ← edit
+│   ├── hospitals/{page,new,[id]}.tsx
+│   ├── locations/page.tsx          ← tree view, inline CRUD (no separate new/edit route)
+│   ├── categories/page.tsx
+│   ├── blood-donors/page.tsx
+│   ├── ambulance/{page,new,[id]}.tsx
+│   ├── moderation/
+│   │   ├── reviews/page.tsx
+│   │   ├── qa/page.tsx
+│   │   └── reports/page.tsx
+│   ├── articles/{page,new,[id]}.tsx
+│   ├── polls/{page,new,[id]}.tsx
+│   ├── pages/                      ← custom page builder
+│   │   ├── page.tsx                ← list
+│   │   └── [id]/page.tsx           ← block builder editor
+│   ├── notifications/{page,new}.tsx
+│   ├── leads/page.tsx
+│   ├── subscriptions/{plans,entities}/page.tsx
+│   ├── ads/{page,new,[id]}.tsx
+│   ├── god-mode/
+│   │   ├── homepage/page.tsx
+│   │   ├── theme/page.tsx
+│   │   ├── footer/page.tsx
+│   │   ├── flags/page.tsx
+│   │   └── menu/page.tsx
+│   ├── analytics/page.tsx
+│   ├── admins/{page,new,[id]}.tsx
+│   ├── audit-log/page.tsx
+│   └── settings/page.tsx
+└── api/
+    └── [mirrors each domain — server-side service-role mutations]
+```
+
+**Deployment note:** separate Next.js project/repo from the user app
+(or a monorepo with two apps) — different auth model, different design
+system, different deploy cadence (admin changes shouldn't risk a user-app
+redeploy). Both connect to the **same Supabase project**. Recommend a
+subdomain: `admin.vytanexa.app` (or `vytanexa-admin.vercel.app`
+initially) — never expose admin routes on the main consumer domain.
+
+### Authentication Flow
+```
+/login
+┌─────────────────────────────────────────────┐
+│              ◈ Vytanexa Admin                │
+│                                             │
+│  ইমেইল / ফোন   [_____________________]      │
+│  পাসওয়ার্ড      [_____________________]      │
+│  [সাইন ইন]                                   │
+│                                             │
+│  (No public signup — accounts created only   │
+│   by super_admin via Admin Users screen, A14)│
+└─────────────────────────────────────────────┘
+```
+Uses Supabase Auth (email/password, separate credential set from the
+user-app's phone-OTP flow) — session checked in `(dashboard)/layout.tsx`
+against the `admin_users` table (from DB Part 5): must have a row with
+`is_active = true`, or redirect to `/login` with "অ্যাক্সেস নেই" message.
+2FA (TOTP) recommended as a Phase 2 hardening step given the blast
+radius of this panel — noted, not blocking for launch.
+
+### Role & Permission Matrix
+```
+                          super_admin  admin   moderator  editor
+─────────────────────────────────────────────────────────────────
+Doctors/Hospitals CRUD         ✅        ✅        ❌        ✅
+Verify doctor/hospital         ✅        ✅        ❌        ❌
+Moderation (reviews/QA/reports)✅        ✅        ✅        ❌
+Articles/Polls/Custom Pages    ✅        ✅        ❌        ✅
+Publish content live           ✅        ✅        ❌        ❌
+  (editor can DRAFT, not publish — a review step, matches the
+   RichTextEditor safety philosophy from A01)
+Notifications/Announcements    ✅        ✅        ❌        ❌
+Leads inbox                    ✅        ✅        ❌        ❌
+Subscription plans/pricing     ✅        ❌        ❌        ❌
+Ads management                 ✅        ✅        ❌        ❌
+God Mode (homepage/theme/       ✅        ❌        ❌        ❌
+  footer/flags/menu)
+  (deliberately super_admin-only — this is the highest blast-radius
+  category; even a trusted "admin" role shouldn't casually reshuffle
+  the live homepage or repaint the brand colors)
+Analytics                      ✅        ✅        ✅        ❌
+Manage other admins            ✅        ❌        ❌        ❌
+Audit log (view)                ✅        ✅        ❌        ❌
+Settings                       ✅        ❌        ❌        ❌
+```
+Enforced in TWO layers (defense in depth, matching the RLS philosophy
+from the DB schema): (1) sidebar hides items the role can't access —
+UX-level, prevents confusion; (2) every server-side mutation route
+independently re-checks the role via `admin_users.role` +
+`permissions` JSONB override — never trusts the client to have hidden
+a button correctly. `admin_users.permissions` JSONB allows
+super_admin to grant a one-off exception (e.g. "this specific admin
+CAN also touch god-mode") without inventing a new role.
+
+### Practical Starting Point for a Solo/Small Team
+Given this is currently a one-person operation (you), day one setup:
+one `super_admin` account (you). As the team grows — hiring a content
+editor for articles, a moderator for reviews — this matrix is already
+ready without any schema or code change, just assigning roles in A14.
+
+---
+
+_(File continues — A03: Dashboard Home & Unified Moderation Queue Pattern, in next commit)_
