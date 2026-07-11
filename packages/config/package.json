@@ -1,0 +1,10 @@
+{
+  "name": "@vytanexa/config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./tailwind-preset.js",
+  "exports": {
+    ".": "./tailwind-preset.js",
+    "./tokens": "./design-tokens.js"
+  }
+}
