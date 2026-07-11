@@ -12,7 +12,7 @@ everything), and never require touching code to change the live app.
 - [x] A01 — Admin Design System · Component Philosophy (data-dense, desktop-first)
 - [x] A02 — Information Architecture · Navigation · Auth & Roles
 - [x] A03 — Dashboard Home · Unified Moderation Queue Pattern
-- [ ] A04 — Locations Manager · Categories Manager
+- [x] A04 — Locations Manager · Categories Manager
 - [ ] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
 - [ ] A06 — Hospitals Manager + Ambulance + Blood Bank Management
 - [ ] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
@@ -477,4 +477,127 @@ extensibility payoff of designing the pattern once, deliberately, now.
 
 ---
 
-_(File continues — A04: Locations Manager · Categories Manager, in next commit)_
+## A04 — LOCATIONS MANAGER · CATEGORIES MANAGER
+
+### Locations Manager (`/locations`)
+> This screen is the operator-facing UI over the self-referencing
+> `locations` table (DB Part 1). Since there's no pre-seeded data
+> (confirmed decision), this is often the FIRST screen a new admin
+> touches before anything else can be created (doctors/hospitals need
+> a location to attach to).
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  এলাকা ম্যানেজমেন্ট                    [+ নতুন এলাকা যোগ করুন]│
+├─────────────────────────────────────────────────────────────┤
+│  🔍 [এলাকা খুঁজুন...]                                          │
+├─────────────────────────────────────────────────────────────┤
+│  ▾ পশ্চিমবঙ্গ (State)                          [✏️][🗑️][+ যোগ]│
+│    ▾ কোচবিহার (District)                       [✏️][🗑️][+ যোগ]│
+│      • কোচবিহার সদর (Sub-district)             [✏️][🗑️]      │
+│      • তুফানগঞ্জ (Sub-district)                 [✏️][🗑️]      │
+│      • দিনহাটা (Sub-district)                   [✏️][🗑️]      │
+│    ▸ জলপাইগুড়ি (District)               [collapsed, ▸ expand]│
+│  ▸ মহারাষ্ট্র (State)                     [collapsed, ▸ expand]│
+│  ▸ অসম (State)                                                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Interaction Model
+Expandable tree (not a flat table) — mirrors the actual hierarchy
+mentally, matches how the DB `locations` table + `location_paths`
+recursive view are structured. Each row has inline `[✏️ edit] [🗑️
+delete] [+ যোগ করুন = add child]` — the "add child" button is
+context-aware: clicking it under "কোচবিহার" pre-fills the new form's
+`parent_id` and `type` (next level down), removing the chance of an
+admin accidentally creating a District with no State parent (the DB
+CHECK constraint from Part 1 backstops this too — defense in depth).
+
+### Add/Edit Location Modal
+```
+┌─────────────────────────────────────────────┐
+│ ✕      নতুন এলাকা যোগ করুন                    │
+│ ─────────────────────────────────────────── │
+│  ধরন:  জেলা (District)      ← locked, inherited
+│  প্যারেন্ট: পশ্চিমবঙ্গ        ← locked, inherited
+│                                             │
+│  নাম (বাংলা) *   [_______________________]  │
+│  Name (English)  [_______________________]  │
+│  नाम (हिन्दी)     [_______________________]  │
+│  স্লাগ (URL)      [auto-generated, editable] │
+│                                             │
+│  অক্ষাংশ (ঐচ্ছিক) [___]  দ্রাঘিমাংশ [___]   │
+│                                             │
+│  ☑ সক্রিয় (Active — অ্যাপে দেখাবে)          │
+│                                             │
+│  [সংরক্ষণ করুন]                              │
+└─────────────────────────────────────────────┘
+```
+Slug auto-generated from Bengali/English name (transliterated,
+lowercase, hyphenated) but editable — matters because slugs feed
+directly into the SEO landing page URLs (S21). "সক্রিয় (Active)"
+toggle = soft-hide without deleting (maps to `is_active`, distinct
+from `deleted_at` — an inactive location stays in the tree for admin
+reference but disappears from the user-app's location picker
+immediately).
+
+### Delete Safety
+Deleting a location with children OR with doctors/hospitals/chambers
+still attached is **blocked with a clear message**: "এই এলাকায় এখনো
+৫টি চেম্বার যুক্ত আছে। প্রথমে সেগুলো সরান বা অন্য এলাকায় স্থানান্তর
+করুন।" — never a silent cascade delete of real business data (the DB
+FK is `ON DELETE RESTRICT` for exactly this reason, Part 1). Deleting
+an empty leaf location asks for standard ConfirmDialog only.
+
+### Bulk Import (Practical Necessity)
+Given "nationwide, no pre-seeded data" — manually adding 28 states +
+hundreds of districts one-by-one is impractical. A **CSV import**
+option lives here:
+```
+[📥 CSV থেকে আমদানি করুন]
+→ Template download: state_name_bn, state_name_en, district_name_bn,
+  district_name_en, ...
+→ Upload → preview table showing what will be created → confirm →
+  batch insert (server-side, validates duplicates against existing
+  slugs, skips rather than errors on conflict)
+```
+This is a one-time-heavy-use, low-frequency-after tool — but essential
+for practically bootstrapping national coverage without weeks of
+manual data entry.
+
+---
+
+### Categories Manager (`/categories`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  বিভাগ (বিশেষজ্ঞতা) ম্যানেজমেন্ট         [+ নতুন বিভাগ যোগ করুন]│
+├─────────────────────────────────────────────────────────────┤
+│  [drag ⠿] [🫀 icon] হৃদরোগ (Cardiology)      ৫ জন ডাক্তার     │
+│           হোমপেজে দেখাবে: ☑        [✏️][🗑️]                 │
+│  [drag ⠿] [👶 icon] শিশু রোগ (Pediatrics)    ৮ জন ডাক্তার     │
+│           হোমপেজে দেখাবে: ☑        [✏️][🗑️]                 │
+│  ...                                                          │
+└─────────────────────────────────────────────────────────────┘
+```
+Drag-handle (⠿) reorders `display_order` — this directly drives the
+Category Grid order in S04 SEC-05 on the live user app, so the
+operator sees an immediate visual link between "reorder here" and
+"homepage changes." Doctor count column is a live read-only reference
+(helps decide which categories deserve homepage visibility).
+
+### Add/Edit Category Modal
+```
+নাম (বাংলা/English/हिन्दी) *, স্লাগ, আইকন [icon picker — small curated
+SVG set, not arbitrary upload, keeps visual consistency with S01's
+icon system], সার্চ কিওয়ার্ড (comma-separated aliases — feeds S05's
+Bengali-English alias resolution), ☑ হোমপেজে দেখাবে, ☑ সক্রিয়
+```
+
+### Delete Safety
+Same pattern as Locations — blocked if doctors reference this
+category (`RESTRICT` FK, DB Part 2), clear message shown, points
+admin to reassign those doctors first.
+
+---
+
+_(File continues — A05: Doctors Manager — List, CRUD, Verification, Chambers Sub-Editor, in next commit)_
