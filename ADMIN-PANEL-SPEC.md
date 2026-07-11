@@ -13,7 +13,7 @@ everything), and never require touching code to change the live app.
 - [x] A02 — Information Architecture · Navigation · Auth & Roles
 - [x] A03 — Dashboard Home · Unified Moderation Queue Pattern
 - [x] A04 — Locations Manager · Categories Manager
-- [ ] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
+- [x] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
 - [ ] A06 — Hospitals Manager + Ambulance + Blood Bank Management
 - [ ] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
 - [ ] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
@@ -600,4 +600,129 @@ admin to reassign those doctors first.
 
 ---
 
-_(File continues — A05: Doctors Manager — List, CRUD, Verification, Chambers Sub-Editor, in next commit)_
+## A05 — DOCTORS MANAGER
+
+### List Page (`/doctors`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ডাক্তার                                  [+ নতুন ডাক্তার]   │
+├─────────────────────────────────────────────────────────────┤
+│ 🔍[খুঁজুন...] [সব স্ট্যাটাস▾] [সব বিভাগ▾] [সব এলাকা▾]  ⚙️কলাম│
+├─────────────────────────────────────────────────────────────┤
+│☐│ফটো│নাম          │বিভাগ   │এলাকা    │স্ট্যাটাস │রেটিং│একশন│
+│☐│👤 │Dr. Priyanka  │মেডিসিন │কোচবিহার │✅ভেরিফাই│4.8 │⋯  │
+│☐│👤 │Dr. Rahul     │হৃদরোগ  │তুফানগঞ্জ│🟡পেন্ডিং│ -  │⋯  │
+│☐│👤 │Dr. Sumana    │শিশু    │দিনহাটা  │✅ভেরিফাই│4.5 │⋯  │
+├─────────────────────────────────────────────────────────────┤
+│ ২৪৩ জন ডাক্তার   |◂ ১ ২ ৩ ... ১০ ▸|          [25/page ▾] │
+└─────────────────────────────────────────────────────────────┘
+```
+`DataTable` component from A01 — sortable columns (name, rating,
+created date), status filter defaults to showing ALL (pending +
+verified both visible here; the separate moderation queue pattern
+from A03 is for content moderation, not entity verification — this
+list is the entity system-of-record). Row `⋯` menu: এডিট / ভেরিফাই /
+সাসপেন্ড / মুছুন (soft-delete) / প্রোফাইল দেখুন (opens live user-app
+profile in new tab — quick sanity-check of how an edit actually looks
+live).
+
+Bulk select → bulk actions bar: bulk verify, bulk feature/unfeature.
+
+### Create/Edit Doctor Form — Collapsible Sections (A01 `FormSection`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ডাক্তার সম্পাদনা: Dr. Priyanka Das      [খসড়া সংরক্ষিত ✓]   │
+├─────────────────────────────────────────────────────────────┤
+│ ▾ মৌলিক তথ্য                                                  │
+│   ছবি: [MediaUploader — crops to 1:1]                         │
+│   নাম (বাংলা)* [___________]  Name (English) [___________]   │
+│   नाम (हिन्दी)  [___________]                                 │
+│   বিভাগ* [মেডিসিন ▾]         BMDC নম্বর [___________]        │
+│   ডিগ্রি (একাধিক) [MBBS ✕][MD (Medicine) ✕][+ যোগ করুন]      │
+│   অভিজ্ঞতা (বছর) [___]                                        │
+│   ভাষা [বাংলা✓][English✓][हिन्दी]                             │
+├─────────────────────────────────────────────────────────────┤
+│ ▸ পরিচিতি ও বিশেষজ্ঞতা                          [collapsed]  │
+│   (bio_translations, expertise_tags, treats_conditions)       │
+├─────────────────────────────────────────────────────────────┤
+│ ▸ যোগাযোগ ও ফি                                  [collapsed]  │
+│   (whatsapp_number, consultation_fee_min/max)                 │
+├─────────────────────────────────────────────────────────────┤
+│ ▸ সার্চ সেটিংস                                   [collapsed]  │
+│   (search_aliases — "এই ডাক্তারকে অন্য কোন নামে মানুষ খুঁজতে   │
+│    পারে?" helper text, e.g. nicknames/spelling variants)       │
+├─────────────────────────────────────────────────────────────┤
+│ ▾ চেম্বার (২টি)                    [+ নতুন চেম্বার যোগ করুন]  │
+│   [Chamber Sub-Editor — see below]                             │
+├─────────────────────────────────────────────────────────────┤
+│ ▾ স্ট্যাটাস                                                    │
+│   ভেরিফিকেশন: [🟡 পেন্ডিং ▾]  ফিচার্ড: ☐  ফিচার প্রায়োরিটি:[0]│
+│   সক্রিয় (is_available): ☑                                    │
+├─────────────────────────────────────────────────────────────┤
+│              [খসড়া হিসেবে সংরক্ষণ]  [সংরক্ষণ ও প্রকাশ করুন]   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Chamber Sub-Editor (Nested, Inline — Not a Separate Page)
+```
+┌─────────────────────────────────────────────────────────────┐
+│ চেম্বার ১: প্রান্ত ডায়াগনস্টিক সেন্টার  [প্রধান ●] [🗑️]      │
+│ চেম্বার নাম* [___________]                                    │
+│ এলাকা* [কোচবিহার সদর ▾]  ঠিকানা* [___________________]      │
+│ ফোন* [___________]  WhatsApp [___________]                    │
+│ Google Maps লিংক [___________]                                │
+│ ভিজিট ফি [___]                                                │
+│                                                               │
+│ সময়সূচি:                                                      │
+│  ☑শনি ☑রবি ☐সোম ☑মঙ্গল ☐বুধ ☑বৃহঃ ☐শুক্র                    │
+│  খোলা: [15:00 ▾]   বন্ধ: [21:00 ▾]                            │
+│  [+ ভিন্ন সময়ের জন্য আরেকটি সময়সূচি যোগ করুন]                │
+│  ← multiple schedule rows if hours differ by day-group          │
+│                                                               │
+│ [এই চেম্বারকে প্রধান হিসেবে সেট করুন]                          │
+└─────────────────────────────────────────────────────────────┘
+```
+Day-checkbox + time-picker UI (not raw JSON editing) generates the
+`chambers.schedule` JSONB array under the hood — the operator never
+sees or touches JSON directly (matches A01's `JSONPreview` philosophy:
+friendly form always, raw view only if they expand "advanced").
+"প্রধান" (primary) toggle enforces the DB's one-primary-per-doctor
+unique index automatically — selecting a new primary silently
+unsets the previous one, no error shown for what is actually normal
+behavior.
+
+### Verification Workflow (Distinct From Content Moderation)
+```
+┌─────────────────────────────────────────────┐
+│  ভেরিফিকেশন স্ট্যাটাস পরিবর্তন                 │
+│  ─────────────────────────────────────────  │
+│  বর্তমান: 🟡 পেন্ডিং                          │
+│                                             │
+│  ○ ✅ ভেরিফাই করুন                            │
+│    (এই ডাক্তার এখনই পাবলিক অ্যাপে দেখা যাবে)   │
+│  ○ ❌ প্রত্যাখ্যান করুন                         │
+│    কারণ (অভ্যন্তরীণ নোট) [_________________]  │
+│  ○ 🚫 সাসপেন্ড করুন (আগে ভেরিফাইড ছিল)         │
+│    কারণ [_________________]                  │
+│                                             │
+│  [নিশ্চিত করুন]                               │
+└─────────────────────────────────────────────┘
+```
+This directly flips `doctors.verification_status` — the SAME field
+that the DB RLS policy checks (Part 2) before showing a doctor
+publicly. The UI makes explicit what's at stake ("এখনই পাবলিক অ্যাপে
+দেখা যাবে") precisely because this single toggle is the actual
+publish gate for the entire live app — the operator should never be
+surprised by that.
+
+### Why "Save as Draft" vs "Save & Publish" Both Exist
+A doctor record can be saved mid-entry (e.g. admin has photo + name
+but is still gathering chamber details) without accidentally exposing
+an incomplete profile — `verification_status` stays whatever it was
+(defaults to `pending`, invisible publicly per RLS) until the admin
+explicitly verifies. This is a soft distinction (both buttons save the
+same row) but the labeling matters for operator confidence.
+
+---
+
+_(File continues — A06: Hospitals Manager + Ambulance + Blood Bank Management, in next commit)_
