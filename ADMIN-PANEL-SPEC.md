@@ -20,7 +20,7 @@ everything), and never require touching code to change the live app.
 - [x] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
 - [x] A10 — Articles CMS · Q&A Management
 - [x] A11 — Polls Composer · Notifications/Announcement Composer
-- [ ] A12 — Subscription Plans Manager · Ads Manager
+- [x] A12 — Subscription Plans Manager · Ads Manager
 - [ ] A13 — Leads Inbox
 - [ ] A14 — Admin Users/Roles · Audit Log Viewer
 - [ ] A15 — Analytics Dashboard · General Settings
@@ -1359,4 +1359,105 @@ before sending to every single user's screen instantly.
 
 ---
 
-_(File continues — A12: Subscription Plans Manager · Ads Manager, in next commit)_
+## A12 — SUBSCRIPTION PLANS MANAGER · ADS MANAGER
+
+### Subscription Plans (`/subscriptions/plans`) — `super_admin` only (A02)
+> Edits `subscription_plans` (DB Part 2). This is pricing/business-model
+> control — deliberately restricted per the role matrix.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  সাবস্ক্রিপশন প্ল্যান                                          │
+├─────────────────────────────────────────────────────────────┤
+│  🆓 Free      ₹0/মাস      [প্রয়োগ: doctor,hospital]  [✏️]    │
+│  🟢 Basic     ₹৪৯৯/মাস    [প্রয়োগ: doctor,hospital]  [✏️]    │
+│  🔵 Pro       ₹৯৯৯/মাস    [প্রয়োগ: doctor,hospital]  [✏️]    │
+│  🟣 Premium   ₹১৯৯৯/মাস   [প্রয়োগ: doctor,hospital]  [✏️]    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Edit Plan Modal**
+```
+নাম (বাংলা/English)*
+মাসিক মূল্য* [___]   বার্ষিক মূল্য (ঐচ্ছিক) [___]
+প্রয়োগযোগ্য: ☑ ডাক্তার  ☑ হাসপাতাল
+
+সুবিধা (Benefits):
+  ☑ ফিচার্ড লিস্টিং (হোমপেজ/তালিকায় উপরে দেখাবে)
+  ☑ অ্যানালিটিক্স অ্যাক্সেস
+  ☑ প্রায়োরিটি সাপোর্ট
+  সর্বোচ্চ চেম্বার সংখ্যা [___]
+  [+ কাস্টম সুবিধা যোগ করুন]  ← free-form key:value for future
+                                benefits not yet built into the UI
+                                as a dedicated toggle (writes directly
+                                into subscription_plans.benefits JSONB,
+                                the extensibility hook designed in
+                                DB Part 2)
+[সংরক্ষণ করুন]
+```
+Checkbox-driven benefit toggles map to well-known `benefits` JSON
+keys; the "+ কাস্টম সুবিধা" escape hatch means a brand-new benefit
+idea doesn't need a code change to exist in the data model — though
+the LIVE APP won't actually *enforce* an arbitrary custom benefit
+until code is written to check for it. This is intentionally honest:
+the escape hatch stores intent for the future, it doesn't create new
+app behavior by itself.
+
+### Active Subscriptions (`/subscriptions/entities`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔍[ডাক্তার/হাসপাতাল খুঁজুন...]  [সব প্ল্যান▾] [সব স্ট্যাটাস▾] │
+├─────────────────────────────────────────────────────────────┤
+│ এন্টিটি          │প্ল্যান │স্ট্যাটাস│মেয়াদ শেষ  │একশন        │
+│ Dr. Priyanka Das │🔵Pro  │✅সক্রিয়│২০ আগস্ট   │[পরিবর্তন][✕]│
+│ সিটি হাসপাতাল    │🟣Premium│✅সক্রিয়│১৫ সেপ্টে │[পরিবর্তন][✕]│
+└─────────────────────────────────────────────────────────────┘
+```
+**"+ সাবস্ক্রিপশন যোগ করুন"** manual-assignment flow (entity picker +
+plan picker + duration) — this is how you'll operate BEFORE a real
+payment gateway is wired up: manually granting a Pro tier after
+receiving payment via UPI/bank transfer directly, common and
+completely reasonable for an early-stage Indian platform. When a
+payment gateway integration happens later (out of schema scope per
+DB Part 5's notes), this manual-grant flow doesn't go away — it
+remains useful for comps, promotions, and support-driven corrections.
+
+---
+
+### Ads Manager (`/ads`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  বিজ্ঞাপন                                    [+ নতুন বিজ্ঞাপন]│
+├─────────────────────────────────────────────────────────────┤
+│ থাম্বনেইল│স্পন্সর      │প্লেসমেন্ট      │সক্রিয়│ভিউ  │ক্লিক │
+│ [img]   │সিটি ফার্মেসি│হোমপেজ ব্যানার │✅    │১২৪০ │৮৯   │
+│ [img]   │কেয়ার ল্যাব  │নেটিভ ফিড      │✅    │৮৯০  │৪৫   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Create/Edit Ad**
+```
+প্লেসমেন্ট*    ○ হোমপেজ ব্যানার (2:1)   ○ নেটিভ ফিড (16:6)
+স্পন্সরের নাম* [___________]
+ছবি*          [MediaUploader — aspect ratio locked to placement type,
+               prevents a stretched/cropped-wrong image going live]
+লিংক (Target URL)* [___________]
+প্রদর্শনের ক্রম  [___]  (হোমপেজ ব্যানার হলে, slider order)
+তারিখ পরিসীমা*  শুরু [তারিখ▾]   শেষ [তারিখ▾]
+☑ সক্রিয়
+
+━━━ পারফরম্যান্স ━━━ (edit view only, after ad has run)
+ইমপ্রেশন: ১,২৪০   ক্লিক: ৮৯   CTR: ৭.২%
+[analytics_events aggregation, read from event_type='impression'/
+'click' filtered to this ad's entity_id — DB Part 5]
+```
+Date-range fields directly gate visibility (the S04 spec's query
+`start_date <= today AND end_date >= today` reads these) — an ad
+with a past end_date simply stops appearing, no separate "archive"
+action needed, though `is_active` remains available as a manual
+kill-switch independent of the schedule (e.g. sponsor asks to pause
+early).
+
+---
+
+_(File continues — A13: Leads Inbox, in next commit)_
