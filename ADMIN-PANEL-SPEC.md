@@ -21,8 +21,8 @@ everything), and never require touching code to change the live app.
 - [x] A10 — Articles CMS · Q&A Management
 - [x] A11 — Polls Composer · Notifications/Announcement Composer
 - [x] A12 — Subscription Plans Manager · Ads Manager
-- [ ] A13 — Leads Inbox
-- [ ] A14 — Admin Users/Roles · Audit Log Viewer
+- [x] A13 — Leads Inbox
+- [x] A14 — Admin Users/Roles · Audit Log Viewer
 - [ ] A15 — Analytics Dashboard · General Settings
 
 ---
@@ -1460,4 +1460,56 @@ early).
 
 ---
 
-_(File continues — A13: Leads Inbox, in next commit)_
+## A13 — LEADS INBOX (`/leads`)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [নতুন (৫)] [যোগাযোগ করা হয়েছে] [সম্পন্ন] [বাতিল]  🔍 [ডাক্তার▾]│
+├─────────────────────────────────────────────────────────────┤
+│ রোগী        │ফোন        │ডাক্তার        │চেম্বার    │সময়      │
+│ করিম উদ্দিন  │98765-43210│Dr. Priyanka   │প্রান্ত DC │২ ঘণ্টা আগে│
+│  "জ্বরের জন্য দেখাতে চাই" — বার্তা                    [যোগাযোগ করা হয়েছে ✓]│
+└─────────────────────────────────────────────────────────────┘
+```
+Row expands to show full message + preferred time. One-click status
+change (নতুন → যোগাযোগ করা হয়েছে → সম্পন্ন/বাতিল) — this status
+directly reflects on the patient's own history view (S17). Phone
+number is tap-to-call from admin panel too (you're often the one
+following up with the chamber). Filter by doctor — useful once a
+chamber wants "give me all my leads this week" (exportable via CSV,
+same pattern as Locations import but reversed — export button).
+Spam-looking leads (repeated numbers, gibberish names) → "বাতিল"
+with reason, feeds future spam-pattern learning informally.
+
+---
+
+## A14 — ADMIN USERS/ROLES · AUDIT LOG VIEWER
+
+### Admin Users (`/admins`) — `super_admin` only
+```
+নাম          │ইমেইল            │রোল         │সক্রিয়│শেষ লগইন   │একশন
+জুয়েল হোসেন   │juyel@...        │super_admin │✅    │এখন        │—
+রহিম (এডিটর)  │rahim@...        │editor      │✅    │২ দিন আগে  │✏️🚫
+```
+**"+ নতুন অ্যাডমিন যোগ করুন"** → name, email, role picker (A02 matrix
+shown inline as reference table so you know what each role can/can't
+do before assigning), sends Supabase Auth invite email. `🚫` = suspend
+(is_active=false, instant logout, account not deleted — reversible).
+Only `super_admin` can create another `super_admin` — prevents
+accidental privilege escalation via a lesser role.
+
+### Audit Log Viewer (`/audit-log`)
+```
+🔍[খুঁজুন...] [সব অ্যাডমিন▾] [সব একশন▾] [তারিখ পরিসীমা]
+─────────────────────────────────────────────────────────
+জুয়েল হোসেন   ভেরিফাই করেছেন   Dr. রহিম উদ্দিন     ২ ঘণ্টা আগে  [বিস্তারিত]
+জুয়েল হোসেন   আপডেট করেছেন    হোমপেজ সেকশন       ৫ ঘণ্টা আগে  [বিস্তারিত]
+```
+"[বিস্তারিত]" expands `before_data`/`after_data` as a readable diff
+(field-by-field, not raw JSON dump) — this is the accountability
+backstop we designed the whole `audit_logs` table for; read-only,
+un-deletable from the UI (matches its zero-RLS-access design, DB Part 5).
+
+---
+
+_(File continues — A15: Analytics Dashboard · General Settings — FINAL admin panel section — in next commit)_
