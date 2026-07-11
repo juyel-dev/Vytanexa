@@ -19,7 +19,7 @@ everything), and never require touching code to change the live app.
 - [x] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
 - [x] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
 - [x] A10 — Articles CMS · Q&A Management
-- [ ] A11 — Polls Composer · Notifications/Announcement Composer
+- [x] A11 — Polls Composer · Notifications/Announcement Composer
 - [ ] A12 — Subscription Plans Manager · Ads Manager
 - [ ] A13 — Leads Inbox
 - [ ] A14 — Admin Users/Roles · Audit Log Viewer
@@ -1271,4 +1271,92 @@ otherwise — it's built for exactly this human-in-the-loop reality.
 
 ---
 
-_(File continues — A11: Polls Composer · Notifications/Announcement Composer, in next commit)_
+## A11 — POLLS COMPOSER · NOTIFICATIONS/ANNOUNCEMENT COMPOSER
+
+### Polls (`/polls`)
+List: question, total votes, status (চলমান/মেয়াদ শেষ), expiry date.
+
+**Create/Edit Poll**
+```
+প্রশ্ন* [___________________________________]
+অপশন:
+  ১. [_________________________] [🗑️]
+  ২. [_________________________] [🗑️]
+  [+ আরেকটি অপশন যোগ করুন]         (min 2, max 6 options)
+মেয়াদ শেষ হবে [তারিখ পিকার ▾]  (ঐচ্ছিক — blank = চলতে থাকবে)
+[পোল প্রকাশ করুন]
+```
+Once a poll has ≥1 vote, options become **read-only** (can't edit/
+delete/reorder text — editing an option's wording after votes exist
+would corrupt the meaning of already-cast votes). A locked-icon +
+tooltip explains why, rather than just silently disabling. Ending a
+poll early is possible any time via a "এখনই বন্ধ করুন" button
+(sets `expires_at = now()`), independent of the pre-set expiry.
+
+### Results View
+```
+আপনি কি নিয়মিত স্বাস্থ্য পরীক্ষা করান?
+হ্যাঁ, বছরে একবার    ▓▓▓▓▓▓▓▓ ৪৫% (২৫৬)
+মাঝে মাঝে            ▓▓▓▓▓ ৩০% (১৭০)
+কখনো করাইনি          ▓▓▓ ২৫% (১৪২)
+মোট: ৫৬৮ ভোট
+```
+Read-only results panel appears inline on the edit page once votes
+exist — no separate analytics screen needed for something this simple.
+
+---
+
+### Notifications/Announcements (`/notifications`)
+
+### List — Two Tabs
+```
+[পাঠানো ঘোষণা]  [ব্যক্তিগত নোটিফিকেশন লগ]
+```
+Tab 1 = admin-composed general/emergency broadcasts (this screen's
+main job). Tab 2 = read-only log of system-generated personal
+notifications (e.g. "আপনার প্রশ্নের উত্তর এসেছে") for
+troubleshooting/support reference — not manually composed here, those
+are created automatically by app logic (e.g. on answer-publish, DB
+Part 4 trigger territory... actually generated at the application
+layer when an answer is approved, inserting a `type='personal'` row —
+noted for the eventual application/API-layer spec, not the admin UI).
+
+### Compose New Announcement
+```
+ধরন*        ○ সাধারণ ঘোষণা      ● 🚨 জরুরি সতর্কতা
+             (emergency = shows in emergency-50/red styling on the
+             live app's Home banner, S04 SEC-01 — visually distinct,
+             reserve for genuine health alerts, not routine news)
+
+শিরোনাম*    [_________________________________]
+বার্তা*     [_________________________________]
+             [_________________________________]
+
+হোমপেজে ব্যানার হিসেবে দেখান  ☑
+লক্ষ্য (ঐচ্ছিক)   [একটি কাস্টম পেজ লিংক করুন ▾]  বা  [বাহ্যিক URL]
+মেয়াদ শেষ হবে     [তারিখ পিকার ▾]  (ঐচ্ছিক)
+
+[পাঠান / প্রকাশ করুন]
+```
+
+### Emergency Type — Extra Confirmation
+Selecting "🚨 জরুরি সতর্কতা" and hitting publish triggers a distinct,
+slightly heavier `ConfirmDialog` than the default:
+```
+┌─────────────────────────────────────────────┐
+│  ⚠️ জরুরি সতর্কতা প্রকাশ করবেন?                │
+│  এটি প্রতিটি ইউজারের হোমপেজে লাল ব্যানার হিসেবে │
+│  সাথে সাথে দেখা যাবে। শুধুমাত্র প্রকৃত স্বাস্থ্য   │
+│  সতর্কতার জন্য ব্যবহার করুন।                    │
+│  [বাতিল]              [হ্যাঁ, এখনই প্রকাশ করুন] │
+└─────────────────────────────────────────────┘
+```
+This extra friction is intentional — matches the DB schema's earlier
+design note that emergency notifications are "a safety broadcast, not
+marketing" (S18/S20) and are the one notification type users can't
+opt out of; the composer UI should make an operator feel that weight
+before sending to every single user's screen instantly.
+
+---
+
+_(File continues — A12: Subscription Plans Manager · Ads Manager, in next commit)_
