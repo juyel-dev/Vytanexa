@@ -14,7 +14,7 @@ everything), and never require touching code to change the live app.
 - [x] A03 — Dashboard Home · Unified Moderation Queue Pattern
 - [x] A04 — Locations Manager · Categories Manager
 - [x] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
-- [ ] A06 — Hospitals Manager + Ambulance + Blood Bank Management
+- [x] A06 — Hospitals Manager + Ambulance + Blood Bank Management
 - [ ] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
 - [ ] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
 - [ ] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
@@ -725,4 +725,104 @@ same row) but the labeling matters for operator confidence.
 
 ---
 
-_(File continues — A06: Hospitals Manager + Ambulance + Blood Bank Management, in next commit)_
+## A06 — HOSPITALS MANAGER + AMBULANCE + BLOOD BANK
+
+### Hospitals List (`/hospitals`)
+Same `DataTable` pattern as Doctors (A05) — columns: photo, name,
+type (hospital/clinic/diagnostic/nursing_home), location, emergency
+badge (🚨 if `has_emergency_dept`), status, rating, actions. Filters:
+status, type, location, "শুধু জরুরি বিভাগ আছে এমন" checkbox.
+
+### Create/Edit Hospital Form
+```
+▾ মৌলিক তথ্য
+  কভার ছবি [MediaUploader, 16:9]   গ্যালারি [multi-upload, up to 8]
+  নাম (বাংলা/English/हिन्दी)*
+  ধরন* [হাসপাতাল ▾]  (হাসপাতাল/ক্লিনিক/ডায়াগনস্টিক/নার্সিং হোম)
+  এলাকা* [▾]  ঠিকানা* [_______]
+  ফোন* [___]  WhatsApp [___]  Maps লিংক [___]
+▸ বিবরণ                                          [collapsed]
+▾ সেবা ও সুবিধা
+  পরীক্ষা/সেবা (Test Catalog থেকে বেছে নিন):
+  [🔍 টেস্ট খুঁজুন...] [✓CBC][✓X-Ray Chest][✓ECG][+ আরো যোগ করুন]
+  ← multi-select searchable picker against test_catalog (DB Part 3),
+    NOT free-text — keeps services[] values canonical, matches S10's
+    search-index design intent exactly
+  সুবিধা ট্যাগ: [✓ICU][✓জরুরি বিভাগ ২৪/৭][✓অ্যাম্বুলেন্স][✓ব্লাড ব্যাংক]
+  ☑ জরুরি বিভাগ আছে (has_emergency_dept)
+    ← this single checkbox is what makes the hospital appear on
+    /emergency (S12) — flagged explicitly in the UI, same "visible
+    stakes" philosophy as doctor verification
+▾ সময়
+  ☑ ২৪ ঘণ্টা খোলা      OR      [day/time schedule — same UI as
+                                 Chamber Sub-Editor, A05, reused
+                                 component]
+▾ স্ট্যাটাস
+  ভেরিফিকেশন [🟡 পেন্ডিং ▾]  ফিচার্ড ☐  ট্রেন্ডিং ☐
+[খসড়া সংরক্ষণ]  [সংরক্ষণ ও প্রকাশ করুন]
+```
+
+### Why Services Are Picked, Not Typed
+Directly enforces the DB Part 3 design: `hospitals.services[]` must
+contain `test_catalog.canonical_key` values for S10's search to work
+(free-text "X-Ray" vs "xray" vs "এক্স-রে" would silently break
+search matching). The picker searches `test_catalog` (name +
+aliases), shows results, admin clicks to add — impossible to enter an
+unmatched value. If a needed test isn't in the catalog yet, an inline
+"+ নতুন টেস্ট ক্যাটালগে যোগ করুন" shortcut opens a mini-modal to add
+it to `test_catalog` without leaving this form.
+
+---
+
+### Ambulance Services (`/ambulance`)
+Simple list+form, same `DataTable`/`FormSection` pattern:
+```
+নাম*, এলাকা*, ফোন*, WhatsApp, সংযুক্ত হাসপাতাল [optional, dropdown —
+maps to ambulance_services.hospital_id, leave blank for independent
+operators, per our schema discussion], গাড়ির সংখ্যা, ☑ ICU সুবিধা,
+প্রতি কিমি ভাড়া, কভারেজ ব্যাসার্ধ (কিমি), ☑ ২৪/৭, ভেরিফিকেশন স্ট্যাটাস
+```
+
+---
+
+### Blood Bank Management (`/blood-donors`)
+Two tabs — distinct data, distinct operator tasks:
+
+**Tab 1 — রক্তদাতা তালিকা (Donor Directory)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [সব গ্রুপ▾] [সব এলাকা▾]  🔍                                   │
+├─────────────────────────────────────────────────────────────┤
+│ নাম          │গ্রুপ│এলাকা      │শেষ দান     │স্ট্যাটাস│একশন│
+│ করিম উদ্দিন   │O+   │কোচবিহার   │৪ মাস আগে   │✅সক্রিয় │⋯  │
+├─────────────────────────────────────────────────────────────┤
+```
+Unlike the public app (S11), admin here CAN see phone numbers
+(operator needs this for verification/moderation calls) —
+`⋯` menu: নিষ্ক্রিয় করুন (deactivate — self-service via SMS is future
+scope; admin can do it manually meanwhile), মুছুন (soft-delete, e.g.
+spam/fake entries). This is a service-role-only screen; RLS from DB
+Part 3 blocks anon/authenticated direct table reads entirely — only
+the admin backend (service role) reaches raw `blood_donors` rows.
+
+**Tab 2 — ব্লাড ব্যাংক স্টক (Hospital Inventory Reporting)**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  হাসপাতাল: কোচবিহার জেলা হাসপাতাল ব্লাড ব্যাংক                │
+│  সর্বশেষ আপডেট: ৬ ঘণ্টা আগে                                   │
+│  A+[✅উপলব্ধ▾] A-[⚠️কম▾] B+[✅▾] B-[❌নেই▾] O+[✅▾] O-[⚠️▾]   │
+│  AB+[✅▾] AB-[❌▾]                          [সংরক্ষণ করুন]     │
+└─────────────────────────────────────────────────────────────┘
+```
+One dropdown per blood-group per hospital-with-blood-bank-tag, quick
+weekly-update workflow. Writes to `blood_bank_inventory`
+(`reported_at` auto-updates to `now()`) — the "48hr staleness = hidden
+publicly" rule (DB Part 3 RLS) means this genuinely needs to be
+refreshed periodically for the public feature to keep showing data;
+a **"স্টক আপডেট করুন"** reminder badge appears on the Dashboard
+Home (A03) attention row if any hospital's inventory is >36hrs stale
+(early warning before the 48hr public-hide threshold hits).
+
+---
+
+_(File continues — A07: Homepage Section Control · Theme Editor  ★ God Mode Core ★, in next commit)_
