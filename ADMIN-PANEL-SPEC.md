@@ -15,7 +15,7 @@ everything), and never require touching code to change the live app.
 - [x] A04 — Locations Manager · Categories Manager
 - [x] A05 — Doctors Manager (List · CRUD · Verification · Chambers)
 - [x] A06 — Hospitals Manager + Ambulance + Blood Bank Management
-- [ ] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
+- [x] A07 — Homepage Section Control · Theme Editor  ★ God Mode Core ★
 - [ ] A08 — Footer/Social/Contact Editor · Feature Flags · Menu Manager
 - [ ] A09 — Custom Page / Block Builder  ★ Biggest Single Screen ★
 - [ ] A10 — Articles CMS · Q&A Management
@@ -825,4 +825,127 @@ Home (A03) attention row if any hospital's inventory is >36hrs stale
 
 ---
 
-_(File continues — A07: Homepage Section Control · Theme Editor  ★ God Mode Core ★, in next commit)_
+## A07 — HOMEPAGE SECTION CONTROL · THEME EDITOR ★ GOD MODE CORE ★
+
+> Both screens write to the SAME row: `app_settings` (DB Part 1,
+> singleton). This is the highest-leverage, highest-blast-radius
+> corner of the entire admin panel — every change here is instantly
+> visible to every user of the live app. `super_admin`-only (A02).
+
+### Homepage Section Control (`/god-mode/homepage`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  হোমপেজ সেকশন কন্ট্রোল          [👁️ লাইভ প্রিভিউ] [প্রকাশ করুন]│
+├─────────────────────────────────────────────────────────────┤
+│  বাম পাশে সাজান → ডান পাশে সরাসরি প্রিভিউ দেখুন                │
+├───────────────────────┬───────────────────────────────────┤
+│ [⠿] ℹ️ ঘোষণা ব্যানার  ☑│                                   │
+│ [⠿] 🖼️ হিরো ব্যানার   ☑│      [LIVE IFRAME PREVIEW —       │
+│ [⠿] 📊 কুইক স্ট্যাটস   ☑│       actual user-app /home       │
+│ [⠿] ⚡ কুইক অ্যাকশন   ☑│       rendered at mobile width,    │
+│ [⠿] 🏷️ বিভাগ গ্রিড    ☑│       updates live as you drag/    │
+│ [⠿] 👨‍⚕️ জনপ্রিয় ডাক্তার☑│       toggle on the left]         │
+│ [⠿] 📢 নেটিভ বিজ্ঞাপন ☑│                                   │
+│ [⠿] 🏥 ট্রেন্ডিং হাসপাতাল☑│                                 │
+│ [⠿] 🩺 উপসর্গ          ☑│                                   │
+│ [⠿] 📰 স্বাস্থ্য আর্টিকেল☐│  ← currently OFF, per your        │
+│ [⠿] 🙋 প্রশ্নোত্তর টিজার☐│    launch config (Q&A/articles     │
+│ [⠿] 🩸 ব্লাড সার্ভিস CTA☑│    feature-flagged off initially) │
+└───────────────────────┴───────────────────────────────────┘
+```
+
+### Interaction Model
+Drag-handle (⠿) reorders, checkbox toggles visibility — **directly
+maps to `app_settings.homepage_settings.sections[]`**
+(`{id, visible, order}`, exact shape from DB Part 1 / referenced
+throughout S04). No "save" needed for the preview (updates
+optimistically on every drag/toggle, client-side only) — but a
+**explicit "প্রকাশ করুন" (Publish) button** is required to actually
+write to the database and go live. This two-step (arrange freely →
+deliberately publish) prevents a half-finished reorder from
+accidentally going live mid-edit, and gives one more deliberate pause
+before the highest-blast-radius action in the whole panel.
+
+### Live Preview Mechanism
+The right panel is a real `<iframe>` pointed at a special preview
+route on the user app (`/?preview=true`) that reads section config
+from a `postMessage`-passed draft state instead of the live DB row —
+so the operator sees an **accurate, actual rendering** (not a mockup
+approximation) before publishing. This is a meaningful engineering
+investment but directly serves "যেন ঝামেলা না হয়" — nothing builds
+non-technical operator trust like seeing the REAL result before
+committing.
+
+### Publish Confirmation
+```
+┌─────────────────────────────────────────────┐
+│  হোমপেজ পরিবর্তন প্রকাশ করবেন?                  │
+│  এই পরিবর্তন সাথে সাথে সব ইউজারের কাছে         │
+│  দেখা যাবে।                                    │
+│  [বাতিল]                    [হ্যাঁ, প্রকাশ করুন]│
+└─────────────────────────────────────────────┘
+```
+On confirm: writes to `app_settings`, logs to `audit_logs`
+(before/after diff = old vs new `sections[]` array — full accountability
+per DB Part 5 design), toast "✅ হোমপেজ আপডেট হয়েছে"।
+
+---
+
+### Theme Editor (`/god-mode/theme`)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  থিম এডিটর                      [👁️ লাইভ প্রিভিউ] [প্রকাশ করুন]│
+├───────────────────────┬───────────────────────────────────┤
+│ ব্র্যান্ড রং              │                                   │
+│  প্রাইমারি (Brand)        │      [LIVE IFRAME PREVIEW —       │
+│  [🟦 #1756C8] [পরিবর্তন] │       same mechanism as Homepage  │
+│                          │       Control above]              │
+│  সাকসেস/ভেরিফাইড (Life)  │                                   │
+│  [🟩 #0CAF74] [পরিবর্তন] │                                   │
+│                          │                                   │
+│  জরুরি (Emergency)       │                                   │
+│  [🟥 #DC2626] [পরিবর্তন] │                                   │
+│                          │                                   │
+│  ─────────────────────  │                                   │
+│  লোগো ও আইকন              │                                   │
+│  [MediaUploader: Logo]   │                                   │
+│  [MediaUploader: Favicon]│                                   │
+│                          │                                   │
+│  [🔄 ডিফল্ট রঙে ফিরে যান] │                                   │
+└───────────────────────┴───────────────────────────────────┘
+```
+
+### Deliberately Constrained, Not a Full Design Tool
+Color pickers offer **swatch + hex input**, but only for the ~4
+semantic brand tokens defined in S01 (`brand`, `life`, `emergency`,
+`accent`) — NOT every single design token (neutrals, spacing,
+typography scale stay code-defined, not admin-editable). This is an
+intentional god-mode boundary: full design-system-level control from
+a UI would risk an operator accidentally breaking contrast ratios,
+touch-target sizes, or visual consistency across 22 screens of
+carefully-specified UI (S01-S22). Brand color re-tinting is safe and
+valuable (rebranding, seasonal campaigns); token-level chaos is not
+— this line is drawn deliberately, matching your own instruction
+"এমন কিছু একদম না যেন ঝামেলা হয়।"
+
+### Contrast Safety Check
+On any color change, before allowing publish: an automated check
+computes contrast ratio of the new brand color against white text
+(used on buttons/FAB/badges throughout S01-S22) — if below WCAG AA
+(4.5:1), a warning appears: **"⚠️ এই রং বাটনের সাদা লেখার সাথে
+পড়তে কষ্ট হতে পারে। তবুও প্রকাশ করবেন?"** — not a hard block (your
+call is still respected), but an informed one.
+
+### How Theme Changes Actually Apply (Technical Note)
+`app_settings.theme_colors` JSONB is read at request-time by the
+user-app's root layout and injected as CSS custom property overrides
+(`--color-brand-600: <admin value>`) — meaning a theme change is
+**instant on next page load**, no rebuild/redeploy needed. This is
+precisely why the ISR revalidate window for the Home page (S04:
+5 minutes) matters — worst case, a just-published theme change takes
+up to 5 minutes to reach already-cached pages; acceptable trade-off
+for the performance benefit ISR gives everywhere else.
+
+---
+
+_(File continues — A08: Footer/Social/Contact Editor · Feature Flags · Menu Manager, in next commit)_
