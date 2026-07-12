@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-canvas text-neutral-900;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; /* admin-body is the workhorse size, A01 */
+}

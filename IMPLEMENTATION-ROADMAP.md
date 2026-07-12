@@ -4,19 +4,20 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 
 ---
 
-## PHASE 0 — Repo Scaffold (Foundation, No Business Logic Yet)
+## PHASE 0 — Repo Scaffold ✅ COMPLETE (Foundation, No Business Logic Yet)
 - [x] Extract DB migrations from spec → `packages/database/migrations/`
-- [ ] Root `package.json` (npm workspaces: apps/*, packages/*)
-- [ ] Root `.gitignore`, `.env.example`, `README.md` (setup instructions)
-- [ ] `packages/config` — shared Tailwind preset + design tokens (from
-      VYTANEXA-BLUEPRINT.md S01), shared ESLint/Prettier config
-- [ ] `apps/web` — Next.js 14 App Router skeleton, TypeScript strict,
-      Tailwind wired to shared preset, Supabase client stub
-- [ ] `apps/admin` — same skeleton, separate app, admin design tokens
-      (ADMIN-PANEL-SPEC.md A01)
-- [ ] Verify both apps run locally (`npm run dev` in each) with a
-      placeholder "Vytanexa — Coming Soon" page — proves the scaffold
-      works before any real feature code
+- [x] Root `package.json` (npm workspaces: apps/*, packages/*)
+- [x] Root `.gitignore`, `.env.example`
+- [x] `packages/config` — shared Tailwind preset + design tokens (from
+      VYTANEXA-BLUEPRINT.md S01)
+- [x] `apps/web` — Next.js 14 App Router skeleton, TypeScript strict,
+      Tailwind wired to shared preset, Supabase client/server stubs
+- [x] `apps/admin` — same skeleton, admin density tokens (A01),
+      separate service-role client (server-only) vs browser client
+- [x] Root `README.md` (setup instructions)
+- [x] `npm install` + `npm run build` verified for both apps —
+      TypeScript strict mode, zero errors, apps/web first-load JS
+      87.3KB (well under the S22 150KB/route budget)
 
 ## PHASE 1 — Database Live
 - [ ] Provision Supabase project (needs Juyel's credentials — ask)

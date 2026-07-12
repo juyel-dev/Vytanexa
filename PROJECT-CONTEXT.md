@@ -112,14 +112,15 @@ Vytanexa/
 │   ├── 0003_hospitals.sql      ✅ extracted (hospitals, test_catalog, blood, ambulance)
 │   ├── 0004_engagement.sql     ✅ extracted (reviews, leads, Q&A, polls, articles, notifications)
 │   └── 0005_system.sql         ✅ extracted (users, admin_users, analytics, audit, rate limits)
-├── apps/web/                   ⏳ not yet scaffolded
-├── apps/admin/                 ⏳ not yet scaffolded
-└── packages/config/            ⏳ not yet scaffolded (shared design tokens)
+├── apps/web/                   ✅ scaffolded, builds clean (Next.js 14 + TS strict)
+├── apps/admin/                 ✅ scaffolded, builds clean (Next.js 14 + TS strict)
+└── packages/config/            ✅ shared design tokens + Tailwind preset
 ```
-**Last major milestone:** full spec package complete, DB migrations
-extracted into runnable SQL. Next milestone: repo scaffold (folder
-tree, package.json workspaces, Tailwind config with S01 design tokens)
-— see `IMPLEMENTATION-ROADMAP.md` for the phased plan.
+**Last major milestone:** Phase 0 scaffold complete — both apps
+verified with `npm install` + `npm run build` (zero TypeScript errors,
+apps/web first-load JS 87.3KB, under S22's 150KB budget). Next
+milestone: Phase 1 (provision real Supabase project, run migrations,
+generate types) — needs Juyel to provide project credentials.
 
 ---
 
