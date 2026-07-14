@@ -19,17 +19,30 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       TypeScript strict mode, zero errors, apps/web first-load JS
       87.3KB (well under the S22 150KB/route budget)
 
-## PHASE 1 — Database Live
-- [ ] Provision Supabase project (needs Juyel's credentials — ask)
-- [ ] Run migrations 0001→0005 in order against the real project
-- [ ] Verify RLS policies active, spot-check with anon key (should see
-      only verified doctors, no blood donor phones, etc.)
-- [ ] Generate TypeScript types from Supabase schema →
-      `packages/database/types.ts` (via `supabase gen types typescript`)
-- [ ] Seed ONLY structural reference data if truly needed for dev
-      testing (e.g. a couple of test locations) — NEVER production
-      demo data, and clearly marked/removable before real launch,
-      per the PRODUCTION DATA RULE in PROJECT-CONTEXT.md
+## PHASE 1 — Database Live ✅ COMPLETE
+- [x] Provision Supabase project — done by Juyel: project "Vytanexa"
+      (ref `lfrvzdhonsnemdfmxthw`), Postgres 17, region ap-southeast-2
+- [x] Run migrations 0001→0005 in order — applied live via Supabase MCP
+      connector, all 32 tables created, RLS enabled on every table
+- [x] Security & performance hardening pass (0006, 0007) — ran Supabase's
+      built-in advisors post-migration, found and fixed REAL issues:
+      3 views were SECURITY DEFINER (now security_invoker), a
+      question_upvotes policy allowed arbitrary delete/update by anyone
+      (tightened to insert+read only), functions had mutable search_path
+      (pinned), auth.uid() re-evaluated per-row in 6 policies
+      (wrapped in `select` for query-plan caching), 10 missing FK
+      indexes added, handle_new_auth_user was public-RPC-callable
+      (revoked, trigger-only now)
+- [x] Generate TypeScript types → `packages/database/types.ts`
+      (fixed a genuine multi-schema generic-type bug in the raw
+      generator output — simplified to single-schema helpers, verified
+      with a standalone `tsc` compile before wiring in)
+- [x] Wire typed `Database` generic into all 3 Supabase clients
+      (apps/web browser+server, apps/admin browser+service-role) —
+      full `npm run build` verified clean on both apps afterward
+- [ ] Seed structural reference data (states/districts) — deferred to
+      Phase 6's real location data entry via the Admin Panel's CSV
+      bulk import (A04) once that screen is built; not needed yet
 
 ## PHASE 2 — User App Core (S01-S09 first — highest-value discovery flow)
 - [ ] S01 design tokens → actual `tailwind.config.ts` + global CSS

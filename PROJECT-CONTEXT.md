@@ -84,10 +84,14 @@ per-session by Juyel, short-lived, he revokes after use) to commit
 directly — small incremental commits, one logical change each, pushed
 immediately after each edit. No large uncommitted batches of work.
 
-**Supabase / Vercel:** Not yet provisioned as of this writing. Juyel
-has offered to provide a disposable Supabase project (URL + anon key +
-service role key) and Vercel account when implementation needs them —
-ask when that point is reached, don't assume they exist yet.
+**Supabase:** LIVE — project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`,
+region ap-southeast-2, Postgres 17), created and connected by Juyel via
+the Supabase MCP connector + a GitHub↔Supabase integration on the same
+repo. Full schema (32 tables, migrations 0001-0007) applied and
+verified. Real anon/service-role keys exist in `apps/web/.env.local`
+and `apps/admin/.env.local` locally (gitignored, never committed).
+
+**Vercel:** Not yet provisioned.
 
 **⚠️ Security note for future sessions:** any credential pasted into
 chat is inherently exposed in conversation history. Treat every
@@ -107,20 +111,23 @@ Vytanexa/
 ├── PROJECT-CONTEXT.md          ✅ this file
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist
 ├── packages/database/migrations/
-│   ├── 0001_core.sql           ✅ extracted (locations, app_settings, custom_pages)
-│   ├── 0002_doctors.sql        ✅ extracted (categories, doctors, chambers, subscriptions)
-│   ├── 0003_hospitals.sql      ✅ extracted (hospitals, test_catalog, blood, ambulance)
-│   ├── 0004_engagement.sql     ✅ extracted (reviews, leads, Q&A, polls, articles, notifications)
-│   └── 0005_system.sql         ✅ extracted (users, admin_users, analytics, audit, rate limits)
-├── apps/web/                   ✅ scaffolded, builds clean (Next.js 14 + TS strict)
-├── apps/admin/                 ✅ scaffolded, builds clean (Next.js 14 + TS strict)
+│   ├── 0001_core.sql           ✅ applied live
+│   ├── 0002_doctors.sql        ✅ applied live
+│   ├── 0003_hospitals.sql      ✅ applied live
+│   ├── 0004_engagement.sql     ✅ applied live
+│   ├── 0005_system.sql         ✅ applied live
+│   ├── 0006_security_and_performance_hardening.sql  ✅ applied live
+│   └── 0007_lock_is_admin_execute.sql               ✅ applied live
+├── packages/database/types.ts  ✅ generated from live schema, verified
+├── apps/web/                   ✅ scaffolded, builds clean, typed Supabase client wired
+├── apps/admin/                 ✅ scaffolded, builds clean, typed clients (browser + service-role) wired
 └── packages/config/            ✅ shared design tokens + Tailwind preset
 ```
-**Last major milestone:** Phase 0 scaffold complete — both apps
-verified with `npm install` + `npm run build` (zero TypeScript errors,
-apps/web first-load JS 87.3KB, under S22's 150KB budget). Next
-milestone: Phase 1 (provision real Supabase project, run migrations,
-generate types) — needs Juyel to provide project credentials.
+**Last major milestone:** Phase 1 complete — live Supabase project
+"Vytanexa" (ref `lfrvzdhonsnemdfmxthw`), 32 tables, full RLS, security/
+performance advisors run and real issues fixed, TypeScript types
+generated and wired into both apps, verified with clean `npm run build`.
+Next milestone: Phase 2 — first real feature code (S04 Home page).
 
 ---
 

@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@vytanexa/database';
 
 /**
  * Service-role Supabase client — FULL RLS BYPASS. This is how the
@@ -20,7 +21,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
  *   convention enforced by code review, not by the database itself.
  */
 export function createServiceRoleClient() {
-  return createSupabaseClient(
+  return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {

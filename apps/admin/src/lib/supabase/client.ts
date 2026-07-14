@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
+import type { Database } from '@vytanexa/database';
 
 /**
  * Browser client — anon key, RLS-scoped. Used ONLY for the admin's own
@@ -9,7 +10,7 @@ import { createBrowserClient } from '@supabase/ssr';
  * (see service-role.ts) — this file must never be used for that.
  */
 export function createClient() {
-  return createBrowserClient(
+  return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
