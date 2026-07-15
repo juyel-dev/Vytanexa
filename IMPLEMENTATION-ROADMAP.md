@@ -45,8 +45,21 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       bulk import (A04) once that screen is built; not needed yet
 
 ## PHASE 2 — User App Core (S01-S09 first — highest-value discovery flow)
-- [ ] S01 design tokens → actual `tailwind.config.ts` + global CSS
-- [ ] S02 routing shell → App Router file structure, bottom nav, top bar
+- [x] S01 design tokens → `tailwind.config.ts` extends shared preset +
+      layout constants (topbar/navbar/z-index) wired
+- [x] S02 routing shell → `(main)` route group, BottomNav (5 tabs,
+      active-state via usePathname), TopBar (Variant A Home + Variant B
+      Section — C/D/E deferred to the screens that need them),
+      placeholder pages for all 5 tabs
+- [x] Bengali typography wired via next/font (Hind Siliguri, Noto Sans
+      Bengali, Plus Jakarta Sans) — **verification caveat:** `tsc
+      --noEmit` passes clean, but `next build` could NOT be verified
+      in this sandbox — the network allowlist here doesn't include
+      `fonts.googleapis.com` (next/font/google needs one build-time
+      fetch even for "self-hosting"). This is a sandbox limitation,
+      not a code defect — will resolve automatically on Vercel (full
+      internet access) or if Juyel runs `npm run build` locally.
+      **Action item: confirm on first real build outside this sandbox.**
 - [ ] S03 onboarding flow
 - [ ] S04 Home page (start with static sections, wire data progressively)
 - [ ] S05 Search

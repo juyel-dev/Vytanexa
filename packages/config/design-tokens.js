@@ -55,8 +55,9 @@ const colors = {
 };
 
 const fontFamily = {
-  bengali: ['Hind Siliguri', 'Noto Sans Bengali', 'sans-serif'],
-  sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+  'bengali-display': ['var(--font-bengali-display)', 'Noto Sans Bengali', 'sans-serif'],
+  'bengali-body': ['var(--font-bengali-body)', 'Hind Siliguri', 'sans-serif'],
+  sans: ['var(--font-sans)', 'Plus Jakarta Sans', 'Inter', 'sans-serif'],
   mono: ['JetBrains Mono', 'Courier New', 'monospace'],
 };
 

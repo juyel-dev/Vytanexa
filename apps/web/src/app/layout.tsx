@@ -1,10 +1,31 @@
 import type { Metadata } from 'next';
+import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 
-// Font loading (next/font, self-hosted per S22 performance budget —
-// no external Google Fonts network request) will be wired in Phase 2
-// alongside the Bengali-first typography system from S01. Deliberately
-// deferred here to keep this scaffold commit minimal and verifiable.
+// Self-hosted via next/font (no external Google Fonts network request
+// at runtime — S22 performance budget). Exposed as CSS variables so
+// Tailwind's fontFamily.bengali / fontFamily.sans (packages/config/
+// design-tokens.js) resolve to the actual loaded font, not a fallback.
+const hindSiliguri = Hind_Siliguri({
+  subsets: ['bengali', 'latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-bengali-display',
+  display: 'swap',
+});
+
+const notoSansBengali = Noto_Sans_Bengali({
+  subsets: ['bengali'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-bengali-body',
+  display: 'swap',
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Vytanexa — আপনার স্বাস্থ্য, আপনার সংযোগ',
@@ -17,10 +38,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Locale detection (cookie-based, S02 § 7) wired in Phase 2 alongside
-  // next-intl setup. `lang="bn"` as the correct default in the meantime.
+  // Locale detection (cookie-based, S02 § 7) wired in a later Phase 2
+  // step alongside next-intl setup. `lang="bn"` as the correct default
+  // in the meantime.
   return (
-    <html lang="bn">
+    <html
+      lang="bn"
+      className={`${hindSiliguri.variable} ${notoSansBengali.variable} ${plusJakartaSans.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
