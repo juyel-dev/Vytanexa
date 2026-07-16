@@ -12,6 +12,8 @@ soft-delete everywhere, `*_translations` JSONB for i18n content.
 - [x] PART 3 — Hospitals: hospitals, test_catalog, blood_donors, blood_bank_inventory, ambulance_services
 - [x] PART 4 — Engagement: reviews (+rating trigger), leads, questions/answers, polls, articles, notifications
 - [x] PART 5 — System: users, favorites, admin_users, data_reports, analytics_events, audit_logs, rate_limits, cross-part FK completion, RLS
+- [x] PART 6 — Symptoms: symptoms, symptom_categories (added post-launch-planning, see TODO.md)
+- [x] PART 7 — Ads: ads table + placement enum (added post-launch-planning, see TODO.md)
 
 ---
 
@@ -1411,9 +1413,133 @@ CREATE POLICY analytics_public_insert ON analytics_events
 
 ---
 
-## ✅ DATABASE SCHEMA — COMPLETE (Parts 1–5)
+---
 
-**37 tables · 3 views · 6 trigger functions · full RLS coverage.**
+## PART 6 — SYMPTOMS
+> **Gap found during Phase 2 execution planning** (documented in
+> TODO.md): `VYTANEXA-BLUEPRINT.md` § S09 (Symptoms Page) and § S04
+> SEC-09 both reference a symptoms table that the original Parts 1-5
+> pass never actually created. Added here with the same conventions
+> as every other content table.
+
+```sql
+CREATE TABLE symptoms (
+  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug                     TEXT NOT NULL UNIQUE,
+  title_translations       JSONB NOT NULL DEFAULT '{"bn": ""}'::jsonb,
+  description_translations JSONB NOT NULL DEFAULT '{}'::jsonb,
+  cover_image_url          TEXT,
+  is_emergency             BOOLEAN NOT NULL DEFAULT false,
+  display_order            INT NOT NULL DEFAULT 0,
+  is_active                BOOLEAN NOT NULL DEFAULT true,
+  created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+  deleted_at                TIMESTAMPTZ
+);
+
+CREATE INDEX idx_symptoms_slug      ON symptoms(slug) WHERE deleted_at IS NULL;
+CREATE INDEX idx_symptoms_emergency ON symptoms(is_emergency)
+  WHERE is_emergency = true AND deleted_at IS NULL AND is_active = true;
+CREATE INDEX idx_symptoms_active    ON symptoms(display_order)
+  WHERE is_active = true AND deleted_at IS NULL;
+
+CREATE TRIGGER trg_symptoms_updated_at BEFORE UPDATE ON symptoms
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+```
+
+**Many-to-many with categories** — a symptom can recommend multiple
+specialties (e.g. "chest pain" → cardiology AND general medicine), and
+one specialty can be recommended by multiple symptoms. A join table
+gives real referential integrity, consistent with the
+`doctor_hospital_links` pattern from Part 2:
+
+```sql
+CREATE TABLE symptom_categories (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symptom_id   UUID NOT NULL REFERENCES symptoms(id) ON DELETE CASCADE,
+  category_id  UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  display_order INT NOT NULL DEFAULT 0,
+
+  UNIQUE(symptom_id, category_id)
+);
+
+CREATE INDEX idx_symptom_categories_symptom  ON symptom_categories(symptom_id);
+CREATE INDEX idx_symptom_categories_category ON symptom_categories(category_id);
+```
+
+**RLS:**
+```sql
+ALTER TABLE symptoms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE symptom_categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY symptoms_public_read ON symptoms
+  FOR SELECT USING (deleted_at IS NULL AND is_active = true);
+
+CREATE POLICY symptom_categories_public_read ON symptom_categories
+  FOR SELECT USING (true);
+```
+
+---
+
+## PART 7 — ADS
+> **Second gap found during the same planning pass**: `VYTANEXA-
+> BLUEPRINT.md` § S04 SEC-02 (Hero Banner Slider) / SEC-07 (Native Ad)
+> and `ADMIN-PANEL-SPEC.md` § A12 (Ads Manager) all reference an `ads`
+> table that was never created. This schema matches A12's field set
+> exactly, so the admin UI spec and this table stay in lockstep.
+
+```sql
+CREATE TYPE ad_placement AS ENUM ('homepage_banner', 'native_feed');
+
+CREATE TABLE ads (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  placement      ad_placement NOT NULL,
+  sponsor_name   TEXT NOT NULL,
+  image_url      TEXT NOT NULL,
+  target_url     TEXT NOT NULL,
+  display_order  INT NOT NULL DEFAULT 0,
+  start_date     DATE NOT NULL,
+  end_date       DATE NOT NULL,
+  is_active      BOOLEAN NOT NULL DEFAULT true,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  deleted_at     TIMESTAMPTZ,
+
+  CONSTRAINT chk_ad_date_range CHECK (end_date >= start_date)
+);
+
+CREATE INDEX idx_ads_placement_active ON ads(placement, display_order)
+  WHERE is_active = true AND deleted_at IS NULL;
+
+CREATE TRIGGER trg_ads_updated_at BEFORE UPDATE ON ads
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+```
+
+**RLS** — matches the exact query contract already documented in S04
+SEC-02 ("WHERE placement=... AND is_active=true AND start_date<=today
+AND end_date>=today"), enforced at the database layer too:
+```sql
+ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY ads_public_read ON ads
+  FOR SELECT USING (
+    deleted_at IS NULL AND is_active = true
+    AND start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE
+  );
+```
+
+Impressions/clicks are tracked via `analytics_events`
+(`event_type='ad_impression'/'ad_click'`, `entity_id=ads.id`) per the
+existing generic analytics design (Part 5) — no separate counter
+columns needed, consistent with doctor/hospital view tracking.
+
+---
+
+## ✅ DATABASE SCHEMA — COMPLETE (Parts 1–7)
+
+**39 tables · 3 views · 6 trigger functions · full RLS coverage.**
+(Updated from the original "37 tables, Parts 1-5" after Parts 6-7 were
+added post-launch-planning — see TODO.md.)
 
 ### Design Principles Applied Throughout
 ```
@@ -1450,5 +1576,5 @@ CREATE POLICY analytics_public_insert ON analytics_events
 
 ---
 
-_(Database schema file complete. Next: ADMIN-PANEL-SPEC — the Next.js
-"Ultra God Mode" admin application, screen by screen, in a new file.)_
+_(Database schema file complete, Parts 1-7. Next: ADMIN-PANEL-SPEC —
+the Next.js "Ultra God Mode" admin application, screen by screen.)_

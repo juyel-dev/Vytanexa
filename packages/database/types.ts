@@ -4,8 +4,14 @@
  * Do not hand-edit — regenerate after any migration change instead.
  *
  * Source project: Vytanexa (ref: lfrvzdhonsnemdfmxthw)
- * Regenerated: after migrations 0001-0007 (full schema + security/
- * performance hardening pass)
+ * Regenerated: after migrations 0001-0009 (full schema + security/
+ * performance hardening + symptoms + ads tables)
+ *
+ * NOTE: this regeneration uses Supabase's own updated generator output
+ * (DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">),
+ * which properly fixes the multi-schema generic issue that required a
+ * manual simplification in the previous version of this file — no
+ * hand-editing needed this time, the official output is correct as-is.
  */
 
 export type Json =
@@ -17,6 +23,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -51,6 +59,51 @@ export type Database = {
           name?: string
           permissions?: Json
           role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ads: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          display_order: number
+          end_date: string
+          id: string
+          image_url: string
+          is_active: boolean
+          placement: Database["public"]["Enums"]["ad_placement"]
+          sponsor_name: string
+          start_date: string
+          target_url: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          display_order?: number
+          end_date: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          placement: Database["public"]["Enums"]["ad_placement"]
+          sponsor_name: string
+          start_date: string
+          target_url: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          display_order?: number
+          end_date?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          placement?: Database["public"]["Enums"]["ad_placement"]
+          sponsor_name?: string
+          start_date?: string
+          target_url?: string
           updated_at?: string
         }
         Relationships: []
@@ -1597,6 +1650,84 @@ export type Database = {
           },
         ]
       }
+      symptom_categories: {
+        Row: {
+          category_id: string
+          display_order: number
+          id: string
+          symptom_id: string
+        }
+        Insert: {
+          category_id: string
+          display_order?: number
+          id?: string
+          symptom_id: string
+        }
+        Update: {
+          category_id?: string
+          display_order?: number
+          id?: string
+          symptom_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "symptom_categories_symptom_id_fkey"
+            columns: ["symptom_id"]
+            isOneToOne: false
+            referencedRelation: "symptoms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      symptoms: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          deleted_at: string | null
+          description_translations: Json
+          display_order: number
+          id: string
+          is_active: boolean
+          is_emergency: boolean
+          slug: string
+          title_translations: Json
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description_translations?: Json
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_emergency?: boolean
+          slug: string
+          title_translations?: Json
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description_translations?: Json
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_emergency?: boolean
+          slug?: string
+          title_translations?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       test_catalog: {
         Row: {
           aliases: string[]
@@ -1781,6 +1912,7 @@ export type Database = {
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
     }
     Enums: {
+      ad_placement: "homepage_banner" | "native_feed"
       app_role: "super_admin" | "admin" | "moderator" | "editor"
       entity_type: "doctor" | "hospital" | "article" | "question" | "poll"
       hospital_type: "hospital" | "clinic" | "diagnostic" | "nursing_home"
@@ -1798,40 +1930,127 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database["public"]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-/**
- * NOTE: the standard multi-schema-aware generic helpers (as emitted by
- * `supabase gen types`) were simplified here. This project has exactly
- * one schema ("public"); the generic `{ schema: keyof Database }`
- * overload broke under `strict` mode because `Database` also carries
- * an internal `__InternalSupabase` metadata key with no `Tables`/
- * `Views`/`Enums` shape, which TypeScript correctly flagged (TS2536)
- * when the generic tried to index into it. Single-schema versions
- * below are simpler, safer, and 100% sufficient for how this project
- * actually calls these helpers.
- */
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  TableName extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"]),
-> = (DefaultSchema["Tables"] & DefaultSchema["Views"])[TableName] extends {
-  Row: infer R
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
-  ? R
-  : never
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-export type TablesInsert<TableName extends keyof DefaultSchema["Tables"]> =
-  DefaultSchema["Tables"][TableName] extends { Insert: infer I } ? I : never
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export type TablesUpdate<TableName extends keyof DefaultSchema["Tables"]> =
-  DefaultSchema["Tables"][TableName] extends { Update: infer U } ? U : never
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
-export type Enums<EnumName extends keyof DefaultSchema["Enums"]> =
-  DefaultSchema["Enums"][EnumName]
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
     Enums: {
+      ad_placement: ["homepage_banner", "native_feed"],
       app_role: ["super_admin", "admin", "moderator", "editor"],
       entity_type: ["doctor", "hospital", "article", "question", "poll"],
       hospital_type: ["hospital", "clinic", "diagnostic", "nursing_home"],

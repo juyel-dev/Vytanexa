@@ -10,18 +10,21 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
 
 ---
 
-## SCHEMA GAP FOUND — MUST FIX BEFORE S09
-- [ ] Add `symptoms` table (migration 0008) — VYTANEXA-BLUEPRINT.md § S09
-      needs: title_translations, slug, cover_image_url, is_emergency
-      flag, recommended category_ids (array or join table), body/
-      description_translations. **This table does not exist yet** —
-      caught during TODO planning, not silently glossed over. Design
-      it properly (soft-delete, RLS public-read pattern matching every
-      other content table) rather than bolting it on carelessly.
-- [ ] Regenerate `packages/database/types.ts` after adding it
-- [ ] Update `DATABASE-SCHEMA.md` itself with a new "PART 6 — SYMPTOMS"
-      section so the markdown source of truth stays accurate (per
-      README.md's stated rule: markdown wins, .sql is derived)
+## SCHEMA GAP FOUND — MUST FIX BEFORE S09 ✅ DONE
+- [x] Add `symptoms` table (migration 0008) — done, includes
+      `symptom_categories` join table for the many-to-many with
+      `categories`, RLS matching every other content table
+- [x] Regenerate `packages/database/types.ts` after adding it — done,
+      also picked up the `ads` table (see below) in the same regen
+- [x] Update `DATABASE-SCHEMA.md` with PART 6 (Symptoms) and PART 7
+      (Ads) — done, table count corrected 37→39
+
+## SECOND GAP FOUND WHILE FIXING THE FIRST — ALSO DONE
+- [x] `ads` table was ALSO missing (S04 SEC-02/SEC-07, A12 all depend
+      on it) — caught during the same planning pass rather than
+      discovered later mid-build. Migration 0009 applied, documented
+      in DATABASE-SCHEMA.md PART 7, matches A12's Ads Manager field
+      set exactly.
 
 ---
 
@@ -31,12 +34,11 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
 - [x] SEC-05 Category Grid (done)
 - [ ] SEC-01 Announcement Banner (queries `notifications` where
       show_as_banner=true; empty-state hidden until admin creates one)
-- [ ] SEC-02 Hero Banner Slider (needs an `ads` table — **another
-      schema gap**: no `ads` table exists either! Check DATABASE-SCHEMA.md
-      before building; add migration 0009 if confirmed missing)
+- [ ] SEC-02 Hero Banner Slider (queries the now-existing `ads` table,
+      placement='homepage_banner')
 - [ ] SEC-06 Popular Doctors (real query: verified doctors, location-
       sorted once location system exists; for now sort by rating/featured)
-- [ ] SEC-07 Native Ad (same `ads` table dependency as SEC-02)
+- [ ] SEC-07 Native Ad (queries `ads`, placement='native_feed')
 - [ ] SEC-08 Trending Hospitals (real query, horizontal scroll)
 - [ ] SEC-09 Symptom Quick Access (depends on the new `symptoms` table above)
 - [ ] SEC-10 Health Articles (real query against `articles`, conditional
