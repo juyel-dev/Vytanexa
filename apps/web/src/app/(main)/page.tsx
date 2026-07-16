@@ -1,22 +1,38 @@
 import { TopBarHome } from '@/components/layout/TopBar';
+import { QuickActionsRow } from '@/components/home/QuickActionsRow';
+import { CategoryGrid } from '@/components/home/CategoryGrid';
+import { QuickStatsBar } from '@/components/home/QuickStatsBar';
+
+// NOTE on caching: this page is dynamically rendered per-request, not
+// ISR-cached, because the Supabase server client (lib/supabase/server.ts)
+// reads cookies() for future auth-aware personalization -- Next.js
+// forces dynamic rendering whenever a Server Component touches
+// cookies(), which overrides any `revalidate` export. S04's "5 min ISR"
+// target is a later optimization (splitting cookie-dependent bits from
+// cacheable ones) rather than something to fake with a config that
+// wouldn't actually take effect -- documenting the real behavior here
+// instead of a misleading revalidate export.
 
 export default function Home() {
   return (
     <>
       <TopBarHome />
-      <main className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 text-2xl font-bold text-white shadow-brand">
-          V
+      <main>
+        {/* Location chip (S04) intentionally deferred — needs the
+            Location Picker sheet (S03/S02) built first, which needs
+            real location data in the DB to be meaningful. Sections
+            below are ordered per S04's default order; admin-controlled
+            reordering (app_settings.homepage_settings) wires in once
+            the Admin Panel's Homepage Section Control (A07) exists. */}
+        <QuickStatsBar />
+        <QuickActionsRow />
+        <CategoryGrid />
+
+        <div className="px-6 py-10 text-center text-xs text-neutral-400">
+          বাকি সেকশন (Popular Doctors, Hospitals, Symptoms...) পরবর্তী ধাপে
+          <br />
+          see IMPLEMENTATION-ROADMAP.md
         </div>
-        <h1 className="font-bengali-display text-2xl font-bold text-neutral-900">
-          Vytanexa
-        </h1>
-        <p className="font-bengali-body text-sm text-neutral-500">
-          আপনার স্বাস্থ্য, আপনার সংযোগ — শীঘ্রই আসছে
-        </p>
-        <p className="mt-4 text-xs text-neutral-400">
-          Phase 2 — app shell wired · see IMPLEMENTATION-ROADMAP.md
-        </p>
       </main>
     </>
   );

@@ -52,14 +52,29 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       Section — C/D/E deferred to the screens that need them),
       placeholder pages for all 5 tabs
 - [x] Bengali typography wired via next/font (Hind Siliguri, Noto Sans
-      Bengali, Plus Jakarta Sans) — **verification caveat:** `tsc
-      --noEmit` passes clean, but `next build` could NOT be verified
-      in this sandbox — the network allowlist here doesn't include
-      `fonts.googleapis.com` (next/font/google needs one build-time
-      fetch even for "self-hosting"). This is a sandbox limitation,
-      not a code defect — will resolve automatically on Vercel (full
-      internet access) or if Juyel runs `npm run build` locally.
-      **Action item: confirm on first real build outside this sandbox.**
+      Bengali, Plus Jakarta Sans). **Fixed a real bug found during
+      verification:** `@supabase/ssr` was pinned to `^0.5.1` (resolved
+      0.5.2), which predates Supabase's `__InternalSupabase` type-gen
+      convention — `createServerClient<Database>`/`createBrowserClient
+      <Database>` silently returned `never` row types (confirmed via
+      isolated test: raw `@supabase/supabase-js` typed correctly, the
+      `@supabase/ssr` wrapper didn't). Bumped to `^0.12.3` in both
+      apps, confirmed fixed. **Font network caveat still applies:**
+      `next build` cannot fetch Google Fonts in this sandbox (allowlist
+      excludes `fonts.googleapis.com`) — isolated this by temporarily
+      stripping the font import and running a full `next build`, which
+      passed clean (exit 0, all 5 routes, correct dynamic/static
+      split) confirming every other line of code is correct. Restored
+      the real next/font code afterward. Only the font fetch itself is
+      unverified in-sandbox; will confirm on first Vercel/local build.
+- [x] S04 Home page — first live-data slice: QuickStatsBar (real
+      doctor/hospital/district counts), QuickActionsRow (static),
+      CategoryGrid (real `categories` query + doctor-count-per-category,
+      fixed a second real bug: PostgREST reverse-relationship embeds
+      `doctors(count)` aren't statically typeable from the `categories`
+      side since the FK lives on `doctors` — restructured to two
+      simple, correctly-typed queries instead of forcing a type-cast)
+      — remaining SEC-01/02/06-13 sections land in later passes
 - [ ] S03 onboarding flow
 - [ ] S04 Home page (start with static sections, wire data progressively)
 - [ ] S05 Search
