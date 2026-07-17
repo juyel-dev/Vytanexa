@@ -1,4 +1,5 @@
 import { TopBarHome } from '@/components/layout/TopBar';
+import { LocationChip } from '@/components/layout/LocationChip';
 import { Footer } from '@/components/layout/Footer';
 import { NativeAd } from '@/components/home/NativeAd';
 import { PwaInstallBanner } from '@/components/home/PwaInstallBanner';
@@ -36,9 +37,7 @@ export default async function Home() {
     <>
       <TopBarHome />
       <main>
-        {/* Location chip (S04) intentionally deferred — needs the
-            Location Picker sheet (S03/S02) built first, which needs
-            real location data in the DB to be meaningful. */}
+        <LocationChip />
 
         {sections.map((section) => {
           const SectionComponent = SECTION_COMPONENTS[section.id]!;

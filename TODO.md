@@ -61,13 +61,30 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
       not this code's to seed)
 
 ## S02/S03 — Still-Missing Shell Pieces
-- [ ] Location Chip component (S02 § 2.4) — needs Location Picker Sheet
-- [ ] Location Picker Sheet (S03 § "Location Setup") — real query
-      against `locations` table (currently empty; build the UI to
-      handle that empty state correctly per spec, don't fake data)
-- [ ] Emergency FAB (S02 § 2.3) — global, all pages
+- [x] Location Chip component (S02 § 2.4) — reads shared Zustand
+      location store, opens the picker sheet
+- [x] Location Picker Sheet (S03 § "Location Setup") — cascading
+      State→District→Sub-district against the live `locations` table.
+      **GPS auto-detect deliberately deferred** (reverse-geocoding to
+      an admin-created location row needs a mapping API or custom
+      geo-matching — a real sub-feature, not something to stub).
+      Manual selection (the spec's required fallback anyway) is fully
+      functional.
+- [x] Emergency FAB (S02 § 2.3) — global, wired into (main)/layout.tsx,
+      3 expandable options each opening a condensed BottomSheet;
+      national ambulance number (102) hardcoded per S12's explicit
+      "never DB-dependent" requirement
+- [x] Built `BottomSheet` (reusable, shared infra — used by FAB +
+      Location Picker, will be reused again by S07 review/lead
+      sheets, S05 filters, etc.)
+- [x] Added S01's named keyframe animations (fadeIn, slideUp,
+      slideInRight, scaleIn, shake) to the shared Tailwind preset —
+      previously undefined, needed for BottomSheet's slide-up
+- [x] Installed Zustand, built `stores/location-store.ts` (persisted)
+      — first real use of the S22 cross-cutting "Zustand stores" item
 - [ ] S03 full onboarding flow (splash, language select, slides,
-      location setup, optional sign-in) — currently fully unbuilt
+      location setup [now unblocked — reuses LocationPickerSheet],
+      optional sign-in) — still fully unbuilt, next up
 
 ## S05 — SEARCH
 - [ ] `/search` page: empty state (recent/trending/shortcuts)
