@@ -28,29 +28,37 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
 
 ---
 
-## S04 — HOME PAGE (remaining sections)
+## S04 — HOME PAGE ✅ ALL SECTIONS DONE
 - [x] SEC-03 Quick Stats Bar (done)
 - [x] SEC-04 Quick Actions Row (done)
 - [x] SEC-05 Category Grid (done)
-- [ ] SEC-01 Announcement Banner (queries `notifications` where
+- [x] SEC-01 Announcement Banner (queries `notifications` where
       show_as_banner=true; empty-state hidden until admin creates one)
-- [ ] SEC-02 Hero Banner Slider (queries the now-existing `ads` table,
-      placement='homepage_banner')
-- [ ] SEC-06 Popular Doctors (real query: verified doctors, location-
-      sorted once location system exists; for now sort by rating/featured)
-- [ ] SEC-07 Native Ad (queries `ads`, placement='native_feed')
-- [ ] SEC-08 Trending Hospitals (real query, horizontal scroll)
-- [ ] SEC-09 Symptom Quick Access (depends on the new `symptoms` table above)
-- [ ] SEC-10 Health Articles (real query against `articles`, conditional
-      on `is_published` rows existing)
-- [ ] SEC-11 Community Q&A Teaser (feature-flag gated via `app_settings.
-      features.community_qa`)
-- [ ] SEC-12 Blood Services CTA (static banner + link, no query needed)
-- [ ] SEC-13 PWA Install Banner (client-side, visit-count + beforeinstallprompt)
-- [ ] Footer (reads `app_settings` singleton row — social_links,
-      footer_links, contact_*)
-- [ ] Wire `app_settings.homepage_settings` for admin-controlled section
-      order/visibility (currently hardcoded render order)
+- [x] SEC-02 Hero Banner Slider (queries `ads`, client sub-component
+      for auto-advance/swipe carousel; fires `ad_click` via the new
+      `/api/analytics` route)
+- [x] SEC-06 Popular Doctors (real query; introduced reusable
+      `DoctorCard` component for reuse across S05/S06/S07 later)
+- [x] SEC-07 Native Ad (queries `ads` placement='native_feed', random
+      rotation among active ads)
+- [x] SEC-08 Trending Hospitals (real query, horizontal scroll)
+- [x] SEC-09 Symptom Quick Access (uses the new `symptoms` table,
+      emergency symptoms visually flagged)
+- [x] SEC-10 Health Articles (real query, conditional on published rows)
+- [x] SEC-11 Community Q&A Teaser (feature-flag gated via
+      `app_settings.features.community_qa`, defaults hidden)
+- [x] SEC-12 Blood Services CTA (static banner)
+- [x] SEC-13 PWA Install Banner (client component, visit-count +
+      beforeinstallprompt capture; install button is correctly inert
+      until S22's PWA/service-worker infra exists — honest, not faked)
+- [x] Footer (reads `app_settings` singleton row)
+- [x] Wired `app_settings.homepage_settings` for admin-controlled
+      section order/visibility — built `lib/homepage-sections.ts` as
+      the registry connecting section `id` strings to components,
+      with `DEFAULT_SECTIONS` matching the spec's default array
+      exactly as a fallback when the admin hasn't customized anything
+      yet (never written back to the DB — that's the admin's data,
+      not this code's to seed)
 
 ## S02/S03 — Still-Missing Shell Pieces
 - [ ] Location Chip component (S02 § 2.4) — needs Location Picker Sheet
@@ -129,8 +137,13 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
       polls, donor registration, data reports)
 - [ ] Rate-limiting wired into every public-insert Route Handler using
       the `check_rate_limit()` DB function
-- [ ] Analytics event firing (`analytics_events` inserts) on every
-      spec'd interaction (S07's event list, search, shares, etc.)
+- [~] Analytics event firing (`analytics_events` inserts) on every
+      spec'd interaction (S07's event list, search, shares, etc.) —
+      **`/api/analytics` Route Handler built** (pulled forward from
+      here while building S04's Hero Slider, which needed it for
+      ad_click tracking); wiring the *rest* of the spec'd events
+      (doctor_view, call_click, share, search, etc.) happens as each
+      of those screens gets built, not all at once here
 - [ ] Error boundaries + loading.tsx skeletons per route
 - [ ] Accessibility pass (aria-labels, focus states) per S01 § 11
 

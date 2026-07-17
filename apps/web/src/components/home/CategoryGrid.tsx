@@ -83,7 +83,7 @@ export async function CategoryGrid() {
                 {cat.icon_key ?? '🩺'}
               </span>
               <span className="line-clamp-2 font-bengali-body text-[13px] font-semibold text-neutral-800">
-                {getLocalizedField(cat.name_translations as Record<string, string>)}
+                {getLocalizedField(cat.name_translations)}
               </span>
               {doctorCount > 0 && (
                 <span className="text-[11px] text-neutral-500">{doctorCount} জন</span>
