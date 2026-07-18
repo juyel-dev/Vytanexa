@@ -31,6 +31,10 @@ const keyframes = {
     '25%': { transform: 'translateX(-4px)' },
     '75%': { transform: 'translateX(4px)' },
   },
+  progress: {
+    from: { transform: 'scaleX(0)' },
+    to: { transform: 'scaleX(1)' },
+  },
 };
 
 const animation = {
@@ -39,6 +43,7 @@ const animation = {
   'slide-in-right': 'slideInRight 300ms cubic-bezier(0.16, 1, 0.3, 1)',
   'scale-in': 'scaleIn 200ms ease-out',
   shake: 'shake 300ms ease-in-out',
+  progress: 'progress 1800ms linear forwards',
 };
 
 /** @type {import('tailwindcss').Config} */

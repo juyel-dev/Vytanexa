@@ -82,9 +82,20 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
       previously undefined, needed for BottomSheet's slide-up
 - [x] Installed Zustand, built `stores/location-store.ts` (persisted)
       — first real use of the S22 cross-cutting "Zustand stores" item
-- [ ] S03 full onboarding flow (splash, language select, slides,
-      location setup [now unblocked — reuses LocationPickerSheet],
-      optional sign-in) — still fully unbuilt, next up
+- [x] S03 full onboarding flow — splash, language select, 3 slides,
+      location setup (reuses LocationPickerSheet), optional sign-in
+      (phone+OTP and Google via Supabase Auth). Onboarding store
+      (Zustand, persisted) drives step orchestration, giving "resume
+      from last completed step" (S03 Edge Cases) for free. Also built:
+      `/auth/login` (standalone, for returning guests via S16/S17 soft
+      -gates) and `/auth/verify` (shared OTP entry, 6 auto-advancing
+      digit boxes). FirstRunGate wired into (main)/layout.tsx redirects
+      new visitors to /onboarding from ANY entry point, not just Home.
+      **Infra caveat, not a code defect:** phone-OTP needs an SMS
+      provider (e.g. Twilio) and Google needs an OAuth client, both
+      configured in the Supabase dashboard — the Auth calls themselves
+      are correct and complete, same category of gap as the sandbox's
+      font-fetch block noted earlier.
 
 ## S05 — SEARCH
 - [ ] `/search` page: empty state (recent/trending/shortcuts)

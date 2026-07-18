@@ -1,4 +1,5 @@
 import { BottomNav } from '@/components/layout/BottomNav';
+import { FirstRunGate } from '@/components/layout/FirstRunGate';
 import dynamic from 'next/dynamic';
 
 // Code-split: EmergencyFAB pulls in the browser Supabase client for its
@@ -26,6 +27,7 @@ export default function MainLayout({
 }) {
   return (
     <>
+      <FirstRunGate />
       <div className="pb-[calc(theme(spacing.navbar)+env(safe-area-inset-bottom))]">
         {children}
       </div>
