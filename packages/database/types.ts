@@ -1909,7 +1909,21 @@ export type Database = {
         Args: { p_key: string; p_max_count: number; p_window: string }
         Returns: boolean
       }
+      get_trending_searches: {
+        Args: { p_limit?: number }
+        Returns: { query: string; search_count: number }[]
+      }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      // The following three are NOT app-defined -- they're built-in
+      // functions from the pg_trgm/unaccent extensions, which leak
+      // into the public schema's type generation because those
+      // extensions are installed in `public` (a WARN-level, deferred
+      // decision documented in DATABASE-SCHEMA.md's hardening notes).
+      // Listed here for type accuracy; the app never calls these
+      // directly.
+      show_limit: { Args: Record<PropertyKey, never>; Returns: number }
+      show_trgm: { Args: { '': string }; Returns: string[] }
+      unaccent: { Args: { '': string }; Returns: string }
     }
     Enums: {
       ad_placement: "homepage_banner" | "native_feed"

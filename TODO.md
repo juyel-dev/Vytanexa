@@ -97,12 +97,36 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
       are correct and complete, same category of gap as the sandbox's
       font-fetch block noted earlier.
 
-## S05 — SEARCH
-- [ ] `/search` page: empty state (recent/trending/shortcuts)
-- [ ] Typing state — autocomplete dropdown, parallel Supabase queries
-- [ ] Results state — tabbed, filters, sort
-- [ ] No-results state
-- [ ] Voice search (SpeechRecognition API integration)
+## S05 — SEARCH ✅ DONE
+- [x] `/search` page: empty state (recent/trending/shortcuts) — recent
+      via localStorage (`lib/recent-searches.ts`), trending via a new
+      `get_trending_searches()` RPC (aggregates `analytics_events`,
+      migration 0010 — plain PostgREST can't express the needed
+      GROUP BY), category shortcuts reusing the categories table
+- [x] Typing state — autocomplete dropdown, parallel Supabase queries
+      **moved server-side** (`/api/search` Route Handler) rather than
+      client-side, learned from the Home page bundle-size lesson —
+      Search page ships zero Supabase client code itself
+- [x] Results state — tabbed (all/doctors/hospitals/symptoms), full
+      query via the same `/api/search` route with a higher limit.
+      **Filter sheet + sort dropdown NOT built here** — S05's spec
+      explicitly reuses S06's Doctor List filter sheet for the
+      "doctors" tab; building that once in S06 and having Search
+      reuse it is the correct order, not a scope gap in this pass
+- [x] No-results state — retry suggestions + WhatsApp fallback CTA
+- [x] Voice search — `useVoiceSearch` hook wraps SpeechRecognition
+      with the spec's bn-BD→bn-IN→en-IN language fallback chain, full
+      overlay with listening/processing/error states
+- [x] Bengali-English alias resolution (হার্ট→cardiology etc.) per spec
+
+**Verification caveat, honestly noted:** the JSONB `ilike` filter
+pattern (`name_translations->>bn.ilike.%q%`) used in `/api/search`
+compiles and typechecks, and the equivalent raw SQL was confirmed
+valid directly against the live database — but this sandbox can't
+reach the Supabase REST API directly (not in the network allowlist),
+so PostgREST's own parsing of that exact `.or()` filter string is
+unverified end-to-end. Spot-check once real doctor/hospital data
+exists (Admin Panel A05/A06, or manual test data).
 
 ## S06 — DOCTOR LIST
 - [ ] `/doctors` page: filter chips, sort, infinite scroll
