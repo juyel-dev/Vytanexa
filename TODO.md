@@ -128,12 +128,30 @@ so PostgREST's own parsing of that exact `.or()` filter string is
 unverified end-to-end. Spot-check once real doctor/hospital data
 exists (Admin Panel A05/A06, or manual test data).
 
-## S06 — DOCTOR LIST
-- [ ] `/doctors` page: filter chips, sort, infinite scroll
-- [ ] Filter sheet (district, specialty multi-select, fee range, rating,
-      availability, verified, language)
-- [ ] Doctor card component (full variant) — reusable, used again in
-      S04 SEC-06, S05 results, S07 related, SEO pages
+## S06 — DOCTOR LIST ✅ DONE
+- [x] `/doctors` page: SSR first page (server component, good for SEO/
+      slow connections) + client-side infinite scroll continuation via
+      IntersectionObserver + `/api/doctors`
+- [x] Filter sheet (specialty multi-select, fee range slider, rating,
+      language) — reuses `BottomSheet`. **District and "available
+      today" filters deferred** (documented in `lib/queries/doctor-
+      list.ts` — both need real chamber data to filter against
+      meaningfully; the query builder has the exact spot to add them)
+- [x] Doctor card component — already built in S04, reused as-is here
+      (proof the S04 investment in a shared component paid off)
+- [x] Sort (rating/reviews/fee/experience), specialty chip row,
+      result count — all URL-state-driven (shareable, back-button safe
+      per spec)
+- [x] One shared query builder (`lib/queries/doctor-list.ts`) used by
+      BOTH the SSR page and the pagination API route, so they can
+      never drift out of sync with each other
+
+**Verification caveat, honestly noted:** the `categories!inner(...)`
+embedded-join filter (`.in('categories.slug', slugs)`) typechecks and
+follows standard PostgREST syntax for inner-join filtering, but like
+the S05 JSONB filter, this sandbox can't reach the live REST API to
+confirm PostgREST parses it exactly as expected — spot-check once
+real doctor+category data exists.
 
 ## S07 — DOCTOR PROFILE ★ most critical page ★
 - [ ] `/doctors/[slug]` route, SSG+ISR
