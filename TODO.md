@@ -153,16 +153,35 @@ the S05 JSONB filter, this sandbox can't reach the live REST API to
 confirm PostgREST parses it exactly as expected — spot-check once
 real doctor+category data exists.
 
-## S07 — DOCTOR PROFILE ★ most critical page ★
-- [ ] `/doctors/[slug]` route, SSG+ISR
-- [ ] Hero card, trust strip, sticky tab bar
-- [ ] Tab 1 তথ্য (Info)
-- [ ] Tab 2 চেম্বার (Chambers) — schedule grouping + live status algorithm
-- [ ] Tab 3 রিভিউ (Reviews) — list + submission modal + rate limiting
-- [ ] Tab 4 হাসপাতাল (Hospital Affiliations)
-- [ ] Sticky bottom action bar
-- [ ] Appointment Lead Capture sheet — writes to `leads` table
-- [ ] Share sheet + OG meta + JSON-LD
+## S07 — DOCTOR PROFILE ✅ DONE ★ most critical page ★
+- [x] `/doctors/[slug]` route, ISR (revalidate 3600s per spec's "1 hour
+      for profiles" — same honest cookies()-forces-dynamic caveat as
+      Home, documented in the file rather than silently claimed)
+- [x] Hero card, trust strip, sticky tab bar (client-side tab state,
+      not a route change, per spec)
+- [x] Tab 1 তথ্য (Info) — **schema note:** spec's mockup shows
+      structured "Degree — Institution (Year)" entries, but
+      `doctors.degree` is a flat text array with no institution/year
+      fields; rendered as-is rather than fabricating data that
+      doesn't exist in the schema
+- [x] Tab 2 চেম্বার (Chambers) — built `lib/chamber-schedule.ts`:
+      schedule grouping + live open/closed status as pure, reusable
+      functions (also needed later for S06's "আজ উপলব্ধ" chip)
+- [x] Tab 3 রিভিউ (Reviews) — list + distribution bars + submission
+      modal (honeypot, 20-500 char validation) + `/api/reviews` with
+      rate limiting via the shared `check_rate_limit()` DB function
+- [x] Tab 4 হাসপাতাল (Hospital Affiliations)
+- [x] Sticky bottom action bar — **required restructuring the (main)
+      layout**: built `MainChrome.tsx` (pathname-aware) so detail
+      pages hide the global BottomNav in favor of their own full-width
+      bar, per spec ("Detail pages hide bottom nav, this bar takes its
+      place") — a real architectural fix, not a workaround
+- [x] Appointment Lead Capture sheet → `/api/leads`, same rate-limit
+      pattern, direct call/WhatsApp always available alongside the
+      form per spec (never gated behind it)
+- [x] Share sheet (built generic — `components/shared/ShareSheet.tsx`,
+      reusable by S08/S09 later) + OG meta (`generateMetadata`) +
+      JSON-LD (`Physician` schema)
 
 ## S08 — HOSPITAL LIST/DETAIL
 - [ ] `/hospitals` list page

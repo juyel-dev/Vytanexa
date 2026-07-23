@@ -1,4 +1,4 @@
-import { BottomNav } from '@/components/layout/BottomNav';
+import { MainChrome } from '@/components/layout/MainChrome';
 import { FirstRunGate } from '@/components/layout/FirstRunGate';
 import dynamic from 'next/dynamic';
 
@@ -18,7 +18,9 @@ const EmergencyFAB = dynamic(
  * Wraps every screen that has the bottom nav + top bar chrome: Home,
  * Search, Doctors, Hospitals, Symptoms, Community, More, etc.
  * TopBar is intentionally NOT injected here — its variant differs per
- * page (S02 § 2.2), so each page renders its own.
+ * page (S02 § 2.2), so each page renders its own. BottomNav itself is
+ * pathname-conditional (see MainChrome) — hidden on detail pages per
+ * S07's sticky-bottom-action-bar requirement.
  */
 export default function MainLayout({
   children,
@@ -28,11 +30,8 @@ export default function MainLayout({
   return (
     <>
       <FirstRunGate />
-      <div className="pb-[calc(theme(spacing.navbar)+env(safe-area-inset-bottom))]">
-        {children}
-      </div>
+      <MainChrome>{children}</MainChrome>
       <EmergencyFAB />
-      <BottomNav />
     </>
   );
 }
