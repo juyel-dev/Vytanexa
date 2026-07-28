@@ -1,12 +1,32 @@
+import { Suspense } from 'react';
 import { TopBarSection } from '@/components/layout/TopBar';
+import { HospitalListClient } from '@/components/hospitals/HospitalListClient';
+import { createClient } from '@/lib/supabase/server';
+import { queryHospitalList } from '@/lib/queries/hospital-list';
 
-export default function HospitalsPage() {
+/**
+ * Hospital List Page — VYTANEXA-BLUEPRINT.md § S08. Mirrors the SSR +
+ * client-infinite-scroll architecture established in S06's Doctor List.
+ */
+export default async function HospitalsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const supabase = createClient();
+
+  const { data: hospitals, count } = await queryHospitalList(supabase, {
+    type: searchParams.type,
+    emergencyOnly: searchParams.emergencyOnly === 'true',
+    page: 0,
+  });
+
   return (
     <>
       <TopBarSection title="হাসপাতাল" />
-      <main className="flex min-h-[50vh] items-center justify-center px-6 text-center text-sm text-neutral-400">
-        S08 (Hospital List) not yet built — see IMPLEMENTATION-ROADMAP.md
-      </main>
+      <Suspense fallback={null}>
+        <HospitalListClient initialHospitals={hospitals} initialCount={count} />
+      </Suspense>
     </>
   );
 }
