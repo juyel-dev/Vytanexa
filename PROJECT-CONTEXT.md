@@ -103,44 +103,69 @@ credentials are needed and none are present in the current session.
 
 ## 5. CURRENT STATE OF THE REPO (Update This Section As Work Progresses)
 
+**⚠️ For the exact session checkpoint (what's uncommitted, exact next
+step, gotchas discovered mid-session), read `CHECKPOINT.md` FIRST —
+it supersedes the summary below whenever the two disagree, and gets
+rewritten at the end of every session while this section only gets a
+periodic refresh.**
+
 ```
 Vytanexa/
-├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22)
-├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-5, 37 tables)
-├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15)
+├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22 spec)
+├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-7, 39 tables)
+├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, NOT built yet)
 ├── PROJECT-CONTEXT.md          ✅ this file
-├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist
-├── packages/database/migrations/
-│   ├── 0001_core.sql           ✅ applied live
-│   ├── 0002_doctors.sql        ✅ applied live
-│   ├── 0003_hospitals.sql      ✅ applied live
-│   ├── 0004_engagement.sql     ✅ applied live
-│   ├── 0005_system.sql         ✅ applied live
-│   ├── 0006_security_and_performance_hardening.sql  ✅ applied live
-│   └── 0007_lock_is_admin_execute.sql               ✅ applied live
-├── packages/database/types.ts  ✅ generated from live schema, verified
-├── apps/web/                   ✅ scaffolded, builds clean, typed Supabase client wired
-├── apps/admin/                 ✅ scaffolded, builds clean, typed clients (browser + service-role) wired
-└── packages/config/            ✅ shared design tokens + Tailwind preset
+├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
+├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
+├── CHECKPOINT.md               ✅ exact session handoff state — READ THIS FIRST
+├── packages/database/migrations/  0001-0010, all applied live
+├── packages/database/types.ts  generated from live schema
+├── apps/web/                   Next.js user app — see below for build progress
+└── apps/admin/                 Phase 0 scaffold only, no real screens built yet
 ```
-**Last major milestone:** Phase 1 complete — live Supabase project
-"Vytanexa" (ref `lfrvzdhonsnemdfmxthw`), 32 tables, full RLS, security/
-performance advisors run and real issues fixed, TypeScript types
-generated and wired into both apps, verified with clean `npm run build`.
-Next milestone: Phase 2 — first real feature code (S04 Home page).
+
+**Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
+39 tables, full RLS, migrations 0001-0010 applied and hardened.
+
+**apps/web build progress** (screens implemented against live data,
+verified via typecheck + build each time — see `TODO.md` for the
+authoritative checklist):
+```
+✅ Phase 0-1 (scaffold, DB wiring)
+✅ S01-S02 (design tokens, routing shell, nav)
+✅ S03 (onboarding, auth pages)
+✅ S04 (Home, all 13 sections)
+✅ S05 (Search, all states + voice)
+✅ S06 (Doctor List)
+✅ S07 (Doctor Profile — "most critical page")
+⏳ S08 (Hospital List done, Hospital Detail in progress — see CHECKPOINT.md)
+❌ S09 onward — not started
+❌ Admin Panel (apps/admin) — not started beyond Phase 0 scaffold
+```
+
+**Last major milestone:** S07 Doctor Profile complete (the spec's own
+"most critical page"). Currently mid-way through S08 Hospital Detail
+when the user paused the session to checkpoint (container reset risk
+— see `CHECKPOINT.md` § 7 for what happened and the recovery drill).
 
 ---
 
 ## 6. HOW TO RESUME WORK IN A NEW SESSION
 
-1. Read this file.
-2. Check §5 above for what's built vs pending (keep it updated!).
-3. Check `IMPLEMENTATION-ROADMAP.md` for the current phase's checklist.
+1. **Read `CHECKPOINT.md` first** — exact next step, uncommitted work,
+   session-specific gotchas. This file (§5 above) is the durable summary;
+   CHECKPOINT.md is the precise "start here" pointer.
+2. Check `TODO.md` for the authoritative, granular execution checklist.
+3. Check `IMPLEMENTATION-ROADMAP.md` for the phase-level view.
 4. If credentials (GitHub PAT / Supabase keys) aren't in the current
    conversation, ask Juyel for fresh ones rather than assuming old
    ones still work.
 5. Continue in small, incrementally-committed steps — think before
-   writing code, verify before committing, push immediately after
-   each verified change (Juyel's explicit working preference).
-6. Update this file's §5 (and roadmap checkboxes) as milestones complete
-   — this file is only useful if kept current.
+   writing code, verify (typecheck + build) before committing, push
+   immediately after each verified change. This session learned the
+   hard way (a container reset) why "immediately" matters — see
+   `CHECKPOINT.md` § 7.
+6. Update `TODO.md` checkboxes and this file's §5 as milestones
+   complete — both are only useful if kept current. Consider replacing
+   `CHECKPOINT.md`'s content with a fresh checkpoint at each natural
+   pause point, rather than letting it grow unbounded.

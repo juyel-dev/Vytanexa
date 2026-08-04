@@ -183,12 +183,21 @@ real doctor+category data exists.
       reusable by S08/S09 later) + OG meta (`generateMetadata`) +
       JSON-LD (`Physician` schema)
 
-## S08 — HOSPITAL LIST/DETAIL
-- [ ] `/hospitals` list page
-- [ ] `/hospitals/[slug]` detail page — gallery, services, linked doctors
+## S08 — HOSPITAL LIST/DETAIL ⏳ IN PROGRESS — see CHECKPOINT.md
+- [x] `/hospitals` list page — SSR + infinite scroll + type/emergency
+      filters, committed (commit f37febc)
+- [ ] `/hospitals/[slug]` detail page — gallery, services, linked
+      doctors. **Query + UI component written but UNCOMMITTED and
+      UNVERIFIED as of this checkpoint** (`lib/queries/hospital-
+      detail.ts`, `components/hospital-profile/HospitalProfileClient.
+      tsx`) — the route file itself
+      (`app/(main)/hospitals/[slug]/page.tsx`) was not yet created.
+      **See CHECKPOINT.md § 3 for the exact next step.**
 
-## S09 — SYMPTOMS (blocked on schema gap above)
-- [ ] `/symptoms` list page
+## S09 — SYMPTOMS
+- [ ] `/symptoms` list page (schema gap from earlier in this file is
+      RESOLVED — `symptoms`/`symptom_categories` tables exist,
+      migration 0008, already used by S04's SymptomQuickAccess)
 - [ ] `/symptoms/[slug]` detail page — emergency flagging visual
 
 ## S10-S12 — Health Services
