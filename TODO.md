@@ -203,11 +203,35 @@ real doctor+category data exists.
       always show "কল করুন" fallback; no `insurance_schemes` or
       "established year" columns → those spec mockup sections omitted.
 
-## S09 — SYMPTOMS
-- [ ] `/symptoms` list page (schema gap from earlier in this file is
-      RESOLVED — `symptoms`/`symptom_categories` tables exist,
-      migration 0008, already used by S04's SymptomQuickAccess)
-- [ ] `/symptoms/[slug]` detail page — emergency flagging visual
+## S09 — SYMPTOMS ✅ COMPLETE (with one noted deferred schema gap)
+- [x] `/symptoms` list page — SSG/ISR 6hr, search-within-page (client-
+      side, no round-trip), emergency section pinned top, general grid
+      grouped by each symptom's first linked specialty
+      (`lib/queries/symptom-list.ts` — see file for the schema-gap
+      note: no true "symptom category" taxonomy column exists, spec's
+      mockup grouping fabricated from the closest real data instead)
+- [x] `/symptoms/[slug]` detail page — emergency banner (border +
+      CTA to `/emergency`), description, related-specialty chips w/
+      doctor counts (`getSpecialtyDoctorCounts` — NOT location-
+      filtered, same deferral as `doctor-list.ts`'s district filter,
+      documented inline), bottom CTA to `/doctors?specialty=...`.
+      `MedicalSymptom` JSON-LD.
+- [ ] **DEFERRED, not forgotten:** `symptoms.common_causes` and
+      `symptoms.when_to_see_doctor` array columns don't exist
+      (migration 0008 only added `description_translations`) — the
+      spec's mockup shows both sections. Supabase MCP connector was
+      unreachable this session (connection timeout on `list_migrations`
+      and `execute_sql`) so the migration to add them couldn't be
+      applied live. Sections are correctly auto-hidden per spec's own
+      "auto-hidden if empty" rule rather than showing empty content —
+      not a bug, just incomplete data model. **Next session: retry the
+      Supabase MCP connector; if reachable, add migration 0011 with
+      `common_causes_translations JSONB` +
+      `when_to_see_doctor_translations JSONB` (array-of-translated-
+      strings shape, consistent with the `*_translations` convention),
+      regenerate types, wire into `SymptomDetailClient.tsx` (both
+      components are already structured to just add another
+      auto-hidden `<section>` — no refactor needed).**
 
 ## S10-S12 — Health Services
 - [ ] S10 Lab/Diagnostic test search (`/health/lab-tests`)
