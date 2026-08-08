@@ -7,10 +7,10 @@ import { getLocalizedField } from '@/lib/i18n';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 import { InfoTab } from './InfoTab';
 import { ChambersTab } from './ChambersTab';
-import { ReviewsTab } from './ReviewsTab';
 import { HospitalsTab } from './HospitalsTab';
 import { AppointmentSheet } from './AppointmentSheet';
 import { ShareSheet } from '@/components/shared/ShareSheet';
+import { ReviewsTab } from '@/components/shared/ReviewsTab';
 
 type Review = {
   id: string;
@@ -181,8 +181,9 @@ export function DoctorProfileClient({
       {activeTab === 'chambers' && <ChambersTab chambers={doctor.chambers} />}
       {activeTab === 'reviews' && (
         <ReviewsTab
-          doctorId={doctor.id}
-          doctorName={name}
+          entityType="doctor"
+          entityId={doctor.id}
+          entityName={name}
           reviews={reviews}
           ratingAvg={doctor.rating_avg}
           ratingCount={doctor.rating_count}

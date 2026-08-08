@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
-type Review = {
+export type Review = {
   id: string;
   reviewer_name: string;
   rating: number;
@@ -14,22 +14,29 @@ type Review = {
 };
 
 /**
- * Tab 3 — রিভিউ (Reviews) — VYTANEXA-BLUEPRINT.md § S07 Tab 3.
+ * Reviews Tab — VYTANEXA-BLUEPRINT.md § S07 Tab 3, reused as-is for
+ * S08 Tab 4 per the spec's own framing: "Identical mechanics to S07
+ * Tab 3 ... scoped to `hospital_id` instead of `doctor_id`". Generic
+ * over `entityType`/`entityId` rather than doctor-specific — moved
+ * here from `doctor-profile/ReviewsTab.tsx` unchanged in behavior.
+ *
  * Rating distribution bars computed client-side from the same
  * `reviews` prop (approved reviews only, fetched server-side by the
- * parent page) — no separate aggregate query needed since
- * `doctor.rating_avg`/`rating_count` already carry the DB-trigger-
+ * parent page) — no separate aggregate query needed since the
+ * entity's `rating_avg`/`rating_count` already carry the DB-trigger-
  * maintained totals (DATABASE-SCHEMA.md § 4.1).
  */
 export function ReviewsTab({
-  doctorId,
-  doctorName,
+  entityType,
+  entityId,
+  entityName,
   reviews,
   ratingAvg,
   ratingCount,
 }: {
-  doctorId: string;
-  doctorName: string;
+  entityType: 'doctor' | 'hospital';
+  entityId: string;
+  entityName: string;
   reviews: Review[];
   ratingAvg: number;
   ratingCount: number;
@@ -99,7 +106,7 @@ export function ReviewsTab({
               {r.admin_reply && (
                 <div className="mt-2 rounded-md bg-brand-50 p-2.5">
                   <p className="text-[12px] font-semibold text-brand-700">
-                    💬 ডাক্তারের প্রতিক্রিয়া:
+                    💬 {entityType === 'hospital' ? 'হাসপাতালের প্রতিক্রিয়া' : 'ডাক্তারের প্রতিক্রিয়া'}:
                   </p>
                   <p className="text-[13px] text-neutral-700">{r.admin_reply}</p>
                 </div>
@@ -121,8 +128,9 @@ export function ReviewsTab({
       <ReviewSubmissionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        doctorId={doctorId}
-        doctorName={doctorName}
+        entityType={entityType}
+        entityId={entityId}
+        entityName={entityName}
       />
     </div>
   );
@@ -131,13 +139,15 @@ export function ReviewsTab({
 function ReviewSubmissionModal({
   open,
   onClose,
-  doctorId,
-  doctorName,
+  entityType,
+  entityId,
+  entityName,
 }: {
   open: boolean;
   onClose: () => void;
-  doctorId: string;
-  doctorName: string;
+  entityType: 'doctor' | 'hospital';
+  entityId: string;
+  entityName: string;
 }) {
   const [rating, setRating] = useState(0);
   const [name, setName] = useState('');
@@ -156,7 +166,8 @@ function ReviewSubmissionModal({
     const res = await fetch('/api/reviews', {
       method: 'POST',
       body: JSON.stringify({
-        doctor_id: doctorId,
+        entity_type: entityType,
+        entity_id: entityId,
         reviewer_name: name,
         rating,
         review_text: text,
@@ -187,9 +198,7 @@ function ReviewSubmissionModal({
         </p>
       ) : (
         <>
-          <p className="mb-3 text-center text-[14px] text-neutral-700">
-            {doctorName} কে রেট করুন
-          </p>
+          <p className="mb-3 text-center text-[14px] text-neutral-700">{entityName} কে রেট করুন</p>
           <div className="mb-4 flex justify-center gap-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <button key={i} onClick={() => setRating(i)} aria-label={`${i} star`}>

@@ -183,16 +183,25 @@ real doctor+category data exists.
       reusable by S08/S09 later) + OG meta (`generateMetadata`) +
       JSON-LD (`Physician` schema)
 
-## S08 — HOSPITAL LIST/DETAIL ⏳ IN PROGRESS — see CHECKPOINT.md
+## S08 — HOSPITAL LIST/DETAIL ✅ COMPLETE
 - [x] `/hospitals` list page — SSR + infinite scroll + type/emergency
       filters, committed (commit f37febc)
-- [ ] `/hospitals/[slug]` detail page — gallery, services, linked
-      doctors. **Query + UI component written but UNCOMMITTED and
-      UNVERIFIED as of this checkpoint** (`lib/queries/hospital-
-      detail.ts`, `components/hospital-profile/HospitalProfileClient.
-      tsx`) — the route file itself
-      (`app/(main)/hospitals/[slug]/page.tsx`) was not yet created.
-      **See CHECKPOINT.md § 3 for the exact next step.**
+- [x] `/hospitals/[slug]` detail page — gallery (swipeable + lightbox),
+      hero info block, tab bar (তথ্য/ডাক্তার/সেবা/রিভিউ), sticky
+      call+directions bar, emergency visual treatment, `Hospital`
+      JSON-LD. `lib/queries/hospital-detail.ts` (`getHospitalBySlug` +
+      `getHospitalServices` — resolves `services[]` against
+      `test_catalog` for Tab 3's category grouping).
+      Side-effect refactor: generalized the doctor-only `ReviewsTab`
+      + `/api/reviews` route into shared, `entityType`-generic
+      versions (`components/shared/ReviewsTab.tsx`) instead of a
+      near-duplicate for hospitals — matches the spec's own framing
+      ("scoped to hospital_id instead of doctor_id"). S07 unaffected,
+      re-typechecked clean after the change.
+      Schema-gap notes (documented honestly in the components, not
+      worked around): no per-hospital test pricing field → services
+      always show "কল করুন" fallback; no `insurance_schemes` or
+      "established year" columns → those spec mockup sections omitted.
 
 ## S09 — SYMPTOMS
 - [ ] `/symptoms` list page (schema gap from earlier in this file is
