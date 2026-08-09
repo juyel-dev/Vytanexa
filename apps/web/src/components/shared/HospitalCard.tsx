@@ -15,9 +15,7 @@ export type HospitalCardData = {
   phone: string;
   rating_avg: number;
   rating_count: number;
-};
-
-const TYPE_LABELS: Record<string, string> = {
+};const TYPE_LABELS: Record<string, string> = {
   hospital: 'হাসপাতাল',
   clinic: 'ক্লিনিক',
   diagnostic: 'ডায়াগনস্টিক',
@@ -36,8 +34,20 @@ const FACILITY_LABELS: Record<string, string> = {
  * Variant". Full-width list card, distinct from S04's compact
  * horizontal TrendingHospitals card (different context, different
  * information density needed).
+ *
+ * `matchedTestLabel` (optional) — VYTANEXA-BLUEPRINT.md § S10 "Result
+ * Card": "same card system as Hospital compact card (S08) with one
+ * addition: a confirmation line showing which searched test is
+ * available there." Additive prop, undefined by default, so existing
+ * S06/S08 call sites are unaffected.
  */
-export function HospitalCard({ hospital }: { hospital: HospitalCardData }) {
+export function HospitalCard({
+  hospital,
+  matchedTestLabel,
+}: {
+  hospital: HospitalCardData;
+  matchedTestLabel?: string;
+}) {
   const name = getLocalizedField(hospital.name_translations);
 
   return (
@@ -63,6 +73,11 @@ export function HospitalCard({ hospital }: { hospital: HospitalCardData }) {
       </div>
       <div className="p-4">
         <h3 className="text-[16px] font-bold text-neutral-900">{name}</h3>
+        {matchedTestLabel && (
+          <p className="mt-1 text-[12px] font-medium text-life-600">
+            ✅ এই টেস্ট পাওয়া যায়: {matchedTestLabel}
+          </p>
+        )}
         <div className="mt-1 flex items-center gap-2">
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-600">
             {TYPE_LABELS[hospital.type] ?? hospital.type}

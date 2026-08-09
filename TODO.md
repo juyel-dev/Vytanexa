@@ -228,7 +228,21 @@ real doctor+category data exists.
       `DATABASE-SCHEMA.md` updated to match live schema.
 
 ## S10-S12 — Health Services
-- [ ] S10 Lab/Diagnostic test search (`/health/lab-tests`)
+- [x] S10 Lab/Diagnostic test search (`/health/lab-tests`) — search
+      input (300ms debounce, min 2 chars) against `test_catalog`
+      (name/canonical_key/aliases) resolved to verified hospitals via
+      `services[] @> matched_keys` (`lib/queries/test-search.ts`,
+      `/api/test-search` route, `test_search` analytics event).
+      Popular-test chip grid for zero-typing search (spec's
+      low-literacy UX note). `HospitalCard` extended with an optional
+      `matchedTestLabel` prop (additive, S06/S08 call sites
+      unaffected) for the "✅ এই টেস্ট পাওয়া যায়: X" confirmation line.
+      No-results fallback: "সব ডায়াগনস্টিক সেন্টার দেখুন →" + WhatsApp
+      CTA, same pattern as S05.
+      Note: `test_catalog` has no admin-seeded rows yet in the live DB
+      — verified the empty-state paths render correctly (popular chip
+      grid says "টেস্টের তালিকা এখনো যোগ করা হয়নি", search always
+      returns the no-results fallback until an admin populates it).
 - [ ] S11 Blood Services page (`/health/blood-services`) — donor list
       (via `public_blood_donors` view, never raw table), registration form
 - [ ] S12 Emergency system — FAB condensed sheets + full `/emergency`
