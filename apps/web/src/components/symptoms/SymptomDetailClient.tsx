@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2, AlertTriangle } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { getLocalizedField, getLocalizedArray } from '@/lib/i18n';
 import type { SymptomDetail } from '@/lib/queries/symptom-detail';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 
@@ -14,10 +14,10 @@ type SpecialtyLink = SymptomDetail['symptom_categories'][number];
  * Symptom Detail — VYTANEXA-BLUEPRINT.md § S09 "Symptom Detail Page".
  * Emergency banner (if `is_emergency`) is "the single most important
  * visual escalation in the whole app" per spec, positioned immediately
- * below the cover image. Content sections auto-hidden if empty (see
- * `lib/queries/symptom-detail.ts` for the common_causes/
- * when_to_see_doctor schema-gap note — those two sections never
- * render today since the columns don't exist).
+ * below the cover image. All three content sections (description,
+ * common causes, when to see a doctor) are auto-hidden if empty per
+ * spec — an admin who hasn't filled in causes/advice yet for a given
+ * symptom just gets a shorter page, not empty headers.
  */
 export function SymptomDetailClient({
   symptom,
@@ -32,6 +32,8 @@ export function SymptomDetailClient({
 
   const title = getLocalizedField(symptom.title_translations);
   const description = getLocalizedField(symptom.description_translations);
+  const commonCauses = getLocalizedArray(symptom.common_causes_translations);
+  const whenToSeeDoctor = getLocalizedArray(symptom.when_to_see_doctor_translations);
   const specialties = [...symptom.symptom_categories]
     .filter((l): l is SpecialtyLink & { categories: NonNullable<SpecialtyLink['categories']> } =>
       l.categories !== null
@@ -88,6 +90,36 @@ export function SymptomDetailClient({
         <section className="px-4 py-4">
           <h3 className="mb-2 text-[15px] font-bold text-neutral-800">বিবরণ</h3>
           <p className="text-[14px] leading-relaxed text-neutral-700">{description}</p>
+        </section>
+      )}
+
+      {commonCauses.length > 0 && (
+        <section className="px-4 py-4">
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🔎 সাধারণ কারণ</h3>
+          <ul className="space-y-1.5">
+            {commonCauses.map((cause, i) => (
+              <li key={i} className="flex items-start gap-2 text-[14px] text-neutral-700">
+                <span className="mt-0.5 text-neutral-400">•</span>
+                <span>{cause}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {whenToSeeDoctor.length > 0 && (
+        <section className="px-4 py-4">
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">
+            🩺 কখন ডাক্তার দেখাবেন
+          </h3>
+          <ul className="space-y-1.5">
+            {whenToSeeDoctor.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-[14px] text-neutral-700">
+                <span className="mt-0.5 text-life-600">✓</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

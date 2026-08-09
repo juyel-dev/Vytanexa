@@ -4,14 +4,8 @@
  * Do not hand-edit — regenerate after any migration change instead.
  *
  * Source project: Vytanexa (ref: lfrvzdhonsnemdfmxthw)
- * Regenerated: after migrations 0001-0009 (full schema + security/
- * performance hardening + symptoms + ads tables)
- *
- * NOTE: this regeneration uses Supabase's own updated generator output
- * (DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">),
- * which properly fixes the multi-schema generic issue that required a
- * manual simplification in the previous version of this file — no
- * hand-editing needed this time, the official output is correct as-is.
+ * Regenerated: after migration 0011 (symptoms.common_causes_translations
+ * + symptoms.when_to_see_doctor_translations)
  */
 
 export type Json =
@@ -1688,6 +1682,7 @@ export type Database = {
       }
       symptoms: {
         Row: {
+          common_causes_translations: Json
           cover_image_url: string | null
           created_at: string
           deleted_at: string | null
@@ -1699,8 +1694,10 @@ export type Database = {
           slug: string
           title_translations: Json
           updated_at: string
+          when_to_see_doctor_translations: Json
         }
         Insert: {
+          common_causes_translations?: Json
           cover_image_url?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1712,8 +1709,10 @@ export type Database = {
           slug: string
           title_translations?: Json
           updated_at?: string
+          when_to_see_doctor_translations?: Json
         }
         Update: {
+          common_causes_translations?: Json
           cover_image_url?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1725,6 +1724,7 @@ export type Database = {
           slug?: string
           title_translations?: Json
           updated_at?: string
+          when_to_see_doctor_translations?: Json
         }
         Relationships: []
       }
@@ -1911,19 +1911,15 @@ export type Database = {
       }
       get_trending_searches: {
         Args: { p_limit?: number }
-        Returns: { query: string; search_count: number }[]
+        Returns: {
+          query: string
+          search_count: number
+        }[]
       }
-      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
-      // The following three are NOT app-defined -- they're built-in
-      // functions from the pg_trgm/unaccent extensions, which leak
-      // into the public schema's type generation because those
-      // extensions are installed in `public` (a WARN-level, deferred
-      // decision documented in DATABASE-SCHEMA.md's hardening notes).
-      // Listed here for type accuracy; the app never calls these
-      // directly.
-      show_limit: { Args: Record<PropertyKey, never>; Returns: number }
-      show_trgm: { Args: { '': string }; Returns: string[] }
-      unaccent: { Args: { '': string }; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       ad_placement: "homepage_banner" | "native_feed"

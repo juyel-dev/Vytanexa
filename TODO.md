@@ -216,22 +216,16 @@ real doctor+category data exists.
       filtered, same deferral as `doctor-list.ts`'s district filter,
       documented inline), bottom CTA to `/doctors?specialty=...`.
       `MedicalSymptom` JSON-LD.
-- [ ] **DEFERRED, not forgotten:** `symptoms.common_causes` and
-      `symptoms.when_to_see_doctor` array columns don't exist
-      (migration 0008 only added `description_translations`) — the
-      spec's mockup shows both sections. Supabase MCP connector was
-      unreachable this session (connection timeout on `list_migrations`
-      and `execute_sql`) so the migration to add them couldn't be
-      applied live. Sections are correctly auto-hidden per spec's own
-      "auto-hidden if empty" rule rather than showing empty content —
-      not a bug, just incomplete data model. **Next session: retry the
-      Supabase MCP connector; if reachable, add migration 0011 with
-      `common_causes_translations JSONB` +
-      `when_to_see_doctor_translations JSONB` (array-of-translated-
-      strings shape, consistent with the `*_translations` convention),
-      regenerate types, wire into `SymptomDetailClient.tsx` (both
-      components are already structured to just add another
-      auto-hidden `<section>` — no refactor needed).**
+- [x] **RESOLVED (migration 0011):** `symptoms.common_causes_translations`
+      and `symptoms.when_to_see_doctor_translations` (JSONB array-of-
+      translation-object columns) added once the Supabase MCP
+      connector came back online (project had auto-paused —
+      `Supabase:restore_project` brought it back, not a connector
+      bug). Types regenerated (`packages/database/types.ts`), wired
+      into `SymptomDetailClient.tsx` via new `getLocalizedArray`
+      helper (`lib/i18n.ts`) — both sections auto-hidden if empty per
+      spec, same as before, just no longer permanently empty.
+      `DATABASE-SCHEMA.md` updated to match live schema.
 
 ## S10-S12 — Health Services
 - [ ] S10 Lab/Diagnostic test search (`/health/lab-tests`)

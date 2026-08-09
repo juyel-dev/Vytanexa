@@ -38,3 +38,18 @@ export function getLocalizedField(translations: Json | null | undefined, locale:
   const firstValue = Object.values(record).find((v) => typeof v === 'string');
   return typeof firstValue === 'string' ? firstValue : '';
 }
+
+/**
+ * Reads a JSONB *array* of per-locale translation objects — the
+ * pluralized variant of the `*_translations` convention used for list
+ * fields (e.g. `symptoms.common_causes_translations`:
+ * `[{"bn": "...", "en": "..."}, ...]`, migration 0011). Malformed/
+ * non-array input degrades to an empty array rather than throwing,
+ * same defensive posture as `getLocalizedField`.
+ */
+export function getLocalizedArray(translations: Json | null | undefined, locale: string = 'bn'): string[] {
+  if (!Array.isArray(translations)) return [];
+  return translations
+    .map((item) => getLocalizedField(item as Json, locale))
+    .filter((s) => s.length > 0);
+}

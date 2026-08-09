@@ -1428,6 +1428,8 @@ CREATE TABLE symptoms (
   slug                     TEXT NOT NULL UNIQUE,
   title_translations       JSONB NOT NULL DEFAULT '{"bn": ""}'::jsonb,
   description_translations JSONB NOT NULL DEFAULT '{}'::jsonb,
+  common_causes_translations      JSONB NOT NULL DEFAULT '[]'::jsonb, -- migration 0011, array of translation objects
+  when_to_see_doctor_translations JSONB NOT NULL DEFAULT '[]'::jsonb, -- migration 0011, array of translation objects
   cover_image_url          TEXT,
   is_emergency             BOOLEAN NOT NULL DEFAULT false,
   display_order            INT NOT NULL DEFAULT 0,

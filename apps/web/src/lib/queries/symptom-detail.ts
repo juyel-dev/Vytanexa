@@ -5,15 +5,14 @@ import type { Database } from '@vytanexa/database';
  * Symptom Detail Query — VYTANEXA-BLUEPRINT.md § S09 "Symptom Detail
  * Page". Same one-function-for-metadata-and-body pattern as S07/S08.
  *
- * Schema note: the spec's mockup content sections (description,
- * common_causes[], when_to_see_doctor[]) map to only ONE real column —
- * `description_translations` (DATABASE-SCHEMA.md § 6, migration
- * 0008_symptoms.sql). There's no `common_causes`/`when_to_see_doctor`
- * array column on `symptoms`. Per the spec's own instruction that each
- * section is "auto-hidden if empty", those two sections are simply
- * never rendered today — the honest behavior for data that doesn't
- * exist, not a fabricated placeholder. Adding them is a schema
- * migration + admin panel field, tracked in TODO.md, not a UI fix.
+ * `common_causes_translations` / `when_to_see_doctor_translations`
+ * (migration 0011 — see TODO.md for the earlier session where this
+ * was deferred because the Supabase MCP connector was unreachable)
+ * are JSONB arrays of per-locale translation objects, read via
+ * `getLocalizedArray` (`lib/i18n.ts`). Both still correctly render
+ * nothing if the admin hasn't filled them in for a given symptom yet
+ * (spec's "auto-hidden if empty" rule) — the column existing doesn't
+ * mean every row has data.
  */
 export async function getSymptomBySlug(supabase: SupabaseClient<Database>, slug: string) {
   const { data: symptom, error } = await supabase
