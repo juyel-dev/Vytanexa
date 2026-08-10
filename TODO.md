@@ -243,8 +243,30 @@ real doctor+category data exists.
       — verified the empty-state paths render correctly (popular chip
       grid says "টেস্টের তালিকা এখনো যোগ করা হয়নি", search always
       returns the no-results fallback until an admin populates it).
-- [ ] S11 Blood Services page (`/health/blood-services`) — donor list
-      (via `public_blood_donors` view, never raw table), registration form
+- [x] S11 Blood Services page (`/health/blood-services`) — blood group
+      filter chips (8 + সবগুলো), blood bank cards (verified hospitals
+      tagged `facility_tags @> {'blood_bank'}`, stock indicators
+      freshness-gated to 48hrs, computed at query time per spec — no
+      cron), donor list via `public_blood_donors` view (never the raw
+      table), donor registration form (guest-submittable, rate-limited
+      1/phone/90 days).
+      **Architecture decision:** the spec's donor phone-reveal design
+      ("resolved server-side via a protected Route Handler") turned out
+      to be unbuildable as originally sketched — `blood_donors_service_
+      only` RLS blocks ALL direct SELECT regardless of key, and
+      apps/web deliberately never holds the service-role key (that
+      lives in apps/admin only, per `lib/supabase/server.ts`'s own
+      comment). Resolved with a narrowly-scoped SECURITY DEFINER RPC
+      (`get_donor_phone`, migration 0012) — same pattern already
+      established by `is_admin()` — rather than breaking the
+      no-service-role-in-web-app rule. `get_advisors` flagged the new
+      function for an unpinned `search_path`; fixed immediately
+      (migration 0013). `DATABASE-SCHEMA.md` § 3.6 updated to match.
+      District/location filtering (shown in spec's mockup) intentionally
+      deferred — no location-selector component exists anywhere in the
+      app yet (same deferral as `doctor-list.ts`/`hospital-list.ts`);
+      noted inline in `BloodServicesClient.tsx` as the natural next
+      consumer once one lands app-wide.
 - [ ] S12 Emergency system — FAB condensed sheets + full `/emergency`
       page + offline-cached national numbers
 

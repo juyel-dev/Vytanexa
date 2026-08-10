@@ -4,8 +4,8 @@
  * Do not hand-edit — regenerate after any migration change instead.
  *
  * Source project: Vytanexa (ref: lfrvzdhonsnemdfmxthw)
- * Regenerated: after migration 0011 (symptoms.common_causes_translations
- * + symptoms.when_to_see_doctor_translations)
+ * Regenerated: after migration 0013 (pinned search_path on
+ * get_donor_phone; no type-shape change from 0012)
  */
 
 export type Json =
@@ -1909,6 +1909,7 @@ export type Database = {
         Args: { p_key: string; p_max_count: number; p_window: string }
         Returns: boolean
       }
+      get_donor_phone: { Args: { p_donor_id: string }; Returns: string }
       get_trending_searches: {
         Args: { p_limit?: number }
         Returns: {

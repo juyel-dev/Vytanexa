@@ -745,6 +745,33 @@ CREATE POLICY blood_donors_service_only ON blood_donors
 CREATE POLICY public_insert_donor ON blood_donors
   FOR INSERT WITH CHECK (consent_contact = true);
 
+-- Migration 0012 — RESOLVED the apparent contradiction above: this
+-- doc's original note said the phone-reveal Route Handler would read
+-- blood_donors.phone "server-side", but apps/web's Supabase client
+-- only ever holds the anon key (by design — the service-role client
+-- lives in apps/admin only), and blood_donors_service_only blocks
+-- ALL direct SELECT regardless of key. A SECURITY DEFINER RPC closes
+-- this gap the same way is_admin() already does for admin checks:
+CREATE OR REPLACE FUNCTION get_donor_phone(p_donor_id UUID)
+RETURNS TEXT AS $$
+  SELECT phone FROM blood_donors
+  WHERE id = p_donor_id
+    AND is_active = true
+    AND deleted_at IS NULL
+    AND consent_contact = true;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+REVOKE ALL ON FUNCTION get_donor_phone(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_donor_phone(UUID) TO anon, authenticated;
+-- Same predicate as public_blood_donors (active + not deleted + opted
+-- in), so this doesn't widen exposure beyond making an already-listed,
+-- already-consenting donor's number reachable instead of permanently
+-- unreadable. The app's Route Handler additionally rate-limits calls
+-- via check_rate_limit() (anti-scraping) before invoking this RPC.
+-- Migration 0013: pinned search_path (get_advisors flagged the
+-- unpinned version as function_search_path_mutable).
+ALTER FUNCTION get_donor_phone(UUID) SET search_path = public;
+
 CREATE POLICY bbi_public_read ON blood_bank_inventory
   FOR SELECT USING (reported_at > now() - interval '48 hours');
 
