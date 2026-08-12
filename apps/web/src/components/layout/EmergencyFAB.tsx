@@ -26,6 +26,22 @@ type SheetKind = 'ambulance' | 'hospital' | 'blood' | null;
  */
 const NATIONAL_AMBULANCE = { label: 'জাতীয় অ্যাম্বুলেন্স সেবা', number: '102' };
 
+/**
+ * VYTANEXA-BLUEPRINT.md § S12 "Analytics": `emergency_call_click
+ * {number_type}`. Added to match `EmergencyPageClient`'s identical
+ * tracking — the FAB's tel: links are just as much an emergency call
+ * as the full page's, so they should be counted the same way.
+ */
+function trackCall(numberType: string, label: string) {
+  fetch('/api/analytics', {
+    method: 'POST',
+    body: JSON.stringify({
+      event_type: 'emergency_call_click',
+      metadata: { number_type: numberType, label, source: 'fab' },
+    }),
+  }).catch(() => {});
+}
+
 export function EmergencyFAB() {
   const [expanded, setExpanded] = useState(false);
   const [activeSheet, setActiveSheet] = useState<SheetKind>(null);
@@ -113,6 +129,7 @@ export function EmergencyFAB() {
       >
         <a
           href={`tel:${NATIONAL_AMBULANCE.number}`}
+          onClick={() => trackCall('national', NATIONAL_AMBULANCE.number)}
           className="mb-2 flex items-center justify-between rounded-lg bg-emergency-50 p-3"
         >
           <span className="text-[14px] font-semibold text-emergency-700">
@@ -125,6 +142,7 @@ export function EmergencyFAB() {
           <a
             key={a.id}
             href={`tel:${a.phone}`}
+            onClick={() => trackCall('ambulance', a.id)}
             className="mb-2 flex items-center justify-between rounded-lg border border-neutral-100 p-3"
           >
             <span className="text-[14px] text-neutral-800">
@@ -154,7 +172,7 @@ export function EmergencyFAB() {
             <span className="text-[14px] text-neutral-800">
               {getLocalizedField(h.name_translations)}
             </span>
-            <a href={`tel:${h.phone}`}>
+            <a href={`tel:${h.phone}`} onClick={() => trackCall('local_hospital', h.id)}>
               <Phone className="h-4 w-4 text-emergency-600" />
             </a>
           </div>

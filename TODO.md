@@ -263,12 +263,47 @@ real doctor+category data exists.
       function for an unpinned `search_path`; fixed immediately
       (migration 0013). `DATABASE-SCHEMA.md` § 3.6 updated to match.
       District/location filtering (shown in spec's mockup) intentionally
-      deferred — no location-selector component exists anywhere in the
-      app yet (same deferral as `doctor-list.ts`/`hospital-list.ts`);
-      noted inline in `BloodServicesClient.tsx` as the natural next
-      consumer once one lands app-wide.
-- [ ] S12 Emergency system — FAB condensed sheets + full `/emergency`
-      page + offline-cached national numbers
+      deferred at the time — see the CORRECTION note under S12 below;
+      the claim that no location-selector existed was wrong.
+- [x] S12 Emergency system — FAB (pre-existing from earlier foundational
+      work, `layout/EmergencyFAB.tsx`) + new full `/emergency` page.
+      **CORRECTION to S08/S10/S11's notes above:** while building this,
+      found that a `LocationChip` + Zustand `location-store` already
+      existed (`components/layout/LocationChip.tsx`,
+      `stores/location-store.ts` — also from that same earlier
+      foundational session). The S08/S10/S11 comments claiming "no
+      location-selector component exists anywhere in the app yet" were
+      factually wrong, not a considered trade-off — I just hadn't
+      checked. `/emergency` is the first page to actually wire it up
+      for real district filtering (hospitals + ambulances scoped by
+      `location_id` when a district is selected). **Still open:**
+      retrofitting real district filtering into S08/S10/S11's list
+      pages using the same store — not done this session, flagged here
+      for a dedicated follow-up rather than rushed in alongside S12.
+      `/emergency` structure: `NationalNumbersSection.tsx` (hardcoded
+      national numbers, zero Supabase dependency, renders before any
+      network request resolves — the "must work offline" requirement),
+      `EmergencyPageViewTracker.tsx` (tiny, just the page-view
+      analytics event), `EmergencyDataSections.tsx` (Location Chip +
+      nearby emergency hospitals/blood banks/ambulances).
+      **Bundle-size lesson:** the first version called the browser
+      Supabase client directly from `EmergencyDataSections` (matching
+      `EmergencyFAB`'s existing pattern) and measured 171KB First Load
+      JS — over the 150KB budget. Neither `next/dynamic({ssr:false})`
+      nor `export const dynamic = 'force-dynamic'` fixed it (confirmed
+      by direct measurement, not assumption) — the actual fix was a new
+      `/api/emergency-data` Route Handler, matching how every other
+      list page in this app already fetches (hospitals, doctors,
+      lab-tests, blood-services). Dropped to 104KB. `EmergencyFAB`
+      itself stays cheap because it's dynamically imported once from
+      the shared `(main)/layout.tsx`, not from a page — a page-level
+      import of the same heavy client doesn't get the same treatment.
+      Added `emergency_call_click{number_type}` analytics to
+      `EmergencyFAB`'s existing tel: links too, for consistency with
+      the new page (S12's spec names this event explicitly).
+      Offline service-worker precaching remains S22 PWA scope — this
+      session only ensured the *shell* has no data dependency, which
+      is the precondition for that later work, not a substitute for it.
 
 ## S13-S15 — Community
 - [ ] S13 Articles list + detail
