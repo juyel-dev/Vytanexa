@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Phone } from 'lucide-react';
 import { getLocalizedField } from '@/lib/i18n';
 import { DonorRegistrationSheet } from './DonorRegistrationSheet';
+import { LocationChip } from '@/components/layout/LocationChip';
+import { useLocationStore } from '@/stores/location-store';
 import type { BloodBank } from '@/lib/queries/blood-services';
 import type { Json } from '@vytanexa/database';
 
@@ -30,26 +32,51 @@ type District = { id: string; slug: string; name_translations: Json };
  * (emergency-600 theme, distinct from brand-blue elsewhere per spec)
  * narrows both blood bank stock display and the donor list at once.
  *
- * District/location filtering (shown in the spec's mockup as a
- * "📍 কোচবিহার [▾]" chip) is intentionally not built here — no
- * location-selector component exists anywhere else in the app yet
- * (doctor-list.ts and hospital-list.ts both defer district filtering
- * for the same reason), and the live dataset is currently empty
- * regardless. Adding one selector just for this page would be
- * inconsistent scope; when a real location-selector lands app-wide,
- * this page is the natural next consumer.
+ * District filtering (Location Chip + Zustand store) — added after
+ * S12 uncovered these already existed in the app (see TODO.md's S12
+ * correction note; the original claim that no selector existed was
+ * wrong). The page's own SSR fetch handles first paint nationally
+ * (the server can't see the client's persisted district), then this
+ * component refetches via `/api/blood-services` whenever the district
+ * changes, replacing `bloodBanks`/`donors` with the scoped results.
  */
 export function BloodServicesClient({
-  bloodBanks,
-  donors,
+  bloodBanks: initialBloodBanks,
+  donors: initialDonors,
   districts,
 }: {
   bloodBanks: BloodBank[];
   donors: Donor[];
   districts: District[];
 }) {
+  const { districtId } = useLocationStore();
+  const [bloodBanks, setBloodBanks] = useState(initialBloodBanks);
+  const [donors, setDonors] = useState(initialDonors);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [registerOpen, setRegisterOpen] = useState(false);
+
+  useEffect(() => {
+    if (!districtId) {
+      setBloodBanks(initialBloodBanks);
+      setDonors(initialDonors);
+      return;
+    }
+    let cancelled = false;
+    const params = new URLSearchParams({ district: districtId });
+    if (selectedGroup) params.set('bloodGroup', selectedGroup);
+    fetch(`/api/blood-services?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        setBloodBanks(json.bloodBanks ?? []);
+        setDonors(json.donors ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [districtId, selectedGroup]);
 
   const filteredDonors = useMemo(
     () => (selectedGroup ? donors.filter((d) => d.blood_group === selectedGroup) : donors),
@@ -58,6 +85,7 @@ export function BloodServicesClient({
 
   return (
     <div className="pb-6">
+      <LocationChip />
       <div className="px-4 py-4">
         <h2 className="mb-2.5 text-[14px] font-semibold text-neutral-700">
           আপনার রক্তের গ্রুপ বেছে নিন

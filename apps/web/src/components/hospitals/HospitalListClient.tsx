@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { HospitalCard, type HospitalCardData } from '@/components/shared/HospitalCard';
+import { LocationChip } from '@/components/layout/LocationChip';
+import { useLocationStore } from '@/stores/location-store';
 
 const TYPES: [string, string][] = [
   ['hospital', 'হাসপাতাল'],
@@ -14,6 +16,18 @@ const TYPES: [string, string][] = [
 /**
  * Hospital List Client — VYTANEXA-BLUEPRINT.md § S08, mirrors
  * DoctorListClient's (S06) SSR-hydrate + infinite-scroll pattern.
+ *
+ * District filtering: pushes the Location Chip's selection into the
+ * `?district=` URL param via the same `updateParam` mechanism already
+ * used for `type`/`emergencyOnly` — Next.js then re-runs the Server
+ * Component page with the new searchParams and this component's
+ * existing prop-sync effect picks up the fresh, already-filtered
+ * results. No separate client-side fetch path needed for this filter
+ * (unlike `/emergency`, which needed instant reactivity without a
+ * navigation); reusing the existing infrastructure here is simpler
+ * and more consistent with this page's own established pattern. Added
+ * after S12 uncovered that the Location Chip already existed — see
+ * TODO.md's S12 correction note for why this wasn't here from the start.
  */
 export function HospitalListClient({
   initialHospitals,
@@ -25,6 +39,7 @@ export function HospitalListClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { districtId } = useLocationStore();
 
   const [hospitals, setHospitals] = useState(initialHospitals);
   const [count, setCount] = useState(initialCount);
@@ -76,8 +91,17 @@ export function HospitalListClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  useEffect(() => {
+    const currentDistrict = searchParams.get('district');
+    if ((districtId ?? null) !== currentDistrict) {
+      updateParam('district', districtId ?? null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [districtId]);
+
   return (
     <div>
+      <LocationChip />
       <div className="flex gap-2 overflow-x-auto border-b border-neutral-100 px-4 py-2.5 [scrollbar-width:none]">
         <button
           onClick={() => updateParam('type', null)}

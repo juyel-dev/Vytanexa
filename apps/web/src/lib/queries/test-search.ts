@@ -19,6 +19,12 @@ import type { Database, Json } from '@vytanexa/database';
  * Returns hospitals de-duplicated across multiple matched tests, each
  * tagged with which of the searched-for tests it actually offers (for
  * the result card's "✅ এই টেস্ট পাওয়া যায়: CBC" confirmation line).
+ *
+ * `locationId` (optional) scopes results to a district via
+ * `location_id` equality — added after S12 uncovered that the
+ * Location Chip + Zustand store this depends on already existed in
+ * the app (see TODO.md's S12 correction note). Omitting it searches
+ * nationally, same as before.
  */
 export type TestSearchResult = {
   hospital: {
@@ -38,7 +44,11 @@ export type TestSearchResult = {
   matchedTestNames: Json[];
 };
 
-export async function searchTests(supabase: SupabaseClient<Database>, query: string) {
+export async function searchTests(
+  supabase: SupabaseClient<Database>,
+  query: string,
+  locationId?: string
+) {
   const pattern = `%${query}%`;
 
   const { data: matchedTests, error: testError } = await supabase
@@ -60,7 +70,7 @@ export async function searchTests(supabase: SupabaseClient<Database>, query: str
 
   const canonicalKeys = matchedTests.map((t) => t.canonical_key);
 
-  const { data: hospitals, error: hospitalError } = await supabase
+  let hospitalQuery = supabase
     .from('hospitals')
     .select(
       `id, slug, name_translations, cover_image_url, type, address_line, phone,
@@ -68,7 +78,10 @@ export async function searchTests(supabase: SupabaseClient<Database>, query: str
        rating_avg, rating_count, is_featured`
     )
     .eq('verification_status', 'verified')
-    .overlaps('services', canonicalKeys)
+    .overlaps('services', canonicalKeys);
+  if (locationId) hospitalQuery = hospitalQuery.eq('location_id', locationId);
+
+  const { data: hospitals, error: hospitalError } = await hospitalQuery
     .order('is_featured', { ascending: false })
     .order('rating_avg', { ascending: false })
     .limit(20);

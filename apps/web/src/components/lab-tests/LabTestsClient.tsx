@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { getLocalizedField } from '@/lib/i18n';
 import { HospitalCard } from '@/components/shared/HospitalCard';
+import { LocationChip } from '@/components/layout/LocationChip';
+import { useLocationStore } from '@/stores/location-store';
 import type { Json } from '@vytanexa/database';
 
 type PopularTest = { canonical_key: string; name_translations: Json };
@@ -28,8 +30,15 @@ type SearchResult = {
  * 300ms, min 2 chars per spec. Popular chips give an instant search
  * with zero typing ("critical for low-literacy UX" per spec) by just
  * setting the query directly, reusing the same debounced-fetch path.
+ *
+ * District filtering (Location Chip + Zustand store) added after S12
+ * uncovered these already existed in the app — see TODO.md's S12
+ * correction note. `districtId` is in the debounce effect's deps, so
+ * changing district re-runs the current search against the new area
+ * without the person needing to retype anything.
  */
 export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }) {
+  const { districtId } = useLocationStore();
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [results, setResults] = useState<SearchResult[] | null>(null);
@@ -43,17 +52,20 @@ export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }
     }
     setLoading(true);
     const handle = setTimeout(async () => {
-      const res = await fetch(`/api/test-search?q=${encodeURIComponent(query.trim())}`);
+      const params = new URLSearchParams({ q: query.trim() });
+      if (districtId) params.set('district', districtId);
+      const res = await fetch(`/api/test-search?${params.toString()}`);
       const json = await res.json();
       setResults(json.results ?? []);
       setSubmittedQuery(query.trim());
       setLoading(false);
     }, 300);
     return () => clearTimeout(handle);
-  }, [query]);
+  }, [query, districtId]);
 
   return (
     <div className="pb-6">
+      <LocationChip />
       <div className="px-4 py-3">
         <div className="flex h-11 items-center gap-2 rounded-full bg-neutral-100 px-4">
           <Search className="h-4 w-4 text-neutral-400" />

@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const params: HospitalListParams = {
     type: sp.get('type') ?? undefined,
     emergencyOnly: sp.get('emergencyOnly') === 'true',
+    locationId: sp.get('district') ?? undefined,
     page: sp.get('page') ? Number(sp.get('page')) : 0,
   };
 

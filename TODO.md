@@ -276,10 +276,9 @@ real doctor+category data exists.
       factually wrong, not a considered trade-off — I just hadn't
       checked. `/emergency` is the first page to actually wire it up
       for real district filtering (hospitals + ambulances scoped by
-      `location_id` when a district is selected). **Still open:**
-      retrofitting real district filtering into S08/S10/S11's list
-      pages using the same store — not done this session, flagged here
-      for a dedicated follow-up rather than rushed in alongside S12.
+      `location_id` when a district is selected). **Follow-up done
+      same session:** S08/S10/S11's list pages retrofitted with real
+      district filtering too — see the dedicated entry after this one.
       `/emergency` structure: `NationalNumbersSection.tsx` (hardcoded
       national numbers, zero Supabase dependency, renders before any
       network request resolves — the "must work offline" requirement),
@@ -304,6 +303,44 @@ real doctor+category data exists.
       Offline service-worker precaching remains S22 PWA scope — this
       session only ensured the *shell* has no data dependency, which
       is the precondition for that later work, not a substitute for it.
+
+## District Filtering Retrofit (S08/S10/S11) — ✅ COMPLETE
+Same-session follow-up to S12's correction note above. Reused the
+existing `LocationChip` + Zustand `location-store` (no new UI
+component needed) across all three pages:
+- **Hospitals (S08):** `hospital-list.ts` gained a `locationId` param
+  (`.eq('location_id', ...)`). `HospitalListClient.tsx` renders
+  `<LocationChip />` and syncs the store's `districtId` into the
+  existing `?district=` URL param via the page's own `updateParam`
+  mechanism (same one already used for `type`/`emergencyOnly`) — Next
+  then re-runs the SSR page with the new searchParams and the
+  component's existing prop-sync effect picks up the fresh results.
+  No new fetch path needed; reused 100% of the existing infrastructure.
+- **Lab Tests (S10):** `test-search.ts`'s `searchTests()` gained an
+  optional `locationId` param. `/api/test-search` reads `?district=`.
+  `LabTestsClient.tsx` renders `<LocationChip />`, includes `districtId`
+  in the debounce effect's deps so changing district re-runs the
+  current search without retyping.
+- **Blood Services (S11):** `blood-services.ts`'s `getBloodBanks()` /
+  `getBloodDonors()` both gained an optional `locationId` param. New
+  `/api/blood-services` route (this page has no existing
+  searchParams-driven refetch mechanism like hospitals does, so it
+  needed its own route, mirroring `/api/emergency-data`).
+  `BloodServicesClient.tsx` renders `<LocationChip />`; SSR still
+  paints nationally first (server can't see the client's persisted
+  district), then a `useEffect` refetches via the new route once a
+  district is selected.
+- **Doctors (S06) deliberately NOT touched:** checked `doctor-list.ts`
+  first rather than assuming — its district deferral is a *different*,
+  legitimate reason ("district filtering needs a chambers join
+  (chambers.location_id) ... no meaningful chamber data exists yet to
+  filter against"), not the "no selector exists" mistake made for the
+  other three. Conflating the two would have been a real error.
+
+Verified: typecheck clean, full build clean (hospitals 109KB, lab-tests
+109KB, blood-services 105KB — all within the 150KB budget, modest
+increases from adding LocationChip, no bundle regression), get_advisors
+clean (no new DB objects, pure application-layer change).
 
 ## S13-S15 — Community
 - [ ] S13 Articles list + detail

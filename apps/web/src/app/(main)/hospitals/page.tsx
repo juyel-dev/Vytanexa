@@ -18,6 +18,7 @@ export default async function HospitalsPage({
   const { data: hospitals, count } = await queryHospitalList(supabase, {
     type: searchParams.type,
     emergencyOnly: searchParams.emergencyOnly === 'true',
+    locationId: searchParams.district,
     page: 0,
   });
 

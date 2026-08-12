@@ -11,10 +11,13 @@ export const metadata: Metadata = {
 
 /**
  * Blood Services — VYTANEXA-BLUEPRINT.md § S11 (`/health/blood-services`).
- * All three data sources fetched server-side on first load; blood
- * group filtering happens client-side against this same preloaded
- * set (small dataset, no need for a round-trip per filter tap — same
- * reasoning as S09's symptom search).
+ * All three data sources fetched server-side on first load (nationally
+ * — the server can't see the client's persisted Location Chip
+ * selection). `BloodServicesClient` refetches via `/api/blood-services`
+ * once a district is selected; blood group filtering stays client-side
+ * against whichever set is currently loaded (small dataset, no need
+ * for a round-trip per filter tap — same reasoning as S09's symptom
+ * search).
  */
 export default async function BloodServicesPage() {
   const supabase = createClient();

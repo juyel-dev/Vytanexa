@@ -14,16 +14,26 @@ import type { Database } from '@vytanexa/database';
  * hospital with no fresh inventory rows just renders with no stock
  * indicators at all, per spec: "stale data hidden entirely rather
  * than shown wrong."
+ *
+ * `locationId` (optional) scopes to a district via `location_id`
+ * equality — added after S12 uncovered that the Location Chip +
+ * Zustand store this depends on already existed in the app (see
+ * TODO.md's S12 correction note). Omitting it returns results
+ * nationally, same as before.
  */
-export async function getBloodBanks(supabase: SupabaseClient<Database>) {
-  const { data: hospitals, error: hospitalError } = await supabase
+export async function getBloodBanks(supabase: SupabaseClient<Database>, locationId?: string) {
+  let hospitalQuery = supabase
     .from('hospitals')
     .select(
       'id, slug, name_translations, address_line, phone, whatsapp_number, operating_hours, has_emergency_dept'
     )
     .eq('verification_status', 'verified')
-    .contains('facility_tags', ['blood_bank'])
-    .order('is_featured', { ascending: false });
+    .contains('facility_tags', ['blood_bank']);
+  if (locationId) hospitalQuery = hospitalQuery.eq('location_id', locationId);
+
+  const { data: hospitals, error: hospitalError } = await hospitalQuery.order('is_featured', {
+    ascending: false,
+  });
 
   if (hospitalError) {
     console.error('getBloodBanks failed:', hospitalError.message);
@@ -58,10 +68,14 @@ export type BloodBank = Awaited<ReturnType<typeof getBloodBanks>>[number];
  * omits `phone` at the schema level (DATABASE-SCHEMA.md § 3.6) —
  * never the raw `blood_donors` table, and RLS blocks that table
  * entirely for the anon key regardless (`blood_donors_service_only`).
+ *
+ * `locationId` (optional) scopes to a district, same rationale as
+ * `getBloodBanks`'s equivalent param above.
  */
 export async function getBloodDonors(
   supabase: SupabaseClient<Database>,
-  bloodGroup?: string
+  bloodGroup?: string,
+  locationId?: string
 ) {
   let query = supabase
     .from('public_blood_donors')
@@ -70,6 +84,7 @@ export async function getBloodDonors(
     .limit(30);
 
   if (bloodGroup) query = query.eq('blood_group', bloodGroup);
+  if (locationId) query = query.eq('location_id', locationId);
 
   const { data, error } = await query;
   if (error) {

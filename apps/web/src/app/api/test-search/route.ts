@@ -15,18 +15,20 @@ import { searchTests } from '@/lib/queries/test-search';
  */
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q')?.trim() ?? '';
+  const district = request.nextUrl.searchParams.get('district') ?? undefined;
 
   if (q.length < 2) {
     return NextResponse.json({ results: [], matchedTests: [] });
   }
 
   const supabase = createClient();
-  const { results, matchedTests } = await searchTests(supabase, q);
+  const { results, matchedTests } = await searchTests(supabase, q, district);
 
   void supabase
     .from('analytics_events')
     .insert({
       event_type: 'test_search',
+      location_id: district ?? null,
       metadata: { query: q, results_count: results.length },
     })
     .then(() => {});
