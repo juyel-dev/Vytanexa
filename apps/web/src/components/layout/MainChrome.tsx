@@ -14,7 +14,12 @@ import { BottomNav } from './BottomNav';
  * its own spacing for its own sticky bar (see DoctorProfileClient's
  * `pb-24` wrapper).
  */
-const DETAIL_PAGE_PATTERNS = [/^\/doctors\/[^/]+$/, /^\/hospitals\/[^/]+$/, /^\/symptoms\/[^/]+$/];
+const DETAIL_PAGE_PATTERNS = [
+  /^\/doctors\/[^/]+$/,
+  /^\/hospitals\/[^/]+$/,
+  /^\/symptoms\/[^/]+$/,
+  /^\/community\/articles\/[^/]+$/,
+];
 
 export function MainChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

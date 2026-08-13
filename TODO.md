@@ -343,7 +343,19 @@ increases from adding LocationChip, no bundle regression), get_advisors
 clean (no new DB objects, pure application-layer change).
 
 ## S13-S15 — Community
-- [ ] S13 Articles list + detail
+- [x] S13 Articles list + detail (`/community/articles`,
+      `/community/articles/[slug]`) — `lib/queries/article-list.ts` +
+      `article-detail.ts`, SSR+infinite-scroll list (featured card +
+      2-col grid, category chips), SSG+ISR(1hr) detail with
+      `MedicalWebPage` JSON-LD, author byline links to doctor profile
+      when `author_doctor_id` is set. `body_html` rendered via
+      `dangerouslySetInnerHTML` — sanitization is the Admin Panel's
+      write-time responsibility per DATABASE-SCHEMA.md's own comment
+      on that column; flagged inline in `article-detail.ts` for when
+      that panel gets built. New `lib/i18n.ts` helpers:
+      `formatRelativeTimeBn` (the "২ দিন আগে" meta line) and
+      `toBengaliDigits`. `article_view`/`article_read_complete`
+      (≥90% scroll)/`related_article_click` analytics wired.
 - [ ] S14 Q&A (feature-flag gated)
 - [ ] S15 Polls + Data Report ("ভুল তথ্য জানান") cross-cutting action
 
