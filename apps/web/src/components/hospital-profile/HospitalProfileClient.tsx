@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Share2, Phone, Navigation, Star } from 'lucide-react';
+import { ChevronLeft, Share2, MoreVertical, Phone, Navigation, Star } from 'lucide-react';
 import { getLocalizedField } from '@/lib/i18n';
 import type { HospitalDetail } from '@/lib/queries/hospital-detail';
 import type { MatchedService } from './ServicesTab';
@@ -12,6 +12,8 @@ import { DoctorsTab } from './DoctorsTab';
 import { ServicesTab } from './ServicesTab';
 import { ReviewsTab, type Review } from '@/components/shared/ReviewsTab';
 import { ShareSheet } from '@/components/shared/ShareSheet';
+import { MoreOptionsSheet } from '@/components/shared/MoreOptionsSheet';
+import { DataReportSheet } from '@/components/shared/DataReportSheet';
 
 const TYPE_LABELS: Record<string, string> = {
   hospital: 'সরকারি হাসপাতাল',
@@ -49,6 +51,8 @@ export function HospitalProfileClient({
 }) {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number][0]>('info');
   const [shareOpen, setShareOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const name = getLocalizedField(hospital.name_translations);
   const doctorCount = hospital.doctor_hospital_links.filter((l) => l.doctors !== null).length;
@@ -72,12 +76,20 @@ export function HospitalProfileClient({
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <button
-          onClick={() => setShareOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
-        >
-          <Share2 className="h-4 w-4" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShareOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setMoreOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Image gallery */}
@@ -203,6 +215,17 @@ export function HospitalProfileClient({
         title={name}
         subtitle={TYPE_LABELS[hospital.type] ?? hospital.type}
         url={pageUrl}
+      />
+      <MoreOptionsSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        onReportClick={() => setReportOpen(true)}
+      />
+      <DataReportSheet
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        entityType="hospital"
+        entityId={hospital.id}
       />
     </div>
   );

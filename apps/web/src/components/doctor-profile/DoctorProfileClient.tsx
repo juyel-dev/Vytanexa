@@ -11,6 +11,8 @@ import { HospitalsTab } from './HospitalsTab';
 import { AppointmentSheet } from './AppointmentSheet';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 import { ReviewsTab } from '@/components/shared/ReviewsTab';
+import { MoreOptionsSheet } from '@/components/shared/MoreOptionsSheet';
+import { DataReportSheet } from '@/components/shared/DataReportSheet';
 
 type Review = {
   id: string;
@@ -45,6 +47,8 @@ export function DoctorProfileClient({
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number][0]>('info');
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const name = getLocalizedField(doctor.name_translations);
   const specialty = doctor.categories
@@ -81,7 +85,10 @@ export function DoctorProfileClient({
           >
             <Share2 className="h-4 w-4" />
           </button>
-          <button className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white">
+          <button
+            onClick={() => setMoreOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
+          >
             <MoreVertical className="h-4 w-4" />
           </button>
         </div>
@@ -224,6 +231,17 @@ export function DoctorProfileClient({
         title={name}
         subtitle={specialty}
         url={pageUrl}
+      />
+      <MoreOptionsSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        onReportClick={() => setReportOpen(true)}
+      />
+      <DataReportSheet
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        entityType="doctor"
+        entityId={doctor.id}
       />
     </div>
   );

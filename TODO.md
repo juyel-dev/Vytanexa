@@ -378,7 +378,28 @@ clean (no new DB objects, pure application-layer change).
       sign-in-gated yet — spec calls for a "soft-gate" but no real auth
       exists until S22, and gating without real auth behind it would
       just be a fake wall; documented inline in `/api/answers`.
-- [ ] S15 Polls + Data Report ("ভুল তথ্য জানান") cross-cutting action
+- [x] S15 Polls + Data Report ("ভুল তথ্য জানান") cross-cutting action —
+      `/community/polls`: `lib/queries/polls.ts` (RLS already filters
+      `is_active=true`; expired-but-active polls still return and the
+      client shows results-only, per spec), `/api/polls/[id]/vote`
+      (single-select, not a toggle like S14's upvotes — translates
+      `poll_votes`'s UNIQUE-constraint violation into a clean "already
+      voted" 409 rather than a generic 500), `components/polls/
+      PollsClient.tsx` (optimistic UI, animated result bars, per-poll
+      localStorage `voted` flag reconciled against the server's 409 if
+      it's ever missing/cleared).
+      Data Report: `components/shared/DataReportSheet.tsx` (one shared
+      sheet, not duplicated per entity type) + `components/shared/
+      MoreOptionsSheet.tsx` (the "⋯ menu" spec refers to — currently
+      one item, kept as its own component so a second item later
+      doesn't require restructuring). Wired into `DoctorProfileClient`
+      (the `MoreVertical` button already existed there, unused — just
+      needed an onClick) and `HospitalProfileClient` (needed a new
+      `MoreVertical` button added, matching Doctor's pattern).
+      `/api/data-reports` writes `status='open'` — moderation queue,
+      never auto-applied, per spec's anti-vandalism rationale.
+      `poll_view`/`poll_vote`/`data_report_submit{entity_type,reason}`
+      analytics wired.
 
 ## S16-S18 — Account & Settings
 - [ ] S16 More page (hamburger menu, real content replacing placeholder)

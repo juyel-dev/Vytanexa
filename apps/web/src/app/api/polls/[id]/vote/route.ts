@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+/**
+ * POST /api/polls/[id]/vote — VYTANEXA-BLUEPRINT.md § S15. "One vote
+ * per device (localStorage poll_id list) or per-account if signed
+ * in." `poll_votes.UNIQUE(poll_id, voter_key)` (DATABASE-SCHEMA.md §
+ * 4.4) is the actual dedup enforcement — a duplicate vote attempt
+ * hits that constraint and this route translates the resulting
+ * Postgres error (code 23505) into a clean "already voted" response
+ * rather than a generic 500.
+ *
+ * Unlike question upvotes (S14), this is intentionally NOT a toggle —
+ * spec's mockup shows radio-button single-select with no "unvote"
+ * affordance, and `recalc_poll_counts()`'s trigger-maintained counters
+ * are designed around one-shot votes.
+ */
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const { optionId, voterKey } = await request.json();
+  if (!optionId || !voterKey) {
+    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+  }
+
+  const supabase = createClient();
+
+  const { data: poll } = await supabase
+    .from('polls')
+    .select('expires_at')
+    .eq('id', params.id)
+    .single();
+
+  if (poll?.expires_at && new Date(poll.expires_at) < new Date()) {
+    return NextResponse.json({ error: 'এই জরিপের মেয়াদ শেষ হয়ে গেছে' }, { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from('poll_votes')
+    .insert({ poll_id: params.id, option_id: optionId, voter_key: voterKey });
+
+  if (error) {
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'আপনি ইতিমধ্যে ভোট দিয়েছেন' }, { status: 409 });
+    }
+    console.error('poll vote insert failed:', error.message);
+    return NextResponse.json({ error: 'ভোট দিতে সমস্যা হয়েছে' }, { status: 500 });
+  }
+
+  const { data: updatedOptions } = await supabase
+    .from('poll_options')
+    .select('id, vote_count')
+    .eq('poll_id', params.id);
+
+  const totalVotes = (updatedOptions ?? []).reduce((sum, o) => sum + o.vote_count, 0);
+
+  return NextResponse.json({ success: true, options: updatedOptions ?? [], totalVotes });
+}
