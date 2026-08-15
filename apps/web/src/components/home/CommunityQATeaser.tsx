@@ -1,24 +1,20 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 /**
  * Community Q&A Teaser — VYTANEXA-BLUEPRINT.md § S04 SEC-11
  * Feature-flag gated via `app_settings.features.community_qa`
  * (DATABASE-SCHEMA.md § 1.5) — defaults OFF, so this section stays
  * hidden until an admin explicitly enables it (A08's Feature Flags
- * screen), matching the flag's own default.
+ * screen), matching the flag's own default. Now shares
+ * `lib/feature-flags.ts` with the S14 `/community/qa` routes
+ * themselves rather than its own inline query.
  */
 export async function CommunityQATeaser() {
   const supabase = createClient();
 
-  const { data: settings } = await supabase
-    .from('app_settings')
-    .select('features')
-    .eq('id', 1)
-    .single();
-
-  const features = settings?.features as { community_qa?: boolean } | null;
-  if (!features?.community_qa) {
+  if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
     return null;
   }
 

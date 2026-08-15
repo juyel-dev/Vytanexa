@@ -356,7 +356,28 @@ clean (no new DB objects, pure application-layer change).
       `formatRelativeTimeBn` (the "২ দিন আগে" meta line) and
       `toBengaliDigits`. `article_view`/`article_read_complete`
       (≥90% scroll)/`related_article_click` analytics wired.
-- [ ] S14 Q&A (feature-flag gated)
+- [x] S14 Q&A (feature-flag gated) — `/community/qa`,
+      `/community/qa/[id]`. New `lib/feature-flags.ts` (shared
+      `app_settings.features` reader, also refactored
+      `CommunityQATeaser` to use it instead of its own inline query)
+      and `lib/device-id.ts` (localStorage device ID, shared with S15
+      polls). Both routes 404 via `notFound()` when
+      `features.community_qa` is off, not just hidden from nav —
+      genuinely unreachable. `lib/queries/qa-list.ts` +
+      `qa-detail.ts`: list with newest/most-upvoted/unanswered-first
+      sort, doctor-answered badge (batched per-page query, not N+1),
+      detail with doctor-answers-pinned-top (partitioned in JS after
+      one chronological fetch — Supabase's query builder can't express
+      "non-null group first, chronological within group" as a single
+      ORDER BY). `/api/questions` (GET infinite scroll + POST submit,
+      moderated), `/api/questions/[id]/upvote` (toggle via
+      `question_upvotes`'s UNIQUE constraint), `/api/answers` (POST,
+      moderated, `doctor_id` always null from this route — doctor
+      answers only ever come from an admin/portal mechanism per spec's
+      own scope note). Answer submission is guest-submittable, NOT
+      sign-in-gated yet — spec calls for a "soft-gate" but no real auth
+      exists until S22, and gating without real auth behind it would
+      just be a fake wall; documented inline in `/api/answers`.
 - [ ] S15 Polls + Data Report ("ভুল তথ্য জানান") cross-cutting action
 
 ## S16-S18 — Account & Settings

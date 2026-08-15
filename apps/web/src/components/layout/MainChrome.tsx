@@ -19,6 +19,7 @@ const DETAIL_PAGE_PATTERNS = [
   /^\/hospitals\/[^/]+$/,
   /^\/symptoms\/[^/]+$/,
   /^\/community\/articles\/[^/]+$/,
+  /^\/community\/qa\/[^/]+$/,
 ];
 
 export function MainChrome({ children }: { children: React.ReactNode }) {
