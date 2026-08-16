@@ -449,7 +449,34 @@ clean (no new DB objects, pure application-layer change).
       পূর্বাবস্থায় ফেরান") — the card just stays until next page
       load. Documented as a reasonable first-pass call, not silently
       dropped.
-- [ ] S18 Settings (language/location/notifications/privacy)
+- [x] S18 Settings (`/settings`, not auth-gated — language/location/
+      privacy work for guests too). `components/settings/
+      LanguageSheet.tsx`: new BottomSheet (not a reuse of onboarding's
+      full-page `LanguageStep.tsx` — wrong interaction shape, wired to
+      the onboarding flow's own store); sets `locale` cookie + persists
+      `preferred_language` for signed-in users. **Honest scope note:**
+      this does NOT yet re-render existing UI into the chosen language
+      — full UI-chrome i18n is S22 scope and unbuilt; documented
+      inline rather than overclaiming. Location row reuses
+      `LocationPickerSheet` directly (already exactly matches spec's
+      "updates the global location used across Home/Doctors/Hospitals
+      filtering"). Notification toggles persist to `users.
+      notification_prefs`; "emergency" rejected server-side even if
+      sent (`/api/account/notification-prefs`) — non-togglable by
+      design, not just a disabled UI control. Data export request logs
+      an `analytics_events` row rather than a dedicated queue/table —
+      spec calls this "low priority... included for completeness," no
+      email/WhatsApp delivery infra exists, documented inline as a
+      lightweight stand-in. Clear Cache calls real `caches`/
+      `serviceWorker` APIs (currently a safe no-op since no service
+      worker is registered yet — forward-compatible with S22's PWA
+      work, not a fake button).
+      **Bundle-size catch (same lesson as S12/S16, caught before
+      shipping this time):** `SettingsClient.tsx` initially statically
+      imported `LocationPickerSheet`, measuring 171KB — over budget.
+      Fixed by dynamically importing it (`next/dynamic({ssr:false})`),
+      matching the exact pattern `LocationChip.tsx` already established
+      for the same component. Dropped to 104KB.
 
 ## S19-S21 — Dynamic & SEO
 - [ ] S19 Custom page renderer (`/page/[slug]`) + BlockRenderer switch
