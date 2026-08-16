@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Phone, Navigation } from 'lucide-react';
 import { getLocalizedField } from '@/lib/i18n';
 import type { Json } from '@vytanexa/database';
+import { FavoriteToggle } from './FavoriteToggle';
 
 export type HospitalCardData = {
   id: string;
@@ -70,6 +71,9 @@ export function HospitalCard({
             🚨 জরুরি বিভাগ
           </span>
         )}
+        <div className="absolute left-2 top-2">
+          <FavoriteToggle entityType="hospital" entityId={hospital.id} />
+        </div>
       </div>
       <div className="p-4">
         <h3 className="text-[16px] font-bold text-neutral-900">{name}</h3>

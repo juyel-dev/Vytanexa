@@ -4,8 +4,8 @@
  * Do not hand-edit — regenerate after any migration change instead.
  *
  * Source project: Vytanexa (ref: lfrvzdhonsnemdfmxthw)
- * Regenerated: after migration 0013 (pinned search_path on
- * get_donor_phone; no type-shape change from 0012)
+ * Regenerated: after migration 0014 (questions_own_read RLS policy,
+ * reviews.user_id column + reviews_own_read RLS policy)
  */
 
 export type Json =
@@ -1512,6 +1512,7 @@ export type Database = {
           reviewer_phone: string | null
           status: Database["public"]["Enums"]["moderation_status"]
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           admin_reply?: string | null
@@ -1528,6 +1529,7 @@ export type Database = {
           reviewer_phone?: string | null
           status?: Database["public"]["Enums"]["moderation_status"]
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           admin_reply?: string | null
@@ -1544,6 +1546,7 @@ export type Database = {
           reviewer_phone?: string | null
           status?: Database["public"]["Enums"]["moderation_status"]
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1551,6 +1554,13 @@ export type Database = {
             columns: ["moderated_by"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

@@ -792,6 +792,7 @@ CREATE TABLE reviews (
   entity_id       UUID NOT NULL,
   reviewer_name   TEXT NOT NULL,
   reviewer_phone  TEXT,                     -- for rate-limit dedup, never public
+  user_id         UUID REFERENCES users(id) ON DELETE SET NULL, -- migration 0014, nullable, S17 "My Reviews"
   rating          SMALLINT NOT NULL,
   review_text     TEXT NOT NULL,
   admin_reply     TEXT,
@@ -1105,6 +1106,9 @@ CREATE POLICY reviews_public_read ON reviews
   FOR SELECT USING (status = 'approved' AND deleted_at IS NULL);
 CREATE POLICY reviews_public_insert ON reviews
   FOR INSERT WITH CHECK (status = 'pending');
+CREATE POLICY reviews_own_read ON reviews
+  FOR SELECT USING (auth.uid() = user_id);
+  -- migration 0014, S17 "আমার রিভিউ"
 
 -- Leads: write-only from public (no public SELECT — a stranger should
 -- never read another patient's phone/name via API). Signed-in users
@@ -1118,6 +1122,10 @@ CREATE POLICY questions_public_read ON questions
   FOR SELECT USING (status = 'approved' AND deleted_at IS NULL);
 CREATE POLICY questions_public_insert ON questions
   FOR INSERT WITH CHECK (status = 'pending');
+CREATE POLICY questions_own_read ON questions
+  FOR SELECT USING (auth.uid() = user_id);
+  -- migration 0014, S17 "আমার প্রশ্ন" — mirrors leads_own_read exactly,
+  -- lets a signed-in user see their own pending/rejected questions too
 CREATE POLICY upvotes_public_all ON question_upvotes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY answers_public_read ON answers
   FOR SELECT USING (status = 'approved' AND deleted_at IS NULL);

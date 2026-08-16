@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: alreadyMsg }, { status: 429 });
   }
 
+  // S17 "আমার রিভিউ": associate with the signed-in submitter when
+  // present, so the reviews_own_read RLS policy (migration 0014) can
+  // surface it back to them later — doesn't gate submission on being
+  // signed in, still fully guest-submittable.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { error } = await supabase.from('reviews').insert({
     entity_type: resolvedType as 'doctor' | 'hospital',
     entity_id: resolvedId,
@@ -76,6 +84,7 @@ export async function POST(request: NextRequest) {
     rating,
     review_text,
     status: 'pending',
+    user_id: user?.id ?? null,
   });
 
   if (error) {

@@ -75,6 +75,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // S17 "আমার প্রশ্ন ও উত্তর": associate with the signed-in submitter
+  // when present, so questions_own_read (migration 0014) can surface
+  // this back to them even before it's approved. Doesn't gate
+  // submission on being signed in.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from('questions')
     .insert({
@@ -85,6 +93,7 @@ export async function POST(request: NextRequest) {
       author_name: is_anonymous ? null : author_name?.trim() || null,
       author_phone: author_phone?.trim() || null,
       status: 'pending',
+      user_id: user?.id ?? null,
     })
     .select('id')
     .single();

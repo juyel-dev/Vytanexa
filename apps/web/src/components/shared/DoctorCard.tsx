@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Star, Phone, MessageCircle } from 'lucide-react';
 import type { Json } from '@vytanexa/database';
 import { getLocalizedField } from '@/lib/i18n';
+import { FavoriteToggle } from './FavoriteToggle';
 
 export type DoctorCardData = {
   id: string;
@@ -49,6 +50,9 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
           PRO
         </span>
       )}
+      <div className="absolute right-3 top-3 z-dropdown">
+        <FavoriteToggle entityType="doctor" entityId={doctor.id} />
+      </div>
       <div className="flex gap-3">
         <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-brand-50 text-xl font-bold text-brand-600 ring-1 ring-brand-100">
           {doctor.photo_url ? (
