@@ -402,8 +402,53 @@ clean (no new DB objects, pure application-layer change).
       analytics wired.
 
 ## S16-S18 — Account & Settings
-- [ ] S16 More page (hamburger menu, real content replacing placeholder)
-- [ ] S17 Account (profile/favorites/history) — auth-guarded route group
+- [x] S16 More page (`/more`) — real content replacing placeholder.
+      `lib/current-user.ts` (shared `getCurrentUser()`, session +
+      `public.users` profile join, used by S16 and S17 both), `lib/
+      queries/more-page.ts` (data-driven custom-page menu injection
+      from `custom_pages WHERE show_in_menu=true`, notification
+      badge). Sign-out via `/api/auth/signout` (server-side, keeps the
+      browser Supabase client out of the More page bundle — same
+      lesson as S12's `/emergency` bundle-size investigation).
+- [x] S17 Account (`/account/*`) — auth-guarded per-page (each page
+      redirects guests to `/auth/login?returnUrl=...` rather than a
+      shared layout guard, since each page needs `currentUser` for its
+      own queries anyway). Pages: home (counts + typed-confirmation
+      delete flow), favorites (doctor/hospital tabs, reuses
+      `DoctorCard`/`HospitalCard` directly), history (read-only
+      `leads` log), qa (own questions incl. pending/rejected), reviews
+      (own reviews), profile (name/email/location edit; phone
+      deliberately NOT editable — needs real OTP re-verification, not
+      built yet, documented inline in `/api/account/profile`).
+      **Migration 0014** (applied live): `questions_own_read` RLS
+      policy (mirrors `leads_own_read` exactly) + `reviews.user_id`
+      column (new — reviews had NO user association at all before,
+      "My Reviews" was literally unbuildable without this) +
+      `reviews_own_read` policy. Wired `user_id` into `/api/reviews`
+      and `/api/questions` POST inserts (attaches when signed in,
+      still fully guest-submittable either way). `get_advisors`
+      re-checked clean after.
+      **Global favorites infrastructure** (new, used everywhere, not
+      just `/account/favorites`): `stores/favorites-store.ts`
+      (Zustand, not persisted — always reflects server truth, unlike
+      `location-store.ts`) + `components/shared/FavoriteToggle.tsx`
+      (heart icon, guest soft-gate inline prompt "সাইন ইন করে সেভ
+      করুন" per spec — NOT a hard redirect), wired into `DoctorCard`
+      and `HospitalCard` so every list/search/home surface in the app
+      gets working favorites for free. `/api/favorites` (toggle +
+      batch-check).
+      Account deletion: soft-delete via `users.deleted_at` +
+      anonymizes PII (name/email/phone cleared) + server-side sign-out,
+      per spec's "anonymizes PII, retains aggregate analytics" —
+      `auth.users` row itself untouched so a future re-signup with the
+      same phone gets a fresh profile via the existing
+      `trg_on_auth_user_created` trigger.
+      **Known simplification:** unfavoriting from `/account/favorites`
+      updates the heart instantly (global store) but doesn't animate
+      the card out with an undo toast (spec's "সরানো হয়েছে ↩️
+      পূর্বাবস্থায় ফেরান") — the card just stays until next page
+      load. Documented as a reasonable first-pass call, not silently
+      dropped.
 - [ ] S18 Settings (language/location/notifications/privacy)
 
 ## S19-S21 — Dynamic & SEO

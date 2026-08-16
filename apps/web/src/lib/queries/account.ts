@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@vytanexa/database';
+import type { Database, Json } from '@vytanexa/database';
 
 /**
  * Favorites — VYTANEXA-BLUEPRINT.md § S17 "Favorites (`/account/
@@ -135,7 +135,7 @@ export async function resolveReviewEntityNames(
       : Promise.resolve({ data: [] }),
   ]);
 
-  const map = new Map<string, { slug: string; name_translations: unknown }>();
+  const map = new Map<string, { slug: string; name_translations: Json }>();
   for (const d of doctors ?? []) map.set(d.id, d);
   for (const h of hospitals ?? []) map.set(h.id, h);
   return map;
