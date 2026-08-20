@@ -503,7 +503,31 @@ clean (no new DB objects, pure application-layer change).
       Verified full build clean at 106KB First Load JS — no
       bundle-size surprise this time (checked immediately, not after
       the fact).
-- [ ] S20 Notifications center (`/notifications`)
+- [x] S20 Notifications center (`/notifications`). Announcement Banner
+      (S04) already existed untouched — S20 explicitly says "no
+      separate spec needed here beyond that reference." `lib/queries/
+      notifications.ts`: `getNotifications` (RLS already scopes
+      `personal` type to `target_user_id`, general/emergency visible
+      to all — one query serves guests and signed-in users both, no
+      branching needed) + `getReadNotificationIds` (signed-in only).
+      Read-state split exactly per spec: DB `notification_reads` for
+      signed-in users, `localStorage.vytanexa_read_notification_ids`
+      for guests — `NotificationsClient` merges whichever applies on
+      mount. `/api/notifications/mark-read` + `mark-all-read`: no-op
+      success response for guests (nothing to persist server-side for
+      them), real upsert (composite PK `(user_id, notification_id)` —
+      verified against the actual schema before writing the
+      `onConflict` string, not assumed) for signed-in users.
+      **Correction to S16's badge comment:** this app's bottom nav has
+      no bell icon at all (5 tabs: Home/Doctors/Search/Hospitals/More
+      per S02 § 2.1) — S16's original comment referenced "mirrors
+      bottom-nav bell badge state," which doesn't exist; fixed the
+      comment to reflect that the More-page row is the only badge
+      surface. Also documented (not fixed — a deliberate scope line):
+      the badge dot is only accurate for signed-in users, since a
+      guest's unread count depends on `localStorage` this Server
+      Component can't read; adding a client-side check just for a
+      badge dot was judged disproportionate.
 - [ ] S21 SEO landing pages (`/[state]/[district]/[specialty]`) +
       sitemap.xml route handler
 

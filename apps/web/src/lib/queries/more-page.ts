@@ -25,11 +25,20 @@ export async function getMenuCustomPages(supabase: SupabaseClient<Database>) {
 /**
  * Notification badge — VYTANEXA-BLUEPRINT.md § S16 "Notification
  * Badge": "Small red dot on 'নোটিফিকেশন' row if unread notifications
- * exist (mirrors bottom-nav bell badge state, single source of truth
- * from notifications_read_status)." Guests never have personal
- * notifications and general/emergency ones aren't tracked per-user,
- * so this only checks the signed-in case; callers pass `null` for
- * guests and get `false` back immediately.
+ * exist." Guests never have personal notifications and general/
+ * emergency ones aren't tracked per-user, so this only checks the
+ * signed-in case; callers pass `null` for guests and get `false` back
+ * immediately.
+ *
+ * Known limitation (S20): a guest COULD have unread general/emergency
+ * notifications, but their read-state lives in `localStorage`
+ * (`vytanexa_read_notification_ids`, set client-side by
+ * `NotificationsClient`), which this Server Component has no way to
+ * read. Rather than adding a client-side badge check just for this
+ * dot, guests simply never see it — a deliberate, documented scope
+ * line, not an oversight. Bottom-nav has no bell icon in this app's
+ * 5-tab layout (Home/Doctors/Search/Hospitals/More per S02 § 2.1), so
+ * this More-page row is the only badge surface anyway.
  */
 export async function hasUnreadNotifications(
   supabase: SupabaseClient<Database>,
