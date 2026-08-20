@@ -26,3 +26,17 @@ export async function getActivePolls(supabase: SupabaseClient<Database>) {
 }
 
 export type PollWithOptions = Awaited<ReturnType<typeof getActivePolls>>[number];
+
+/** Single poll by ID — VYTANEXA-BLUEPRINT.md § S19 "poll" block embed. */
+export async function getPollById(supabase: SupabaseClient<Database>, pollId: string) {
+  const { data, error } = await supabase
+    .from('polls')
+    .select(
+      'id, question, total_votes, expires_at, created_at, poll_options(id, option_text, vote_count, display_order)'
+    )
+    .eq('id', pollId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}

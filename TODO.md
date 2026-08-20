@@ -479,8 +479,30 @@ clean (no new DB objects, pure application-layer change).
       for the same component. Dropped to 104KB.
 
 ## S19-S21 — Dynamic & SEO
-- [ ] S19 Custom page renderer (`/page/[slug]`) + BlockRenderer switch
-      for all 12 block types
+- [x] S19 Custom page renderer (`/page/[slug]`) + BlockRenderer switch
+      for all 12 block types. `lib/custom-page-blocks.ts` (loosely-typed
+      block shapes — the JSONB has no DB-level schema, so
+      `BlockRenderer`'s runtime fail-safe is the real safety net, not
+      the TS types). Static blocks (hero/rich_text/image/cta_banner/
+      spacer+divider) in `StaticBlocks.tsx`; `poll`/`qa_embed` fetch
+      their entity server-side and link through to the real
+      interactive page rather than reimplementing voting/answering
+      state inline (a deliberate scope line, documented in each);
+      `magazine_grid`/`doctor_grid`/`hospital_grid` reuse `ArticleCard`/
+      `DoctorCard`/`HospitalCard` directly — extracted `ArticleCard`
+      out of S13's `ArticleListClient` into `components/shared/` first
+      so this didn't need a duplicate; `report_form` (client, fully
+      dynamic field rendering from admin-defined
+      text/select/checkbox — matches spec's "no code release needed to
+      publish a new page") posts to new `/api/page-submissions`
+      (write-only, no public SELECT policy exists — admin reads via
+      service role); `faq_accordion` (client, accordion state).
+      Unknown/malformed block types render nothing rather than
+      crashing, so future block types (or a malformed JSON row) never
+      take down an already-published page.
+      Verified full build clean at 106KB First Load JS — no
+      bundle-size surprise this time (checked immediately, not after
+      the fact).
 - [ ] S20 Notifications center (`/notifications`)
 - [ ] S21 SEO landing pages (`/[state]/[district]/[specialty]`) +
       sitemap.xml route handler
