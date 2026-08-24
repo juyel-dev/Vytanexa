@@ -44,7 +44,7 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       Phase 6's real location data entry via the Admin Panel's CSV
       bulk import (A04) once that screen is built; not needed yet
 
-## PHASE 2 — User App Core (S01-S09 first — highest-value discovery flow)
+## PHASE 2 — User App Core (S01-S09 first — highest-value discovery flow) ✅ COMPLETE
 - [x] S01 design tokens → `tailwind.config.ts` extends shared preset +
       layout constants (topbar/navbar/z-index) wired
 - [x] S02 routing shell → `(main)` route group, BottomNav (5 tabs,
@@ -73,22 +73,27 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       fixed a second real bug: PostgREST reverse-relationship embeds
       `doctors(count)` aren't statically typeable from the `categories`
       side since the FK lives on `doctors` — restructured to two
-      simple, correctly-typed queries instead of forcing a type-cast)
-      — remaining SEC-01/02/06-13 sections land in later passes
-- [ ] S03 onboarding flow
-- [ ] S04 Home page (start with static sections, wire data progressively)
-- [ ] S05 Search
-- [ ] S06 Doctor List
-- [ ] S07 Doctor Profile (the "most critical page" — extra care here)
-- [ ] S08 Hospital List/Detail
-- [ ] S09 Symptoms
+      simple, correctly-typed queries instead of forcing a type-cast),
+      all 13 sections eventually completed (see TODO.md for the full
+      per-section breakdown)
+- [x] S03 onboarding flow
+- [x] S05 Search (all 4 states + voice search + trending RPC)
+- [x] S06 Doctor List
+- [x] S07 Doctor Profile (the "most critical page" — extra care taken)
+- [x] S08 Hospital List/Detail
+- [x] S09 Symptoms (list + detail, incl. migration 0011)
 
-## PHASE 3 — User App Extended (S10-S22)
-- [ ] S10 Lab/Diagnostic search · S11 Blood Services · S12 Emergency
-- [ ] S13 Articles · S14 Q&A · S15 Polls/Reports
-- [ ] S16 More menu · S17 Account · S18 Settings
-- [ ] S19 Custom page renderer · S20 Notifications · S21 SEO pages
-- [ ] S22 PWA/offline/i18n wiring
+## PHASE 3 — User App Extended (S10-S22) — S10-S20 COMPLETE, S21-S22 REMAINING
+- [x] S10 Lab/Diagnostic search · S11 Blood Services (migrations
+      0012/0013) · S12 Emergency (+ district filtering retrofit on
+      S08/S10/S11, discovered while building S12)
+- [x] S13 Articles · S14 Q&A (feature-flag gated) · S15 Polls/Reports
+- [x] S16 More menu · S17 Account (migration 0014) · S18 Settings
+- [x] S19 Custom page renderer (all 12 block types) · S20 Notifications
+- [ ] S21 SEO pages — **NEXT, not started.** See `CHECKPOINT.md` §3.
+- [ ] S22 PWA/offline/i18n wiring — several earlier screens have
+      documented, honest placeholders waiting on this (see
+      `CHECKPOINT.md` §8 for the full list)
 
 ## PHASE 4 — Admin Panel Core (A01-A09 first)
 - [ ] A01-A02 shell, sidebar, auth/roles

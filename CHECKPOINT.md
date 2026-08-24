@@ -3,8 +3,11 @@
 project. It exists specifically to let you continue from the exact
 point work paused, without the original conversation.**
 
-Last updated: this checkpoint, immediately after the user requested a
-pause to document state (see §7 for why).
+Last updated: end of the session that completed S13 through S20
+(Community, Account, Settings, Custom Pages, Notifications). Juyel
+ended the session here deliberately — conversation context was ~60%
+used, not because of any blocker — and asked for this file to be
+brought fully up to date before starting a fresh chat.
 
 ---
 
@@ -24,277 +27,288 @@ pause to document state (see §7 for why).
 ## 2. EXACT CHECKPOINT
 
 **Last verified, committed, and pushed state:** commit
-`f37febc` — "feat(web): S08 Hospital List (part 1/2) — SSR + infinite
-scroll, type/emergency filters"
+`6cab144` — "feat(web): S20 Notifications Center COMPLETE"
 
-**Repo:** `github.com/juyel-dev/Vytanexa`, branch `main`, 45 commits.
+**Repo:** `github.com/juyel-dev/Vytanexa`, branch `main`. Working tree
+is clean at this commit — nothing uncommitted, nothing pending.
 
-**Live Supabase project:** "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
-region ap-southeast-2, Postgres 17. 39 tables, full RLS, migrations
-0001-0010 applied and verified (see `packages/database/migrations/`
-and `DATABASE-SCHEMA.md` Parts 1-7).
+**Everything S01 through S20 is complete, typecheck-clean, full-build
+verified, and pushed.** This is a genuine clean stopping point, not a
+mid-task pause.
 
-### What's fully done (verified: typecheck + build clean, committed, pushed)
-- **Phase 0** — monorepo scaffold (apps/web, apps/admin, packages/config, packages/database)
-- **Phase 1** — live Supabase wired, types generated, security/perf hardening
-- **S01-S02** — design tokens, routing shell, BottomNav, TopBar variants
-- **S03** — full onboarding (splash/language/slides/location/signin), `/auth/login`, `/auth/verify`
-- **S04** — Home page, all 13 sections, admin-controlled section registry
-- **S05** — Search (all 4 states, voice search, trending RPC)
-- **S06** — Doctor List (SSR + infinite scroll, filter sheet, sort)
-- **S07** — Doctor Profile (all 4 tabs, lead capture, reviews, share, SEO)
-- **S08 part 1/2** — Hospital List (`/hospitals`) — SSR + infinite scroll + filters
+---
 
-### Uncommitted local work (exists in the sandbox filesystem right now, UNVERIFIED)
-Two files were written but **never typechecked, never built, never
-committed** — the session was paused specifically to write this
-handoff before verifying/committing them:
+## 3. IMMEDIATE NEXT STEP
+
+**S21 — SEO Landing Pages** (`VYTANEXA-BLUEPRINT.md`, search for
+`## S21`). Not started at all — no files exist for it yet.
+
+Read the full S21 section before starting. From memory, the shape is:
+- URL hierarchy: `/[state]`, `/[state]/[district]`,
+  `/[state]/[district]/[specialty]` — the third level is the highest-
+  value long-tail SEO target (e.g. "কোচবিহারে হৃদরোগ বিশেষজ্ঞ ডাক্তার")
+- `generateStaticParams()` from the DB (states × districts × active
+  specialties with ≥1 doctor) — SSG at build time
+- Content-rich, crawlable landing shell wrapping the same doctor-list
+  experience (S06), not a separate feature — re-uses
+  `queryDoctorList`/`DoctorCard` etc.
+- Will also need `sitemap.xml` (a Route Handler, not a static file,
+  per Next.js App Router convention) enumerating these generated pages
+  plus the rest of the crawlable app (articles, doctor/hospital detail
+  pages, symptoms, custom pages)
+
+**Before writing any code for S21:**
+1. Check Supabase connectivity first — see § 5 below, this has failed
+   at the start of nearly every session so far.
+2. Re-read the full S21 spec section in `VYTANEXA-BLUEPRINT.md` — don't
+   rely on this summary, it's from memory and may be incomplete.
+3. Check whether `locations` has any real district/state data yet
+   (`SELECT count(*) FROM locations`) — if it's still empty (it was,
+   last checked), `generateStaticParams()` will correctly generate zero
+   pages, which is honest/correct behavior, not a bug to work around.
+
+**After S21, continue in this order** (per the todo list Juyel asked
+for at the start of this stretch — proceed through it without asking
+again unless something genuinely blocks):
+- S22 — Infrastructure: next-intl i18n setup, PWA (manifest, service
+  worker, offline page, precaching), any Auth polish. This is the
+  biggest remaining non-admin item — several earlier screens
+  (Settings' language row, `/emergency`'s offline requirement, the
+  Clear Cache button) have documented, honest placeholders waiting on
+  this.
+- Cross-cutting passes: Zod validation audit across all API routes
+  (most currently do manual `if (!x) return 400` checks, not Zod —
+  worth deciding whether to retrofit), rate-limit coverage audit,
+  accessibility pass, error boundary audit.
+- **Admin Panel** (`apps/admin`, spec in `ADMIN-PANEL-SPEC.md`, A01+)
+  — a large separate phase, Phase 0 scaffold only so far. This is
+  genuinely a second application; scope it deliberately when reached
+  rather than assuming it's a quick add-on.
+
+---
+
+## 4. WHAT THIS SESSION BUILT (S13-S20 summary)
+
+Full detail is in `TODO.md` under each numbered section — this is
+just an index so you know where to look, not a substitute for reading
+those entries.
+
+- **S13 Articles** — list (featured card + grid, category chips,
+  infinite scroll) + detail (rich HTML body, author byline,
+  `MedicalWebPage` JSON-LD). Extracted `components/shared/ArticleCard.tsx`
+  for reuse.
+- **S14 Q&A Community** — feature-flag gated
+  (`app_settings.features.community_qa`), genuinely 404s when off.
+  Doctor-answers-pinned-top, upvoting, moderated submissions.
+- **S15 Polls + Data Report** — single-select polls with optimistic
+  voting; "ভুল তথ্য জানান" cross-cutting action wired into Doctor/
+  Hospital detail pages via a shared sheet.
+- **S16 More page** — real account-aware header, data-driven custom-
+  page menu injection, sign-out.
+- **S17 Account** — 6 pages (home/favorites/history/qa/reviews/profile).
+  Built a genuinely global favorites system (heart toggle on every
+  Doctor/Hospital card app-wide, not just the account page).
+- **S18 Settings** — language/location/notifications/privacy, not
+  auth-gated.
+- **S19 Custom Page Renderer** — `/page/[slug]`, all 12 block types,
+  fail-safe unknown-block handling.
+- **S20 Notifications Center** — DB read-state for signed-in users,
+  localStorage for guests, merged correctly.
+
+### Database migrations applied this session (0011-0014)
+All applied live via Supabase MCP, all mirrored to local `.sql` files
+in `packages/database/migrations/`, all documented in
+`DATABASE-SCHEMA.md` inline, `packages/database/types.ts` regenerated
+after each:
+- **0011** — `symptoms.common_causes_translations` +
+  `when_to_see_doctor_translations` (deferred from an earlier session,
+  resolved this session once Supabase came back online)
+- **0012** — `get_donor_phone()` SECURITY DEFINER RPC (S11's donor
+  phone-reveal — the originally-spec'd "service-role Route Handler"
+  design was architecturally impossible given apps/web never holds
+  the service-role key; this RPC is the real fix, same pattern as
+  `is_admin()`)
+- **0013** — pinned `search_path` on `get_donor_phone` (fixed a
+  `get_advisors` WARN immediately after 0012)
+- **0014** — `questions_own_read` RLS policy + `reviews.user_id`
+  column + `reviews_own_read` RLS policy (S17's "My Questions"/"My
+  Reviews" were literally unbuildable without these — reviews had no
+  user association at all before)
+
+---
+
+## 5. SUPABASE CONNECTIVITY — CHECK THIS FIRST, EVERY SESSION
+
+The Supabase project (`lfrvzdhonsnemdfmxthw`, free tier) **auto-pauses
+on inactivity**. This has happened at the start of nearly every
+session so far. It is normal, not a bug.
+
+**Symptom:** `Supabase:list_migrations`, `Supabase:execute_sql`, etc.
+time out with "Connection terminated due to connection timeout."
+
+**Fix, every time:**
 ```
-apps/web/src/lib/queries/hospital-detail.ts       (new)
-apps/web/src/components/hospital-profile/HospitalProfileClient.tsx  (new)
+1. Supabase:get_project → check status field
+2. If status is "INACTIVE" → Supabase:restore_project
+3. Poll Supabase:get_project every ~20-30s until status is
+   "ACTIVE_HEALTHY" (can take 1-3 minutes)
+4. Then retry whatever Supabase call failed
 ```
-These implement the hospital detail page's data-fetching and UI
-(gallery, info, services, linked doctors, sticky call/directions bar,
-share sheet) — mirroring S07's doctor-detail pattern. **The route file
-`apps/web/src/app/(main)/hospitals/[slug]/page.tsx` was NOT yet
-created** — that's the missing piece that wires the above two files
-together (see S07's `doctors/[slug]/page.tsx` as the exact template:
-`getHospitalBySlug` instead of `getDoctorBySlug`, `generateMetadata`
-with a `LocalBusiness`/`Hospital` JSON-LD instead of `Physician`).
+Don't assume the connector itself is broken and give up — it almost
+certainly just needs a restore.
 
-**⚠️ If these two files aren't present when you resume:** the sandbox
-container was reset again (this already happened once this session —
-see §7). That's fine — they're small, quick to recreate following the
-exact pattern in `lib/queries/doctor-detail.ts` +
-`components/doctor-profile/DoctorProfileClient.tsx` (S07, already
-committed, safe). Re-check with:
+---
+
+## 6. HARD-WON LESSONS FROM THIS SESSION (read before writing client components)
+
+### Bundle-size: the browser Supabase client is expensive (~60-70KB)
+Hit this **three separate times** this session (S12's `/emergency`,
+S16-adjacent, S18's `/settings`) before it stopped being a surprise.
+The pattern that bites:
+
+- `lib/supabase/client.ts`'s `createBrowserClient` (full supabase-js +
+  auth-js + realtime-js + storage-js) costs ~60-70KB once actually
+  imported into a page's client bundle.
+- `EmergencyFAB` stays cheap on every page because it's dynamically
+  imported (`next/dynamic({ssr:false})`) from the **shared root
+  layout**, not from an individual page.
+- The same `dynamic({ssr:false})` trick does **NOT** reliably save you
+  at the page level — confirmed by direct measurement, not assumption:
+  tried it on `/emergency`, tried `force-dynamic` rendering too,
+  neither worked reliably. Also caught a **second** instance in
+  `/settings`'s `SettingsClient.tsx`, which had accidentally used a
+  **static** import of `LocationPickerSheet` instead of dynamic (typo
+  of habit, not a new problem) — fixing that one import dropped it
+  from 171KB to 104KB immediately, confirming dynamic import *can*
+  work at the component level when actually applied correctly.
+- **The reliable fix:** don't call the browser Supabase client
+  directly from a page-critical client component at all. Fetch via a
+  Route Handler instead (`/api/emergency-data` is the pattern — see
+  that route's own comment for the full story). This matches how
+  every other list page in the app already worked before this lesson
+  was learned the hard way.
+
+**Going forward:** any new client component that needs Supabase data
+should default to fetching via a Route Handler, not
+`createClient()` from `lib/supabase/client.ts` directly, unless
+there's a specific reason (like `EmergencyFAB` and `LocationChip`,
+which are layout-level and already proven cheap). **Always run the
+full font-stripped `next build` and check the bundle size of any new
+route before considering it done** — this is already the established
+workflow (see §7 workflow below), don't skip it.
+
+### A real, embarrassing mistake — and the value of not hiding it
+While building S08/S10/S11 (hospitals, lab tests, blood services),
+this session's earlier self wrote code comments claiming "no
+location-selector exists anywhere in the app yet" and deferred real
+district filtering on that basis. That claim was **false** — a
+`LocationChip` + Zustand `location-store` already existed from earlier
+foundational work, just hadn't been checked for. Discovered this while
+building S12 (`/emergency`), which needed exactly that component.
+
+What happened next matters: rather than quietly using the newly-
+discovered component going forward and leaving the earlier false
+claim sitting in three files, this session went back and (a) flagged
+the mistake explicitly to Juyel, (b) retrofitted real district
+filtering into all three affected pages in a dedicated follow-up pass
+(see the "District Filtering Retrofit" TODO.md entry, between S12 and
+S13), and (c) checked `doctor-list.ts`'s similar-looking deferral
+before touching it too — and correctly found that one was a
+**different, legitimate** reason (needs a `chambers` join, no real
+chamber data exists yet to test against), not the same mistake. Left
+it alone.
+
+**The lesson for future sessions:** when a past comment/decision turns
+out to be wrong, say so plainly and fix it if the fix is reasonably
+scoped — don't paper over it, and don't over-correct by "fixing"
+things that were actually fine for a different, valid reason. Check
+before assuming a pattern repeats.
+
+### Schema gaps get fixed via migration, not silently worked around
+Recurring pattern this whole project: when a spec'd feature turns out
+to need a DB change that doesn't exist yet (S09's `common_causes`,
+S11's donor-phone RPC, S17's `reviews.user_id`), the response has
+consistently been: apply a real migration via Supabase MCP, document
+it inline in `DATABASE-SCHEMA.md` and the local `.sql` file, regenerate
+types, re-check `get_advisors`. Not: fake the feature, leave it
+silently broken, or build a workaround that avoids touching the DB.
+Keep doing this — it's why the app actually works end-to-end rather
+than accumulating fake-looking features.
+
+---
+
+## 7. ESTABLISHED WORKFLOW (unchanged, keep following it)
+
+Per screen/feature:
+1. Read the relevant spec section carefully (`VYTANEXA-BLUEPRINT.md`
+   for user-app screens, `DATABASE-SCHEMA.md` for any schema question,
+   `ADMIN-PANEL-SPEC.md` once that phase starts)
+2. Check what already exists in the repo before building (view files,
+   don't assume — this session's location-selector mistake happened
+   from *not* checking)
+3. Implement
+4. `npm run typecheck --workspace=apps/web` (or `apps/admin` once that
+   phase starts)
+5. Full production build with fonts temporarily stripped from
+   `apps/web/src/app/layout.tsx` (Google Fonts is network-blocked in
+   this sandbox) → verify all new/changed routes are within the 150KB
+   First Load JS budget → restore the real font code **byte-for-byte**
+   (diff against a backup, don't just eyeball it) → re-typecheck
+6. Check Supabase advisors (`get_advisors`, both `security` and
+   `performance` types) after any migration — confirm no new
+   ERROR/WARN findings beyond the pre-existing, already-accepted ones
+7. Update `TODO.md` with honest, specific notes — what was built, what
+   was deferred and why, any schema gap found and how it was resolved
+   or why it wasn't
+8. Commit with a detailed message (`git commit -F /tmp/commit_msg.txt`
+   via heredoc, since messages often contain backticks) → push
+   immediately (`git push "https://${GH_TOKEN}@github.com/juyel-dev/Vytanexa.git" main -q`,
+   unset `GH_TOKEN` right after)
+
+**Safety check before every commit:** `git status --short | grep -iE
+"\.env\.local|node_modules"` — must return nothing. Never commit
+secrets or node_modules.
+
+**GitHub PAT:** provided fresh each session by Juyel (see uploaded
+`github_PAT` file or ask if not present) — short-lived by design,
+never assume an old one from a previous transcript still works.
+
+---
+
+## 8. THINGS THAT ARE INTENTIONALLY NOT BUILT (don't "fix" these without reading why)
+
+- Real UI-chrome i18n (language switching actually changing rendered
+  text) — infrastructure exists (locale cookie, `preferred_language`
+  persists) but no page threads a resolved locale through
+  `getLocalizedField()` calls yet. S22 scope. Documented in
+  `components/settings/LanguageSheet.tsx`.
+- PWA offline caching / service worker — S22 scope. `/emergency` and
+  Settings' "Clear Cache" button are both already forward-compatible
+  (real browser API calls, currently safe no-ops) but nothing is
+  registered yet.
+- Phone number change flow (re-verification via OTP) — `/account/
+  profile` deliberately doesn't accept phone edits, documented inline
+  in `/api/account/profile`.
+- Answer submission "soft sign-in gate" (S14) — currently fully
+  guest-submittable because gating without a real auth wall behind it
+  would just be a fake UI barrier. Real auth exists (Supabase Auth,
+  OTP-based, already wired for login/verify) but no page enforces a
+  "soft" prompt-then-continue pattern yet.
+- District filtering on `doctor-list.ts` — different, valid reason
+  (needs a `chambers` join + real chamber data to test against), not
+  the same gap that was fixed on hospitals/lab-tests/blood-services.
+- Data export request (S18) — logs an `analytics_events` row, no real
+  job queue or email/WhatsApp delivery. Spec itself calls this "low
+  priority... included for completeness."
+
+---
+
+## 9. RESUMING WORK — QUICK START
+
 ```bash
-ls apps/web/src/lib/queries/hospital-detail.ts \
-   apps/web/src/components/hospital-profile/HospitalProfileClient.tsx
+mkdir -p /home/claude/work && cd /home/claude/work
+git clone -q https://github.com/juyel-dev/Vytanexa.git && cd Vytanexa
+npm install --silent
 ```
-
-## 3. EXACT NEXT STEP
-
-1. Re-clone if the container was reset (see §7 for the exact commands
-   — this is now a well-rehearsed recovery procedure).
-2. Re-create `apps/web/.env.local` and `apps/admin/.env.local` (real
-   values are in `PROJECT-CONTEXT.md` §4 — actually they are NOT
-   written there for security; ask the user for fresh Supabase
-   credentials if not already in your conversation context, or check
-   if the previous session's values still work by testing a build).
-3. Check whether the two uncommitted files from §2 above still exist.
-   If yes: verify them (`npm run typecheck --workspace=apps/web`). If
-   no: recreate them following S07's pattern.
-4. Create `apps/web/src/app/(main)/hospitals/[slug]/page.tsx` (the
-   missing piece — see S07's `doctors/[slug]/page.tsx` as the exact
-   template to copy and adapt).
-5. Run the full verification sequence (this project's established
-   discipline, see §5 below): typecheck both apps, then full
-   `next build` via the font-strip technique (see §6), then restore
-   the real font code byte-for-byte, then re-typecheck.
-6. Update `TODO.md` — check off S08, add any new findings.
-7. Commit + push immediately.
-8. Continue down `TODO.md` from S09 (Symptoms) onward.
-
----
-
-## 4. KEY ARCHITECTURE DECISIONS MADE THIS SESSION (Not Yet in PROJECT-CONTEXT.md)
-
-These were discovered/decided during implementation, not in the
-original spec docs — future sessions should know them before
-re-deriving or accidentally contradicting them:
-
-```
-✅ Two schema gaps found and fixed: `symptoms`/`symptom_categories`
-   tables and `ads` table didn't exist despite the blueprint/admin
-   spec depending on them. Added as migrations 0008/0009. Documented
-   in DATABASE-SCHEMA.md Parts 6-7.
-
-✅ @supabase/ssr must be >=0.12.x — the version originally pinned
-   (^0.5.1) silently broke typed-client row inference with the newer
-   Supabase type-generator output (__InternalSupabase key). Root-caused
-   via isolated testing, not guessed.
-
-✅ Heavy client components (EmergencyFAB, LocationPickerSheet) must be
-   next/dynamic(..., {ssr:false})-loaded, and only MOUNTED when
-   actually opened (not just prop-gated) — otherwise the browser
-   Supabase client bundle blows the 150KB/route budget. Confirmed via
-   measurement (175KB -> 108KB after fixing).
-
-✅ All Supabase queries for pages/API routes go through the SERVER
-   client (lib/supabase/server.ts), never the browser client, UNLESS
-   the component is inherently interactive client-side (FAB, Location
-   Picker, onboarding auth forms). Search, doctor list, hospital list
-   all proxy through Route Handlers (/api/search, /api/doctors,
-   /api/hospitals) specifically to keep Supabase client code off
-   pages that don't strictly need client-side interactivity.
-
-✅ Detail pages (doctor/hospital/symptom) hide the global BottomNav in
-   favor of their own full-width sticky action bar, per S07's spec.
-   Implemented via `components/layout/MainChrome.tsx` (pathname-aware,
-   regex-matched against /doctors/[slug], /hospitals/[slug],
-   /symptoms/[slug]) rather than restructuring route groups.
-
-✅ Shared query-builder-function pattern: lib/queries/{entity}-list.ts
-   and lib/queries/{entity}-detail.ts, one function used by BOTH the
-   SSR page and the corresponding API route (or generateMetadata),
-   so the two call sites can never drift out of sync. Established in
-   S06/S07, continue this pattern for S08 detail, S09, etc.
-
-✅ Reusable components built so far, use them rather than
-   re-implementing: BottomSheet, ShareSheet (components/shared/),
-   DoctorCard, HospitalCard (components/shared/), lib/i18n.ts
-   (getLocalizedField — handles Json type from Supabase directly, no
-   manual casting needed), lib/chamber-schedule.ts (schedule
-   grouping + live status, pure functions).
-
-✅ Two Zustand stores exist: stores/location-store.ts (persisted,
-   shared between onboarding and the always-available Location Chip),
-   stores/onboarding-store.ts (persisted, drives the onboarding step
-   machine).
-
-✅ Generic API routes already built and reusable: /api/analytics
-   (fire-and-forget event logging), /api/leads, /api/reviews (both
-   rate-limited via the DB's check_rate_limit() RPC), /api/search +
-   /api/search/trending.
-```
-
----
-
-## 5. VERIFICATION DISCIPLINE (Established This Session — Follow It)
-
-Every commit this session followed this sequence, and future sessions
-should too:
-```bash
-# 1. Typecheck (fast, catches most issues)
-rm -rf apps/web/.next && npm run typecheck --workspace=apps/web
-
-# 2. Full build verification (see §6 for the font workaround)
-
-# 3. Also typecheck/build apps/admin if anything in packages/* changed
-npm run typecheck --workspace=apps/admin
-
-# 4. Safety check before EVERY commit — never skip this:
-git status --short | grep -iE "\.env\.local|node_modules" && echo "ABORT" || echo "clean"
-
-# 5. Commit with a descriptive message (use a temp file + git commit -F
-#    if the message contains backticks — see §7, this bit a shell
-#    syntax error once already)
-
-# 6. Push immediately: 
-export GH_TOKEN="<fresh PAT from the user>" && \
-  git push "https://${GH_TOKEN}@github.com/juyel-dev/Vytanexa.git" main -q && \
-  unset GH_TOKEN
-```
-
-When something doesn't typecheck or build, **fix the real bug** — this
-session found and fixed several real issues (not just noise): a
-Supabase library version incompatibility, a PostgREST reverse-relation
-typing gap, a missing Suspense boundary for useSearchParams, an
-undefined Tailwind keyframe, an ambient SpeechRecognition type missing
-a `length` property, a bundle-size regression. All were root-caused
-and fixed properly, documented in the relevant commit messages — grep
-`git log` for "real bug" / "real issue" to find them all if useful
-context.
-
----
-
-## 6. THE GOOGLE FONTS SANDBOX LIMITATION (Recurring, Expected)
-
-This sandbox's network allowlist does not include
-`fonts.googleapis.com`. `apps/web/src/app/layout.tsx` uses
-`next/font/google` (Hind Siliguri, Noto Sans Bengali, Plus Jakarta
-Sans) — correct, production-ready code that works fine on Vercel or
-any machine with normal internet access, but `next build` cannot
-complete in THIS sandbox because of that one blocked fetch.
-
-**Workaround used all session, repeat it:**
-```bash
-cp apps/web/src/app/layout.tsx /tmp/layout.tsx.bak
-# Temporarily replace with a version with no font imports (see any
-# commit message this session for the exact stripped-down content)
-rm -rf apps/web/.next && npm run build --workspace=apps/web
-# Confirms EVERYTHING ELSE is correct
-cp /tmp/layout.tsx.bak apps/web/src/app/layout.tsx
-diff /tmp/layout.tsx.bak apps/web/src/app/layout.tsx && echo "restored exactly"
-```
-Never leave the stripped version committed — always restore the real
-font code before committing. This is a sandbox artifact, not a code
-defect — noted honestly in commit messages throughout rather than
-silently worked around.
-
----
-
-## 7. CONTAINER RESET — WHAT HAPPENED, WHAT TO DO
-
-Mid-session, the sandbox container was reset (fresh filesystem, only a
-few just-created files survived). **No work was actually lost** because
-of the "commit + push immediately after every verified step" discipline
-— recovery was just:
-```bash
-cd /home/claude && rm -rf Vytanexa && \
-  export GH_TOKEN="<fresh PAT — ask the user, previous one may be
-    revoked>" && \
-  git clone "https://${GH_TOKEN}@github.com/juyel-dev/Vytanexa.git" && \
-  unset GH_TOKEN
-cd Vytanexa && git config user.email "dev@vytanexa.app" && \
-  git config user.name "Vytanexa Dev"   # fresh clones need this set again
-npm install
-```
-Then recreate `.env.local` files in both apps (values are sensitive,
-not stored in the repo — get them fresh from the user or from
-whatever's in your current conversation context) and continue.
-
-**Lesson reinforced:** commit and push after every small, verified
-unit of work — never accumulate more than one feature's worth of
-uncommitted changes. This checkpoint itself exists because the user
-correctly recognized reset risk mid-feature and asked to pause and
-document rather than risk losing more in-progress context.
-
-**Also learned:** a fresh `git clone` has no `user.email`/`user.name`
-configured — the very first commit attempt after a re-clone will fail
-with "Author identity unknown" until you set it (command above).
-
----
-
-## 8. OPEN QUESTIONS / ASSUMPTIONS TO VALIDATE
-
-- **JSONB `.or()` filter syntax** (used in `/api/search`,
-  `lib/queries/doctor-list.ts`'s specialty filter) and the
-  `categories!inner(...)` embedded-join filter pattern: both typecheck
-  and match documented PostgREST syntax, but this sandbox cannot reach
-  the live REST API directly (not in the network allowlist) to
-  confirm end-to-end. **Spot-check both once real doctor/hospital/
-  category data exists** — either via the Admin Panel (not yet built)
-  or a manual test insert.
-- **Phone-OTP and Google sign-in** (S03 onboarding, `/auth/login`):
-  code is correct and complete, but needs an SMS provider (e.g.
-  Twilio) and a Google OAuth client configured in the Supabase
-  dashboard — neither is set up yet. Not testable until that
-  infrastructure exists.
-- **`doctors.degree` schema mismatch**: S07's Info tab spec shows
-  structured "Degree — Institution (Year)" entries; the actual schema
-  only has a flat text array. Rendered as-is (documented in
-  `InfoTab.tsx` and `TODO.md`) rather than fabricating fields. If
-  structured education history becomes a real product need, that's a
-  schema migration, not a UI fix.
-- **No real content exists yet** — every screen has been verified for
-  correct empty-state handling (per the Production Data Rule — zero
-  demo/seed data), but nothing has been visually verified with real
-  doctors/hospitals/etc. because none exist. The Admin Panel (not yet
-  started — see TODO.md) is what will let real data get entered.
-
----
-
-## 9. WHAT HASN'T BEEN STARTED AT ALL
-
-Per `TODO.md`, everything from S08-part-2 (hospital detail) onward:
-S09 (Symptoms — needs the schema added this session), S10-S12 (Lab/
-Blood/Emergency), S13-S15 (Community), S16-S18 (Account/Settings),
-S19-S22 (Custom pages/Notifications/SEO/PWA), and the **entire Admin
-Panel** (apps/admin currently has only the Phase 0 scaffold — a
-placeholder page, no real screens from ADMIN-PANEL-SPEC.md A01-A15
-have been built yet). See `TODO.md` for the exact ordered list —
-follow it top to bottom, don't skip, verify before checking off,
-commit after each item, per the user's standing instructions
-(documented at the top and bottom of `TODO.md` itself).
+Then: check Supabase connectivity (§5), re-read the S21 spec section,
+and continue per §3 above.

@@ -118,14 +118,19 @@ Vytanexa/
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
 ├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
 ├── CHECKPOINT.md               ✅ exact session handoff state — READ THIS FIRST
-├── packages/database/migrations/  0001-0010, all applied live
-├── packages/database/types.ts  generated from live schema
-├── apps/web/                   Next.js user app — see below for build progress
+├── packages/database/migrations/  0001-0014, all applied live
+├── packages/database/types.ts  generated from live schema (after 0014)
+├── apps/web/                   Next.js user app — S01-S20 complete, see below
 └── apps/admin/                 Phase 0 scaffold only, no real screens built yet
 ```
 
 **Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
-39 tables, full RLS, migrations 0001-0010 applied and hardened.
+39+ tables (+ `reviews.user_id`, migration 0014), full RLS, migrations
+0001-0014 applied and hardened. **The project auto-pauses on
+inactivity (free tier)** — every session so far has needed
+`Supabase:restore_project` at least once. This is normal, not a bug;
+`Supabase:get_project` returning `status: "INACTIVE"` or MCP calls
+timing out both mean "restore it," not "something is broken."
 
 **apps/web build progress** (screens implemented against live data,
 verified via typecheck + build each time — see `TODO.md` for the
@@ -138,15 +143,31 @@ authoritative checklist):
 ✅ S05 (Search, all states + voice)
 ✅ S06 (Doctor List)
 ✅ S07 (Doctor Profile — "most critical page")
-⏳ S08 (Hospital List done, Hospital Detail in progress — see CHECKPOINT.md)
-❌ S09 onward — not started
+✅ S08 (Hospital List + Detail)
+✅ S09 (Symptoms List + Detail, incl. migration 0011)
+✅ S10 (Lab & Diagnostic Test Search)
+✅ S11 (Blood Services, incl. migrations 0012/0013)
+✅ S12 (Emergency System — FAB + full /emergency page)
+✅ District filtering retrofit (S08/S10/S11, using S12-discovered LocationChip)
+✅ S13 (Articles — list + detail)
+✅ S14 (Q&A Community — feature-flag gated)
+✅ S15 (Polls + Data Report cross-cutting action)
+✅ S16 (More page)
+✅ S17 (Account — 6 pages, incl. migration 0014)
+✅ S18 (Settings)
+✅ S19 (Custom Page Renderer — all 12 block types)
+✅ S20 (Notifications Center)
+⏭️ S21 (SEO Landing Pages) — NEXT, not started
+❌ S22 (Infrastructure: i18n, PWA, Auth polish) — not started
+❌ Cross-cutting passes (validation, rate-limit audit, a11y) — not started
 ❌ Admin Panel (apps/admin) — not started beyond Phase 0 scaffold
 ```
 
-**Last major milestone:** S07 Doctor Profile complete (the spec's own
-"most critical page"). Currently mid-way through S08 Hospital Detail
-when the user paused the session to checkpoint (container reset risk
-— see `CHECKPOINT.md` § 7 for what happened and the recovery drill).
+**Last major milestone:** S20 Notifications Center complete. Session
+ended here because conversation context ran long (~60% used per
+Juyel), not because of any blocker — this was a clean, planned
+handoff. See `CHECKPOINT.md` for the exact next step and everything
+worth knowing before continuing.
 
 ---
 
@@ -162,10 +183,8 @@ when the user paused the session to checkpoint (container reset risk
    ones still work.
 5. Continue in small, incrementally-committed steps — think before
    writing code, verify (typecheck + build) before committing, push
-   immediately after each verified change. This session learned the
-   hard way (a container reset) why "immediately" matters — see
-   `CHECKPOINT.md` § 7.
+   immediately after each verified change.
 6. Update `TODO.md` checkboxes and this file's §5 as milestones
-   complete — both are only useful if kept current. Consider replacing
+   complete — both are only useful if kept current. Replace
    `CHECKPOINT.md`'s content with a fresh checkpoint at each natural
    pause point, rather than letting it grow unbounded.
