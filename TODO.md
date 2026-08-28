@@ -528,8 +528,45 @@ clean (no new DB objects, pure application-layer change).
       guest's unread count depends on `localStorage` this Server
       Component can't read; adding a client-side check just for a
       badge dot was judged disproportionate.
-- [ ] S21 SEO landing pages (`/[state]/[district]/[specialty]`) +
-      sitemap.xml route handler
+- [x] S21 SEO landing pages (`/[state]/[district]/[specialty]`) +
+      sitemap.xml route handler — `app/(seo)/` route group (mirrors the
+      spec's `(seo)` group, identical URL hierarchy without polluting
+      `(main)`): `lib/queries/seo.ts` (state/district/category helpers,
+      guardrail: categories filtered to those with ≥1 verified doctor
+      nationally — same national-count pattern as symptom-detail's
+      `getSpecialtyDoctorCounts`, because chamber→location joins require
+      real chamber data that still doesn't exist; documented inline rather
+      than faking district-specific counts), `lib/seo-helpers.ts`
+      (templated H1/title/description/intro with `{district}`
+      `{specialty}` `{doctor_count}` substitution + canonical/hreflang +
+      BreadcrumbList/ItemList/FAQPage JSON-LD builders, defaults match
+      spec's Bengali long-tail intent — future Admin override via
+      `app_settings.seo_defaults` would merge here when that panel exists),
+      `components/seo/` (SeoBreadcrumbs, SeoFaq client accordion,
+      SeoInternalLinks — nearby districts + other specialties). Three ISR
+      pages (revalidate 21600 / 6hr, dynamicParams true, SSG via
+      `generateStaticParams()` from DB):
+      `/[state]` (state hub — H1/intro + district grid + specialty
+      shortcuts), `/[state]/[district]` (district hub — specialty grid
+      of only categories that have doctors + sibling-district links),
+      `/[state]/[district]/[specialty]` (long-tail — the highest-value
+      page per spec: SEO-crafted H1/intro/FAQ + same `queryDoctorList`
+      filtered by specialty as S06, rendered via reused `DoctorCard`,
+      BreadcrumbList+ItemList+FAQPage JSON-LD, internal linking footer).
+      Guardrail: generates zero pages when `locations`/`categories` are
+      empty (honest, verified — CHECKPOINT §3 noted this as expected
+      until admin seeds data); a `/state/district/specialty` combo with
+      zero doctors nationally 404s rather than indexing a thin/empty page.
+      `app/sitemap.ts` (Next.js MetadataRoute.Sitemap, revalidate 1hr) +
+      `app/robots.ts` — enumerates static routes + all verified doctor/
+      hospital/symptom/article/custom-page slugs + every SEO combo under
+      the same doctor≥1 guardrail; DB misses (no .env, empty DB) degrade
+      to static routes only, never throw at build. `(seo)/layout.tsx`
+      reuses `MainChrome`/`FirstRunGate`/`EmergencyFAB` (same chrome as
+      S21's wireframe). Verified: `typecheck` clean, font-stripped `next
+      build` clean (all SEO routes 97-100KB First Load JS, well under
+      150KB budget; no expected bundle regression from server-only data
+      queries).
 
 ## S22 — Infrastructure
 - [ ] next-intl setup, cookie-based locale switching, messages/*.json
