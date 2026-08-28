@@ -37,6 +37,11 @@ next-env.d.ts
 # Testing
 coverage/
 
+# PWA (next-pwa) generated — never commit, regenerated on build
+**/public/sw.js
+**/public/workbox-*.js
+**/public/fallback-*.js
+
 # Misc
 .turbo/
 .vercel/

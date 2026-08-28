@@ -568,11 +568,93 @@ clean (no new DB objects, pure application-layer change).
       150KB budget; no expected bundle regression from server-only data
       queries).
 
-## S22 — Infrastructure
-- [ ] next-intl setup, cookie-based locale switching, messages/*.json
-- [ ] PWA config (next-pwa, manifest, offline page, precaching)
-- [ ] Auth flow: phone+OTP and Google sign-in via Supabase Auth
-- [ ] Zustand stores (onboarding, filters, ui state)
+## S22 — Infrastructure ✅ COMPLETE
+- [x] next-intl setup, cookie-based locale switching, messages/*.json —
+      `messages/bn.json|en.json|hi.json` (common/nav/onboarding/home/doctor/settings/offline
+      keys — covers the spec's bn|en|hi + admin-extensible list, same keys
+      reused by BottomNav and onboarding without duplicating strings),
+      `src/i18n/config.ts` (`locales`, `defaultLocale='bn'`, `isValidLocale`),
+      `src/i18n/request.ts` (`getRequestConfig` reading `locale` cookie via
+      `next/headers:cookies()`, falling back to bn — matches S02 §7 "same
+      URL serves all languages"), `src/lib/getLocale.ts` server helper
+      for DB-content `getLocalizedField(record, 'name', locale)` threading
+      (client sheets already set `locale` cookie; server pages can now
+      call `getLocale()` — BottomNav wired as proof: `components/layout/
+      BottomNav.tsx:1` now uses `useTranslations()` (`nav.home|doctors|
+      search|hospitals|more`) instead of hardcoded `label` strings, so
+      switching in Settings or onboarding re-renders chrome immediately;
+      `next.config.js:1` wrapped with `createNextIntlPlugin('./src/i18n/
+      request.ts')` and `src/app/layout.tsx:1` is now `async`, reads
+      locale cookie + `getMessages()` and wraps `{children}` in
+      `NextIntlClientProvider` with `lang=locale` on `<html>`; Settings'
+      `LanguageSheet.tsx:1` updated to `useTranslations()` + `router.
+      refresh()` after setting `document.cookie=locale=...; path=/; max-
+      age=31536000` and persisting `preferred_language` for signed-in
+      users (previously honest placeholder — now live). DB JSONB fallback
+      chain (`bn→en→first key`) unchanged in `lib/i18n.ts`, but the
+      threading gap noted in earlier TODOs is closed: `getLocale()` is the
+      intended call site for future page-level adoption (shown in BottomNav,
+      incremental for the rest). Verified: typecheck clean, full build
+      clean (see below).
+- [x] PWA config (next-pwa, manifest, offline page, precaching) —
+      installed `next-pwa@5.6.0` (Next 14 compatible, `require('next-pwa')`
+      not `.default` — caught at build), `next.config.js:1` wrapped with
+      `withPWA({ dest:'public', register:true, skipWaiting:true,
+      disable: development, fallbacks:{document:'/offline'},
+      runtimeCaching:[ supabase-images→CacheFirst 30d, next/image→
+      CacheFirst 30d, google-fonts→CacheFirst 1y, /api/*→NetworkOnly,
+      /doctors|/hospitals/[slug]→StaleWhileRevalidate, /community|
+      /symptoms|/search→StaleWhileRevalidate ]})` per S22 spec "Precache:
+      app shell, root layout chrome, /emergency route, core fonts, logo/
+      icon assets, offline.html fallback" + runtime strategies. `src/app/
+      manifest.ts:1` (`MetadataRoute.Manifest`: name/short_name Vytanexa,
+      theme #1756C8, bg #FFF, display standalone, orientation portrait,
+      icons 192/512 + maskable → `public/icons/icon-*.png` placeholders
+      — 1×1 transparent PNGs, 67B each, flagged for Juyel to replace with
+      real brand mark before launch — keeps manifest valid for build
+      without shipping a fake brand asset). `src/app/offline/page.tsx:1`
+      (`'use client'` — required so the retry `onClick={() => location.
+      reload()}` is serializable; Server Component would throw "Event
+      handlers cannot be passed to Client Component props" as hit on first
+      build attempt and fixed) — SVG illustration, `ইন্টারনেট সংযোগ পাওয়া
+      যাচ্ছে না` + `জরুরি নম্বর দেখুন → /emergency` (precached per S12's
+      "must work offline" requirement) + retry. `components/home/
+      PwaInstallBanner.tsx` already captured `beforeinstallprompt` since
+      S04 — now backed by a real manifest + SW, so the button actually
+      fires. Settings' `handleClearCache` already called real `caches.
+      keys()` / `serviceWorker.getRegistrations()` — now finds real
+      workbox caches to clear, previously safe no-op. Build generates
+      `public/sw.js` + workbox runtime — gitignored via existing
+      `.next/` + explicit `public/sw.js` untracked (not committed). Full
+      font-stripped build clean (see below).
+- [x] Auth flow: phone+OTP and Google sign-in via Supabase Auth — already
+      correct since S03 (`components/onboarding/SigninStep.tsx:27`,
+      `app/(auth)/auth/login|verify/page.tsx:1` — `supabase.auth.
+      signInWithOtp({phone})`, `verifyOtp({phone,token,type:'sms'})`,
+      `signInWithOAuth({provider:'google'})` with `redirectTo` — infra
+      caveat remains an SMS provider + Google OAuth client in the
+      Supabase dashboard, documented inline as dashboard config not code
+      defect; now polished with `middleware.ts:1` (Supabase SSR refresh:
+      `createServerClient` with `request.cookies.getAll()/setAll` +
+      `supabase.auth.getUser()` on every request, `matcher` excludes
+      static/icon/manifest assets) so server components reading
+      `lib/supabase/server.ts` (`cookies()`) see a live session after
+      the initial access-token expiry — previously relied on client-only
+      storage, now correct per Supabase App Router docs; the matcher also
+      excludes Next/PWA assets correctly).
+- [x] Zustand stores (onboarding, filters, ui state) — audited:
+      `stores/location-store.ts:1` (persisted `vytanexa_location`),
+      `stores/onboarding-store.ts:1` (persisted `vytanexa_onboarding`,
+      flow resume for free), `stores/favorites-store.ts:1` (global
+      favorites, not persisted — server truth) already as designed;
+      filters are URL searchParams per S22 architecture summary
+      ("URL search params as source of truth for shareable list/filter
+      state"), not a store — intentional, not missing. Added `stores/ui-
+      store.ts:1` (`useUiStore`: `toasts[]` + `pushToast/dismissToast` +
+      `deferredPrompt` for the PWA install banner's captured
+      `beforeinstallprompt` event — lifted from `PwaInstallBanner`'s
+      local state so any surface can trigger `prompt()` without coupling
+      to Home; tiny, documented, within budget).
 
 ## Cross-Cutting (do once, applies everywhere)
 - [ ] Zod validation schemas for every form (leads, reviews, questions,

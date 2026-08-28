@@ -1,0 +1,63 @@
+{
+  "common": {
+    "brand": "Vytanexa",
+    "tagline": "Your Health, Your Connection",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "seeAll": "See all",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "doctors": "Doctors",
+    "search": "Search",
+    "hospitals": "Hospitals",
+    "more": "More"
+  },
+  "onboarding": {
+    "splash_tagline": "Your Health, Your Connection",
+    "language_title": "Select your language",
+    "language_hint": "You can change it later",
+    "slides": [
+      { "title": "Find the right doctor", "desc": "Verified profiles & reviews to choose the specialist" },
+      { "title": "Hospitals & tests made easy", "desc": "Nearby hospitals, diagnostics and lab tests in one place" },
+      { "title": "Emergency by your side", "desc": "Ambulance, blood banks, emergency hospitals — in 2 taps" }
+    ]
+  },
+  "home": {
+    "quickActions": "Quick services",
+    "popularDoctors": "Popular doctors",
+    "trendingHospitals": "Trending hospitals",
+    "symptomQuickAccess": "Find doctor by symptom",
+    "articles": "Health magazine"
+  },
+  "doctor": {
+    "findTitle": "Find doctors",
+    "experience": "{years}+ years experience",
+    "fee": "Visit: {fee}",
+    "bookLead": "Request appointment",
+    "call": "Call",
+    "details": "Details"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "location": "Default location",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "about": "About app",
+    "version": "Version",
+    "clearCache": "Clear cache"
+  },
+  "offline": {
+    "title": "No internet connection",
+    "desc": "Some information may still be available offline.",
+    "emergency": "View emergency numbers",
+    "retry": "Try again"
+  }
+}

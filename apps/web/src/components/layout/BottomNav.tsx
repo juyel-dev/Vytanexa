@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Home, Stethoscope, Search, Building2, Menu, type LucideIcon } from 'lucide-react';
 
 /**
@@ -21,28 +22,30 @@ import { Home, Stethoscope, Search, Building2, Menu, type LucideIcon } from 'luc
 
 type NavItem = {
   href: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   isCenter?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/', label: 'হোম', icon: Home },
-  { href: '/doctors', label: 'ডাক্তার', icon: Stethoscope },
-  { href: '/search', label: 'খুঁজুন', icon: Search, isCenter: true },
-  { href: '/hospitals', label: 'হাসপাতাল', icon: Building2 },
-  { href: '/more', label: 'আরো', icon: Menu },
+  { href: '/', labelKey: 'nav.home', icon: Home },
+  { href: '/doctors', labelKey: 'nav.doctors', icon: Stethoscope },
+  { href: '/search', labelKey: 'nav.search', icon: Search, isCenter: true },
+  { href: '/hospitals', labelKey: 'nav.hospitals', icon: Building2 },
+  { href: '/more', labelKey: 'nav.more', icon: Menu },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useTranslations();
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-navbar flex h-navbar items-stretch border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
       aria-label="প্রধান নেভিগেশন"
     >
-      {NAV_ITEMS.map(({ href, label, icon: Icon, isCenter }) => {
+      {NAV_ITEMS.map(({ href, labelKey, icon: Icon, isCenter }) => {
+        const label = t(labelKey);
         const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
 
         return (

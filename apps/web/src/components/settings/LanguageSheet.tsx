@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
@@ -21,17 +23,12 @@ const LANGUAGES: { code: 'bn' | 'en' | 'hi'; native: string; english: string }[]
  * the onboarding store here would be a mismatched dependency. Same
  * three language options, same visual language, correct surface.
  *
- * Honest scope note: this sets the `locale` cookie (same mechanism
- * onboarding uses) and persists `preferred_language` to the profile
- * for signed-in users — real, working infrastructure. It does NOT
- * yet re-render existing Bengali UI chrome into the chosen language;
- * every page in this app currently calls `getLocalizedField()` with
- * its default locale rather than threading a resolved locale through,
- * because full UI-chrome i18n (next-intl or equivalent) is explicitly
- * S22 scope and hasn't been built. Spec's "applies instantly... re-
- * fetches translated content" is the S22-complete behavior; this
- * sheet lays the groundwork (the preference now persists correctly)
- * without overclaiming a rendering capability that doesn't exist yet.
+ * S22: now wired to next-intl — the locale cookie is read server-side
+ * (RootLayout + i18n/request.ts) and BottomNav/nav etc. re-render via
+ * `useTranslations()`. The `router.refresh()` forces a soft RSC
+ * revalidation so the new messages are fetched without a full hard
+ * reload. DB-content `getLocalizedField()` threading remains incremental
+ * (see `lib/getLocale.ts`), but chrome translation is now live.
  */
 export function LanguageSheet({
   open,
@@ -44,6 +41,8 @@ export function LanguageSheet({
   currentLanguage: string;
   isSignedIn: boolean;
 }) {
+  const t = useTranslations('common');
+  const router = useRouter();
   const [selected, setSelected] = useState(currentLanguage);
   const [saving, setSaving] = useState(false);
 
@@ -60,10 +59,11 @@ export function LanguageSheet({
     }
     setSaving(false);
     onClose();
+    router.refresh();
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="ভাষা নির্বাচন করুন">
+    <BottomSheet open={open} onClose={onClose} title={t('close') === 'Close' ? 'Select language' : 'ভাষা নির্বাচন করুন'}>
       <div className="flex flex-col gap-2.5">
         {LANGUAGES.map((lang) => {
           const isSelected = selected === lang.code;

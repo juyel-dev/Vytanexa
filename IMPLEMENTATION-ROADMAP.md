@@ -83,19 +83,19 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 - [x] S08 Hospital List/Detail
 - [x] S09 Symptoms (list + detail, incl. migration 0011)
 
-## PHASE 3 — User App Extended (S10-S22) — S10-S21 COMPLETE, S22 REMAINING
+## PHASE 3 — User App Extended (S10-S22) — ✅ COMPLETE
 - [x] S10 Lab/Diagnostic search · S11 Blood Services (migrations
-       0012/0013) · S12 Emergency (+ district filtering retrofit on
-       S08/S10/S11, discovered while building S12)
+        0012/0013) · S12 Emergency (+ district filtering retrofit on
+        S08/S10/S11, discovered while building S12)
 - [x] S13 Articles · S14 Q&A (feature-flag gated) · S15 Polls/Reports
 - [x] S16 More menu · S17 Account (migration 0014) · S18 Settings
 - [x] S19 Custom page renderer (all 12 block types) · S20 Notifications
 - [x] S21 SEO landing pages (`/(seo)/[state]/[district]/[specialty]` +
-       `sitemap.xml` + `robots.txt` — SSG+ISR 6hr, templated content,
-       BreadcrumbList/ItemList/FAQPage JSON-LD, internal linking)
-- [ ] S22 PWA/offline/i18n wiring — several earlier screens have
-       documented, honest placeholders waiting on this (see
-       `CHECKPOINT.md` §8 for the full list)
+        `sitemap.xml` + `robots.txt` — SSG+ISR 6hr, templated content,
+        BreadcrumbList/ItemList/FAQPage JSON-LD, internal linking)
+- [x] S22 Infrastructure — next-intl (cookie-based, messages/bn|en|hi,
+        BottomNav translated, layout provider), PWA (next-pwa manifest
+        + offline + precaching), Auth middleware, ui-store
 
 ## PHASE 4 — Admin Panel Core (A01-A09 first)
 - [ ] A01-A02 shell, sidebar, auth/roles

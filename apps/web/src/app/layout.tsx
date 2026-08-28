@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import './globals.css';
+import { cookies } from 'next/headers';
+import { isValidLocale, defaultLocale } from '@/i18n/config';
 
 // Self-hosted via next/font (no external Google Fonts network request
 // at runtime — S22 performance budget). Exposed as CSS variables so
@@ -33,20 +37,32 @@ export const metadata: Metadata = {
     'Vytanexa — নিকটবর্তী ডাক্তার, হাসপাতাল, ল্যাব টেস্ট ও জরুরি স্বাস্থ্যসেবা খুঁজুন। Connect. Care. Live.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Locale detection (cookie-based, S02 § 7) wired in a later Phase 2
-  // step alongside next-intl setup. `lang="bn"` as the correct default
-  // in the meantime.
+  // S22: cookie-based locale (no URL prefix, S02 §7). The same `locale`
+  // cookie set by onboarding's LanguageStep and settings' LanguageSheet is
+  // now read on the server and threaded into both `lang=` and the
+  // next-intl provider — BottomNav/nav etc. can call `useTranslations()`
+  // and immediately reflect the chosen language. DB content i18n (JSONB
+  // *_translations via getLocalizedField) continues to work via the
+  // shared `lib/getLocale.ts` helper; full UI-chrome translation is
+  // incremental, but the infrastructure is now live rather than a
+  // placeholder.
+  const rawLocale = cookies().get('locale')?.value;
+  const locale = isValidLocale(rawLocale) ? rawLocale : defaultLocale;
+  const messages = await getMessages();
+
   return (
     <html
-      lang="bn"
+      lang={locale}
       className={`${hindSiliguri.variable} ${notoSansBengali.variable} ${plusJakartaSans.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+      </body>
     </html>
   );
 }
