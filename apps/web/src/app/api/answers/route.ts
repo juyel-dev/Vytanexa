@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { answerSchema } from '@/lib/validations/answers';
 
 /**
  * POST /api/answers — VYTANEXA-BLUEPRINT.md § S14 "উত্তর দিন input at
@@ -19,11 +20,16 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { question_id, body: answerBody, author_name } = body;
-
-  if (!question_id || !answerBody || answerBody.trim().length < 5) {
-    return NextResponse.json({ error: 'উত্তর কমপক্ষে ৫ অক্ষরের হতে হবে' }, { status: 400 });
+  // Normalize client field `body` → schema field `body`, plus validate
+  const parsed = answerSchema.safeParse({
+    question_id: body.question_id,
+    body: body.body,
+    author_name: body.author_name,
+  });
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
+  const { question_id, body: answerBody, author_name } = parsed.data;
 
   const supabase = createClient();
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';

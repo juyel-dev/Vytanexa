@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+import { bloodDonorSchema } from '@/lib/validations/blood-donors';
 
 /**
  * POST /api/blood-donors — VYTANEXA-BLUEPRINT.md § S11 "Donor
@@ -24,20 +23,11 @@ const VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, phone, blood_group, location_id, consent_contact } = body;
-
-  if (!name || !phone || !blood_group || !location_id) {
-    return NextResponse.json({ error: 'সব তথ্য পূরণ করুন' }, { status: 400 });
+  const parsed = bloodDonorSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
-  if (!VALID_BLOOD_GROUPS.includes(blood_group)) {
-    return NextResponse.json({ error: 'রক্তের গ্রুপ সঠিক নয়' }, { status: 400 });
-  }
-  if (consent_contact !== true) {
-    return NextResponse.json(
-      { error: 'জরুরি প্রয়োজনে যোগাযোগ পাওয়ার সম্মতি প্রয়োজন' },
-      { status: 400 }
-    );
-  }
+  const { name, phone, blood_group, location_id, consent_contact } = parsed.data;
 
   const supabase = createClient();
 

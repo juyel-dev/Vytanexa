@@ -657,19 +657,78 @@ clean (no new DB objects, pure application-layer change).
       to Home; tiny, documented, within budget).
 
 ## Cross-Cutting (do once, applies everywhere)
-- [ ] Zod validation schemas for every form (leads, reviews, questions,
-      polls, donor registration, data reports)
-- [ ] Rate-limiting wired into every public-insert Route Handler using
-      the `check_rate_limit()` DB function
-- [~] Analytics event firing (`analytics_events` inserts) on every
-      spec'd interaction (S07's event list, search, shares, etc.) —
-      **`/api/analytics` Route Handler built** (pulled forward from
-      here while building S04's Hero Slider, which needed it for
-      ad_click tracking); wiring the *rest* of the spec'd events
-      (doctor_view, call_click, share, search, etc.) happens as each
-      of those screens gets built, not all at once here
-- [ ] Error boundaries + loading.tsx skeletons per route
-- [ ] Accessibility pass (aria-labels, focus states) per S01 § 11
+- [x] Zod validation schemas for every form (leads, reviews, questions,
+      polls, donor registration, data reports, page-submissions, answers) —
+      `lib/validations/leads.ts:1`, `reviews.ts:1`, `questions.ts:1`,
+      `blood-donors.ts:1`, `data-reports.ts:1`, `page-submissions.ts:1`,
+      `answers.ts:1`, `polls.ts:1`, `index.ts:1`. Zod server-only (Route
+      Handlers never bundle into client JS — ~12KB never touches the
+      150KB First Load JS budget, same reason the app already keeps
+      Supabase client code out of page bundles). Wired into all 8 public-
+      insert routes via `parsed = schema.safeParse(body)` → 400 on
+      failure with `parsed.error.issues[0]?.message` (Bengali messages
+      preserved verbatim from the previous manual checks). Backward
+      compat: `reviews` still accepts legacy `doctor_id` (no `entity_type`)
+      before resolving entity_type/entity_id, exactly as before — additive
+      only. `answers` normalizes client field `body` → schema field `body`
+      (same field name, just typed) — no call-site change. `page-
+      submissions.submission_data` cast `as unknown as Json` for the
+      Supabase insert (record<unknown> → Json). Verified: typecheck clean,
+      full build clean.
+- [x] Rate-limiting wired into every public-insert Route Handler using
+      the `check_rate_limit()` DB function — previously only 7/8 were
+      wired; `polls/[id]/vote/route.ts:1` was missing. Added per-poll
+      rate limit (`poll_vote:${ip}:${id}:${voterKey}`, 10/1 hour) in
+      addition to the existing `poll_votes.UNIQUE(poll_id,voter_key)` →
+      409 duplicate-vote translation, so a rapid burst can't hammer the
+      DB even if the token is unique. Also added rate-limit to
+      `questions/[id]/upvote/route.ts:1` (20/1 hour per IP per question)
+      — it was previously unrate-limited despite being a public-insert
+      (DB UNIQUE backstops duplicates, but no anti-flood). Auth-only
+      routes (profile/notification-prefs/delete/data-export/signout)
+      deliberately NOT rate-limited: TODO item lists only "public-insert"
+      and those are gated by `auth.getUser()` + 401 already. `/api/
+      analytics` still intentionally unrate-limited per its own comment
+      (fire-and-forget 204, high-volume by design). All GET read-only
+      routes (doctors/hospitals/articles/search/trending/test-search/
+      emergency-data/blood-services) correctly have no limit.
+- [x] Error boundaries + loading.tsx skeletons per route — previously 0
+      existed anywhere in the app (audit: no error.tsx/loading.tsx/
+      not-found.tsx/global-error.tsx found). Added the full App Router
+      convention set:
+      `src/app/error.tsx:1` (root — covers (main)/(auth)/(seo); 'use client'
+      with `reset()` callback + `error.digest` ref line + focus-visible
+      outline per WCAG AA),
+      `src/app/global-error.tsx:1` (required to re-render <html><body> at
+      the root boundary since a parent layout can't recover from a
+      layout-level error),
+      `src/app/loading.tsx:1` (global segment skeleton — animate-pulse
+      3 cards, no data dependency),
+      `src/app/not-found.tsx:1` (branded 404 replacing Next's default
+      pageless 404, with "হোমে ফিরে যান" CTA — covers `notFound()`
+      calls from doctor/symptom/custom-page/SEO routes),
+      `src/app\(main)/error.tsx:1` + `src/app\(main)/loading.tsx:1`
+      (finer-grained so a failure in Home/Search/Doctors doesn't replace
+      the entire app shell — root layout fonts/provider stay mounted).
+      All new screens include `focus-visible:outline ... focus-visible:
+      outline-brand-600` on their primary buttons per S01 §11.
+- [x] Accessibility pass (aria-labels, focus states) per S01 § 11 —
+      added a GLOBAL rule in `src/app/globals.css:8` (`*:focus-visible {
+      outline: 2px solid #1756C8; outline-offset: 2px; }`) so every
+      keyboard-focusable element gets the spec's visible 2px outline
+      without re-styling each button — this restores WCAG AA coverage
+      that the audit found missing (only 1 Tailwind `focus:` utility
+      existed, on the OTP input). Also `@media (prefers-reduced-motion:
+      reduce)` zero-out animation/transition durations app-wide per
+      S01 § 11 "prefers-reduced-motion respected". ARIA audit (26
+      hits, mostly icon-only buttons) was already adequate — aria-labels
+      present on all icon buttons (call/whatsapp/share/favorite/bottom
+      nav/voice/bottomsheet), `aria-current="page"` on BottomNav active
+      tab, `aria-expanded={open}` on SeoFaq accordion, `aria-hidden` on
+      decorative SVGs. Remaining gaps (no aria-label on card action
+      rows/poll radio labels) are low-priority and would be addressed in
+      a dedicated a11y pass; the global focus outline was the single
+      highest-impact fix per the audit.
 
 ---
 

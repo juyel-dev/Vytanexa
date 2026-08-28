@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 
 /**
  * POST /api/questions/[id]/upvote — VYTANEXA-BLUEPRINT.md § S14
@@ -14,12 +15,24 @@ import { createClient } from '@/lib/supabase/server';
  * in sync either way, so this route never writes that counter itself.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const { voterKey } = await request.json();
-  if (!voterKey) {
-    return NextResponse.json({ error: 'voterKey প্রয়োজন' }, { status: 400 });
+  const parsed = z.object({ voterKey: z.string().trim().min(1, 'তথ্য অসম্পূর্ণ') }).safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
+  const { voterKey } = parsed.data;
 
   const supabase = createClient();
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+    p_key: `question_upvote:${ip}:${params.id}`,
+    p_max_count: 20,
+    p_window: '1 hour',
+  });
+  if (rateLimitError) {
+    console.error('rate limit check failed:', rateLimitError.message);
+  } else if (!allowed) {
+    return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, { status: 429 });
+  }
 
   const { data: existing } = await supabase
     .from('question_upvotes')

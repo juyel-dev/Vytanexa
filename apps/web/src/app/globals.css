@@ -26,3 +26,21 @@ body {
   @apply bg-neutral-50 text-neutral-900;
   font-family: var(--font-sans, 'Plus Jakarta Sans'), sans-serif;
 }
+
+/* S01 §11 WCAG AA — visible 2px focus outline on keyboard navigation.
+   Previously only a single OTP input had a `focus:` utility; this
+   global rule restores the spec's requirement without re-styling every
+   button individually. Respects prefers-reduced-motion. */
+*:focus-visible {
+  outline: 2px solid #1756c8;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { reviewSchema } from '@/lib/validations/reviews';
 
 /**
  * POST /api/reviews — VYTANEXA-BLUEPRINT.md § S07 "Review Submission
@@ -20,34 +21,26 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { doctor_id, entity_type, entity_id, reviewer_name, rating, review_text, honeypot } =
-    body;
+
+  // Honeypot checked before Zod so bots get a silent 204 without a
+  // validation-error hint that would help them adapt.
+  if (body.honeypot) {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  const parsed = reviewSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+  }
+  const { doctor_id, entity_type, entity_id, reviewer_name, rating, review_text } = parsed.data;
 
   const resolvedType: string = entity_type ?? (doctor_id ? 'doctor' : '');
   const resolvedId: string | undefined = entity_id ?? doctor_id;
 
-  // Honeypot: a hidden form field real users never fill; a bot that
-  // fills every field will trip this. Silent reject, no error hint
-  // that would help a bot adapt.
-  if (honeypot) {
-    return new NextResponse(null, { status: 204 });
-  }
-
-  if (
-    !resolvedType ||
-    !['doctor', 'hospital'].includes(resolvedType) ||
-    !resolvedId ||
-    !reviewer_name ||
-    !rating ||
-    !review_text
-  ) {
-    return NextResponse.json({ error: 'সব তথ্য পূরণ করুন' }, { status: 400 });
-  }
-  if (review_text.length < 20 || review_text.length > 500) {
-    return NextResponse.json({ error: 'রিভিউ ২০-৫০০ অক্ষরের মধ্যে হতে হবে' }, { status: 400 });
-  }
-  if (rating < 1 || rating > 5) {
-    return NextResponse.json({ error: 'রেটিং সঠিক নয়' }, { status: 400 });
+  // Resolved after Zod so we can give a precise 400 for the
+  // entity-resolution edge case (neither new nor legacy fields supplied).
+  if (!resolvedType || !['doctor', 'hospital'].includes(resolvedType) || !resolvedId) {
+    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
   }
 
   const supabase = createClient();

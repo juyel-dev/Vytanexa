@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { pollVoteSchema } from '@/lib/validations/polls';
 
 /**
  * POST /api/polls/[id]/vote — VYTANEXA-BLUEPRINT.md § S15. "One vote
@@ -16,12 +17,28 @@ import { createClient } from '@/lib/supabase/server';
  * are designed around one-shot votes.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const { optionId, voterKey } = await request.json();
-  if (!optionId || !voterKey) {
-    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+  const body = await request.json();
+  const parsed = pollVoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
+  const { optionId, voterKey } = parsed.data;
 
   const supabase = createClient();
+
+  // Rate-limit polls vote per voterKey + poll (anti-flood, in addition to
+  // the DB UNIQUE(poll_id,voter_key) that translates to 409 on duplicate).
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+    p_key: `poll_vote:${ip}:${params.id}:${voterKey}`,
+    p_max_count: 10,
+    p_window: '1 hour',
+  });
+  if (rateLimitError) {
+    console.error('rate limit check failed:', rateLimitError.message);
+  } else if (!allowed) {
+    return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, { status: 429 });
+  }
 
   const { data: poll } = await supabase
     .from('polls')

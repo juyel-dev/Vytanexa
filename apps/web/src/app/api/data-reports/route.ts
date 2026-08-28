@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const VALID_REASONS = ['wrong_phone', 'wrong_address', 'wrong_hours', 'closed', 'other'];
-const VALID_ENTITY_TYPES = ['doctor', 'hospital', 'article', 'question', 'poll'];
+import { dataReportSchema } from '@/lib/validations/data-reports';
 
 /**
  * POST /api/data-reports — VYTANEXA-BLUEPRINT.md § S15 "Reports
@@ -17,14 +15,11 @@ const VALID_ENTITY_TYPES = ['doctor', 'hospital', 'article', 'question', 'poll']
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { entity_type, entity_id, reason, detail } = body;
-
-  if (!VALID_ENTITY_TYPES.includes(entity_type) || !entity_id) {
-    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+  const parsed = dataReportSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
-  if (!VALID_REASONS.includes(reason)) {
-    return NextResponse.json({ error: 'কারণ নির্বাচন করুন' }, { status: 400 });
-  }
+  const { entity_type, entity_id, reason, detail } = parsed.data;
 
   const supabase = createClient();
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';

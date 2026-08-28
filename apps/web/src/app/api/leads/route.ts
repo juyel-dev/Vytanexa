@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { leadSchema } from '@/lib/validations/leads';
 
 /**
  * POST /api/leads — VYTANEXA-BLUEPRINT.md § S07 "Appointment Lead
  * Capture (Income Stream Feature)". Rate-limited 3 per phone per
  * doctor per 24h via the shared `check_rate_limit()` function.
+ * Validated via Zod (leadSchema) — single source of truth per S22's
+ * "react-hook-form + Zod schemas shared between client validation and
+ * Route Handler server-side validation" architecture summary.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { doctor_id, chamber_id, patient_name, patient_phone, preferred_time, message } = body;
-
-  if (!doctor_id || !patient_name || !patient_phone) {
-    return NextResponse.json({ error: 'সব প্রয়োজনীয় তথ্য পূরণ করুন' }, { status: 400 });
+  const parsed = leadSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
-  if (!/^[6-9]\d{9}$/.test(patient_phone)) {
-    return NextResponse.json({ error: 'সঠিক মোবাইল নম্বর দিন' }, { status: 400 });
-  }
-  if (message && message.length > 200) {
-    return NextResponse.json({ error: 'বার্তা খুব বড়' }, { status: 400 });
-  }
+  const { doctor_id, chamber_id, patient_name, patient_phone, preferred_time, message } = parsed.data;
 
   const supabase = createClient();
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {

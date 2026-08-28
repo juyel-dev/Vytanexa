@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { Json } from '@vytanexa/database';
+import { pageSubmissionSchema } from '@/lib/validations/page-submissions';
 
 /**
  * POST /api/page-submissions — VYTANEXA-BLUEPRINT.md § S19
@@ -12,11 +14,11 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { page_id, block_index, submission_data, submitter_phone } = body;
-
-  if (!page_id || block_index === undefined || !submission_data) {
-    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+  const parsed = pageSubmissionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
+  const { page_id, block_index, submission_data, submitter_phone } = parsed.data;
 
   const supabase = createClient();
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
   const { error } = await supabase.from('page_submissions').insert({
     page_id,
     block_index,
-    submission_data,
+    submission_data: submission_data as unknown as Json,
     submitter_phone: submitter_phone?.trim() || null,
   });
 

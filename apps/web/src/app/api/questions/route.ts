@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { queryQuestionList, type QAListParams } from '@/lib/queries/qa-list';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { questionSchema } from '@/lib/validations/questions';
 
 /** GET /api/questions — infinite scroll continuation, mirrors /api/hospitals (S08). */
 export async function GET(request: NextRequest) {
@@ -46,18 +47,12 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
+  const parsed = questionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+  }
   const { title, body: questionBody, category_id, is_anonymous, author_name, author_phone } =
-    body;
-
-  if (!title || title.trim().length < 10) {
-    return NextResponse.json(
-      { error: 'শিরোনাম কমপক্ষে ১০ অক্ষরের হতে হবে' },
-      { status: 400 }
-    );
-  }
-  if (!category_id) {
-    return NextResponse.json({ error: 'বিভাগ নির্বাচন করুন' }, { status: 400 });
-  }
+    parsed.data;
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
