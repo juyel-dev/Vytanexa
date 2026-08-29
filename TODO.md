@@ -828,7 +828,50 @@ clean (no new DB objects, pure application-layer change).
       display_order=i`, audit `category_reorder` — directly drives S04
       CategoryGrid). Verified: typecheck clean, build clean — `/categories`
       4.79kB/95.4kB.
-- [ ] A05 Doctors Manager (list/CRUD/verification/chambers)
+- [x] A05 Doctors Manager (list/CRUD/verification/chambers) —
+      `lib/doctor-utils.ts:1` (`VERIFICATION_LABEL` pending/verified/
+      rejected/suspended + colors, `doctorName()` bn→en→slug,
+      `doctorSlugBase()` via shared `slugify`), `lib/validations/doctors.ts:1`
+      (`baseDoctorSchema` with `name_translations.bn` superRefine,
+      `category_id` uuid, `verification_status` enum, fee range
+      superRefine `max>=min`, `chamberInputSchema` with location/phone/
+      address required, schedule `day(open HH:MM/close)` regex,
+      `is_primary` dedup; `doctorCreateSchema` = base+superRefine,
+      `doctorUpdateSchema` = base.partial + chambers), `(dashboard)/doctors/
+      page.tsx` (`force-dynamic`, `requireAdmin`, filters q/status/category/
+      location (via `chambers.location_id → doctor_ids` two-step), pagination
+      25/page, sort allowlist, primary chamber location resolved via
+      `chambers.is_primary` → `locations` name), `components/doctors/
+      DoctorsTable.tsx:1` (`'use client'`, URL-driven filters via
+      `buildUrl`, search input, 4 dropdowns, bulk bar (verify/suspend/
+      feature/unfeature via `POST /api/admin/doctors/bulk`), DataTable with
+      checkbox, photo, name/slug, category (via `categoryName`), location,
+      `StatusBadge` + featured ⭐ + rating, `⋯` menu (এডিট/ভেরিফাই/সাসপেন্ড/
+      মুছুন/প্রোফাইল দেখুন ↗ `vytanexa.app/doctors/slug`), pagination ◂/▸,
+      `ConfirmDialog` soft-delete, inline verification modal with 3 buttons),
+      `(dashboard)/doctors/new/page.tsx` + `(dashboard)/doctors/[id]/page.tsx`
+      (server, fetch categories+locations+doctor+chambers, pass to
+      `DoctorForm`), `components/doctors/DoctorForm.tsx:1` (collapsible
+      `Section` — মৌলিক তথ্য (bn*/en/hi, slug auto+touched, photo_url,
+      category*, degree `TagInput`, BMDC, exp, languages bn/en/hi toggles),
+      পরিচিতি (bio bn/en, expertise/tags `TagInput`, treats), যোগাযোগ (WA,
+      fee min/max), সার্চ (aliases), চেম্বার (`ChamberEditor`), স্ট্যাটাস
+      (verification, is_available, is_featured+priority), `খসড়া` vs
+      `প্রকাশ` both POST/PATCH the same row — verification stays pending
+      until explicit verify), `components/doctors/ChamberEditor.tsx:1`
+      (add/remove, is_primary radio, location select (500), address/phone/
+      WA/map/lat/lng/fee, `schedule` JSONB UI — day buttons + time inputs +
+      add row), `/api/admin/doctors/route.ts` (POST — category exists,
+      slug unique 409, norm arrays via `Set`, single-primary coercion,
+      insert doctor then chambers with location validation, audit `create`),
+      `/api/admin/doctors/[id]/route.ts` (PATCH — partial updates via
+      `updates as never`, slug clash 409, chambers REPLACE: soft-delete
+      missing ids, upsert by id with location check + single-primary
+      enforcement + fallback primary; DELETE — soft-delete doctor +
+      chambers, audit `delete`), `/api/admin/doctors/bulk/route.ts` (POST
+      `{ids,action}` verify/suspend/reject/feature/unfeature, audit
+      `doctor_bulk`). Verified: typecheck clean, build clean — `/doctors`
+      4.57kB/95.4kB, `/doctors/[id]` & `/doctors/new` 135B/95.2kB, all `ƒ`.
 - [ ] A06 Hospitals/Ambulance/Blood Bank Managers
 - [ ] A07 Homepage Section Control + Theme Editor (god mode core)
 - [ ] A08 Footer/Social/Contact + Feature Flags + Menu Manager

@@ -105,7 +105,10 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       moderation screens)
 - [x] A04 entity managers — Locations + Categories (tree UI, CSV bulk
       import, icon picker, reordering, delete-safety per DB RESTRICT)
-- [ ] A05-A06 entity managers (doctors, hospitals, ambulance, blood)
+- [x] A05 Doctors Manager — list (filters, pagination 25, bulk verify/feature),
+      CRUD (collapsible sections), chambers schedule UI, verification toggle,
+      soft-delete
+- [ ] A06 entity managers (hospitals, ambulance, blood)
 - [ ] A07-A09 God Mode (homepage control, theme editor, footer/flags/
       menu, custom page builder) — the highest-value screens for Juyel
       day-to-day

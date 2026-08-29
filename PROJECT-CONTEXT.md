@@ -113,7 +113,7 @@ periodic refresh.**
 Vytanexa/
 ├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22 spec)
 ├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-7, 39 tables)
-├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A04 built)
+├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A05 built)
 ├── PROJECT-CONTEXT.md          ✅ this file
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
 ├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
@@ -121,7 +121,7 @@ Vytanexa/
 ├── packages/database/migrations/  0001-0014, all applied live
 ├── packages/database/types.ts  generated from live schema (after 0014)
 ├── apps/web/                   Next.js user app — S01-S22 complete, see below
-└── apps/admin/                 Admin panel — A01-A04 complete (shell+auth+dashboard+locations+categories)
+└── apps/admin/                 Admin panel — A01-A05 complete (shell+auth+dashboard+locations+categories+doctors)
 ```
 
 **Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
@@ -160,18 +160,18 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A04 done (shell/auth/dashboard + Locations tree/CSV + Categories)
-⏭️ Admin Panel — A05 next (Doctors Manager — list/CRUD/verification/chambers)
+✅ Admin Panel (apps/admin) — A01-A05 done (shell/auth/dashboard + Locations/Categories + Doctors)
+⏭️ Admin Panel — A06 next (Hospitals/Ambulance/Blood Bank)
 ```
 
-**Last major milestone:** A04 Locations Manager + Categories Manager
-complete, verified (typecheck + build clean — `/locations` 97.8kB,
-`/categories` 95.4kB, all `ƒ` dynamic), and ready to push. The tree UI
-+ slug transliteration + CSV bulk import now unlock real location data
-entry for S02/S03's Location Picker and every district-scoped query
-(S06/S08/S10/S11). Categories reorder directly drives S04's CategoryGrid
-via `display_order`. Next is **A05 Doctors Manager** — the first heavy
-entity CRUD with verification/chambers. See `TODO.md` and `CHECKPOINT.md`.
+**Last major milestone:** A05 Doctors Manager complete, verified
+(typecheck + build clean — `/doctors` 95.4kB, `/doctors/[id]` & `/new`
+95.2kB, all `ƒ` dynamic). List supports filters (q/status/category/
+location via chambers), pagination 25, bulk verify/feature, row ⋯ menu
+(এডিট/ভেরিফাই/সাসপেন্ড/মুছুন/প্রোফাইল ↗), and the full collapsible form
+with chamber schedule UI (`schedule` JSONB) plus verification toggle
+(pending↔verified is the publish gate per DB RLS). Next is **A06**
+Hospitals/Ambulance/Blood. See `TODO.md`.
 
 ---
 
