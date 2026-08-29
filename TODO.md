@@ -766,10 +766,68 @@ clean (no new DB objects, pure application-layer change).
       A03's "unified moderation queue pattern" but is actually consumed by
       the three `/moderation/*` screens which are a later phase; documented
       here so it's not silently forgotten.
-- [ ] A04 Locations Manager (tree UI + CSV bulk import) — **high
-      priority once reached: real location data entry unblocks the
-      Location Picker (S02/S03) and every district-scoped query above**
-- [ ] A04 Categories Manager
+- [x] A04 Locations Manager (tree UI + CSV bulk import) — **was high
+      priority: real location data entry unblocks the Location Picker
+      (S02/S03) and every district-scoped query above — NOW DONE** —
+      `lib/location-utils.ts:1` (shared slugify: Bengali→Latin
+      transliteration table for অ→a..ৎ→t etc., `slugify()` lowercases +
+      hyphen-collapses, `autoSlug(bn,en)` bn→en fallback, `buildLocationTree`
+      + `LOCATION_TYPE_LABEL` + `childType()` helpers — same functions used
+      by client auto-fill AND server bulk import so they never disagree),
+      `lib/validations/locations.ts:1` (Zod, bn required, type/parent
+      `superRefine` matching DB `chk_location_parent`, lat/lng ranges),
+      `lib/audit.ts:1` (`server-only`, `writeAudit()` best-effort
+      `audit_logs` insert — never blocks the real mutation),
+      `(dashboard)/locations/page.tsx` (`force-dynamic`, `requireAdmin()` +
+      service-role `SELECT ... WHERE deleted_at IS NULL` ordered by
+      display_order/slug), `components/locations/LocationsManager.tsx`
+      (`'use client'`, tree from `buildLocationTree`, `filterTree` search
+      by bn/en/hi/slug, auto-expand on search, `Set<string>` expanded
+      state defaulting to all states, per-row `+[add child]` context-aware
+      (ward is leaf, no add), `✏️` edit + `🗑️` delete, `router.refresh()` on
+      save), `LocationModal.tsx` (locked type+parent, bn required + en/hi,
+      slug auto from bn/en with `slugTouched` + regenerate button,
+      lat/lng/is_active, POST `/api/admin/locations` or PATCH
+      `.../[id]`), `LocationImportDialog.tsx` (template download,
+      `parseCsv()` quoted-comma aware, preview table 30-row cap,
+      `POST /api/admin/locations/import`), `/api/admin/locations/route.ts`
+      (POST — validates parent type is exactly one level up via
+      `expectedParentType`, slug unique 409, audit `create`), `/api/admin/
+      locations/[id]/route.ts` (PATCH — slug clash 409, DELETE —
+      soft-delete `deleted_at` only if 0 children AND 0 attached
+      `chambers/hospitals/blood_donors/ambulance_services` → 409 with
+      `“3টি হাসপাতাল”` style counts), `/api/admin/locations/import/
+      route.ts` (POST `{rows}` — 3 passes state→district→sub_district,
+      `seenSlugs`+`idBySlug` dedup, `uniquify()` suffixes `-2` on clash,
+      parent matched by `slugify(name)` so same spelling across rows
+      required, `slug` column overrides auto, latin/lng optional, skips
+      reported with row number + reason, audit `location_import`). Bug
+      fix: `(auth)/login/page.tsx:23` default `next` was `'/dashboard'`
+      (404) → `'/'` because `(dashboard)` adds no path. Verified:
+      typecheck clean, build clean — `/locations` 7.2kB/97.8kB,
+      `/login` 104kB, all `ƒ` dynamic.
+- [x] A04 Categories Manager — `lib/category-utils.ts:1`
+      (`CATEGORY_ICONS` 18-entry curated set with emoji, `iconEmoji()` +
+      `categoryName()`), `lib/validations/categories.ts:1` (Zod, bn
+      required, `icon_key` nullable, `search_keywords[]`, `display_order`
+      + `is_visible_home`/`is_active`), `(dashboard)/categories/page.tsx`
+      (`force-dynamic`, categories ordered by display_order/slug plus
+      single `SELECT category_id FROM doctors` tally for live doctor
+      counts), `components/categories/CategoriesManager.tsx` (search by
+      bn/en/slug/keywords, `↑`/`↓` reorder via `POST /reorder` with
+      `orderedIds[]`, inline `is_visible_home` toggle via PATCH, edit +
+      delete with 409 `"3 জন ডাক্তার যুক্ত আছে"` block), `CategoryModal.tsx`
+      (bn* + en/hi, slug auto+touched+regenerate, 18-icon grid picker,
+      keywords comma→array, `is_visible_home` + `is_active`, POST/PATCH
+      `/api/admin/categories[/id]`), `/api/admin/categories/route.ts`
+      (POST — slug auto from bn/en, unique 409, audit `create`), `/api/
+      admin/categories/[id]/route.ts` (PATCH/DELETE — DELETE blocked if
+      `doctors.category_id` count>0 with clear Bengali message, soft-delete
+      otherwise), `/api/admin/categories/reorder/route.ts` (POST
+      `{orderedIds[]}` — verifies all exist then loop `UPDATE
+      display_order=i`, audit `category_reorder` — directly drives S04
+      CategoryGrid). Verified: typecheck clean, build clean — `/categories`
+      4.79kB/95.4kB.
 - [ ] A05 Doctors Manager (list/CRUD/verification/chambers)
 - [ ] A06 Hospitals/Ambulance/Blood Bank Managers
 - [ ] A07 Homepage Section Control + Theme Editor (god mode core)

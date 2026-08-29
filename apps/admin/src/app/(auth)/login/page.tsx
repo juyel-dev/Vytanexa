@@ -20,7 +20,10 @@ export default function AdminLogin() {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') ?? '/dashboard';
+  // The dashboard lives at `/` (the `(dashboard)` route group adds no
+  // path segment), NOT `/dashboard` — defaulting there would land an
+  // admin on a 404 right after signing in.
+  const next = searchParams.get('next') ?? '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

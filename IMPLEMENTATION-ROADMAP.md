@@ -103,8 +103,9 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 - [x] A03 Dashboard + moderation queue pattern (AttentionCards +
       SummaryCards + RecentActivity; `<ModerationQueue>` deferred to the
       moderation screens)
-- [ ] A04-A06 entity managers (locations, categories, doctors, hospitals,
-      ambulance, blood)
+- [x] A04 entity managers — Locations + Categories (tree UI, CSV bulk
+      import, icon picker, reordering, delete-safety per DB RESTRICT)
+- [ ] A05-A06 entity managers (doctors, hospitals, ambulance, blood)
 - [ ] A07-A09 God Mode (homepage control, theme editor, footer/flags/
       menu, custom page builder) — the highest-value screens for Juyel
       day-to-day

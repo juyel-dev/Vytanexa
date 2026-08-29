@@ -113,7 +113,7 @@ periodic refresh.**
 Vytanexa/
 ├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22 spec)
 ├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-7, 39 tables)
-├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A03 built)
+├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A04 built)
 ├── PROJECT-CONTEXT.md          ✅ this file
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
 ├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
@@ -121,7 +121,7 @@ Vytanexa/
 ├── packages/database/migrations/  0001-0014, all applied live
 ├── packages/database/types.ts  generated from live schema (after 0014)
 ├── apps/web/                   Next.js user app — S01-S22 complete, see below
-└── apps/admin/                 Admin panel — A01-A03 complete (shell+auth+dashboard)
+└── apps/admin/                 Admin panel — A01-A04 complete (shell+auth+dashboard+locations+categories)
 ```
 
 **Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
@@ -160,17 +160,18 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-⏭️ Admin Panel (apps/admin) — A01-A03 done (shell/auth/dashboard), A04 next
+✅ Admin Panel (apps/admin) — A01-A04 done (shell/auth/dashboard + Locations tree/CSV + Categories)
+⏭️ Admin Panel — A05 next (Doctors Manager — list/CRUD/verification/chambers)
 ```
 
-**Last major milestone:** The entire user-facing app (S01–S22) plus the
-cross-cutting passes are complete, verified, and pushed. Further work
-is now **exclusively the Admin Panel** (`apps/admin`, spec
-`ADMIN-PANEL-SPEC.md`) — A01-A02 shell (sidebar, auth/roles) and A03
-dashboard are done; A04 (Locations Manager) is the next high-priority
-screen since real location data entry unblocks the user-app's Location
-Picker and every district-scoped query. See `CHECKPOINT.md` for the
-exact next step.
+**Last major milestone:** A04 Locations Manager + Categories Manager
+complete, verified (typecheck + build clean — `/locations` 97.8kB,
+`/categories` 95.4kB, all `ƒ` dynamic), and ready to push. The tree UI
++ slug transliteration + CSV bulk import now unlock real location data
+entry for S02/S03's Location Picker and every district-scoped query
+(S06/S08/S10/S11). Categories reorder directly drives S04's CategoryGrid
+via `display_order`. Next is **A05 Doctors Manager** — the first heavy
+entity CRUD with verification/chambers. See `TODO.md` and `CHECKPOINT.md`.
 
 ---
 
