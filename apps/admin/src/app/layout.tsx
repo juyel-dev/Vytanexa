@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import './globals.css';
+import { cookies } from 'next/headers';
+import { isValidLocale, defaultLocale } from '@/i18n/config';
+import { ToastProvider } from '@/components/ui/Toast';
 
 export const metadata: Metadata = {
   title: 'Vytanexa Admin',
@@ -7,17 +12,22 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Desktop-first stance (ADMIN-PANEL-SPEC.md § A01) — lang="en" default
-  // since admin chrome is primarily English/mixed, distinct from the
-  // Bengali-first user app.
+  const rawLocale = cookies().get('locale')?.value;
+  const locale = isValidLocale(rawLocale) ? rawLocale : defaultLocale;
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider messages={messages}>
+          <ToastProvider>{children}</ToastProvider>
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

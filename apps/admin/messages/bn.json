@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Vytanexa Admin",
+    "tagline": "Internal operator tool — not indexed."
+  },
+  "nav": {
+    "dashboard": "ড্যাশবোর্ড",
+    "dashboardHome": "ড্যাশবোর্ড",
+    "entities": "এন্টিটি ম্যানেজমেন্ট",
+    "doctors": "ডাক্তার",
+    "hospitals": "হাসপাতাল",
+    "locations": "এলাকা",
+    "categories": "বিভাগ",
+    "bloodDonors": "রক্তদাতা",
+    "ambulance": "অ্যাম্বুলেন্স",
+    "moderation": "মডারেশন",
+    "reviews": "রিভিউ",
+    "qa": "প্রশ্নোত্তর",
+    "reports": "তথ্য রিপোর্ট",
+    "content": "কন্টেন্ট",
+    "articles": "আর্টিকেল",
+    "polls": "জরিপ",
+    "pages": "কাস্টম পেজ",
+    "notifications": "নোটিফিকেশন",
+    "business": "বিজনেস",
+    "leads": "লিড ইনবক্স",
+    "subscriptions": "সাবস্ক্রিপশন",
+    "ads": "বিজ্ঞাপন",
+    "godMode": "গড মোড কন্ট্রোল",
+    "homepage": "হোমপেজ সেকশন",
+    "theme": "থিম এডিটর",
+    "footer": "ফুটার ও সোশ্যাল",
+    "flags": "ফিচার ফ্ল্যাগ",
+    "menu": "মেনু ম্যানেজার",
+    "system": "সিস্টেম",
+    "analytics": "অ্যানালিটিক্স",
+    "admins": "অ্যাডমিন ও রোল",
+    "auditLog": "অডিট লগ",
+    "settings": "সেটিংস",
+    "signOut": "সাইন আউট"
+  },
+  "auth": {
+    "loginHeading": "সাইন ইন করুন",
+    "email": "ইমেইল",
+    "password": "পাসওয়ার্ড",
+    "submit": "সাইন ইন",
+    "error": "ইমেইল বা পাসওয়ার্ড ভুল হয়েছে",
+    "accessDenied": "আপনার এই পৃষ্ঠায় অ্যাক্সেস নেই"
+  },
+  "common": {
+    "save": "সংরক্ষণ করুন",
+    "cancel": "বাতিল",
+    "delete": "মুছুন",
+    "edit": "সম্পাদনা",
+    "back": "পেছনে যান",
+    "search": "খুঁজুন",
+    "loading": "লোড হচ্ছে...",
+    "error": "কিছু ভুল হয়েছে",
+    "retry": "আবার চেষ্টা করুন",
+    "noData": "কোনো তথ্য নেই",
+    "confirm": "নিশ্চিত করুন"
+  },
+  "toast": {
+    "saved": "সংরক্ষিত হয়েছে ✅",
+    "deleted": "মুছে ফেলা হয়েছে",
+    "error": "সংরক্ষণ করতে সমস্যা হয়েছে"
+  }
+}

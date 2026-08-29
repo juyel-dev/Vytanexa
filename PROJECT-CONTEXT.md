@@ -113,15 +113,15 @@ periodic refresh.**
 Vytanexa/
 ├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22 spec)
 ├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-7, 39 tables)
-├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, NOT built yet)
+├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A03 built)
 ├── PROJECT-CONTEXT.md          ✅ this file
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
 ├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
 ├── CHECKPOINT.md               ✅ exact session handoff state — READ THIS FIRST
 ├── packages/database/migrations/  0001-0014, all applied live
 ├── packages/database/types.ts  generated from live schema (after 0014)
-├── apps/web/                   Next.js user app — S01-S20 complete, see below
-└── apps/admin/                 Phase 0 scaffold only, no real screens built yet
+├── apps/web/                   Next.js user app — S01-S22 complete, see below
+└── apps/admin/                 Admin panel — A01-A03 complete (shell+auth+dashboard)
 ```
 
 **Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
@@ -157,17 +157,20 @@ authoritative checklist):
 ✅ S18 (Settings)
 ✅ S19 (Custom Page Renderer — all 12 block types)
 ✅ S20 (Notifications Center)
-⏭️ S21 (SEO Landing Pages) — NEXT, not started
-❌ S22 (Infrastructure: i18n, PWA, Auth polish) — not started
-❌ Cross-cutting passes (validation, rate-limit audit, a11y) — not started
-❌ Admin Panel (apps/admin) — not started beyond Phase 0 scaffold
+✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
+✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
+✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
+⏭️ Admin Panel (apps/admin) — A01-A03 done (shell/auth/dashboard), A04 next
 ```
 
-**Last major milestone:** S20 Notifications Center complete. Session
-ended here because conversation context ran long (~60% used per
-Juyel), not because of any blocker — this was a clean, planned
-handoff. See `CHECKPOINT.md` for the exact next step and everything
-worth knowing before continuing.
+**Last major milestone:** The entire user-facing app (S01–S22) plus the
+cross-cutting passes are complete, verified, and pushed. Further work
+is now **exclusively the Admin Panel** (`apps/admin`, spec
+`ADMIN-PANEL-SPEC.md`) — A01-A02 shell (sidebar, auth/roles) and A03
+dashboard are done; A04 (Locations Manager) is the next high-priority
+screen since real location data entry unblocks the user-app's Location
+Picker and every district-scoped query. See `CHECKPOINT.md` for the
+exact next step.
 
 ---
 

@@ -98,8 +98,11 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
         + offline + precaching), Auth middleware, ui-store
 
 ## PHASE 4 — Admin Panel Core (A01-A09 first)
-- [ ] A01-A02 shell, sidebar, auth/roles
-- [ ] A03 Dashboard + moderation queue pattern
+- [x] A01-A02 shell, sidebar, auth/roles (login + dashboard layout +
+      role-gated nav + `/api/admin/login|sign-out` + shared UI atoms)
+- [x] A03 Dashboard + moderation queue pattern (AttentionCards +
+      SummaryCards + RecentActivity; `<ModerationQueue>` deferred to the
+      moderation screens)
 - [ ] A04-A06 entity managers (locations, categories, doctors, hospitals,
       ambulance, blood)
 - [ ] A07-A09 God Mode (homepage control, theme editor, footer/flags/

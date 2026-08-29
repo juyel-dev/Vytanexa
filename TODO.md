@@ -733,8 +733,39 @@ clean (no new DB objects, pure application-layer change).
 ---
 
 ## ADMIN PANEL (apps/admin) — starts after user-app core is functional
-- [ ] A01-A02 shell: sidebar, auth/roles, layout
-- [ ] A03 Dashboard + moderation queue pattern (shared component)
+- [x] A01-A02 shell: sidebar, auth/roles, layout — `(dashboard)/layout.tsx`
+      (auth guard via `getAdminSession()` + `force-dynamic` so the
+      cookie-gated shell is never prerendered), `components/layout/
+      Sidebar.tsx` (240px/64px collapsible, role-filtered per `roles` —
+      the UX half of defense-in-depth; `god-mode` + `admins`/`settings`
+      groups are super_admin-only per the A02 matrix), `components/layout/
+      TopBar.tsx` (breadcrumb page title + search/bell placeholders +
+      avatar/role), `(auth)/login/page.tsx` (email/password, Supabase Auth
+      credentials separate from the user-app phone-OTP flow), `/api/admin/
+      login` (Route Handler — keeps the ~67KB supabase-js client OUT of
+      `/login`, dropped 171KB→104KB First Load JS, same CHECKPOINT §6
+      lesson as apps/web) + `/api/admin/sign-out` (server-side session
+      clearing). Auth model: `getAdminSession()` in `lib/supabase/auth-verify.ts:1`
+      (`server-only`), `requireAdmin()`/`requireRole(role)` with JSONB
+      `permissions` override. Shared admin UI atoms per A01: `StatusBadge.tsx` (12
+      color variants), `ConfirmDialog.tsx` (destructive-action gate, ref focuses
+      CANCEL not confirm — safe default), `Toast.tsx` (success/error toast
+      provider). Admin i18n (`next-intl`, messages/bn.json — Bengali-only,
+      no fabricated en/hi; `src/i18n/request.ts` + `config.ts`). Verified:
+      typecheck clean, full build clean (all routes ≤104KB, `admin` needs no
+      font-strip since it uses system fonts, no Google Fetch). Dashboard
+      (`/`) is a 175B shell at 96.1KB — correct (auth-gated render).
+- [x] A03 Dashboard + moderation queue pattern (shared component) —
+      `(dashboard)/page.tsx` (answers "আজ আমার কী করা দরকার?" first:
+      `AttentionCards` — 4 pending-queue cards, colored left border by
+      urgency, auto-hide at 0, parent collapses to "সব আপ টু ডেট!" when
+      all empty; below it `SummaryCards` totals + `RecentActivity` reading
+      `audit_logs` last-5 joined to `admin_users(name)`). `/api/admin/login`
+      + `/api/admin/sign-out` wire the A02 auth surface. Moderation queue
+      `<ModerationQueue>` shared component is NOT yet built — it belongs to
+      A03's "unified moderation queue pattern" but is actually consumed by
+      the three `/moderation/*` screens which are a later phase; documented
+      here so it's not silently forgotten.
 - [ ] A04 Locations Manager (tree UI + CSV bulk import) — **high
       priority once reached: real location data entry unblocks the
       Location Picker (S02/S03) and every district-scoped query above**

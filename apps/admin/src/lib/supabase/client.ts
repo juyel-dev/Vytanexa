@@ -2,12 +2,17 @@ import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@vytanexa/database';
 
 /**
- * Browser client — anon key, RLS-scoped. Used ONLY for the admin's own
- * auth session (login, reading their own admin_users row per
- * DATABASE-SCHEMA.md § 5.9 `admin_users_own_read` policy). Every actual
- * data mutation (doctors, hospitals, god-mode settings, etc.) goes
- * through a server-side Route Handler using the service-role client
- * (see service-role.ts) — this file must never be used for that.
+ * Browser-side Supabase client — anon key only, RLS-scoped.
+ *
+ * Currently NOT imported anywhere: the login page posts to the
+ * `/api/admin/login` Route Handler instead (keeping the ~67KB supabase-js
+ * bundle out of the client bundle). This file exists as the standard
+ * browser client for future client-side admin reads (moderation queue
+ * interactions, search-as-you-type filters, etc.).
+ *
+ * RLS is the actual security boundary; this client can never bypass it.
+ * The service-role client (lib/supabase/service-role.ts) is
+ * `server-only` and is the ONLY thing that performs admin writes.
  */
 export function createClient() {
   return createBrowserClient<Database>(
