@@ -1100,15 +1100,21 @@ ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_reads ENABLE ROW LEVEL SECURITY;
 
--- Reviews: public reads APPROVED only; public can INSERT (goes to
--- 'pending'), never UPDATE/DELETE
-CREATE POLICY reviews_public_read ON reviews
-  FOR SELECT USING (status = 'approved' AND deleted_at IS NULL);
+-- Reviews: approved reviews visible to everyone; a signed-in user
+-- also sees their OWN reviews regardless of status (S17 "আমার
+-- রিভিউ"). Public can INSERT (goes to 'pending'), never UPDATE/DELETE.
+-- Single combined SELECT policy (migration 0015) rather than two
+-- separate permissive policies — get_advisors flagged the two-policy
+-- version for redundant per-query evaluation (multiple_permissive_
+-- policies) plus an unwrapped auth.uid() re-evaluating per row
+-- (auth_rls_initplan); both fixed by collapsing into one policy using
+-- (select auth.uid()).
+CREATE POLICY reviews_select ON reviews
+  FOR SELECT USING (
+    (status = 'approved' AND deleted_at IS NULL) OR (select auth.uid()) = user_id
+  );
 CREATE POLICY reviews_public_insert ON reviews
   FOR INSERT WITH CHECK (status = 'pending');
-CREATE POLICY reviews_own_read ON reviews
-  FOR SELECT USING (auth.uid() = user_id);
-  -- migration 0014, S17 "আমার রিভিউ"
 
 -- Leads: write-only from public (no public SELECT — a stranger should
 -- never read another patient's phone/name via API). Signed-in users
@@ -1117,15 +1123,15 @@ CREATE POLICY leads_public_insert ON leads FOR INSERT WITH CHECK (true);
 CREATE POLICY leads_own_read ON leads
   FOR SELECT USING (auth.uid() = user_id);
 
--- Q&A: same approved-only + insert-as-pending pattern as reviews
-CREATE POLICY questions_public_read ON questions
-  FOR SELECT USING (status = 'approved' AND deleted_at IS NULL);
+-- Q&A: same approved-visible-to-all + own-row-regardless-of-status
+-- pattern as reviews above, same migration 0015 single-policy
+-- consolidation for the same performance reasons.
+CREATE POLICY questions_select ON questions
+  FOR SELECT USING (
+    (status = 'approved' AND deleted_at IS NULL) OR (select auth.uid()) = user_id
+  );
 CREATE POLICY questions_public_insert ON questions
   FOR INSERT WITH CHECK (status = 'pending');
-CREATE POLICY questions_own_read ON questions
-  FOR SELECT USING (auth.uid() = user_id);
-  -- migration 0014, S17 "আমার প্রশ্ন" — mirrors leads_own_read exactly,
-  -- lets a signed-in user see their own pending/rejected questions too
 CREATE POLICY upvotes_public_all ON question_upvotes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY answers_public_read ON answers
   FOR SELECT USING (status = 'approved' AND deleted_at IS NULL);
