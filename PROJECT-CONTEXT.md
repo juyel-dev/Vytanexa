@@ -160,18 +160,17 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A10 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A)
-⏭️ Admin Panel — A11 next (Polls + Notifications composer)
+✅ Admin Panel (apps/admin) — A01-A11 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications)
+⏭️ Admin Panel — A12 next (Subscription Plans + Ads Manager)
 ```
 
-**Last major milestone:** A10 Articles CMS + Q&A management complete,
-verified (typecheck + build clean — `/articles` 91.7kB, `/articles/[id]` &
-`/new` 92.1kB, `/qa` 89.7kB, all `ƒ` dynamic). Articles support i18n title,
-cover 16:9, category/tags, body HTML + read_time auto (words/200), author
-doctor link vs guest byline, SEO, draft/publish (editor 403), soft-delete
-with view_count warning, plus Q&A manager — unanswered/all tabs, answer on
-behalf of verified doctor → `answers` `status='approved'` (audit). Nav
-`qaManage` added. Next is **A11** Polls/Notifications. See `TODO.md`.
+**Last major milestone:** A11 Polls + Notifications composer complete,
+verified (typecheck + build clean — `/polls` 90.6kB, `/polls/[id]` & `/new`
+89.9kB, `/notifications` 89.9kB, all `ƒ` dynamic). Polls support 2-6 options,
+expiry, vote lock (409 if votes exist), close early (`expires_at=now`),
+results bar `%`; Notifications support general/emergency broadcasts +
+personal log, banner toggle, target_url, expires. Next is **A12**
+Subscription Plans + Ads. See `TODO.md`.
 
 ---
 

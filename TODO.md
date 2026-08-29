@@ -1017,7 +1017,31 @@ clean (no new DB objects, pure application-layer change).
       `messages/bn.json:22` `qaManage`. Verified: typecheck clean, build
       clean — `/articles` 4.42kB/91.7kB, `/articles/[id]` & `/new`
       135B/92.1kB, `/qa` 2.44kB/89.7kB, all `ƒ`.
-- [ ] A11 Polls + Notifications composer
+- [x] A11 Polls + Notifications composer — `lib/validations/polls.ts:1` (Zod
+      `question*` + `options[]` 2-6 unique, `expires_at` nullable, `is_active`,
+      `notificationCreateSchema` general/emergency/personal), `(dashboard)/
+      polls/page.tsx` (`force-dynamic`, admin, 100 polls + options, `PollsList`),
+      `components/polls/PollsList.tsx:1` (table 5 cols question/ভোট/স্ট্যাটাস/
+      মেয়াদ/`⋯` এডিট/`এখনই বন্ধ`/`🗑️`, `ConfirmDialog`, `statusOf` চলমান/মেয়াদ
+      শেষ/বন্ধ), `(dashboard)/polls/new/page.tsx` + `[id]/page.tsx` (fetch
+      poll+options, map to `PollForm`), `components/polls/PollForm.tsx:1`
+      (question*, options 2-6 add/remove, expiry datetime-local, results view
+      when `total_votes>0` (bar `%` + count, read-only lock with 🔒 message),
+      POST/PATCH `/api/admin/polls[/id]`, 409 `"ভোট পড়ার পর অপশন পরিবর্তন করা
+      যায় না"`), `/api/admin/polls/route.ts` (POST admin, question/options→
+      poll + poll_options rows, audit `create`), `/api/admin/polls/[id]/
+      route.ts` (PATCH — hasVotes lock 409, else replace options, DELETE
+      soft-delete, audit), `/api/admin/polls/[id]/close/route.ts` (POST
+      `expires_at=now`+`is_active=false`, audit), `(dashboard)/notifications/
+      page.tsx` (`force-dynamic`, admin, broadcasts `general/emergency` 100 +
+      personals `personal` 100, `NotificationsManager`), `components/
+      notifications/NotificationsManager.tsx:1` (tabs `পাঠানো ঘোষণা`/`ব্যক্তিগত
+      লগ`, composer general/emergency + title*/body*/target_url/banner/expires,
+      POST `/api/admin/notifications` → broadcast, lists with `show_as_banner`
+      + is_active), `/api/admin/notifications/route.ts` (POST admin,
+      personal needs `target_user_id`, audit `create`). Verified: typecheck
+      clean, build clean — `/polls` 3.37kB/90.6kB, `/polls/[id]` & `/new`
+      2.67kB/89.9kB, `/notifications` 2.65kB/89.9kB, all `ƒ`.
 - [ ] A12 Subscription Plans + Ads Manager
 - [ ] A13 Leads Inbox
 - [ ] A14 Admin Users/Roles + Audit Log Viewer

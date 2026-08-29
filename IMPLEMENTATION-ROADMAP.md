@@ -119,7 +119,7 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 
 ## PHASE 5 — Admin Panel Extended (A10-A15)
 - [x] A10 Articles CMS + Q&A management (cover, i18n title, tags, body, read-time auto, author doctor/guest, SEO, draft/publish, soft-delete + unanswered QA answer-on-behalf)
-- [ ] A11 Polls + Notifications composer
+- [x] A11 Polls + Notifications composer (poll 2-6 options + expiry + vote lock + close early + results bar, notifications general/emergency/personal + banner)
 - [ ] A12-A13 business tools (subscriptions, ads, leads)
 - [ ] A14-A15 system tools (roles, audit log, analytics, settings)
 
