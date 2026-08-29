@@ -1088,7 +1088,30 @@ clean (no new DB objects, pure application-layer change).
       `/api/admin/leads/[id]/route.ts` (PATCH `status` enum, super_admin? admin,
       sets `contacted_at` on contacted, audit `update`). Verified: typecheck
       clean, build clean — `/leads` 3.93kB/91.2kB, all `ƒ`.
-- [ ] A14 Admin Users/Roles + Audit Log Viewer
+- [x] A14 Admin Users/Roles + Audit Log Viewer — `lib/validations/admins.ts:1`
+      (Zod `name*`+`email*`+`role` enum + `permissions` record,
+      `adminUpdateSchema` name/role/permissions/is_active),
+      `/(dashboard)/admins/page.tsx` (`force-dynamic`, `requireRole('super_admin')`,
+      `admin_users` + `auth.admin.listUsers()` emailMap + enriched `email`,
+      `AdminsManager`), `components/admins/AdminsManager.tsx:1` (`'use client'`,
+      DataTable 6 cols নাম/ইমেইল/রোল(`super_admin` purple/`admin` brand)/সক্রিয়/
+      শেষ লগইন/✏️/`🚫` suspend, role matrix note, `+ নতুন অ্যাডমিন` modal
+      (name*/email*+role select → POST `/api/admin/admins`), edit modal
+      (role select → PATCH), suspend `ConfirmDialog` (is_active toggle, self
+      lockout prevented, `🚫`/`✅`), `/api/admin/admins/route.ts` (POST
+      super_admin, `role==='super_admin'` requires super_admin, `auth.admin.
+      createUser` email_confirm + `admin_users` insert + rollback on fail,
+      audit `create`), `/api/admin/admins/[id]/route.ts` (PATCH super_admin,
+      self-deactivation block, super_admin escalation check, audit `update`),
+      `/(dashboard)/audit-log/page.tsx` (`force-dynamic`, admin, `q`/`admin`/
+      `action`/`entity`/`page` filters, `admin_users` for dropdown, `audit_logs`
+      select `id,admin_id,action,entity_type,entity_id,before/after,ip,created_at`
+      + `admin_users(name)` join, `count exact` + pagination 25, `AuditLogViewer`),
+      `components/audit/AuditLogViewer.tsx:1` (filters search + 3 selects +
+      `q` or `ilike`, DataTable 7 cols সময়/অ্যাডমিন/অ্যাকশন(`create` life/
+      `delete` emergency/`publish` brand)/entity/ID/IP/বিস্তারিত `দেখুন` toggle
+      before/after JSON `pre`, pagination ◂/▸). Verified: typecheck clean,
+      build clean — `/admins` 4.33kB/91.6kB, `/audit-log` 2.78kB/90kB, all `ƒ`.
 - [ ] A15 Analytics Dashboard + Settings
 
 ---

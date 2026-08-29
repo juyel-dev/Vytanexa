@@ -160,16 +160,17 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A13 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications + Subscriptions/Ads + Leads)
-⏭️ Admin Panel — A14 next (Admin Users/Roles + Audit Log Viewer)
+✅ Admin Panel (apps/admin) — A01-A14 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications + Subscriptions/Ads + Leads + AdminUsers/Audit)
+⏭️ Admin Panel — A15 next (Analytics Dashboard + Settings)
 ```
 
-**Last major milestone:** A13 Leads Inbox complete, verified (typecheck +
-build clean — `/leads` 91.2kB, all `ƒ` dynamic). Tabs new/contacted/completed/
-cancelled + counts, filters q (patient/phone) + doctor, expand message +
-preferred_time + tel:, status select → `PATCH /api/admin/leads/[id]` +
-`contacted_at`, CSV export. Next is **A14** Admin Users/Roles + Audit Log.
-See `TODO.md`.
+**Last major milestone:** A14 Admin Users/Roles + Audit Log Viewer complete,
+verified (typecheck + build clean — `/admins` 91.6kB, `/audit-log` 90kB, all
+`ƒ` dynamic). Admin Users supports super_admin invite (auth.admin.createUser +
+admin_users insert with rollback, role matrix, suspend toggle, self-lockout
+prevent); Audit Log shows before/after JSON with filters q/admin/action/entity
++ pagination, accountability per DB Part 5. Next is **A15** Analytics +
+Settings. See `TODO.md`.
 
 ---
 
