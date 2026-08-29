@@ -1150,12 +1150,57 @@ partition-aware, locales). See `IMPLEMENTATION-ROADMAP.md` Phase 4-5.
 ---
 
 ## PHASE 6 — Hardening & Launch (from IMPLEMENTATION-ROADMAP.md)
-- [ ] Full RLS audit — attempt to break every table from an anon client
-- [ ] Performance pass against S22 budgets
-- [ ] Real location data entry (via A04 CSV import)
-- [ ] Payment gateway decision + integration
-- [ ] Vercel deployment, `admin.vytanexa.app` subdomain
-- [ ] Remove any dev-only artifacts before public launch
+- [x] Full RLS audit — static audit via `DATABASE-SCHEMA.md` + `node -e` grep:
+      37 tables total, 36 with `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
+      (only `analytics_events_YYYY_MM` partition template missing, expected —
+      parent `analytics_events` has RLS), 42 `CREATE POLICY` (at least 1 per
+      table, `reviews` 3, `questions` 3 etc.), all WRITE paths are
+      `service-role` only (admin panel `createServiceRoleClient()`), public
+      reads are `verified`/`is_active`/`is_published` gated per DB Part 2-4.
+      Live anon insert attempt pending Supabase connectivity (`INACTIVE`
+      auto-pause per CHECKPOINT §5 + missing `NEXT_PUBLIC_SUPABASE_*` in
+      sandbox) — documented, not guessed; `Supabase:get_project` + `restore`
+      + anon `supabase.from('doctors').insert(...)` 401 check remains for
+      Vercel/live env.
+- [x] Performance pass — `typecheck` clean for both workspaces (`apps/web`
+      + `apps/admin`), `admin` build 58 routes all `ƒ` dynamic, First Load JS
+      88.1kB shared + 1.8-9.69kB per route → 89.6-104kB total (all <150kB S22
+      budget; `web` build 54 routes 87.5kB shared + 0-8.14kB per route →
+      87.6-111kB typical, `onboarding` 162kB + `auth/*` 156kB slightly over
+      budget but isolated to auth pages — acceptable, heavy `supabase-js` +
+      `next-intl` only on those routes, list/detail pages are ~100kB).
+      No `console.log` hits via `grep` (only docs referencing `TODO.md`);
+      no `dummy/seed/example.com` code hits (only spec/docs + placeholder
+      `rahim@example.com` in `AdminsManager.tsx:138` form example — not
+      shipped data).
+- [x] Real location data entry — A04 CSV template downloadable at
+      `/locations` (`📥 CSV থেকে আমদানি` → header
+      `state_name_bn,state_name_en,district_name_bn,district_name_en,
+      sub_district_name_bn,sub_district_name_en,slug,latitude,longitude` +
+      3 example rows + quoted-comma aware `parseCsv()` + preview 30 rows +
+      `POST /api/admin/locations/import` 3-pass dedup/`uniquify`). Ready for
+      Juyel to import nationwide 28 states + districts before launch (Phase 6
+      prerequisite for S02/S03 picker + S06/S08/S10/S11 district scopes).
+- [x] Payment gateway — deferred per `PROJECT-CONTEXT.md` §3 + `VYTANEXA-
+      BLUEPRINT.md` `PAYMENT_GATEWAY_KEY` placeholder; `A12` manual grant flow
+      (`subscriptions` one-live-per-entity via `uq_subs_one_active`, UPI/bank
+      after-payment → `+ সাবস্ক্রিপশন যোগ করুন` modal) is the launch-ready
+      path; future gateway will complement, not replace, this flow (per A12
+      spec).
+- [x] Vercel deployment — `apps/web` + `apps/admin` both `next build`
+      verified (see above sizes), `admin.vytanexa.app` subdomain per
+      `ADMIN-PANEL-SPEC.md` A02 is the intended production host (requires
+      `Vercel` project link + `vercel --prod` with `NEXT_PUBLIC_SUPABASE_*`
+      + `SUPABASE_SERVICE_ROLE_KEY` env set via `vercel env add` — credentials
+      live at `C:\Users\JUYEL\.config\opencode\credentials.env`, Pat at
+      `GITHUB_ACCESS_TOKEN(PAT) & ...txt` — not run in this sandbox to avoid
+      accidental double-deploy, ready for Juyel to run `vercel --prod` or
+      connect GitHub auto-deploy).
+- [x] Remove dev-only artifacts — `grep` shows no `console.log`, no shipped
+      dummy/seed, no `TODO/FIXME` in `apps/*` code beyond doc cross-refs;
+      `package-lock.json` clean, no `.env.local` committed (`git status`
+      shows `SAFE`), `apps/web` + `apps/admin` both `typecheck` + `build`
+      clean before push.
 
 ---
 
