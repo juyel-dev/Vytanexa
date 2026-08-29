@@ -872,7 +872,54 @@ clean (no new DB objects, pure application-layer change).
       `{ids,action}` verify/suspend/reject/feature/unfeature, audit
       `doctor_bulk`). Verified: typecheck clean, build clean — `/doctors`
       4.57kB/95.4kB, `/doctors/[id]` & `/doctors/new` 135B/95.2kB, all `ƒ`.
-- [ ] A06 Hospitals/Ambulance/Blood Bank Managers
+- [x] A06 Hospitals/Ambulance/Blood Bank Managers —
+      `lib/hospital-utils.ts:1` (`HOSPITAL_TYPE_LABEL`, `hospitalName()`,
+      `hospitalSlugBase()` via shared `slugify`, `FACILITY_OPTIONS` 8 tags),
+      `lib/validations/hospitals.ts:1` (Zod `baseHospitalSchema` —
+      bn required, type enum, location_id uuid, phone*, gallery ≤8,
+      services[] canonical, facility_tags[], has_emergency_dept,
+      operating_hours `{is_24x7,schedule[]}`), `lib/validations/ambulance.ts:1`
+      (bn required, location/phone*, hospital_id nullable, is_icu, per_km,
+      coverage, is_24x7), `lib/validations/blood.ts:1` (blood_group enum,
+      inventory `{hospital_id, inventory[]}`), `(dashboard)/hospitals/
+      page.tsx` (`force-dynamic`, filters q/status/type/location/emergency,
+      primary location resolve, pagination 25), `components/hospitals/
+      HospitalsTable.tsx:1` (filters 4 selects + emergency checkbox,
+      DataTable 8 cols, `StatusBadge`, `🚨` emergency, ⋯ menu এডিট/মুছুন/
+      দেখুন), `(dashboard)/hospitals/new/page.tsx` + `[id]/page.tsx`
+      (fetch locations+test_catalog+ hospital, map to `HospitalForm`),
+      `components/hospitals/HospitalForm.tsx:1` (Sections: মৌলিক তথ্য
+      (cover 16:9, gallery 8 URL, bn*/en/hi, slug auto, type*, location*,
+      address*/phone*/WA/map/lat/lng), বিবরণ (bn/en), সেবা (searchable
+      `test_catalog` picker — canonical_key filter, `✓` toggle, inline
+      `+ নতুন টেস্ট ক্যাটালগে যোগ করুন` → `POST /api/admin/test-catalog` with
+      canonical_key regex, facility_tags 8 toggles, has_emergency_dept
+      → /emergency gate), সময় (is_24x7 vs schedule day+time rows),
+      স্ট্যাটাস (verification, featured/trending+priority), single
+      `সংরক্ষণ করুন` → POST/PATCH), `/api/admin/hospitals/route.ts` (POST —
+      location exists, slug 409, gallery slice 8, services/facility dedup,
+      audit `create`), `/api/admin/hospitals/[id]/route.ts` (PATCH partial
+      + slug 409 + location check, DELETE soft-delete, audit), `/(dashboard)/
+      ambulance/page.tsx` (hospitals/locations maps, enriched
+      location_name/hospital_name), `components/ambulance/AmbulanceManager.tsx:1`
+      (`'use client'`, table 8 cols, modal (bn*/en, location*, phone*, WA,
+      hospital nullable, vehicle/rate/radius numeric, ICU + 24/7 +
+      verification), POST/PATCH `/api/admin/ambulance[/id]`, DELETE),
+      `/api/admin/ambulance/route.ts` + `[id]/route.ts` (location/hospital
+      validation, audit), `/(dashboard)/blood-donors/page.tsx` (donors +
+      locations + hospitals with `facility_tags@>['blood_bank']` + inventories
+      → locMap + invByHosp), `components/blood/BloodManager.tsx:1` (tabs:
+      donor directory filtered by group/location, table 7 cols with phone
+      + is_active toggle → PATCH, soft-delete; inventory tab per hospital
+      8 groups `available/low/unavailable/unknown` selects + `সংরক্ষণ করুন`
+      → POST `/api/admin/blood-inventory` upsert `onConflict` + audit),
+      `/api/admin/blood-donors/[id]/route.ts` (PATCH is_active, DELETE
+      soft-delete), `/api/admin/blood-inventory/route.ts` (POST
+      `{hospital_id,inventory[]}` upsert, audit), `/api/admin/test-catalog/
+      route.ts` (POST canonical_key regex, clash 409, audit). Verified:
+      typecheck clean, build clean — `/hospitals` 3.29kB/94kB,
+      `/hospitals/[id]` & `/new` 135B/94.4kB, `/ambulance` 5.21kB/92.5kB,
+      `/blood-donors` 4.36kB/91.6kB, all `ƒ`.
 - [ ] A07 Homepage Section Control + Theme Editor (god mode core)
 - [ ] A08 Footer/Social/Contact + Feature Flags + Menu Manager
 - [ ] A09 Custom Page / Block Builder

@@ -108,7 +108,10 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 - [x] A05 Doctors Manager — list (filters, pagination 25, bulk verify/feature),
       CRUD (collapsible sections), chambers schedule UI, verification toggle,
       soft-delete
-- [ ] A06 entity managers (hospitals, ambulance, blood)
+- [x] A06 Hospitals/Ambulance/Blood — hospitals (type/location/emergency
+      filters, services via test_catalog picker, gallery, hours, soft-delete),
+      ambulance (location + hospital link, ICU/rate/radius, 24/7), blood
+      (donor directory + inventory per hospital, 48h staleness)
 - [ ] A07-A09 God Mode (homepage control, theme editor, footer/flags/
       menu, custom page builder) — the highest-value screens for Juyel
       day-to-day
