@@ -113,7 +113,7 @@ periodic refresh.**
 Vytanexa/
 ├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22 spec)
 ├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-7, 39 tables)
-├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A06 built)
+├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A09 built)
 ├── PROJECT-CONTEXT.md          ✅ this file
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
 ├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
@@ -121,7 +121,7 @@ Vytanexa/
 ├── packages/database/migrations/  0001-0014, all applied live
 ├── packages/database/types.ts  generated from live schema (after 0014)
 ├── apps/web/                   Next.js user app — S01-S22 complete, see below
-└── apps/admin/                 Admin panel — A01-A06 complete (shell+auth+dashboard+locations+categories+doctors+hospitals/ambulance/blood)
+└── apps/admin/                 Admin panel — A01-A09 complete (shell+auth+dashboard+locations/categories/doctors/hospitals/ambulance/blood+god-mode/custom-pages)
 ```
 
 **Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
@@ -160,19 +160,20 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A06 done (shell/auth/dashboard + Locations/Categories + Doctors + Hospitals/Ambulance/Blood)
-⏭️ Admin Panel — A07 next (God Mode: homepage/theme/footer/flags/menu + custom page)
+✅ Admin Panel (apps/admin) — A01-A09 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages)
+⏭️ Admin Panel — A10 next (Articles CMS + Q&A · Polls + Notifications)
 ```
 
-**Last major milestone:** A06 Hospitals/Ambulance/Blood complete, verified
-(typecheck + build clean — `/hospitals` 94kB, `/hospitals/[id]` & `/new`
-94.4kB, `/ambulance` 92.5kB, `/blood-donors` 91.6kB, all `ƒ` dynamic).
-Hospitals support type/location/emergency filters + services via
-`test_catalog` picker + gallery + hours + `has_emergency_dept` → /emergency
-gate; Ambulance has location/hospital link + ICU/rate/radius/24/7;
-Blood has donor directory (group/location) + inventory per hospital
-(`blood_bank_inventory` upsert, 48h staleness). Next is **A07-A09**
-God Mode — the highest-value screens for Juyel day-to-day. See `TODO.md`.
+**Last major milestone:** A07-A09 God Mode complete, verified (typecheck +
+build clean — `/god-mode/homepage` 91.8kB, `/god-mode/theme` 91.8kB,
+`/god-mode/footer` 90.8kB, `/god-mode/flags` 89.4kB, `/god-mode/menu`
+90.1kB, `/pages` 92kB, `/pages/[id]` 93.7kB, all `ƒ` dynamic). Homepage
+sections reorder + publish → `app_settings.homepage_settings`, theme 4
+tokens + contrast + logo → `theme_colors`, footer/social/contact →
+`app_settings` singleton (super_admin, audit), flags merge → `features`,
+menu reorder → `custom_pages.menu_order`, plus full custom page block
+builder (12 types, autosave 30s, preview/publish). Next is **A10**
+Articles/Q&A + **A11** Polls/Notifications. See `TODO.md`.
 
 ---
 

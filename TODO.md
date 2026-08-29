@@ -920,9 +920,73 @@ clean (no new DB objects, pure application-layer change).
       typecheck clean, build clean — `/hospitals` 3.29kB/94kB,
       `/hospitals/[id]` & `/new` 135B/94.4kB, `/ambulance` 5.21kB/92.5kB,
       `/blood-donors` 4.36kB/91.6kB, all `ƒ`.
-- [ ] A07 Homepage Section Control + Theme Editor (god mode core)
-- [ ] A08 Footer/Social/Contact + Feature Flags + Menu Manager
-- [ ] A09 Custom Page / Block Builder
+- [x] A07 Homepage Section Control + Theme Editor (god mode core) —
+      `lib/app-settings.ts:1` (`getAppSettings()` singleton id=1, defensive
+      create if missing), `(dashboard)/god-mode/homepage/page.tsx`
+      (`force-dynamic`, `requireRole('super_admin')`, reads
+      `homepage_settings.sections`), `components/god-mode/HomepageControl.tsx:1`
+      (`'use client'`, 11 sections DEFAULT_IDS, reorder ↑/↓ + `order`
+      reassign, visibility toggle, `hasChanges` diff, left controls + right
+      MVP preview (ordered visible list, note iframe deferred), publish →
+      `POST /api/admin/app-settings/homepage` + `ConfirmDialog` + audit
+      `app_settings` before/after, toast), `/api/admin/app-settings/
+      homepage/route.ts` (POST `{sections[]}` Zod, super_admin, update
+      `homepage_settings` + `updated_by`, audit `publish`), `(dashboard)/
+      god-mode/theme/page.tsx` (reads `theme_colors/logo/favicons`),
+      `components/god-mode/ThemeEditor.tsx:1` (4 tokens brand_600/life_600/
+      emergency_600/accent_500 with swatch+hex+color input, `DEFAULTS`,
+      `hexToRgb`+`contrastRatio` WCAG AA 4.5 warning, logo/favicon inputs,
+      `🔄` reset, publish → `POST /api/admin/app-settings/theme` with
+      `ConfirmDialog` variant warning if low contrast, live color preview
+      buttons), `/api/admin/app-settings/theme/route.ts` (POST
+      `{theme_colors,logo_url,favicon_url}` hex regex, super_admin, audit).
+      Verified: build — `/god-mode/homepage` 4.54kB/91.8kB,
+      `/god-mode/theme` 4.52kB/91.8kB.
+- [x] A08 Footer/Social/Contact + Feature Flags + Menu Manager —
+      `FooterEditor.tsx:1` (tagline, social 4 links (blank hides icon),
+      contact phone/email/whatsapp, footer_links 20 max with ↑/↓ reorder +
+      add/delete, POST `/api/admin/app-settings/footer` → `footer_links`/
+      `social_links`/`contact_*`/`seo_defaults.tagline`, audit),
+      `FeatureFlags.tsx:1` (5 flags `community_qa/polls/articles/
+      blood_services/voice_search` with emoji+desc, toggle → POST
+      `/api/admin/app-settings/flags` merge, audit), `MenuManager.tsx:1`
+      (static 5 S16 groups note + custom_pages draggable (↑/↓) with
+      `show_in_menu` toggle + `menu_icon`, save → POST
+      `/api/admin/custom-pages/menu` with `orderedIds`+`visibility`, audit),
+      `(dashboard)/god-mode/footer/page.tsx` + `flags/page.tsx` + `menu/
+      page.tsx` (all `force-dynamic` super_admin, read `app_settings` or
+      `custom_pages`), `/api/admin/app-settings/footer/route.ts` (POST Zod
+      link+social, super_admin, audit), `/api/admin/app-settings/flags/
+      route.ts` (POST `features` record, merge, audit), `/api/admin/
+      custom-pages/menu/route.ts` (POST `{orderedIds,visibility}` reorder
+      `menu_order` + `show_in_menu`, super_admin, audit). Verified:
+      `/god-mode/footer` 3.56kB/90.8kB, `/flags` 2.17kB/89.4kB,
+      `/god-mode/menu` 2.89kB/90.1kB.
+- [x] A09 Custom Page / Block Builder — `lib/validations/custom-pages.ts:1`
+      (Zod `title*`, `slug` auto, `blocks[]`, `show_in_menu`, menu_*,
+      is_published, meta_*), `/(dashboard)/pages/page.tsx` (`force-dynamic`,
+      admin, 200 pages + submission counts via `page_submissions.page_id`,
+      `PagesList`), `components/custom-pages/PagesList.tsx:1` (DataTable 5
+      cols, `✅/📝` status, menu ✓/✗, `✏️`→ builder + `⎘` duplicate stub +
+      `🗑️` with submission warning, new modal title+slug auto via `slugify`
+      → POST `/api/admin/custom-pages` → `/pages/[id]`), `/(dashboard)/pages/
+      [id]/page.tsx` (fetch page+polls+questions+doctors+hospitals, `PageBuilder`),
+      `components/custom-pages/PageBuilder.tsx:1` (3-col workspace:
+      left `BLOCK_LIBRARY` 12 types hero/rich_text/image/poll/qa_embed/
+      report_form/magazine_grid/doctor_grid/hospital_grid/cta_banner/
+      faq_accordion/spacer with defaults, center canvas drag ↑/↓+delete+
+      mini preview + `+ এখানে ব্লক যোগ করুন`, right property panel per type
+      (hero image/title/subtitle, rich_text HTML textarea, image/caption,
+      poll `poll_id` select, qa_embed `question_id`, doctor/hospital ids
+      comma, cta title/button/href/color, faq items add, spacer size,
+      report_form JSON textarea, magazine heading/category), page settings
+      (title/slug/menu/icon/meta/og), autosave every 30s → PATCH, `👁️
+      প্রিভিউ` → `/page/slug?preview=true`, `প্রকাশ করুন` → PATCH
+      `is_published=true` + `ConfirmDialog` + audit), `/api/admin/custom-pages/
+      route.ts` (POST auto-slug unique 409, audit `create`), `/api/admin/
+      custom-pages/[id]/route.ts` (PATCH partial + slug 409, DELETE
+      soft-delete with submission count, audit). Verified: `/pages`
+      4.76kB/92kB, `/pages/[id]` 6.48kB/93.7kB, all `ƒ`.
 - [ ] A10 Articles CMS + Q&A management
 - [ ] A11 Polls + Notifications composer
 - [ ] A12 Subscription Plans + Ads Manager

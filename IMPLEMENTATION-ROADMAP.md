@@ -112,9 +112,10 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       filters, services via test_catalog picker, gallery, hours, soft-delete),
       ambulance (location + hospital link, ICU/rate/radius, 24/7), blood
       (donor directory + inventory per hospital, 48h staleness)
-- [ ] A07-A09 God Mode (homepage control, theme editor, footer/flags/
-      menu, custom page builder) — the highest-value screens for Juyel
-      day-to-day
+- [x] A07-A09 God Mode — homepage (sections reorder/publish, iframe MVP) +
+      theme (4 tokens + contrast + logo, publish) + footer/social/contact +
+      feature flags (5 toggles) + menu manager (custom_pages reorder) +
+      custom page builder (12 block types, autosave 30s, preview/publish)
 
 ## PHASE 5 — Admin Panel Extended (A10-A15)
 - [ ] A10-A11 content tools (articles, Q&A, polls, notifications)
