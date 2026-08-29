@@ -121,7 +121,7 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 - [x] A10 Articles CMS + Q&A management (cover, i18n title, tags, body, read-time auto, author doctor/guest, SEO, draft/publish, soft-delete + unanswered QA answer-on-behalf)
 - [x] A11 Polls + Notifications composer (poll 2-6 options + expiry + vote lock + close early + results bar, notifications general/emergency/personal + banner)
 - [x] A12 Subscription Plans + Ads Manager (4 tiers price/benefits/custom, manual entity grant, ads placement 2:1/16:6 + dates + stats)
-- [ ] A13 Leads Inbox
+- [x] A13 Leads Inbox (tabs + counts, filters q/doctor, expand message + tel:, status select + CSV export)
 - [ ] A14-A15 system tools (roles, audit log, analytics, settings)
 
 ## PHASE 6 — Hardening & Launch Prep

@@ -1072,7 +1072,22 @@ clean (no new DB objects, pure application-layer change).
       audit `create`), `/api/admin/ads/[id]/route.ts` (PATCH partial + DELETE
       soft-delete, audit). Verified: typecheck clean, build clean — `/subscriptions`
       4.28kB/91.5kB, `/ads` 4.67kB/91.9kB, all `ƒ`.
-- [ ] A13 Leads Inbox
+- [x] A13 Leads Inbox — `/(dashboard)/leads/page.tsx` (`force-dynamic`, admin,
+      tabs `new`+`contacted`+`completed`+`cancelled`/`all` with counts via
+      `count exact head:true` per status, filters `q` patient/phone + doctor
+      dropdown (distinct doctor_ids → `doctors` names), pagination 25, query
+      `or(patient_name.ilike,patient_phone.ilike)` + `doctor_id` + `status`,
+      enrich doctor_name via `doctorMap` + chamber_name via `chambers` (2
+      extra queries), `LeadsManager`), `components/leads/LeadsManager.tsx:1`
+      (`'use client'`, URL-driven `buildUrl`, status tabs with counts + `সব`,
+      `📥 CSV এক্সপোর্ট` (header `patient_name,patient_phone...` + rows),
+      filters search + doctor select, DataTable 6 cols রোগী(expand message +
+      preferred_time)/ফোন(`tel:`)/ডাক্তার/চেম্বার/সময়(`bn-BD`)/স্ট্যাটাস
+      `select` (new/contacted/completed/cancelled/spam → PATCH
+      `/api/admin/leads/[id]` + audit), pagination ◂/▸),
+      `/api/admin/leads/[id]/route.ts` (PATCH `status` enum, super_admin? admin,
+      sets `contacted_at` on contacted, audit `update`). Verified: typecheck
+      clean, build clean — `/leads` 3.93kB/91.2kB, all `ƒ`.
 - [ ] A14 Admin Users/Roles + Audit Log Viewer
 - [ ] A15 Analytics Dashboard + Settings
 
