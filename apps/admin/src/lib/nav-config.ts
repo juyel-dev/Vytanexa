@@ -58,6 +58,7 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: 'nav.content',
     items: [
       { href: '/articles', labelKey: 'nav.articles', icon: '📰' },
+      { href: '/qa', labelKey: 'nav.qaManage', icon: '🩺' },
       { href: '/polls', labelKey: 'nav.polls', icon: '📊' },
       { href: '/pages', labelKey: 'nav.pages', icon: '📄' },
       { href: '/notifications', labelKey: 'nav.notifications', icon: '🔔' },

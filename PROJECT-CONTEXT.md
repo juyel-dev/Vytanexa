@@ -160,20 +160,18 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A09 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages)
-⏭️ Admin Panel — A10 next (Articles CMS + Q&A · Polls + Notifications)
+✅ Admin Panel (apps/admin) — A01-A10 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A)
+⏭️ Admin Panel — A11 next (Polls + Notifications composer)
 ```
 
-**Last major milestone:** A07-A09 God Mode complete, verified (typecheck +
-build clean — `/god-mode/homepage` 91.8kB, `/god-mode/theme` 91.8kB,
-`/god-mode/footer` 90.8kB, `/god-mode/flags` 89.4kB, `/god-mode/menu`
-90.1kB, `/pages` 92kB, `/pages/[id]` 93.7kB, all `ƒ` dynamic). Homepage
-sections reorder + publish → `app_settings.homepage_settings`, theme 4
-tokens + contrast + logo → `theme_colors`, footer/social/contact →
-`app_settings` singleton (super_admin, audit), flags merge → `features`,
-menu reorder → `custom_pages.menu_order`, plus full custom page block
-builder (12 types, autosave 30s, preview/publish). Next is **A10**
-Articles/Q&A + **A11** Polls/Notifications. See `TODO.md`.
+**Last major milestone:** A10 Articles CMS + Q&A management complete,
+verified (typecheck + build clean — `/articles` 91.7kB, `/articles/[id]` &
+`/new` 92.1kB, `/qa` 89.7kB, all `ƒ` dynamic). Articles support i18n title,
+cover 16:9, category/tags, body HTML + read_time auto (words/200), author
+doctor link vs guest byline, SEO, draft/publish (editor 403), soft-delete
+with view_count warning, plus Q&A manager — unanswered/all tabs, answer on
+behalf of verified doctor → `answers` `status='approved'` (audit). Nav
+`qaManage` added. Next is **A11** Polls/Notifications. See `TODO.md`.
 
 ---
 

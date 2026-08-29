@@ -987,7 +987,36 @@ clean (no new DB objects, pure application-layer change).
       custom-pages/[id]/route.ts` (PATCH partial + slug 409, DELETE
       soft-delete with submission count, audit). Verified: `/pages`
       4.76kB/92kB, `/pages/[id]` 6.48kB/93.7kB, all `ƒ`.
-- [ ] A10 Articles CMS + Q&A management
+- [x] A10 Articles CMS + Q&A management — `lib/validations/articles.ts:1`
+      (Zod `title_translations.bn` superRefine, `slug` auto, `body_html*`,
+      `author_doctor_id` nullable, `tags[]`, `read_time` auto words/200,
+      `is_published`, `answerCreateSchema` for Q&A), `(dashboard)/articles/
+      page.tsx` (`force-dynamic`, admin, filters q/status/category, pagination
+      25, distinct categories via dedup, `ArticlesTable`), `components/articles/
+      ArticlesTable.tsx:1` (search, 2 selects, DataTable 7 cols cover/name/
+      category/`✅/📝`+view+date, `⋯` menu এডিট/মুছুন, `ConfirmDialog` with
+      view_count warning), `(dashboard)/articles/new/page.tsx` + `[id]/
+      page.tsx` (fetch doctors 100, map to `ArticleForm`), `components/articles/
+      ArticleForm.tsx:1` (autosave 30s PATCH, `▾ মূল বিষয়বস্তু` (cover 16:9,
+      bn*/en/hi, slug auto, category free-text, tags `TagInput`, body HTML
+      textarea full-width 12 rows + read_time auto words/200 editable), `▾
+      লেখক` (radio doctor link (🔍 search 10 filtered verified doctors) vs
+      guest name), `▸ SEO` (meta_*), `খসড়া সংরক্ষণ` vs `প্রকাশ করুন` with
+      editor role 403 `"প্রকাশ করার অনুমতি নেই"`), `/api/admin/articles/
+      route.ts` (POST — doctor exists, slug 409, readTime auto, audit
+      `create`), `/api/admin/articles/[id]/route.ts` (PATCH partial + slug
+      409 + readTime recalc, DELETE soft-delete with view_count, audit),
+      `(dashboard)/qa/page.tsx` (`force-dynamic`, admin, `tab` unanswered/all
+      via `answer_count=0`, verified doctors 100, `QaManager`), `components/qa/
+      QaManager.tsx:1` (tabs `অনুত্তরিত(count)`/`সব প্রশ্ন`, list title+
+      category/answer/upvote/status, `উত্তর দিন` → doctor picker (verified
+      only) + textarea → `POST /api/admin/qa/answer` with `status='approved'`
+      skip moderation, audit), `/api/admin/qa/answer/route.ts` (POST
+      `{question_id,doctor_id,body}` verified check, insert answers, audit).
+      Nav: `lib/nav-config.ts:60` added `qaManage` → `/qa` under content +
+      `messages/bn.json:22` `qaManage`. Verified: typecheck clean, build
+      clean — `/articles` 4.42kB/91.7kB, `/articles/[id]` & `/new`
+      135B/92.1kB, `/qa` 2.44kB/89.7kB, all `ƒ`.
 - [ ] A11 Polls + Notifications composer
 - [ ] A12 Subscription Plans + Ads Manager
 - [ ] A13 Leads Inbox

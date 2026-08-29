@@ -118,7 +118,8 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       custom page builder (12 block types, autosave 30s, preview/publish)
 
 ## PHASE 5 — Admin Panel Extended (A10-A15)
-- [ ] A10-A11 content tools (articles, Q&A, polls, notifications)
+- [x] A10 Articles CMS + Q&A management (cover, i18n title, tags, body, read-time auto, author doctor/guest, SEO, draft/publish, soft-delete + unanswered QA answer-on-behalf)
+- [ ] A11 Polls + Notifications composer
 - [ ] A12-A13 business tools (subscriptions, ads, leads)
 - [ ] A14-A15 system tools (roles, audit log, analytics, settings)
 
