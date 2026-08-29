@@ -1112,7 +1112,40 @@ clean (no new DB objects, pure application-layer change).
       `delete` emergency/`publish` brand)/entity/ID/IP/বিস্তারিত `দেখুন` toggle
       before/after JSON `pre`, pagination ◂/▸). Verified: typecheck clean,
       build clean — `/admins` 4.33kB/91.6kB, `/audit-log` 2.78kB/90kB, all `ƒ`.
-- [ ] A15 Analytics Dashboard + Settings
+- [x] A15 Analytics Dashboard + Settings — `/(dashboard)/analytics/page.tsx`
+      (`force-dynamic`, admin, `range` 7d/30d/90d → `since`/`sincePrev`, 5
+      parallel counts: pageViews `doctor/hospital/article/page/search` vs prev
+      for `Δ%`, call_click, whatsapp_click, leads count, dailyRows 5000 →
+      `dailyMap` 0-filled + `daily` array, top doctors via `doctor_view`
+      `entity_id` counts → `doctors` names, top searches via `metadata.query`
+      counts, top locations via `location_id` counts → `locations` names,
+      `AnalyticsDashboard`), `components/analytics/AnalyticsDashboard.tsx:1`
+      (`range` links, 4 cards pageViews `↑%`/`call`/`WA`/`newLeads`, daily bar
+      `h-24` + max, 3 tables topDoctors/topSearch/topLocations with CSV
+      `exportCsv` header+rows blob), `/(dashboard)/settings/page.tsx`
+      (`force-dynamic`, super_admin, `getAppSettings()` → `app_name`/`default_locale`/
+      `supported_locales`/`seo_defaults`, `SettingsForm`), `components/settings/
+      SettingsForm.tsx:1` (`app_name`, default_locale select, supported
+      `bn/en/hi` toggles with `supported.includes(default)` validation,
+      seo title/description/og_image, POST `/api/admin/app-settings/general` +
+      toast), `/api/admin/app-settings/general/route.ts` (POST super_admin,
+      Zod `app_name`/`default_locale`/`supported_locales[]`/`seo_defaults`,
+      audit `update`). Verified: typecheck clean, build clean — `/analytics`
+      1.8kB/97.7kB, `/settings` 2.39kB/89.6kB, `/api/admin/app-settings/general`,
+      all `ƒ`.
+
+---
+
+## ADMIN PANEL — COMPLETE (A01-A15)
+
+**Admin Panel `apps/admin` is now feature-complete** — every spec section
+(A01 design system through A15 analytics/settings) has a corresponding
+implementation: entity CRUD with delete-safety per DB `RESTRICT`,
+verification publish gates per RLS, God Mode singleton writes per
+`app_settings` with audit before/after, block builder with 12 types and
+autosave, business tools (subscriptions one-live-per-entity, ads
+placement/dates/stats), system accountability (roles, audit, analytics
+partition-aware, locales). See `IMPLEMENTATION-ROADMAP.md` Phase 4-5.
 
 ---
 

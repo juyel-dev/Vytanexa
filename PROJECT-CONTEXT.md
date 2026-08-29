@@ -113,7 +113,7 @@ periodic refresh.**
 Vytanexa/
 ├── VYTANEXA-BLUEPRINT.md       ✅ complete (S01-S22 spec)
 ├── DATABASE-SCHEMA.md          ✅ complete (Parts 1-7, 39 tables)
-├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A09 built)
+├── ADMIN-PANEL-SPEC.md         ✅ complete (A01-A15 spec, A01-A15 built — admin panel feature-complete)
 ├── PROJECT-CONTEXT.md          ✅ this file
 ├── IMPLEMENTATION-ROADMAP.md   ✅ phased build checklist (phase-level)
 ├── TODO.md                     ✅ granular execution checklist (item-level, authoritative)
@@ -121,7 +121,7 @@ Vytanexa/
 ├── packages/database/migrations/  0001-0014, all applied live
 ├── packages/database/types.ts  generated from live schema (after 0014)
 ├── apps/web/                   Next.js user app — S01-S22 complete, see below
-└── apps/admin/                 Admin panel — A01-A09 complete (shell+auth+dashboard+locations/categories/doctors/hospitals/ambulance/blood+god-mode/custom-pages)
+└── apps/admin/                 Admin panel — A01-A15 COMPLETE (all 15 sections, admin feature-complete)
 ```
 
 **Live Supabase:** project "Vytanexa" (ref `lfrvzdhonsnemdfmxthw`),
@@ -160,17 +160,19 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A14 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications + Subscriptions/Ads + Leads + AdminUsers/Audit)
-⏭️ Admin Panel — A15 next (Analytics Dashboard + Settings)
+✅ Admin Panel (apps/admin) — A01-A15 COMPLETE (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications + Subscriptions/Ads + Leads + AdminUsers/Audit + Analytics/Settings)
+⏭️ Phase 6 Hardening & Launch — RLS audit, perf, data entry, deploy
 ```
 
-**Last major milestone:** A14 Admin Users/Roles + Audit Log Viewer complete,
-verified (typecheck + build clean — `/admins` 91.6kB, `/audit-log` 90kB, all
-`ƒ` dynamic). Admin Users supports super_admin invite (auth.admin.createUser +
-admin_users insert with rollback, role matrix, suspend toggle, self-lockout
-prevent); Audit Log shows before/after JSON with filters q/admin/action/entity
-+ pagination, accountability per DB Part 5. Next is **A15** Analytics +
-Settings. See `TODO.md`.
+**Last major milestone:** A15 Analytics Dashboard + Settings complete, verified
+(typecheck + build clean — `/analytics` 97.7kB, `/settings` 89.6kB,
+`/api/admin/app-settings/general`, all `ƒ` dynamic). Analytics reads
+`analytics_events` (partition-aware) — 4 cards Δ%, daily bar, top 5 doctors/
+search/location + CSV; Settings manages `app_name`/`default_locale`/
+`supported_locales`/`seo_defaults` (super_admin). **Admin Panel A01-A15
+is now feature-complete** — every spec section has an implementation.
+Next is **Phase 6** Hardening & Launch (RLS audit, perf, deploy). See
+`TODO.md` & `IMPLEMENTATION-ROADMAP.md`.
 
 ---
 

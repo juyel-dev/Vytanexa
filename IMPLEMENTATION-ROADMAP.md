@@ -117,13 +117,13 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
       feature flags (5 toggles) + menu manager (custom_pages reorder) +
       custom page builder (12 block types, autosave 30s, preview/publish)
 
-## PHASE 5 — Admin Panel Extended (A10-A15)
+## PHASE 5 — Admin Panel Extended (A10-A15) ✅ COMPLETE
 - [x] A10 Articles CMS + Q&A management (cover, i18n title, tags, body, read-time auto, author doctor/guest, SEO, draft/publish, soft-delete + unanswered QA answer-on-behalf)
 - [x] A11 Polls + Notifications composer (poll 2-6 options + expiry + vote lock + close early + results bar, notifications general/emergency/personal + banner)
 - [x] A12 Subscription Plans + Ads Manager (4 tiers price/benefits/custom, manual entity grant, ads placement 2:1/16:6 + dates + stats)
 - [x] A13 Leads Inbox (tabs + counts, filters q/doctor, expand message + tel:, status select + CSV export)
 - [x] A14 Admin Users/Roles + Audit Log Viewer (super_admin invite, role matrix, suspend, audit before/after + filters)
-- [ ] A15 Analytics Dashboard + Settings
+- [x] A15 Analytics Dashboard + Settings (cards Δ%, daily bar, top doctors/search/location + CSV, app_name/locales/seo_defaults)
 
 ## PHASE 6 — Hardening & Launch Prep
 - [ ] Full RLS audit — attempt to break every table from an anon client
