@@ -1042,7 +1042,36 @@ clean (no new DB objects, pure application-layer change).
       personal needs `target_user_id`, audit `create`). Verified: typecheck
       clean, build clean — `/polls` 3.37kB/90.6kB, `/polls/[id]` & `/new`
       2.67kB/89.9kB, `/notifications` 2.65kB/89.9kB, all `ƒ`.
-- [ ] A12 Subscription Plans + Ads Manager
+- [x] A12 Subscription Plans + Ads Manager — `lib/validations/subscriptions.ts:1`
+      (`tier`/`placement` enums, `planUpdateSchema` (applies_to, price_monthly/
+      yearly, benefits record, is_active), `subscriptionCreateSchema` (doctor/
+      hospital + plan + expires), `adCreateSchema` placement/sponsor*/image*/
+      target*/display_order/start*/end* + date refine + `adUpdateSchema`),
+      `(dashboard)/subscriptions/page.tsx` (`force-dynamic`, super_admin, 4
+      plans ordered by price + 100 subs with `subscription_plans` join + doctor/
+      hospital nameMap via 2 queries, enriched `entity_name`, `SubscriptionsManager`),
+      `components/subscriptions/SubscriptionsManager.tsx:1` (tabs `প্ল্যান`/
+      `সক্রিয় সাবস্ক্রিপশন`, plans grid 4 tiers `🆓/🟢/🔵/🟣` with price `₹` + applies +
+      benefits chips + `✏️` → modal (price monthly/yearly, applies doctor/hospital
+      checkboxes, benefits 3 toggles featured/analytics/priority + max_chambers +
+      custom key:value JSON escape hatch, PATCH `/api/admin/subscription-plans/[id]`,
+      audit), entities table 5 cols entity/plan/status/expires/✕ বাতিল (DELETE →
+      cancelled), `+ সাবস্ক্রিপশন যোগ করুন` modal (type/id UUID, plan select,
+      expires, POST `/api/admin/subscriptions` with one-live-per-entity cancel
+      previous, audit `create`)), `/api/admin/subscription-plans/[id]/route.ts`
+      (PATCH super_admin, audit `update`), `/api/admin/subscriptions/route.ts`
+      (POST super_admin, entity exists, plan exists, cancel existing active/trial,
+      audit), `/api/admin/subscriptions/[id]/route.ts` (PATCH status/expires,
+      DELETE cancelled), `(dashboard)/ads/page.tsx` (`force-dynamic`, admin, 100
+      ads + `analytics_events` ad_impression/click counts per ad → stats map,
+      `AdsManager`), `components/ads/AdsManager.tsx:1` (DataTable 8 cols thumb/
+      sponsor/placement/`✅`/view/click/CTR/`⋯` ✏️/🗑️, modal placement 2:1/16:6
+      radio, sponsor*/image*/target*/order/start*/end* + is_active + perf
+      read-only impressions/clicks/CTR, POST/PATCH `/api/admin/ads[/id]`,
+      DELETE soft-delete, audit), `/api/admin/ads/route.ts` (POST admin, Zod,
+      audit `create`), `/api/admin/ads/[id]/route.ts` (PATCH partial + DELETE
+      soft-delete, audit). Verified: typecheck clean, build clean — `/subscriptions`
+      4.28kB/91.5kB, `/ads` 4.67kB/91.9kB, all `ƒ`.
 - [ ] A13 Leads Inbox
 - [ ] A14 Admin Users/Roles + Audit Log Viewer
 - [ ] A15 Analytics Dashboard + Settings

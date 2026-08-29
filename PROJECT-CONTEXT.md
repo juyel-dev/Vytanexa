@@ -160,17 +160,18 @@ authoritative checklist):
 ✅ S21 (SEO Landing Pages + sitemap.xml + robots.txt)
 ✅ S22 (Infrastructure: next-intl i18n, PWA, Auth middleware, ui-store)
 ✅ Cross-cutting passes (Zod validation, rate-limit coverage, error bounds, a11y)
-✅ Admin Panel (apps/admin) — A01-A11 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications)
-⏭️ Admin Panel — A12 next (Subscription Plans + Ads Manager)
+✅ Admin Panel (apps/admin) — A01-A12 done (shell/auth/dashboard + Locations/Categories/Doctors/Hospitals/Ambulance/Blood + God Mode + Custom Pages + Articles/Q&A + Polls/Notifications + Subscriptions/Ads)
+⏭️ Admin Panel — A13 next (Leads Inbox)
 ```
 
-**Last major milestone:** A11 Polls + Notifications composer complete,
-verified (typecheck + build clean — `/polls` 90.6kB, `/polls/[id]` & `/new`
-89.9kB, `/notifications` 89.9kB, all `ƒ` dynamic). Polls support 2-6 options,
-expiry, vote lock (409 if votes exist), close early (`expires_at=now`),
-results bar `%`; Notifications support general/emergency broadcasts +
-personal log, banner toggle, target_url, expires. Next is **A12**
-Subscription Plans + Ads. See `TODO.md`.
+**Last major milestone:** A12 Subscription Plans + Ads Manager complete,
+verified (typecheck + build clean — `/subscriptions` 91.5kB, `/ads` 91.9kB,
+all `ƒ` dynamic). Plans support 4 tiers price_monthly/yearly, applies_to,
+benefits JSON (featured/analytics/priority + max_chambers + custom key:value
+escape hatch), manual entity grant (`subscriptions` one-live-per-entity);
+Ads support placement 2:1/16:6, sponsor/image/target, display_order, date
+range, is_active, plus impressions/clicks/CTR via `analytics_events`. Super_admin
+for plans/subs, admin for ads. Next is **A13** Leads Inbox. See `TODO.md`.
 
 ---
 

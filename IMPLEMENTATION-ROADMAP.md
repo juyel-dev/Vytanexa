@@ -120,7 +120,8 @@ Check off as completed; update `PROJECT-CONTEXT.md` §5 alongside.
 ## PHASE 5 — Admin Panel Extended (A10-A15)
 - [x] A10 Articles CMS + Q&A management (cover, i18n title, tags, body, read-time auto, author doctor/guest, SEO, draft/publish, soft-delete + unanswered QA answer-on-behalf)
 - [x] A11 Polls + Notifications composer (poll 2-6 options + expiry + vote lock + close early + results bar, notifications general/emergency/personal + banner)
-- [ ] A12-A13 business tools (subscriptions, ads, leads)
+- [x] A12 Subscription Plans + Ads Manager (4 tiers price/benefits/custom, manual entity grant, ads placement 2:1/16:6 + dates + stats)
+- [ ] A13 Leads Inbox
 - [ ] A14-A15 system tools (roles, audit log, analytics, settings)
 
 ## PHASE 6 — Hardening & Launch Prep
