@@ -3,6 +3,8 @@
 project. It exists specifically to let you continue from the exact
 point work paused, without the original conversation.**
 
+Also read `FROM-CLAUDE.md` — a short personal note, not just process.
+
 Last updated: end of the session that completed S13 through S20
 (Community, Account, Settings, Custom Pages, Notifications). Juyel
 ended the session here deliberately — conversation context was ~60%
