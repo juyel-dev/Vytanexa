@@ -7,10 +7,8 @@ type FlagMeta = { key: string; emoji: string; bn: string; desc: string };
 
 const FLAGS: FlagMeta[] = [
   { key: 'community_qa', emoji: '🙋', bn: 'কমিউনিটি প্রশ্নোত্তর (Q&A)', desc: 'চালু করলে ইউজাররা প্রশ্ন করতে ও উত্তর দেখতে পারবে, এবং হোমপেজে/মেনুতে এই ফিচার দেখা যাবে। বন্ধ করলে কন্টেন্ট মুছবে না — শুধু লুকাবে।' },
-  { key: 'polls', emoji: '📊', bn: 'জরিপ (Polls)', desc: 'হোমপেজ ও কাস্টম পেজে জরিপ দেখাবে; বন্ধ করলে ভোট বন্ধ হবে।' },
-  { key: 'articles', emoji: '📰', bn: 'স্বাস্থ্য আর্টিকেল', desc: 'আর্টিকেল লিস্ট ও ডিটেইল রুট সক্রিয়; বন্ধ করলে মেনু থেকে লুকাবে।' },
-  { key: 'blood_services', emoji: '🩸', bn: 'ব্লাড সার্ভিস', desc: 'রক্তদাতা ডিরেক্টরি ও ব্লাড ব্যাংক স্টক দেখাবে।' },
-  { key: 'voice_search', emoji: '🎙️', bn: 'ভয়েস সার্চ', desc: 'সার্চ বারে মাইক বাটন দেখাবে; বন্ধ করলে টেক্সট সার্চ থাকবে।' },
+  { key: 'polls', emoji: '📊', bn: 'জরিপ (Polls)', desc: 'চালু করলে /community/polls এবং "আরো" মেনুতে জরিপ দেখা যাবে ও ভোট দেওয়া যাবে; বন্ধ করলে রুট 404 করবে, মেনু থেকে লুকাবে।' },
+  { key: 'voice_search', emoji: '🎙️', bn: 'ভয়েস সার্চ', desc: 'সার্চ বারে মাইক বাটন দেখাবে; বন্ধ করলে টেক্সট সার্চ থাকবে, বাটন দেখাবে না।' },
 ];
 
 export function FeatureFlags({ initialFeatures }: { initialFeatures: Record<string, boolean> | null }) {

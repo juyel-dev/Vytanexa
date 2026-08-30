@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { pollVoteSchema } from '@/lib/validations/polls';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 /**
  * POST /api/polls/[id]/vote — VYTANEXA-BLUEPRINT.md § S15. "One vote
@@ -17,14 +18,18 @@ import { pollVoteSchema } from '@/lib/validations/polls';
  * are designed around one-shot votes.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const supabase = createClient();
+
+  if (!(await isFeatureEnabled(supabase, 'polls'))) {
+    return NextResponse.json({ error: 'এই ফিচার এখন বন্ধ আছে' }, { status: 404 });
+  }
+
   const body = await request.json();
   const parsed = pollVoteSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
   }
   const { optionId, voterKey } = parsed.data;
-
-  const supabase = createClient();
 
   // Rate-limit polls vote per voterKey + poll (anti-flood, in addition to
   // the DB UNIQUE(poll_id,voter_key) that translates to 409 on duplicate).

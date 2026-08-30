@@ -26,4 +26,5 @@ export type SearchApiResponse = {
 export type TrendingApiResponse = {
   trending: { query: string; search_count: number }[];
   categories: SearchCategoryResult[];
+  voiceSearchEnabled: boolean;
 };

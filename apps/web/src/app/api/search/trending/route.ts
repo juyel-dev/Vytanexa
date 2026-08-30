@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 /**
  * GET /api/search/trending — VYTANEXA-BLUEPRINT.md § S05 "Trending
@@ -11,7 +12,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET() {
   const supabase = createClient();
 
-  const [trendingRes, categoriesRes] = await Promise.all([
+  const [trendingRes, categoriesRes, voiceSearchEnabled] = await Promise.all([
     supabase.rpc('get_trending_searches', { p_limit: 8 }),
     supabase
       .from('categories')
@@ -19,6 +20,10 @@ export async function GET() {
       .eq('is_active', true)
       .order('display_order', { ascending: true })
       .limit(6),
+    // Piggybacked here rather than a separate request — this route
+    // already fires once on mount before the mic button needs to
+    // decide whether to render (app_settings.features.voice_search).
+    isFeatureEnabled(supabase, 'voice_search'),
   ]);
 
   if (trendingRes.error) {
@@ -31,5 +36,6 @@ export async function GET() {
   return NextResponse.json({
     trending: trendingRes.data ?? [],
     categories: categoriesRes.data ?? [],
+    voiceSearchEnabled,
   });
 }

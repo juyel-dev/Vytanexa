@@ -49,11 +49,13 @@ export function MorePageClient({
   currentUser,
   customPages,
   showQA,
+  showPolls,
   hasUnreadNotifications,
 }: {
   currentUser: CurrentUserView;
   customPages: CustomPageLink[];
   showQA: boolean;
+  showPolls: boolean;
   hasUnreadNotifications: boolean;
 }) {
   const router = useRouter();
@@ -119,7 +121,7 @@ export function MorePageClient({
       <MenuSection title="কমিউনিটি">
         <MenuRow href="/community/articles" icon={Newspaper} label="স্বাস্থ্য ম্যাগাজিন" />
         {showQA && <MenuRow href="/community/qa" icon={HelpCircle} label="প্রশ্নোত্তর" />}
-        <MenuRow href="/community/polls" icon={BarChart3} label="জরিপ" />
+        {showPolls && <MenuRow href="/community/polls" icon={BarChart3} label="জরিপ" />}
       </MenuSection>
 
       {customPages.length > 0 && (

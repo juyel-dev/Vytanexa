@@ -35,13 +35,20 @@ export default function SearchPage() {
   const [recent, setRecent] = useState(getRecentSearches());
   const [loading, setLoading] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  // Hidden until the trending fetch confirms the flag — fail-safe
+  // default (matches every other app_settings.features gate in the
+  // app: absent/false means off), same pattern as S14's community_qa.
+  const [voiceSearchEnabled, setVoiceSearchEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'doctors' | 'hospitals' | 'symptoms'>('all');
 
   useEffect(() => {
     inputRef.current?.focus();
     fetch('/api/search/trending')
       .then((r) => r.json())
-      .then(setTrending)
+      .then((data: TrendingApiResponse) => {
+        setTrending(data);
+        setVoiceSearchEnabled(!!data.voiceSearchEnabled);
+      })
       .catch(() => {});
   }, []);
 
@@ -120,9 +127,11 @@ export default function SearchPage() {
               <X className="h-4 w-4 text-neutral-400" />
             </button>
           )}
-          <button onClick={() => setVoiceOpen(true)} aria-label="ভয়েস সার্চ">
-            <Mic className="h-4 w-4 text-brand-600" />
-          </button>
+          {voiceSearchEnabled && (
+            <button onClick={() => setVoiceOpen(true)} aria-label="ভয়েস সার্চ">
+              <Mic className="h-4 w-4 text-brand-600" />
+            </button>
+          )}
         </div>
       </div>
 

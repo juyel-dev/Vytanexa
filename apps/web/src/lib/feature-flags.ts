@@ -4,8 +4,6 @@ import type { Database } from '@vytanexa/database';
 export type FeatureFlags = {
   community_qa?: boolean;
   polls?: boolean;
-  articles?: boolean;
-  blood_services?: boolean;
   voice_search?: boolean;
 };
 

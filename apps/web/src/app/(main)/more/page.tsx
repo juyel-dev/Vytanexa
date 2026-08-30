@@ -19,10 +19,11 @@ export const metadata: Metadata = {
 export default async function MorePage() {
   const supabase = createClient();
 
-  const [currentUser, customPages, showQA] = await Promise.all([
+  const [currentUser, customPages, showQA, showPolls] = await Promise.all([
     getCurrentUser(supabase),
     getMenuCustomPages(supabase),
     isFeatureEnabled(supabase, 'community_qa'),
+    isFeatureEnabled(supabase, 'polls'),
   ]);
 
   const unread = await hasUnreadNotifications(supabase, currentUser?.authUser.id ?? null);
@@ -38,6 +39,7 @@ export default async function MorePage() {
         }
         customPages={customPages}
         showQA={showQA}
+        showPolls={showPolls}
         hasUnreadNotifications={unread}
       />
     </>
