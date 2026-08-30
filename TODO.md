@@ -1265,6 +1265,107 @@ re-read of this file's own prior claims.**
       created_at < now() - interval '7 days'` before this matters at
       scale — not urgent pre-launch.
 
+## PHASE 8 — FINALIZED EXECUTION PLAN (decisions locked 2026-08-30)
+Supersedes the open options in `DEEPDIVE-REFACTOR-PLAN.md` §6 and the
+God Mode / Custom Page Builder discussion — those are now **decided**,
+not options. Work top to bottom, small steps, commit+push per item,
+per the WORKING RULES below. `DEEPDIVE-REFACTOR-PLAN.md` stays as the
+reasoning/reference doc; this section is the actual execution order.
+
+### 8.1 — God Mode: Theme Editor (decision: trim, don't fully build out)
+- [ ] Remove the color-picker UI from `ThemeEditor.tsx` (brand/life/
+      emergency/accent hex fields + contrast checker) — this part is
+      confirmed dead (saves to DB, `apps/web` never reads it, and
+      building the CSS-variable pipeline to make it real costs more
+      than a one-time rebrand is worth). Brand colors stay code-level
+      in `packages/config/design-tokens.js`, as they already
+      effectively are today.
+- [ ] Keep + actually wire Logo/Favicon (the two image-URL fields) —
+      simplify `ThemeEditor.tsx` to just those two fields, and add the
+      missing read side: `apps/web/src/app/layout.tsx` favicon
+      `<link>` (or Next's `icon` metadata field) + wherever the header
+      logo renders, both sourced from `app_settings.logo_url` /
+      `favicon_url`. This is the one part of Theme that's worth
+      finishing rather than cutting.
+- [ ] Update `ADMIN-PANEL-SPEC.md` § A07 Theme section + the God Mode
+      nav label/description if needed to match the trimmed scope.
+
+### 8.2 — God Mode: Feature Flags (decision: trim 5 → 3)
+- [ ] Remove `articles` and `blood_services` flags from
+      `FeatureFlags.tsx`'s `FLAGS` array and the corresponding gating
+      checks in `lib/feature-flags.ts` / wherever they're read on the
+      web side — these are core, always-on features; data-driven
+      empty-states already handle "nothing published yet" correctly,
+      so the flag is redundant. Keep `community_qa`, `polls`,
+      `voice_search` — genuine optional/experimental toggles.
+- [ ] Confirm no other admin screen assumes `articles`/`blood_services`
+      flags exist (e.g. any UI conditionally rendered on them) before
+      removing the keys — grep first, remove second.
+
+### 8.3 — God Mode: Homepage Control / Menu Manager / Footer Editor
+- [ ] No changes — confirmed fully working end-to-end this pass, leave
+      as-is.
+
+### 8.4 — Custom Page Builder / Block Builder (decision: keep, no scope cut)
+- [ ] No removal action. Confirmed load-bearing (`/page/terms`,
+      `/page/privacy` have no other implementation). All 12 block
+      types stay in the code as-is. Documented decision only: future
+      engineering investment on new block types should prioritize
+      `hero`/`rich_text`/`image`/`cta_banner`/`faq_accordion`/`spacer`
+      /`doctor_grid`/`hospital_grid` over further polish on
+      `poll`/`qa_embed`/`report_form` — those three stay functional
+      but deprioritized, nothing to execute here now.
+
+### 8.5 — Security/correctness fixes (from Phase 7 + deep-dive H1/H2)
+- [ ] Sanitize `body_html` (articles) and `content_html` (custom-page
+      rich_text blocks) server-side on write —
+      `isomorphic-dompurify` (or `sanitize-html`) in
+      `api/admin/articles/route.ts`, `[id]/route.ts`, and the
+      custom-pages write route(s). Keep the plain-textarea UX as-is.
+- [ ] DoctorCard "কল করুন" button — stop rendering `tel:` with
+      `whatsapp_number` as a fake phone number. Ship the immediate fix:
+      hide/disable the Call button when `whatsapp_number` is null
+      instead of rendering a dead link. (Real doctor-level `phone`
+      field vs. chamber-level phone is a separate future product
+      decision, not blocking this fix.)
+- [ ] Rate-limit IP derivation — verify Vercel's actual
+      `x-forwarded-for` behavior for this project once deployed; add
+      an `x-real-ip` fallback if warranted.
+- [ ] Add `check_rate_limit()` to `/api/admin/login` matching the
+      pattern already used everywhere else.
+- [ ] Add retention cleanup for `rate_limit_events` (pg_cron or
+      periodic delete) — not urgent, but cheap to do while touching
+      rate-limit code above.
+
+### 8.6 — Architecture leverage points
+- [ ] Extract a shared `<DataTable>` component for `apps/admin`
+      (columns/rows/pagination/empty-state/sort as props). Migrate the
+      14 existing hand-rolled tables one at a time, each its own
+      commit: `AdminsManager, AdsManager, AmbulanceManager,
+      BloodManager, CategoriesManager, MenuManager, LeadsManager,
+      LocationsManager, NotificationsManager, QaManager,
+      SubscriptionsManager, ArticlesTable, DoctorsTable,
+      HospitalsTable`.
+- [ ] Add `loading.tsx` + `error.tsx` + a branded `not-found.tsx` at
+      `apps/admin/src/app/(dashboard)/` layout level — covers all 33
+      dashboard routes via Next's layout-scoped boundary inheritance.
+- [ ] Consolidate `api/account/profile/route.ts` onto a Zod schema in
+      `lib/validations/` matching every other route's convention.
+
+### 8.7 — Deferred (explicitly not now, noted so they don't get lost)
+- Accessibility pass (aria coverage) — batch into a post-launch
+  hardening sprint, start with Home/Doctor List/Doctor Profile/
+  Emergency FAB.
+- Onboarding/auth bundle-size (156–162kB vs 150kB budget) — only
+  worth it if real post-launch CWV data shows it mattering.
+- Ads stats materialized view/rollup — premature at current ad volume.
+- Realtime for admin Leads/Notifications — poll-on-nav stays the
+  permanent choice at this scale, revisit only if it becomes a real
+  operational pain point.
+- Open items not yet individually deep-read: S07 Doctor Profile, S16
+  Community hub, S20 Settings, A03 Dashboard, A10 moderation screens —
+  do a dedicated pass before considering any of these "audited."
+
 ## WORKING RULES (reaffirmed)
 1. Check items off only after real verification (typecheck + build,
    not assumption). If something can't be verified in this sandbox
