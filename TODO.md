@@ -1204,6 +1204,67 @@ partition-aware, locales). See `IMPLEMENTATION-ROADMAP.md` Phase 4-5.
 
 ---
 
+## PHASE 7 — Independent Full-Codebase Audit (2026-08-30)
+Systematic re-audit of all ~280 code files across `apps/web`, `apps/admin`,
+`packages/database` — traced every public write API route end-to-end for
+auth/validation/rate-limit, re-verified service-role isolation, re-checked
+every RLS/SECURITY DEFINER function, checked the XSS surface, and grepped
+the whole tree for hygiene issues. **This was an independent check, not a
+re-read of this file's own prior claims.**
+
+**Confirmed still correct (re-verified, not just trusted):**
+- `SUPABASE_SERVICE_ROLE_KEY` never referenced anywhere under `apps/web`.
+- All 9 public write/contact routes (leads, reviews, questions, answers,
+  poll vote, blood-donors, donor-contact, page-submissions, data-reports)
+  consistently pair Zod validation + `check_rate_limit()`.
+- Account routes (`profile`, `delete`, `notification-prefs`, `favorites`)
+  are all correctly scoped to `auth.uid()` — no IDOR found.
+- `get_donor_phone` / `check_rate_limit` SECURITY DEFINER functions have
+  pinned `search_path` and minimal, correctly-scoped grants.
+- The migration-0015 `deleted_at` regression and the S12 location-filter
+  gaps (hospital-list, blood-services, test-search) are genuinely fixed
+  in the current code, not just marked done.
+- Zero stray `console.log`/`debug` in shipped code (80 hits, all
+  `console.error`). One stray `: any` — in a comment, not real code.
+
+**New findings from this pass:**
+- [ ] **[MEDIUM] Article & custom-page HTML is not actually sanitized.**
+      Comments in `ArticleDetailClient.tsx`, `StaticBlocks.tsx`, and
+      `queries/article-detail.ts` assert `body_html`/`content_html` is
+      "sanitized server-side on write" — but the real write paths
+      (`api/admin/articles/route.ts`, `[id]/route.ts`, and the
+      `PageBuilder.tsx` rich_text block) only run Zod's `.min(1)` string
+      check. Admins type raw HTML into a plain `<textarea>` and it goes
+      straight to the DB, then out via `dangerouslySetInnerHTML` to every
+      visitor. Not exploitable by ordinary users today (only trusted
+      admin/editor accounts can write it), but it's a real stored-XSS
+      surface the moment an editor account is compromised or a lower-
+      trust contributor gets the editor role — and the code comments
+      are currently making a safety claim the code doesn't back up.
+      **Fix:** add `isomorphic-dompurify` (or `sanitize-html`) server-side
+      in both write routes before insert/update; keep the textarea UX.
+- [ ] **[LOW] Rate-limit IP derivation worth hardening.** All 9 routes
+      above key `check_rate_limit()` off
+      `request.headers.get('x-forwarded-for')?.split(',')[0]`. On Vercel
+      this is normally edge-set and trustworthy, but it's still reading
+      the *first* (client-closest) hop rather than a platform-verified
+      header. Belt-and-suspenders: prefer `x-real-ip` when present, or
+      confirm Vercel's exact XFF-overwrite behavior for this project's
+      deployment before relying on it as the sole scraping defense for
+      `get_donor_phone` (currently the highest-value target since it's
+      PII).
+- [ ] **[LOW] No app-level rate limit on `/api/admin/login`.** Every
+      public route uses `check_rate_limit()`; the admin login route
+      (`api/admin/login/route.ts`) relies solely on Supabase Auth's
+      built-in throttling for brute-force protection. Fine for now,
+      worth adding the same primitive here before launch given it's the
+      highest-privilege entry point in the system.
+- [ ] **[LOW / ops] `rate_limit_events` has no retention/cleanup.** Table
+      grows forever (every rate-limited call inserts a row, migration
+      0005). Add a `pg_cron` job or a periodic `DELETE ... WHERE
+      created_at < now() - interval '7 days'` before this matters at
+      scale — not urgent pre-launch.
+
 ## WORKING RULES (reaffirmed)
 1. Check items off only after real verification (typecheck + build,
    not assumption). If something can't be verified in this sandbox
