@@ -78,25 +78,21 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from('questions')
-    .insert({
-      title: title.trim(),
-      body: questionBody?.trim() || null,
-      category_id,
-      is_anonymous: !!is_anonymous,
-      author_name: is_anonymous ? null : author_name?.trim() || null,
-      author_phone: author_phone?.trim() || null,
-      status: 'pending',
-      user_id: user?.id ?? null,
-    })
-    .select('id')
-    .single();
+  const { error } = await supabase.from('questions').insert({
+    title: title.trim(),
+    body: questionBody?.trim() || null,
+    category_id,
+    is_anonymous: !!is_anonymous,
+    author_name: is_anonymous ? null : author_name?.trim() || null,
+    author_phone: author_phone?.trim() || null,
+    status: 'pending',
+    user_id: user?.id ?? null,
+  });
 
   if (error) {
     console.error('question insert failed:', error.message);
     return NextResponse.json({ error: 'প্রশ্ন জমা দিতে সমস্যা হয়েছে' }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, id: data.id });
+  return NextResponse.json({ success: true });
 }

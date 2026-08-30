@@ -1382,7 +1382,7 @@ BEGIN
   INSERT INTO rate_limit_events(limit_key) VALUES (p_key);
   RETURN true;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
 
 -- Old rows beyond any realistic window are periodically purged via a
 -- scheduled job (pg_cron or Supabase Edge Function cron) — operational
