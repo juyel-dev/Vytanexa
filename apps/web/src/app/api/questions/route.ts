@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getClientIp } from '@/lib/get-client-ip';
 import { queryQuestionList, type QAListParams } from '@/lib/queries/qa-list';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { questionSchema } from '@/lib/validations/questions';
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
   const { title, body: questionBody, category_id, is_anonymous, author_name, author_phone } =
     parsed.data;
 
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const ip = getClientIp(request);
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
     p_key: `question_submit:${ip}`,
     p_max_count: 5,

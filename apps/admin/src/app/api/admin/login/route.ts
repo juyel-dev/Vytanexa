@@ -2,6 +2,7 @@ import 'server-only';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getClientIp } from '@/lib/get-client-ip';
 
 /**
  * POST /api/admin/login — ADMIN-PANEL-SPEC.md § A02 "Authentication
@@ -18,6 +19,10 @@ import { cookies } from 'next/headers';
  * so a non-operator with valid email/password still gets an "Access
  * denied" rather than a dashboard that renders nothing (the layout
  * would reject them, but rejecting here is clearer + earlier).
+ *
+ * Rate-limited per-IP and per-email via `check_rate_limit()` (TODO.md
+ * Phase 8.5) — every public write route in apps/web already had this,
+ * this was the one gap given it's the highest-privilege entry point.
  */
 export async function POST(request: Request) {
   const { email, password } = (await request.json()) as {
@@ -46,8 +51,41 @@ export async function POST(request: Request) {
     }
   );
 
+  // TODO.md Phase 8.5: this is the highest-privilege entry point in
+  // the system, and unlike every public write route in apps/web, it
+  // had no app-level throttle at all — only Supabase Auth's own
+  // defaults. Two keys: per-IP (catches broad brute force / password
+  // spraying across many admin emails) and per-email (catches
+  // sustained credential stuffing against one account from rotating
+  // IPs) — both must pass.
+  const ip = getClientIp(request);
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const [ipCheck, emailCheck] = await Promise.all([
+    supabase.rpc('check_rate_limit', {
+      p_key: `admin_login_ip:${ip}`,
+      p_max_count: 10,
+      p_window: '15 minutes',
+    }),
+    supabase.rpc('check_rate_limit', {
+      p_key: `admin_login_email:${normalizedEmail}`,
+      p_max_count: 5,
+      p_window: '15 minutes',
+    }),
+  ]);
+
+  if (ipCheck.error) console.error('admin login IP rate limit check failed:', ipCheck.error.message);
+  if (emailCheck.error) console.error('admin login email rate limit check failed:', emailCheck.error.message);
+
+  if (ipCheck.data === false || emailCheck.data === false) {
+    return NextResponse.json(
+      { error: 'অনেকবার চেষ্টা করা হয়েছে, ১৫ মিনিট পরে আবার চেষ্টা করুন' },
+      { status: 429 }
+    );
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.trim(),
+    email: normalizedEmail,
     password,
   });
 

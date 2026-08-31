@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getClientIp } from '@/lib/get-client-ip';
 import { z } from 'zod';
 
 /**
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const { voterKey } = parsed.data;
 
   const supabase = createClient();
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const ip = getClientIp(request);
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
     p_key: `question_upvote:${ip}:${params.id}`,
     p_max_count: 20,
