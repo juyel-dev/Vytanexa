@@ -1291,16 +1291,26 @@ reasoning/reference doc; this section is the actual execution order.
       nav label/description if needed to match the trimmed scope.
 
 ### 8.2 — God Mode: Feature Flags (decision: trim 5 → 3)
-- [ ] Remove `articles` and `blood_services` flags from
+- [x] Remove `articles` and `blood_services` flags from
       `FeatureFlags.tsx`'s `FLAGS` array and the corresponding gating
       checks in `lib/feature-flags.ts` / wherever they're read on the
       web side — these are core, always-on features; data-driven
       empty-states already handle "nothing published yet" correctly,
       so the flag is redundant. Keep `community_qa`, `polls`,
       `voice_search` — genuine optional/experimental toggles.
-- [ ] Confirm no other admin screen assumes `articles`/`blood_services`
+- [x] Confirm no other admin screen assumes `articles`/`blood_services`
       flags exist (e.g. any UI conditionally rendered on them) before
       removing the keys — grep first, remove second.
+- **Scope grew during execution, documented here so it isn't lost:**
+  verifying this item before touching code turned up that `polls` and
+  `voice_search` were *also* dead — only `community_qa` was ever
+  actually checked anywhere in apps/web. Fixed properly rather than
+  just removed: `polls` now gates `/community/polls` +
+  `api/polls/[id]/vote` + the "More" page menu row (same pattern as
+  `community_qa`); `voice_search` now gates the search page's mic
+  button (piggybacked onto the existing `/api/search/trending`
+  fetch since that page is a client component with no server
+  wrapper). Commit `7a3b26c`.
 
 ### 8.3 — God Mode: Homepage Control / Menu Manager / Footer Editor
 - [ ] No changes — confirmed fully working end-to-end this pass, leave
@@ -1317,23 +1327,23 @@ reasoning/reference doc; this section is the actual execution order.
       but deprioritized, nothing to execute here now.
 
 ### 8.5 — Security/correctness fixes (from Phase 7 + deep-dive H1/H2)
-- [ ] Sanitize `body_html` (articles) and `content_html` (custom-page
+- [x] Sanitize `body_html` (articles) and `content_html` (custom-page
       rich_text blocks) server-side on write —
       `isomorphic-dompurify` (or `sanitize-html`) in
       `api/admin/articles/route.ts`, `[id]/route.ts`, and the
       custom-pages write route(s). Keep the plain-textarea UX as-is.
-- [ ] DoctorCard "কল করুন" button — stop rendering `tel:` with
+- [x] DoctorCard "কল করুন" button — stop rendering `tel:` with
       `whatsapp_number` as a fake phone number. Ship the immediate fix:
       hide/disable the Call button when `whatsapp_number` is null
       instead of rendering a dead link. (Real doctor-level `phone`
       field vs. chamber-level phone is a separate future product
       decision, not blocking this fix.)
-- [ ] Rate-limit IP derivation — verify Vercel's actual
+- [x] Rate-limit IP derivation — verify Vercel's actual
       `x-forwarded-for` behavior for this project once deployed; add
       an `x-real-ip` fallback if warranted.
-- [ ] Add `check_rate_limit()` to `/api/admin/login` matching the
+- [x] Add `check_rate_limit()` to `/api/admin/login` matching the
       pattern already used everywhere else.
-- [ ] Add retention cleanup for `rate_limit_events` (pg_cron or
+- [x] Add retention cleanup for `rate_limit_events` (pg_cron or
       periodic delete) — not urgent, but cheap to do while touching
       rate-limit code above.
 
@@ -1349,7 +1359,7 @@ reasoning/reference doc; this section is the actual execution order.
 - [ ] Add `loading.tsx` + `error.tsx` + a branded `not-found.tsx` at
       `apps/admin/src/app/(dashboard)/` layout level — covers all 33
       dashboard routes via Next's layout-scoped boundary inheritance.
-- [ ] Consolidate `api/account/profile/route.ts` onto a Zod schema in
+- [x] Consolidate `api/account/profile/route.ts` onto a Zod schema in
       `lib/validations/` matching every other route's convention.
 
 ### 8.7 — Deferred (explicitly not now, noted so they don't get lost)
