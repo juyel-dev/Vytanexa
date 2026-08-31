@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
 
 type Donor = { id: string; name: string; phone: string; blood_group: string; location_id: string; location_name: string; last_donated_at: string | null; is_active: boolean };
 type HospInv = { id: string; name: string; inventory: { blood_group: string; stock_level: string; reported_at: string }[] };
@@ -90,33 +91,28 @@ export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]
             </select>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-admin-border bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
-                  <tr><th className="px-3 py-2">নাম</th><th className="px-3 py-2">গ্রুপ</th><th className="px-3 py-2">এলাকা</th><th className="px-3 py-2">শেষ দান</th><th className="px-3 py-2">ফোন</th><th className="px-3 py-2">স্ট্যাটাস</th><th className="px-3 py-2">একশন</th></tr>
-                </thead>
-                <tbody className="divide-y divide-admin-border">
-                  {filteredDonors.length === 0 ? <tr><td colSpan={7} className="px-6 py-10 text-center text-admin-body text-neutral-500">কোনো রক্তদাতা নেই।</td></tr> : filteredDonors.map((d) => (
-                    <tr key={d.id} className="hover:bg-neutral-50">
-                      <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{d.name}</td>
-                      <td className="px-3 py-2"><span className="rounded-full bg-emergency-100 px-2 py-0.5 text-[12px] font-bold text-emergency-700">{d.blood_group}</span></td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-600">{d.location_name}</td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-600">{d.last_donated_at ? new Date(d.last_donated_at).toLocaleDateString('bn-BD') : '—'}</td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-700">{d.phone}</td>
-                      <td className="px-3 py-2">{d.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅ সক্রিয়</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">নিষ্ক্রিয়</span>}</td>
-                      <td className="px-3 py-2">
-                        <span className="flex gap-1">
-                          <button onClick={() => handleToggleActive(d)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">{d.is_active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}</button>
-                          <button onClick={() => setDel(d)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-emergency-600 hover:bg-emergency-50">মুছুন</button>
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            columns={['নাম', 'গ্রুপ', 'এলাকা', 'শেষ দান', 'ফোন', 'স্ট্যাটাস', 'একশন']}
+            rows={filteredDonors}
+            rowKey={(d) => d.id}
+            emptyMessage="কোনো রক্তদাতা নেই।"
+            renderRow={(d) => (
+              <>
+                <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{d.name}</td>
+                <td className="px-3 py-2"><span className="rounded-full bg-emergency-100 px-2 py-0.5 text-[12px] font-bold text-emergency-700">{d.blood_group}</span></td>
+                <td className="px-3 py-2 text-admin-body text-neutral-600">{d.location_name}</td>
+                <td className="px-3 py-2 text-admin-body text-neutral-600">{d.last_donated_at ? new Date(d.last_donated_at).toLocaleDateString('bn-BD') : '—'}</td>
+                <td className="px-3 py-2 text-admin-body text-neutral-700">{d.phone}</td>
+                <td className="px-3 py-2">{d.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅ সক্রিয়</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">নিষ্ক্রিয়</span>}</td>
+                <td className="px-3 py-2">
+                  <span className="flex gap-1">
+                    <button onClick={() => handleToggleActive(d)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">{d.is_active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}</button>
+                    <button onClick={() => setDel(d)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-emergency-600 hover:bg-emergency-50">মুছুন</button>
+                  </span>
+                </td>
+              </>
+            )}
+          />
           <ConfirmDialog open={!!del} title="রক্তদাতা মুছবেন?" description={del ? `"${del.name}" সফট-ডিলিট হবে।` : ''} confirmLabel="মুছুন" variant="danger" busy={busy} onConfirm={handleDelete} onCancel={() => setDel(null)} />
         </>
       ) : (
