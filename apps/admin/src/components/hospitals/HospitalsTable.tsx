@@ -6,6 +6,7 @@ import { Search, MoreHorizontal, Star } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
 import { hospitalName, HOSPITAL_TYPE_LABEL } from '@/lib/hospital-utils';
 
 type Row = {
@@ -52,7 +53,6 @@ export function HospitalsTable({ hospitals, total, page, perPage, locations, cur
   const [del, setDel] = useState<Row | null>(null);
   const [busy, setBusy] = useState(false);
   const totalPages = Math.max(1, Math.ceil(total / perPage));
-
   const push = (patch: Partial<Props['currentFilters']> & { page?: number }) => {
     const next: Props['currentFilters'] & { page?: number } = { ...currentFilters, ...patch };
     if (patch.q !== undefined || patch.status !== undefined || patch.type !== undefined || patch.locationId !== undefined || patch.emergency !== undefined) {
@@ -110,64 +110,48 @@ export function HospitalsTable({ hospitals, total, page, perPage, locations, cur
         </label>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-admin-border bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-3 py-2">ফটো</th>
-                <th className="px-3 py-2">নাম</th>
-                <th className="px-3 py-2">ধরন</th>
-                <th className="px-3 py-2">এলাকা</th>
-                <th className="px-3 py-2">জরুরি</th>
-                <th className="px-3 py-2">স্ট্যাটাস</th>
-                <th className="px-3 py-2">রেটিং</th>
-                <th className="px-3 py-2">একশন</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-admin-border">
-              {hospitals.length === 0 ? (
-                <tr><td colSpan={8} className="px-6 py-12 text-center text-admin-body text-neutral-500">কোনো হাসপাতাল পাওয়া যায়নি।</td></tr>
-              ) : hospitals.map((h) => (
-                <tr key={h.id} className="hover:bg-neutral-50">
-                  <td className="px-3 py-2">
-                    {h.cover_image_url ? <img src={h.cover_image_url} alt={hospitalName(h)} className="h-9 w-14 rounded object-cover" /> : <span className="flex h-9 w-14 items-center justify-center rounded bg-neutral-100 text-[14px]">🏥</span>}
-                  </td>
-                  <td className="px-3 py-2">
-                    <a href={`/hospitals/${h.id}`} className="block text-admin-body font-medium text-neutral-900 hover:text-brand-600">{hospitalName(h)}</a>
-                    <span className="block text-admin-small text-neutral-400">/{h.slug}</span>
-                  </td>
-                  <td className="px-3 py-2 text-admin-body text-neutral-700">{HOSPITAL_TYPE_LABEL[h.type as keyof typeof HOSPITAL_TYPE_LABEL]?.bn ?? h.type}</td>
-                  <td className="px-3 py-2 text-admin-body text-neutral-600">{h.location_name}</td>
-                  <td className="px-3 py-2">{h.has_emergency_dept ? <span className="rounded-full bg-emergency-100 px-2 py-0.5 text-[11px] font-medium text-emergency-700">🚨 আছে</span> : <span className="text-admin-small text-neutral-400">—</span>}</td>
-                  <td className="px-3 py-2"><StatusBadge status={h.verification_status === 'verified' ? 'verified' : h.verification_status === 'pending' ? 'pending' : 'rejected'} label={h.verification_status} />{h.is_featured && <span className="ml-1">⭐</span>}</td>
-                  <td className="px-3 py-2 text-admin-body text-neutral-700">{h.rating_count > 0 ? <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-accent-400 text-accent-400" />{Number(h.rating_avg).toFixed(1)}</span> : <span className="text-neutral-400">—</span>}</td>
-                  <td className="px-3 py-2">
-                    <div className="relative">
-                      <button onClick={() => setOpenId(openId === h.id ? null : h.id)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50"><MoreHorizontal className="h-4 w-4" /></button>
-                      {openId === h.id && (
-                        <div className="absolute right-0 z-10 mt-1 w-44 rounded-lg border border-admin-border bg-white py-1 shadow-lg">
-                          <a href={`/hospitals/${h.id}`} className="block px-3 py-1.5 text-admin-body text-neutral-700 hover:bg-neutral-50">✏️ এডিট</a>
-                          <button onClick={() => { setDel(h); setOpenId(null); }} className="block w-full px-3 py-1.5 text-left text-admin-body text-emergency-600 hover:bg-neutral-50">🗑️ মুছুন</button>
-                          <a href={`https://vytanexa.app/hospitals/${h.slug}`} target="_blank" rel="noopener noreferrer" className="block px-3 py-1.5 text-admin-body text-brand-600 hover:bg-neutral-50">👁️ দেখুন ↗</a>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-between border-t border-admin-border px-3 py-2 text-admin-small">
-          <span className="text-neutral-500">{total}টি হাসপাতাল · পৃষ্ঠা {page} / {Math.max(1, Math.ceil(total / perPage))}</span>
-          <span className="flex items-center gap-1">
-            <button disabled={page <= 1} onClick={() => push({ page: page - 1 })} className="rounded-md border border-admin-border px-2 py-1 text-neutral-700 hover:bg-neutral-50 disabled:opacity-30">◂</button>
-            <span className="px-2 text-neutral-600">{page} / {Math.max(1, Math.ceil(total / perPage))}</span>
-            <button disabled={page >= Math.max(1, Math.ceil(total / perPage))} onClick={() => push({ page: page + 1 })} className="rounded-md border border-admin-border px-2 py-1 text-neutral-700 hover:bg-neutral-50 disabled:opacity-30">▸</button>
-          </span>
-        </div>
-      </div>
+      <DataTable
+        columns={['ফটো', 'নাম', 'ধরন', 'এলাকা', 'জরুরি', 'স্ট্যাটাস', 'রেটিং', 'একশন']}
+        rows={hospitals}
+        rowKey={(h) => h.id}
+        emptyMessage="কোনো হাসপাতাল পাওয়া যায়নি।"
+        pagination={{
+          total,
+          page,
+          totalPages,
+          itemLabel: 'টি হাসপাতাল',
+          onPrev: () => push({ page: page - 1 }),
+          onNext: () => push({ page: page + 1 }),
+        }}
+        renderRow={(h) => (
+          <>
+            <td className="px-3 py-2">
+              {h.cover_image_url ? <img src={h.cover_image_url} alt={hospitalName(h)} className="h-9 w-14 rounded object-cover" /> : <span className="flex h-9 w-14 items-center justify-center rounded bg-neutral-100 text-[14px]">🏥</span>}
+            </td>
+            <td className="px-3 py-2">
+              <a href={`/hospitals/${h.id}`} className="block text-admin-body font-medium text-neutral-900 hover:text-brand-600">{hospitalName(h)}</a>
+              <span className="block text-admin-small text-neutral-400">/{h.slug}</span>
+            </td>
+            <td className="px-3 py-2 text-admin-body text-neutral-700">{HOSPITAL_TYPE_LABEL[h.type as keyof typeof HOSPITAL_TYPE_LABEL]?.bn ?? h.type}</td>
+            <td className="px-3 py-2 text-admin-body text-neutral-600">{h.location_name}</td>
+            <td className="px-3 py-2">{h.has_emergency_dept ? <span className="rounded-full bg-emergency-100 px-2 py-0.5 text-[11px] font-medium text-emergency-700">🚨 আছে</span> : <span className="text-admin-small text-neutral-400">—</span>}</td>
+            <td className="px-3 py-2"><StatusBadge status={h.verification_status === 'verified' ? 'verified' : h.verification_status === 'pending' ? 'pending' : 'rejected'} label={h.verification_status} />{h.is_featured && <span className="ml-1">⭐</span>}</td>
+            <td className="px-3 py-2 text-admin-body text-neutral-700">{h.rating_count > 0 ? <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-accent-400 text-accent-400" />{Number(h.rating_avg).toFixed(1)}</span> : <span className="text-neutral-400">—</span>}</td>
+            <td className="px-3 py-2">
+              <div className="relative">
+                <button onClick={() => setOpenId(openId === h.id ? null : h.id)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50"><MoreHorizontal className="h-4 w-4" /></button>
+                {openId === h.id && (
+                  <div className="absolute right-0 z-10 mt-1 w-44 rounded-lg border border-admin-border bg-white py-1 shadow-lg">
+                    <a href={`/hospitals/${h.id}`} className="block px-3 py-1.5 text-admin-body text-neutral-700 hover:bg-neutral-50">✏️ এডিট</a>
+                    <button onClick={() => { setDel(h); setOpenId(null); }} className="block w-full px-3 py-1.5 text-left text-admin-body text-emergency-600 hover:bg-neutral-50">🗑️ মুছুন</button>
+                    <a href={`https://vytanexa.app/hospitals/${h.slug}`} target="_blank" rel="noopener noreferrer" className="block px-3 py-1.5 text-admin-body text-brand-600 hover:bg-neutral-50">👁️ দেখুন ↗</a>
+                  </div>
+                )}
+              </div>
+            </td>
+          </>
+        )}
+      />
 
       <ConfirmDialog open={!!del} title="হাসপাতাল মুছবেন?" description={del ? `"${hospitalName(del)}" সফট-ডিলিট হবে।` : ''} confirmLabel="মুছুন" variant="danger" busy={busy} onConfirm={handleDelete} onCancel={() => setDel(null)} />
     </div>

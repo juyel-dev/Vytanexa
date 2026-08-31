@@ -29,7 +29,7 @@ export function DataTable<T>({
   emptyMessage,
   pagination,
 }: {
-  columns: string[];
+  columns: ReactNode[];
   rows: T[];
   rowKey: (row: T) => string;
   renderRow: (row: T) => ReactNode;
@@ -49,8 +49,8 @@ export function DataTable<T>({
         <table className="w-full text-left">
           <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
             <tr>
-              {columns.map((c) => (
-                <th key={c} className="px-3 py-2">
+              {columns.map((c, i) => (
+                <th key={i} className="px-3 py-2">
                   {c}
                 </th>
               ))}

@@ -6,6 +6,7 @@ import { Search, MoreHorizontal, Star } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
 import { doctorName, VERIFICATION_LABEL } from '@/lib/doctor-utils';
 import { categoryName } from '@/lib/category-utils';
 
@@ -233,128 +234,95 @@ export function DoctorsTable({ doctors, total, page, perPage, categories, locati
       )}
 
       {/* table */}
-      <div className="overflow-hidden rounded-xl border border-admin-border bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-3 py-2">
-                  <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-4 w-4 rounded border-admin-border" />
-                </th>
-                <th className="px-3 py-2">ফটো</th>
-                <th className="px-3 py-2">নাম</th>
-                <th className="px-3 py-2">বিভাগ</th>
-                <th className="px-3 py-2">এলাকা</th>
-                <th className="px-3 py-2">স্ট্যাটাস</th>
-                <th className="px-3 py-2">রেটিং</th>
-                <th className="px-3 py-2">একশন</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-admin-border">
-              {doctors.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-admin-body text-neutral-500">
-                    কোনো ডাক্তার পাওয়া যায়নি। ফিল্টার বদলান বা নতুন ডাক্তার যোগ করুন।
-                  </td>
-                </tr>
-              ) : (
-                doctors.map((doc) => {
-                  const st = VERIFICATION_LABEL[doc.verification_status as keyof typeof VERIFICATION_LABEL] ?? VERIFICATION_LABEL.pending;
-                  return (
-                    <tr key={doc.id} className="hover:bg-neutral-50">
-                      <td className="px-3 py-2">
-                        <input type="checkbox" checked={selected.has(doc.id)} onChange={() => toggleOne(doc.id)} className="h-4 w-4 rounded border-admin-border" />
-                      </td>
-                      <td className="px-3 py-2">
-                        {doc.photo_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={doc.photo_url} alt={doctorName(doc)} className="h-9 w-9 rounded-full object-cover" />
-                        ) : (
-                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-[14px]">👤</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        <a href={`/doctors/${doc.id}`} className="block text-admin-body font-medium text-neutral-900 hover:text-brand-600">
-                          {doctorName(doc)}
-                        </a>
-                        <span className="block text-admin-small text-neutral-400">/{doc.slug}</span>
-                      </td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-700">{doc.categories ? categoryName(doc.categories) : catMap.get(doc.category_id) ?? '—'}</td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-600">{doc.primary_location_name ?? '—'}</td>
-                      <td className="px-3 py-2">
-                        <StatusBadge status={st.color} label={st.bn} />
-                        {!doc.is_available && <span className="ml-1 rounded-full bg-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-600">অফলাইন</span>}
-                        {doc.is_featured && <span className="ml-1 text-[12px]">⭐</span>}
-                      </td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-700">
-                        {doc.rating_count > 0 ? (
-                          <span className="inline-flex items-center gap-1">
-                            <Star className="h-3.5 w-3.5 fill-accent-400 text-accent-400" /> {Number(doc.rating_avg).toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="relative">
-                          <button onClick={() => setOpenMenuId(openMenuId === doc.id ? null : doc.id)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50" aria-label="একশন">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                          {openMenuId === doc.id && (
-                            <div className="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-admin-border bg-white py-1 shadow-lg">
-                              <a href={`/doctors/${doc.id}`} className="block px-3 py-1.5 text-admin-body text-neutral-700 hover:bg-neutral-50">
-                                ✏️ এডিট
-                              </a>
-                              <button onClick={() => { setVerifyTarget(doc); setOpenMenuId(null); }} className="block w-full px-3 py-1.5 text-left text-admin-body text-neutral-700 hover:bg-neutral-50">
-                                ✅ ভেরিফাই / সাসপেন্ড
-                              </button>
-                              <a href={`/doctors/${doc.id}`} className="block px-3 py-1.5 text-admin-body text-neutral-700 hover:bg-neutral-50">
-                                🚫 সাসপেন্ড
-                              </a>
-                              <button onClick={() => { setDeleteTarget(doc); setOpenMenuId(null); }} className="block w-full px-3 py-1.5 text-left text-admin-body text-emergency-600 hover:bg-neutral-50">
-                                🗑️ মুছুন
-                              </button>
-                              <a href={`https://vytanexa.app/doctors/${doc.slug}`} target="_blank" rel="noopener noreferrer" className="block px-3 py-1.5 text-admin-body text-brand-600 hover:bg-neutral-50">
-                                👁️ প্রোফাইল দেখুন ↗
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* pagination */}
-        <div className="flex items-center justify-between border-t border-admin-border px-3 py-2 text-admin-small">
-          <span className="text-neutral-500">
-            {total} জন ডাক্তার · পৃষ্ঠা {page} / {totalPages}
-          </span>
-          <span className="flex items-center gap-1">
-            <button
-              disabled={page <= 1}
-              onClick={() => pushFilters({ page: page - 1 })}
-              className="rounded-md border border-admin-border px-2 py-1 text-neutral-700 hover:bg-neutral-50 disabled:opacity-30"
-            >
-              ◂
-            </button>
-            <span className="px-2 text-neutral-600">
-              {page} / {totalPages}
-            </span>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => pushFilters({ page: page + 1 })}
-              className="rounded-md border border-admin-border px-2 py-1 text-neutral-700 hover:bg-neutral-50 disabled:opacity-30"
-            >
-              ▸
-            </button>
-          </span>
-        </div>
-      </div>
+      <DataTable
+        columns={[
+          <input key="select-all" type="checkbox" checked={allSelected} onChange={toggleAll} className="h-4 w-4 rounded border-admin-border" />,
+          'ফটো',
+          'নাম',
+          'বিভাগ',
+          'এলাকা',
+          'স্ট্যাটাস',
+          'রেটিং',
+          'একশন',
+        ]}
+        rows={doctors}
+        rowKey={(d) => d.id}
+        emptyMessage="কোনো ডাক্তার পাওয়া যায়নি। ফিল্টার বদলান বা নতুন ডাক্তার যোগ করুন।"
+        pagination={{
+          total,
+          page,
+          totalPages,
+          itemLabel: ' জন ডাক্তার',
+          onPrev: () => pushFilters({ page: page - 1 }),
+          onNext: () => pushFilters({ page: page + 1 }),
+        }}
+        renderRow={(doc) => {
+          const st = VERIFICATION_LABEL[doc.verification_status as keyof typeof VERIFICATION_LABEL] ?? VERIFICATION_LABEL.pending;
+          return (
+            <>
+              <td className="px-3 py-2">
+                <input type="checkbox" checked={selected.has(doc.id)} onChange={() => toggleOne(doc.id)} className="h-4 w-4 rounded border-admin-border" />
+              </td>
+              <td className="px-3 py-2">
+                {doc.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={doc.photo_url} alt={doctorName(doc)} className="h-9 w-9 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-[14px]">👤</span>
+                )}
+              </td>
+              <td className="px-3 py-2">
+                <a href={`/doctors/${doc.id}`} className="block text-admin-body font-medium text-neutral-900 hover:text-brand-600">
+                  {doctorName(doc)}
+                </a>
+                <span className="block text-admin-small text-neutral-400">/{doc.slug}</span>
+              </td>
+              <td className="px-3 py-2 text-admin-body text-neutral-700">{doc.categories ? categoryName(doc.categories) : catMap.get(doc.category_id) ?? '—'}</td>
+              <td className="px-3 py-2 text-admin-body text-neutral-600">{doc.primary_location_name ?? '—'}</td>
+              <td className="px-3 py-2">
+                <StatusBadge status={st.color} label={st.bn} />
+                {!doc.is_available && <span className="ml-1 rounded-full bg-neutral-200 px-1.5 py-0.5 text-[10px] text-neutral-600">অফলাইন</span>}
+                {doc.is_featured && <span className="ml-1 text-[12px]">⭐</span>}
+              </td>
+              <td className="px-3 py-2 text-admin-body text-neutral-700">
+                {doc.rating_count > 0 ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-accent-400 text-accent-400" /> {Number(doc.rating_avg).toFixed(1)}
+                  </span>
+                ) : (
+                  <span className="text-neutral-400">—</span>
+                )}
+              </td>
+              <td className="px-3 py-2">
+                <div className="relative">
+                  <button onClick={() => setOpenMenuId(openMenuId === doc.id ? null : doc.id)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50" aria-label="একশন">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                  {openMenuId === doc.id && (
+                    <div className="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-admin-border bg-white py-1 shadow-lg">
+                      <a href={`/doctors/${doc.id}`} className="block px-3 py-1.5 text-admin-body text-neutral-700 hover:bg-neutral-50">
+                        ✏️ এডিট
+                      </a>
+                      <button onClick={() => { setVerifyTarget(doc); setOpenMenuId(null); }} className="block w-full px-3 py-1.5 text-left text-admin-body text-neutral-700 hover:bg-neutral-50">
+                        ✅ ভেরিফাই / সাসপেন্ড
+                      </button>
+                      <a href={`/doctors/${doc.id}`} className="block px-3 py-1.5 text-admin-body text-neutral-700 hover:bg-neutral-50">
+                        🚫 সাসপেন্ড
+                      </a>
+                      <button onClick={() => { setDeleteTarget(doc); setOpenMenuId(null); }} className="block w-full px-3 py-1.5 text-left text-admin-body text-emergency-600 hover:bg-neutral-50">
+                        🗑️ মুছুন
+                      </button>
+                      <a href={`https://vytanexa.app/doctors/${doc.slug}`} target="_blank" rel="noopener noreferrer" className="block px-3 py-1.5 text-admin-body text-brand-600 hover:bg-neutral-50">
+                        👁️ প্রোফাইল দেখুন ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </td>
+            </>
+          );
+        }}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}
