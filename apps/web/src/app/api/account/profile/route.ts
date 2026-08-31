@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@vytanexa/database';
+import { profileUpdateSchema } from '@/lib/validations/account';
 
 /**
  * PATCH /api/account/profile — VYTANEXA-BLUEPRINT.md § S17 "Profile
@@ -25,18 +26,18 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, email, preferred_language, default_location_id } = body;
-
-  if (name !== undefined && (!name || name.trim().length < 2)) {
-    return NextResponse.json({ error: 'নাম কমপক্ষে ২ অক্ষরের হতে হবে' }, { status: 400 });
+  const parsed = profileUpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? 'অবৈধ ডেটা' },
+      { status: 400 }
+    );
   }
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: 'ইমেইল সঠিক নয়' }, { status: 400 });
-  }
+  const { name, email, preferred_language, default_location_id } = parsed.data;
 
   const updates: Database['public']['Tables']['users']['Update'] = {};
-  if (name !== undefined) updates.name = name.trim();
-  if (email !== undefined) updates.email = email?.trim() || null;
+  if (name !== undefined) updates.name = name;
+  if (email !== undefined) updates.email = email || null;
   if (preferred_language !== undefined) updates.preferred_language = preferred_language;
   if (default_location_id !== undefined) updates.default_location_id = default_location_id;
 
