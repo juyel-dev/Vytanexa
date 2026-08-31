@@ -1348,19 +1348,30 @@ reasoning/reference doc; this section is the actual execution order.
       rate-limit code above.
 
 ### 8.6 — Architecture leverage points
-- [ ] Extract a shared `<DataTable>` component for `apps/admin`
-      (columns/rows/pagination/empty-state/sort as props). Migrate the
-      14 existing hand-rolled tables one at a time, each its own
-      commit: `AdminsManager, AdsManager, AmbulanceManager,
-      BloodManager, CategoriesManager, MenuManager, LeadsManager,
-      LocationsManager, NotificationsManager, QaManager,
-      SubscriptionsManager, ArticlesTable, DoctorsTable,
-      HospitalsTable`.
-- [ ] Add `loading.tsx` + `error.tsx` + a branded `not-found.tsx` at
+- [x] Extract a shared `<DataTable>` component for `apps/admin`
+      (columns/rows/pagination/empty-state as props; `columns` widened
+      to `ReactNode[]` mid-migration for DoctorsTable's select-all
+      checkbox header). **Correction found during execution:** the
+      original "14 tables" list was filename-pattern-based, not
+      verified — 5 of the 14 turned out to be genuinely different UI
+      patterns (not tables) and were correctly left alone instead of
+      forced onto DataTable: `CategoriesManager`/`MenuManager`
+      (reorderable `<ul>` lists), `LocationsManager` (recursive tree
+      view), `NotificationsManager`/`QaManager` (card lists). The real
+      count was 9, all migrated, each its own commit: `ArticlesTable,
+      HospitalsTable, DoctorsTable, AdminsManager, AdsManager,
+      AmbulanceManager, BloodManager, LeadsManager,
+      SubscriptionsManager`.
+- [x] Add `loading.tsx` + `error.tsx` + a branded `not-found.tsx` at
       `apps/admin/src/app/(dashboard)/` layout level — covers all 33
       dashboard routes via Next's layout-scoped boundary inheritance.
 - [x] Consolidate `api/account/profile/route.ts` onto a Zod schema in
       `lib/validations/` matching every other route's convention.
+
+**Phase 8 is now fully complete** — every item across 8.1–8.6 shipped,
+typechecked, build-verified, and pushed. 8.7's deferred list and the
+TopBar logo-image swap sub-item (noted under 8.1) remain open by
+design, not oversight.
 
 ### 8.7 — Deferred (explicitly not now, noted so they don't get lost)
 - Accessibility pass (aria coverage) — batch into a post-launch
