@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
 
 type Row = {
   id: string;
@@ -85,37 +86,32 @@ export function AdsManager({ ads }: { ads: Row[] }) {
         <button onClick={openCreate} className="h-10 rounded-lg bg-brand-600 px-4 text-admin-body font-semibold text-white hover:bg-brand-700">+ নতুন বিজ্ঞাপন</button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-admin-border bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
-              <tr><th className="px-3 py-2">থাম্বনেইল</th><th className="px-3 py-2">স্পন্সর</th><th className="px-3 py-2">প্লেসমেন্ট</th><th className="px-3 py-2">সক্রিয়</th><th className="px-3 py-2">ভিউ</th><th className="px-3 py-2">ক্লিক</th><th className="px-3 py-2">CTR</th><th className="px-3 py-2">একশন</th></tr>
-            </thead>
-            <tbody className="divide-y divide-admin-border">
-              {ads.length === 0 ? <tr><td colSpan={8} className="px-6 py-10 text-center text-admin-body text-neutral-500">কোনো বিজ্ঞাপন নেই।</td></tr> : ads.map((r) => {
-                const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(1) : '0.0';
-                return (
-                  <tr key={r.id} className="hover:bg-neutral-50">
-                    <td className="px-3 py-2"><img src={r.image_url} alt={r.sponsor_name} className="h-9 w-14 rounded object-cover" /></td>
-                    <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{r.sponsor_name}</td>
-                    <td className="px-3 py-2 text-admin-small text-neutral-600">{r.placement === 'homepage_banner' ? 'হোমপেজ ব্যানার' : 'নেটিভ ফিড'}</td>
-                    <td className="px-3 py-2">{r.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">—</span>}</td>
-                    <td className="px-3 py-2 text-admin-body text-neutral-700">{r.impressions}</td>
-                    <td className="px-3 py-2 text-admin-body text-neutral-700">{r.clicks}</td>
-                    <td className="px-3 py-2 text-admin-small text-neutral-600">{ctr}%</td>
-                    <td className="px-3 py-2">
-                      <span className="flex gap-1">
-                        <button onClick={() => openEdit(r)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50"><Pencil className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => setDel(r)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-emergency-600 hover:bg-emergency-50"><Trash2 className="h-3.5 w-3.5" /></button>
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={['থাম্বনেইল', 'স্পন্সর', 'প্লেসমেন্ট', 'সক্রিয়', 'ভিউ', 'ক্লিক', 'CTR', 'একশন']}
+        rows={ads}
+        rowKey={(r) => r.id}
+        emptyMessage="কোনো বিজ্ঞাপন নেই।"
+        renderRow={(r) => {
+          const ctr = r.impressions > 0 ? ((r.clicks / r.impressions) * 100).toFixed(1) : '0.0';
+          return (
+            <>
+              <td className="px-3 py-2"><img src={r.image_url} alt={r.sponsor_name} className="h-9 w-14 rounded object-cover" /></td>
+              <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{r.sponsor_name}</td>
+              <td className="px-3 py-2 text-admin-small text-neutral-600">{r.placement === 'homepage_banner' ? 'হোমপেজ ব্যানার' : 'নেটিভ ফিড'}</td>
+              <td className="px-3 py-2">{r.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">—</span>}</td>
+              <td className="px-3 py-2 text-admin-body text-neutral-700">{r.impressions}</td>
+              <td className="px-3 py-2 text-admin-body text-neutral-700">{r.clicks}</td>
+              <td className="px-3 py-2 text-admin-small text-neutral-600">{ctr}%</td>
+              <td className="px-3 py-2">
+                <span className="flex gap-1">
+                  <button onClick={() => openEdit(r)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50"><Pencil className="h-3.5 w-3.5" /></button>
+                  <button onClick={() => setDel(r)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-emergency-600 hover:bg-emergency-50"><Trash2 className="h-3.5 w-3.5" /></button>
+                </span>
+              </td>
+            </>
+          );
+        }}
+      />
 
       {modal !== undefined && (
         <div className="fixed inset-0 z-[700] flex items-center justify-center p-4">

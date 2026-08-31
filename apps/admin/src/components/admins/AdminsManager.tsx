@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DataTable } from '@/components/ui/DataTable';
 
 type AdminRow = { id: string; name: string; email: string; role: string; is_active: boolean; last_login_at: string | null; created_at: string };
 
@@ -90,32 +91,27 @@ export function AdminsManager({ admins }: { admins: AdminRow[] }) {
         <button onClick={() => setShowNew(true)} className="h-10 rounded-lg bg-brand-600 px-4 text-admin-body font-semibold text-white hover:bg-brand-700">+ নতুন অ্যাডমিন</button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-admin-border bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
-              <tr><th className="px-3 py-2">নাম</th><th className="px-3 py-2">ইমেইল</th><th className="px-3 py-2">রোল</th><th className="px-3 py-2">সক্রিয়</th><th className="px-3 py-2">শেষ লগইন</th><th className="px-3 py-2">একশন</th></tr>
-            </thead>
-            <tbody className="divide-y divide-admin-border">
-              {admins.map((a) => (
-                <tr key={a.id} className="hover:bg-neutral-50">
-                  <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{a.name}</td>
-                  <td className="px-3 py-2 text-admin-small text-neutral-600">{a.email}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${a.role === 'super_admin' ? 'bg-purple-100 text-purple-700' : a.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'}`}>{a.role}</span></td>
-                  <td className="px-3 py-2">{a.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">—</span>}</td>
-                  <td className="px-3 py-2 text-admin-small text-neutral-500">{a.last_login_at ? new Date(a.last_login_at).toLocaleDateString('bn-BD') : '—'}</td>
-                  <td className="px-3 py-2">
-                    <span className="flex gap-1">
-                      <button onClick={() => { setEdit(a); setEditRole(a.role); }} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">✏️</button>
-                      <button onClick={() => setSuspendTarget(a)} className={`rounded-md border px-2 py-1 text-admin-small ${a.is_active ? 'border-emergency-200 bg-emergency-50 text-emergency-700 hover:bg-emergency-100' : 'border-life-200 bg-life-50 text-life-700 hover:bg-life-100'}`}>{a.is_active ? '🚫' : '✅'}</button>
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={['নাম', 'ইমেইল', 'রোল', 'সক্রিয়', 'শেষ লগইন', 'একশন']}
+        rows={admins}
+        rowKey={(a) => a.id}
+        emptyMessage="কোনো অ্যাডমিন নেই।"
+        renderRow={(a) => (
+          <>
+            <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{a.name}</td>
+            <td className="px-3 py-2 text-admin-small text-neutral-600">{a.email}</td>
+            <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${a.role === 'super_admin' ? 'bg-purple-100 text-purple-700' : a.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'}`}>{a.role}</span></td>
+            <td className="px-3 py-2">{a.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">—</span>}</td>
+            <td className="px-3 py-2 text-admin-small text-neutral-500">{a.last_login_at ? new Date(a.last_login_at).toLocaleDateString('bn-BD') : '—'}</td>
+            <td className="px-3 py-2">
+              <span className="flex gap-1">
+                <button onClick={() => { setEdit(a); setEditRole(a.role); }} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">✏️</button>
+                <button onClick={() => setSuspendTarget(a)} className={`rounded-md border px-2 py-1 text-admin-small ${a.is_active ? 'border-emergency-200 bg-emergency-50 text-emergency-700 hover:bg-emergency-100' : 'border-life-200 bg-life-50 text-life-700 hover:bg-life-100'}`}>{a.is_active ? '🚫' : '✅'}</button>
+              </span>
+            </td>
+          </>
+        )}
+      />
 
       <div className="rounded-lg border border-admin-border bg-neutral-50 p-4">
         <h3 className="text-admin-small font-medium text-neutral-700">রোল ম্যাট্রিক্স (A02)</h3>
