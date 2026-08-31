@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
+import { DataTable } from '@/components/ui/DataTable';
 
 type Plan = { id: string; tier: string; name_translations: { bn?: string; en?: string } | null; applies_to: string[]; price_monthly: number; price_yearly: number | null; benefits: Record<string, unknown> | null; is_active: boolean };
 type Sub = { id: string; entity_type: string; entity_id: string; entity_name: string; plan_id: string; status: string; expires_at: string | null; created_at: string; subscription_plans: { tier: string; name_translations: { bn?: string } | null } | null };
@@ -132,26 +133,21 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
           <div className="flex justify-end">
             <button onClick={() => setAssignOpen(true)} className="h-9 rounded-lg bg-brand-600 px-4 text-admin-body font-semibold text-white hover:bg-brand-700">+ সাবস্ক্রিপশন যোগ করুন</button>
           </div>
-          <div className="overflow-hidden rounded-xl border border-admin-border bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-neutral-50 text-admin-small uppercase tracking-wide text-neutral-500">
-                  <tr><th className="px-3 py-2">এন্টিটি</th><th className="px-3 py-2">প্ল্যান</th><th className="px-3 py-2">স্ট্যাটাস</th><th className="px-3 py-2">মেয়াদ শেষ</th><th className="px-3 py-2">একশন</th></tr>
-                </thead>
-                <tbody className="divide-y divide-admin-border">
-                  {subscriptions.length === 0 ? <tr><td colSpan={5} className="px-6 py-8 text-center text-admin-body text-neutral-500">কোনো সক্রিয় সাবস্ক্রিপশন নেই।</td></tr> : subscriptions.map((s) => (
-                    <tr key={s.id} className="hover:bg-neutral-50">
-                      <td className="px-3 py-2"><span className="block text-admin-body font-medium text-neutral-900">{s.entity_name}</span><span className="block text-admin-small text-neutral-400">{s.entity_type} · {s.entity_id.slice(0, 8)}</span></td>
-                      <td className="px-3 py-2 text-admin-body text-neutral-700">{TIER_EMOJI[s.subscription_plans?.tier ?? ''] ?? ''} {s.subscription_plans?.tier ?? s.plan_id.slice(0, 6)}</td>
-                      <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${s.status === 'active' ? 'bg-life-100 text-life-700' : 'bg-neutral-100 text-neutral-600'}`}>{s.status}</span></td>
-                      <td className="px-3 py-2 text-admin-small text-neutral-500">{s.expires_at ? new Date(s.expires_at).toLocaleDateString('bn-BD') : '—'}</td>
-                      <td className="px-3 py-2"><button onClick={() => handleCancelSub(s.id)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-emergency-600 hover:bg-emergency-50">✕ বাতিল</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            columns={['এন্টিটি', 'প্ল্যান', 'স্ট্যাটাস', 'মেয়াদ শেষ', 'একশন']}
+            rows={subscriptions}
+            rowKey={(s) => s.id}
+            emptyMessage="কোনো সক্রিয় সাবস্ক্রিপশন নেই।"
+            renderRow={(s) => (
+              <>
+                <td className="px-3 py-2"><span className="block text-admin-body font-medium text-neutral-900">{s.entity_name}</span><span className="block text-admin-small text-neutral-400">{s.entity_type} · {s.entity_id.slice(0, 8)}</span></td>
+                <td className="px-3 py-2 text-admin-body text-neutral-700">{TIER_EMOJI[s.subscription_plans?.tier ?? ''] ?? ''} {s.subscription_plans?.tier ?? s.plan_id.slice(0, 6)}</td>
+                <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${s.status === 'active' ? 'bg-life-100 text-life-700' : 'bg-neutral-100 text-neutral-600'}`}>{s.status}</span></td>
+                <td className="px-3 py-2 text-admin-small text-neutral-500">{s.expires_at ? new Date(s.expires_at).toLocaleDateString('bn-BD') : '—'}</td>
+                <td className="px-3 py-2"><button onClick={() => handleCancelSub(s.id)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-emergency-600 hover:bg-emergency-50">✕ বাতিল</button></td>
+              </>
+            )}
+          />
         </>
       )}
 
