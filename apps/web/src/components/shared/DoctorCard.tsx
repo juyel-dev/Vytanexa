@@ -105,12 +105,22 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
         ) : (
           <span className="col-span-1" />
         )}
-        <a
-          href={`tel:${doctor.whatsapp_number ?? ''}`}
-          className="flex h-10 items-center justify-center gap-1 rounded-md bg-brand-600 text-[13px] font-semibold text-white"
-        >
-          <Phone className="h-4 w-4" /> কল করুন
-        </a>
+        {doctor.whatsapp_number ? (
+          // Card-level data only has whatsapp_number (no separate
+          // doctor-level phone column — real voice numbers live
+          // per-chamber, not loaded here). Reusing it for tel: is a
+          // deliberate approximation, not a real phone field — so the
+          // button only renders when there's actually a number to
+          // dial, instead of producing a dead `tel:` link.
+          <a
+            href={`tel:${doctor.whatsapp_number}`}
+            className="flex h-10 items-center justify-center gap-1 rounded-md bg-brand-600 text-[13px] font-semibold text-white"
+          >
+            <Phone className="h-4 w-4" /> কল করুন
+          </a>
+        ) : (
+          <span className="col-span-1" />
+        )}
         <Link
           href={`/doctors/${doctor.slug}`}
           className="flex h-10 items-center justify-center rounded-md border border-neutral-200 text-[13px] font-semibold text-neutral-700"
