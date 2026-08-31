@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/supabase/auth-verify';
 import { writeAudit } from '@/lib/audit';
 import { articleUpdateSchema } from '@/lib/validations/articles';
 import { slugify } from '@/lib/location-utils';
+import { sanitizeContentHtml } from '@/lib/sanitize-html';
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const session = await requireRole('admin');
@@ -26,10 +27,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (body.cover_image_url !== undefined) updates.cover_image_url = body.cover_image_url || null;
   if (body.category !== undefined) updates.category = body.category || null;
   if (body.body_html !== undefined) {
-    updates.body_html = body.body_html;
+    const bodyHtml = sanitizeContentHtml(body.body_html ?? '');
+    updates.body_html = bodyHtml;
     // recalc read time if not explicitly provided
     if (body.read_time_minutes === undefined) {
-      const words = (body.body_html ?? '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+      const words = bodyHtml.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
       updates.read_time_minutes = Math.max(1, Math.ceil(words / 200));
     }
   }

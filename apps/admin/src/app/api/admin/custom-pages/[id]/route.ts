@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/supabase/auth-verify';
 import { writeAudit } from '@/lib/audit';
 import { customPageUpdateSchema } from '@/lib/validations/custom-pages';
 import { slugify } from '@/lib/location-utils';
+import { sanitizeCustomPageBlocks } from '@/lib/sanitize-html';
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const session = await requireRole('admin');
@@ -19,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const updates: Record<string, unknown> = {};
   if (body.title !== undefined) updates.title = body.title.trim();
-  if (body.blocks !== undefined) updates.blocks = body.blocks as never;
+  if (body.blocks !== undefined) updates.blocks = sanitizeCustomPageBlocks(body.blocks) as never;
   if (body.show_in_menu !== undefined) updates.show_in_menu = body.show_in_menu;
   if (body.menu_icon !== undefined) updates.menu_icon = body.menu_icon ?? null;
   if (body.menu_order !== undefined) updates.menu_order = body.menu_order;

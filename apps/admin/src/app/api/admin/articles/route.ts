@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/supabase/auth-verify';
 import { writeAudit } from '@/lib/audit';
 import { articleCreateSchema } from '@/lib/validations/articles';
 import { slugify } from '@/lib/location-utils';
+import { sanitizeContentHtml } from '@/lib/sanitize-html';
 
 export async function POST(request: Request) {
   const session = await requireRole('admin');
@@ -31,9 +32,10 @@ export async function POST(request: Request) {
   if (clash) return NextResponse.json({ error: `স্লাগ "${slug}" আগে থেকেই আছে` }, { status: 409 });
 
   // auto read time if not provided: words/200
+  const bodyHtml = sanitizeContentHtml(body.body_html ?? '');
   let readTime = body.read_time_minutes ?? null;
   if (readTime == null) {
-    const words = (body.body_html ?? '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+    const words = bodyHtml.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
     readTime = Math.max(1, Math.ceil(words / 200));
   }
 
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
       title_translations: body.title_translations,
       cover_image_url: body.cover_image_url || null,
       category: body.category || null,
-      body_html: body.body_html,
+      body_html: bodyHtml,
       author_name: body.author_name || null,
       author_doctor_id: body.author_doctor_id ?? null,
       tags: [...new Set((body.tags ?? []).map((s: string) => s.trim()).filter(Boolean))],

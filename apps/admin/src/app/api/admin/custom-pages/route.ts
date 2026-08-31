@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/supabase/auth-verify';
 import { writeAudit } from '@/lib/audit';
 import { customPageCreateSchema } from '@/lib/validations/custom-pages';
 import { slugify } from '@/lib/location-utils';
+import { sanitizeCustomPageBlocks } from '@/lib/sanitize-html';
 
 /**
  * POST /api/admin/custom-pages — create custom page (A09). Auto-slug from title, unique.
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     .insert({
       title: body.title.trim(),
       slug,
-      blocks: (body.blocks ?? []) as never,
+      blocks: sanitizeCustomPageBlocks(body.blocks ?? []) as never,
       show_in_menu: body.show_in_menu ?? false,
       menu_icon: body.menu_icon ?? null,
       menu_order: body.menu_order ?? 0,
