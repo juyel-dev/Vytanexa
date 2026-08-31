@@ -893,58 +893,40 @@ per DB Part 5 design), toast "✅ হোমপেজ আপডেট হয়�
 
 ### Theme Editor (`/god-mode/theme`)
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  থিম এডিটর                      [👁️ লাইভ প্রিভিউ] [প্রকাশ করুন]│
-├───────────────────────┬───────────────────────────────────┤
-│ ব্র্যান্ড রং              │                                   │
-│  প্রাইমারি (Brand)        │      [LIVE IFRAME PREVIEW —       │
-│  [🟦 #1756C8] [পরিবর্তন] │       same mechanism as Homepage  │
-│                          │       Control above]              │
-│  সাকসেস/ভেরিফাইড (Life)  │                                   │
-│  [🟩 #0CAF74] [পরিবর্তন] │                                   │
-│                          │                                   │
-│  জরুরি (Emergency)       │                                   │
-│  [🟥 #DC2626] [পরিবর্তন] │                                   │
-│                          │                                   │
-│  ─────────────────────  │                                   │
-│  লোগো ও আইকন              │                                   │
-│  [MediaUploader: Logo]   │                                   │
-│  [MediaUploader: Favicon]│                                   │
-│                          │                                   │
-│  [🔄 ডিফল্ট রঙে ফিরে যান] │                                   │
-└───────────────────────┴───────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│  থিম এডিটর                        [প্রকাশ করুন]│
+├───────────────────────────────────────────────┤
+│  লোগো ও আইকন                                  │
+│  [Logo URL:    _______________________ ]      │
+│  [Favicon URL: _______________________ ]      │
+└───────────────────────────────────────────────┘
 ```
 
-### Deliberately Constrained, Not a Full Design Tool
-Color pickers offer **swatch + hex input**, but only for the ~4
-semantic brand tokens defined in S01 (`brand`, `life`, `emergency`,
-`accent`) — NOT every single design token (neutrals, spacing,
-typography scale stay code-defined, not admin-editable). This is an
-intentional god-mode boundary: full design-system-level control from
-a UI would risk an operator accidentally breaking contrast ratios,
-touch-target sizes, or visual consistency across 22 screens of
-carefully-specified UI (S01-S22). Brand color re-tinting is safe and
-valuable (rebranding, seasonal campaigns); token-level chaos is not
-— this line is drawn deliberately, matching your own instruction
-"এমন কিছু একদম না যেন ঝামেলা হয়।"
+### Scope Trimmed — TODO.md Phase 8.1 (2026-08-31)
+This section originally specified a 4-color brand-token editor
+(brand/life/emergency/accent) with a live-iframe preview and a WCAG
+contrast checker — all of that was built, then removed. Reason: an
+independent audit (`DEEPDIVE-REFACTOR-PLAN.md` finding H1) found the
+write side worked (save succeeded, contrast checker ran, toast
+confirmed) but **the read side never existed** — `apps/web`'s root
+layout never consumed `app_settings.theme_colors`, because Tailwind
+utility classes are compiled statically from
+`packages/config/design-tokens.js` at build time, not from runtime CSS
+variables. The feature looked fully functional in the admin panel
+while doing nothing on the live site.
 
-### Contrast Safety Check
-On any color change, before allowing publish: an automated check
-computes contrast ratio of the new brand color against white text
-(used on buttons/FAB/badges throughout S01-S22) — if below WCAG AA
-(4.5:1), a warning appears: **"⚠️ এই রং বাটনের সাদা লেখার সাথে
-পড়তে কষ্ট হতে পারে। তবুও প্রকাশ করবেন?"** — not a hard block (your
-call is still respected), but an informed one.
-
-### How Theme Changes Actually Apply (Technical Note)
-`app_settings.theme_colors` JSONB is read at request-time by the
-user-app's root layout and injected as CSS custom property overrides
-(`--color-brand-600: <admin value>`) — meaning a theme change is
-**instant on next page load**, no rebuild/redeploy needed. This is
-precisely why the ISR revalidate window for the Home page (S04:
-5 minutes) matters — worst case, a just-published theme change takes
-up to 5 minutes to reach already-cached pages; acceptable trade-off
-for the performance benefit ISR gives everywhere else.
+Decision: don't build the CSS-variable pipeline to make it real —
+brand colors change once (at launch, maybe at a rebrand), and that
+cost is better paid as a one-time code change than as permanent
+runtime-theming infrastructure. Brand colors stay code-level in
+`packages/config/design-tokens.js`. Logo/favicon are different (real
+recurring reason to change — seasonal campaigns, events) and were kept
++ actually wired: `app_settings.logo_url` / `favicon_url` are now read
+by `apps/web/src/app/layout.tsx`'s `generateMetadata()` for the
+favicon; the header wordmark → logo-image swap (`TopBar.tsx`) is a
+separate, deferred sub-item (needs prop-threading through every
+`<TopBarHome />` call site, more invasive than the favicon change) —
+tracked, not forgotten.
 
 ---
 

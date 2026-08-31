@@ -5,6 +5,7 @@ import { getMessages } from 'next-intl/server';
 import './globals.css';
 import { cookies } from 'next/headers';
 import { isValidLocale, defaultLocale } from '@/i18n/config';
+import { createClient } from '@/lib/supabase/server';
 
 // Self-hosted via next/font (no external Google Fonts network request
 // at runtime — S22 performance budget). Exposed as CSS variables so
@@ -31,11 +32,26 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: 'Vytanexa — আপনার স্বাস্থ্য, আপনার সংযোগ',
-  description:
-    'Vytanexa — নিকটবর্তী ডাক্তার, হাসপাতাল, ল্যাব টেস্ট ও জরুরি স্বাস্থ্যসেবা খুঁজুন। Connect. Care. Live.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // TODO.md Phase 8.1: God Mode's Theme Editor (logo/favicon half —
+  // the color-picker half was cut, confirmed dead) writes
+  // app_settings.favicon_url; this is the read side that was missing
+  // entirely before, the reason that feature did nothing on the live
+  // site. Falls back to the static app/icon.svg file convention when
+  // no custom favicon is set (i.e. today, for everyone, until an
+  // admin actually sets one) by omitting `icons` rather than pointing
+  // it at a hardcoded default.
+  const supabase = createClient();
+  const { data } = await supabase.from('app_settings').select('favicon_url').eq('id', 1).maybeSingle();
+  const faviconUrl = (data as { favicon_url?: string | null } | null)?.favicon_url;
+
+  return {
+    title: 'Vytanexa — আপনার স্বাস্থ্য, আপনার সংযোগ',
+    description:
+      'Vytanexa — নিকটবর্তী ডাক্তার, হাসপাতাল, ল্যাব টেস্ট ও জরুরি স্বাস্থ্যসেবা খুঁজুন। Connect. Care. Live.',
+    ...(faviconUrl ? { icons: { icon: faviconUrl } } : {}),
+  };
+}
 
 export default async function RootLayout({
   children,
