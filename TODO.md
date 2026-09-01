@@ -1436,14 +1436,19 @@ half-verified.
       (consistency, not security — route was already IDOR-safe).
       LocationPickerSheet confirmed well-built, GPS auto-detect
       honestly deferred rather than faked.
-- [ ] 9.3b — S20 Notifications Center · Announcement Banner
+- [x] 9.3b — S20 Notifications Center · Announcement Banner
       (`/notifications`) full deep-dive — the actual unread screen
       this slot was supposed to cover. Read the page, its query, and
       whatever renders the announcement banner. Check `emergency`
       notifications really can't be dismissed/hidden (matching the
       "always-on" enforcement already confirmed server-side in
       notification-prefs), and check mark-read/mark-all-read routes
-      for the same IDOR/validation discipline seen elsewhere.
+      for the same IDOR/validation discipline seen elsewhere. **Done
+      — commit `58685fd`.** Everything checked out well-built (guest/
+      signed-in read-state split matches spec exactly, IDOR-safe,
+      real FK-backed validation, AnnouncementBanner correctly reused
+      from S04). One real gap fixed: `mark-all-read` had no cap on
+      the client-supplied array size.
 - [ ] 9.4 — A03 Admin Dashboard (`/`) full deep-dive. Read the
       summary/attention-card queries. Check for N+1 patterns (this is
       the page most likely to have them — dashboards tend to fire one
