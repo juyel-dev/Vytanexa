@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLocationStore } from '@/stores/location-store';
+import { LANGUAGE_NAMES } from '@/lib/i18n';
 import {
   Heart,
   User,
@@ -47,18 +49,29 @@ const APP_VERSION = '1.0.0';
  */
 export function MorePageClient({
   currentUser,
+  language,
   customPages,
   showQA,
   showPolls,
   hasUnreadNotifications,
 }: {
   currentUser: CurrentUserView;
+  language: string;
   customPages: CustomPageLink[];
   showQA: boolean;
   showPolls: boolean;
   hasUnreadNotifications: boolean;
 }) {
   const router = useRouter();
+  // TODO.md Phase 9.2: the "ভাষা"/"অবস্থান" rows below used to show a
+  // hardcoded "বাংলা" and no value at all, respectively — regardless
+  // of what the user had actually set. `language` comes from the
+  // server (users.preferred_language, same source SettingsClient.tsx
+  // uses); `districtName` is read the same way SettingsClient reads
+  // it — client-side from the location store, since that (not
+  // users.default_location_id, a separate account-profile field) is
+  // the "current active location" concept used app-wide.
+  const { districtName } = useLocationStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -136,8 +149,8 @@ export function MorePageClient({
       )}
 
       <MenuSection title="সেটিংস">
-        <MenuRow href="/settings" icon={Globe} label="ভাষা" value="বাংলা" />
-        <MenuRow href="/settings" icon={MapPin} label="অবস্থান" />
+        <MenuRow href="/settings" icon={Globe} label="ভাষা" value={LANGUAGE_NAMES[language] ?? language} />
+        <MenuRow href="/settings" icon={MapPin} label="অবস্থান" value={districtName ?? 'নির্বাচন করুন'} />
         <MenuRow
           href="/notifications"
           icon={Bell}

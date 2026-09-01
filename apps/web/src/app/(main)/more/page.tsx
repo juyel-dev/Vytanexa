@@ -37,6 +37,7 @@ export default async function MorePage() {
             ? { name: currentUser.profile.name, phone: currentUser.profile.phone }
             : null
         }
+        language={currentUser?.profile.preferred_language ?? 'bn'}
         customPages={customPages}
         showQA={showQA}
         showPolls={showPolls}

@@ -9,6 +9,16 @@
 import type { Json } from '@vytanexa/database';
 
 /**
+ * TODO.md Phase 9.2: extracted from SettingsClient.tsx when
+ * MorePageClient.tsx needed the same map (its "ভাষা" preview value
+ * was hardcoded to "বাংলা" regardless of the user's actual
+ * preferred_language — this is the fix). The only three values
+ * preferred_language is ever written as, per
+ * onboarding/LanguageStep.tsx and validations/account.ts's Zod schema.
+ */
+export const LANGUAGE_NAMES: Record<string, string> = { bn: 'বাংলা', en: 'English', hi: 'हिन्दी' };
+
+/**
  * Reads a `*_translations` JSONB field (DATABASE-SCHEMA.md convention,
  * every content table) with the fallback chain specified in
  * VYTANEXA-BLUEPRINT.md § S22 "i18n Implementation":
