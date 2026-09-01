@@ -1383,9 +1383,8 @@ design, not oversight.
 - Realtime for admin Leads/Notifications — poll-on-nav stays the
   permanent choice at this scale, revisit only if it becomes a real
   operational pain point.
-- Open items not yet individually deep-read: S07 Doctor Profile, S16
-  Community hub, S20 Settings, A03 Dashboard, A10 moderation screens —
-  do a dedicated pass before considering any of these "audited."
+- Open items from Phase 8.7 planning — **all completed in Phase 9**:
+  S07/S16/S20 (web), A03/A10 (admin) all individually deep-read.
 
 ## PHASE 9 — Remaining Deep-Dive Coverage (checklist, follow in order)
 Per explicit instruction: systematic, not random — work this list top

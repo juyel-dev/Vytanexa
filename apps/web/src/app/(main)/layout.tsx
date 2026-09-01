@@ -1,5 +1,7 @@
 import { MainChrome } from '@/components/layout/MainChrome';
 import { FirstRunGate } from '@/components/layout/FirstRunGate';
+import { LogoProvider } from '@/components/layout/LogoContext';
+import { createClient } from '@/lib/supabase/server';
 import dynamic from 'next/dynamic';
 
 // Code-split: EmergencyFAB pulls in the browser Supabase client for its
@@ -22,16 +24,20 @@ const EmergencyFAB = dynamic(
  * pathname-conditional (see MainChrome) — hidden on detail pages per
  * S07's sticky-bottom-action-bar requirement.
  */
-export default function MainLayout({
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createClient();
+  const { data } = await supabase.from('app_settings').select('logo_url').eq('id', 1).maybeSingle();
+  const logoUrl = (data as { logo_url?: string | null } | null)?.logo_url ?? null;
+
   return (
-    <>
+    <LogoProvider logoUrl={logoUrl}>
       <FirstRunGate />
       <MainChrome>{children}</MainChrome>
       <EmergencyFAB />
-    </>
+    </LogoProvider>
   );
 }

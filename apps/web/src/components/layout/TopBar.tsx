@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, Bell, ChevronLeft } from 'lucide-react';
+import { useLogoUrl } from './LogoContext';
 
 /**
  * Top App Bar — VYTANEXA-BLUEPRINT.md § S02 § 2.2
@@ -12,12 +14,17 @@ import { Search, Bell, ChevronLeft } from 'lucide-react';
  */
 
 export function TopBarHome() {
+  const logoUrl = useLogoUrl();
   return (
     <header className="sticky top-0 z-topbar flex h-topbar items-center justify-between border-b border-neutral-100 bg-white px-4 shadow-sm">
       <div className="flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white">
-          V
-        </div>
+        {logoUrl ? (
+          <Image src={logoUrl} alt="Vytanexa" width={28} height={28} className="h-7 w-7 rounded-md object-contain" />
+        ) : (
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white">
+            V
+          </div>
+        )}
         <span className="font-sans text-lg font-bold text-brand-600">Vytanexa</span>
       </div>
       <div className="flex items-center">
