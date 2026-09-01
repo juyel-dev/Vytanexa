@@ -1413,12 +1413,17 @@ half-verified.
       used unsorted chambers[0]; HospitalsTab fetched
       `cover_image_url` but never rendered it; 3 header icon buttons
       had no `aria-label`.
-- [ ] 9.2 — S16 Community hub (`/community`) full deep-dive. Read the
-      page and however it aggregates Q&A + Polls + Articles teasers.
-      Check it correctly respects the `community_qa`/`polls` flags
-      fixed in 8.2 — this page wasn't touched during that fix and is
-      a plausible place the flag-gating was missed (a third
-      surface beyond the page route + nav row).
+- [x] 9.2 — ~~S16 Community hub~~ **Correction:** no such screen exists
+      in VYTANEXA-BLUEPRINT.md — S16 is actually the `/more` page
+      (already touched during Phase 8's flag-wiring, but not read in
+      full at the time). Full read done — commit `417ed02`. Found +
+      fixed: the "ভাষা"/"অবস্থান" preview rows were hardcoded
+      ("বাংলা") or empty regardless of the user's actual
+      `preferred_language` / active location. Wired both the same way
+      `SettingsClient.tsx` (S18) already correctly does it; extracted
+      `LANGUAGE_NAMES` into `lib/i18n.ts` as a shared export in the
+      process. Also confirmed `community_qa`/`polls` flags (fixed in
+      8.2) are correctly respected on this page — no third gap found.
 - [ ] 9.3 — S20 Settings (`/settings`) full deep-dive. Read
       `SettingsClient.tsx` in full (already partially seen while
       checking terms/privacy links) plus whatever it calls for
