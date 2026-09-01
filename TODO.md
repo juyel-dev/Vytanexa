@@ -1474,11 +1474,15 @@ half-verified.
       `ConfirmDialog` with an optional `children` prop along the way
       (backward-compatible, same pattern as `DataTable`'s `columns`
       widening in 8.6).
-- [ ] 9.5 — A10 Q&A/Ambulance/Blood moderation screens full deep-dive.
-      These are card-list UIs (confirmed non-table during 8.6) —
-      check moderation actions (approve/reject/suspend) are all
-      properly `requireRole` + audit-logged, matching the discipline
-      seen elsewhere in admin.
+- [x] 9.5 — ~~A10 Q&A/Ambulance/Blood moderation screens~~
+      **Correction:** A10 is actually "Articles CMS · Q&A
+      Management" per spec; Ambulance/Blood are tables (migrated to
+      DataTable in 8.6), not card-lists. Real intent: verify the two
+      genuine card-list UIs from 8.6 (`QaManager` answer-publishing,
+      `NotificationsManager` composer) have `requireRole`+`writeAudit`
+      discipline. **Done — confirmed clean, no fix needed.** Both
+      `api/admin/qa/answer/route.ts` and
+      `api/admin/notifications/route.ts` have both.
 - [ ] 9.6 — Real accessibility pass on the highest-traffic flows (Home,
       Doctor List, Doctor Profile, Emergency FAB, Search) — not a
       grep count this time, actually reason through keyboard/
