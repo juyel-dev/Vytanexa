@@ -1494,20 +1494,49 @@ half-verified.
       text (no icon-only gaps). EmergencyFAB: main FAB + sub-options
       already labeled; found + fixed one real gap — icon-only phone
       link in the hospital sheet had no accessible name at all.
-- [ ] 9.7 — Re-verify Menu Manager and any other "documented as
+- [x] 9.7 — Re-verify Menu Manager and any other "documented as
       working" claims found while reading 9.1–9.5, the way Theme
       Editor's claim turned out false (H1) — grep-first, trace-the-
       actual-code-path-second, same method that caught H1/H2/H3/H4.
-- [ ] 9.8 — Doctor phone data model product decision (H2's deferred
+      **Done.** Checked every href in `nav-config.ts` (27/27 admin
+      routes) and `BottomNav.tsx`/`MorePageClient.tsx` (all static
+      web routes) actually resolve to a real page — the same class of
+      check that caught the moderation-queue gap in 9.4. Nothing else
+      broken; `/page/support` is legitimately DB-driven (custom_pages
+      slug, can't verify by file existence) and `/auth/login`
+      "missing" was a false alarm — it's in a separate `(auth)` route
+      group, not `(main)`.
+- [x] 9.8 — Doctor phone data model product decision (H2's deferred
       part): now that 9.1 will have looked at chamber.phone usage on
       the detail page, come back with a concrete recommendation
       (option a/b/c from DEEPDIVE-REFACTOR-PLAN.md §4.1) instead of
-      leaving it purely open.
-- [ ] 9.9 — Re-run `get_advisors(security)` and `get_advisors(performance)`
+      leaving it purely open. **Decided: keep the current fix
+      (DoctorCard hides Call when no whatsapp_number) as the
+      permanent state — did not add a chamber join to
+      doctor-list.ts.** Reasoning: fetching a "primary chamber" phone
+      into the list query re-creates the exact ambiguity that caused
+      AppointmentSheet's bug in 9.1 — a doctor can have multiple
+      chambers with different numbers, and the list card has no
+      chamber-selection UI (nor room for one) to disambiguate which
+      one to dial, unlike the detail page where that UI genuinely
+      exists. It would also join a to-many table onto a hot,
+      paginated list-fetch path (SSR page 1 + infinite scroll) for a
+      value that's inherently ambiguous at that scope. WhatsApp-first
+      at the card level, precise chamber calling on the detail page
+      (already correct, confirmed in 9.1) is the right split, not a
+      compromise.
+- [x] 9.9 — Re-run `get_advisors(security)` and `get_advisors(performance)`
       given how much schema/function code has changed since the last
       run (migration 0018, several route changes) — confirm zero new
       regressions, same as after every migration in this project's
-      history.
+      history. **Done.** Zero new WARN/ERROR. All performance findings
+      are pre-existing-pattern INFO (unindexed FKs on
+      `moderated_by`/`resolved_by` — my new 9.4 columns, low-traffic
+      admin-only path, not urgent; unused indexes — expected on a
+      low-traffic dev DB).
+
+**PHASE 9 COMPLETE.** All 9 items done, each with real verification
+(typecheck + build, or advisor re-run) before being checked off.
 
 ## WORKING RULES (reaffirmed)
 
