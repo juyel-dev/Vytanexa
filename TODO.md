@@ -1369,9 +1369,10 @@ reasoning/reference doc; this section is the actual execution order.
       `lib/validations/` matching every other route's convention.
 
 **Phase 8 is now fully complete** — every item across 8.1–8.6 shipped,
-typechecked, build-verified, and pushed. 8.7's deferred list and the
-TopBar logo-image swap sub-item (noted under 8.1) remain open by
-design, not oversight.
+typechecked, build-verified, and pushed. 8.7's deferred list remains
+open by design, not oversight. The TopBar logo-image swap sub-item
+(noted under 8.1) is **now also done** — commit `9f50d49`, via a
+LogoContext instead of 21-call-site prop threading.
 
 ### 8.7 — Deferred (explicitly not now, noted so they don't get lost)
 - Accessibility pass (aria coverage) — batch into a post-launch
