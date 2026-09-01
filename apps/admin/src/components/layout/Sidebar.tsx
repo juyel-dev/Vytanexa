@@ -20,7 +20,17 @@ import type { AppRole } from '@/lib/supabase/auth-verify';
  * chrome state, and keeping it here avoids threading it through the
  * (server) layout as props.
  */
-export function AdminSidebar({ session }: { session: { role: AppRole; name: string } }) {
+export function AdminSidebar({
+  session,
+  badgeCounts,
+}: {
+  session: { role: AppRole; name: string };
+  // TODO.md Phase 9.4: live counts keyed by href, merged over
+  // NAV_GROUPS' static badgeCount at render time — see
+  // lib/moderation-counts.ts for why the static field alone could
+  // never actually show anything.
+  badgeCounts?: Record<string, number>;
+}) {
   const t = useTranslations();
   const pathname = usePathname();
   const router = useRouter();
@@ -80,6 +90,7 @@ export function AdminSidebar({ session }: { session: { role: AppRole; name: stri
             <ul className="flex flex-col gap-0.5">
               {group.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                const liveCount = badgeCounts?.[item.href] ?? item.badgeCount;
                 return (
                   <li key={item.href}>
                     <Link
@@ -98,9 +109,9 @@ export function AdminSidebar({ session }: { session: { role: AppRole; name: stri
                       {!collapsed && (
                         <span className="truncate">
                           {t(item.labelKey)}
-                          {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                          {liveCount !== undefined && liveCount > 0 && (
                             <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emergency-600 px-1 text-[11px] font-bold text-white">
-                              {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                              {liveCount > 99 ? '99+' : liveCount}
                             </span>
                           )}
                         </span>

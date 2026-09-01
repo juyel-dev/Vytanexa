@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { AdminSidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { getAdminSession } from '@/lib/supabase/auth-verify';
+import { getModerationBadgeCounts } from '@/lib/moderation-counts';
 
 // The dashboard depends on the auth-cookie session (getAdminSession) —
 // force dynamic so Next never attempts to prerender it (which would
@@ -26,10 +27,11 @@ export default async function DashboardLayout({
 }) {
   const session = await getAdminSession();
   if (!session) redirect('/login');
+  const badgeCounts = await getModerationBadgeCounts();
 
   return (
     <div className="flex min-h-dvh">
-      <AdminSidebar session={session} />
+      <AdminSidebar session={session} badgeCounts={badgeCounts} />
       <div className="flex flex-1 flex-col">
         <Suspense fallback={<div className="h-14 border-b border-admin-border bg-white" />}>
           <TopBar session={session} />
