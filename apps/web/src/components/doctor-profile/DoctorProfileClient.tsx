@@ -74,6 +74,7 @@ export function DoctorProfileClient({
       <div className="sticky top-0 z-topbar flex h-topbar items-center justify-between bg-brand-600/0 px-2">
         <Link
           href="/doctors"
+          aria-label="পেছনে যান"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -81,12 +82,14 @@ export function DoctorProfileClient({
         <div className="flex gap-2">
           <button
             onClick={() => setShareOpen(true)}
+            aria-label="শেয়ার করুন"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
           >
             <Share2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => setMoreOpen(true)}
+            aria-label="আরো অপশন"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
           >
             <MoreVertical className="h-4 w-4" />

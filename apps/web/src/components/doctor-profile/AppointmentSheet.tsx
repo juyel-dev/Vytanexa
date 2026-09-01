@@ -33,7 +33,14 @@ export function AppointmentSheet({
   chambers: Chamber[];
   whatsappNumber: string | null;
 }) {
-  const [chamberId, setChamberId] = useState(chambers[0]?.id ?? '');
+  const sortedChambers = [...chambers].sort((a, b) => {
+    if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+    return a.display_order - b.display_order;
+  });
+
+  const [chamberId, setChamberId] = useState(
+    () => sortedChambers.find((c) => c.is_primary)?.id ?? sortedChambers[0]?.id ?? ''
+  );
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [preferredTime, setPreferredTime] = useState('any');
@@ -41,6 +48,15 @@ export function AppointmentSheet({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // TODO.md Phase 9.1: the direct-call button below used to always
+  // dial chambers[0]'s number regardless of which chamber the person
+  // picked in the radio list above (or even which one is actually
+  // primary — this prop arrives unsorted from doctor.chambers, unlike
+  // ChambersTab.tsx which explicitly sorts is_primary first). Now
+  // follows the selected chamber, falling back to the first chamber
+  // only when nothing's selected yet.
+  const selectedChamber = sortedChambers.find((c) => c.id === chamberId) ?? sortedChambers[0];
 
   const isValidPhone = /^[6-9]\d{9}$/.test(phone);
   const canSubmit = name.trim().length >= 2 && isValidPhone;
@@ -92,7 +108,7 @@ export function AppointmentSheet({
                 চেম্বার বেছে নিন *
               </label>
               <div className="mb-3 flex flex-col gap-1.5">
-                {chambers.map((c) => (
+                {sortedChambers.map((c) => (
                   <label
                     key={c.id}
                     className="flex items-center gap-2 text-[13px] text-neutral-700"
@@ -175,7 +191,7 @@ export function AppointmentSheet({
 
           <div className="flex gap-2">
             <a
-              href={`tel:${chambers[0]?.phone ?? ''}`}
+              href={`tel:${selectedChamber?.phone ?? ''}`}
               className="h-11 flex-1 rounded-md border border-neutral-200 text-center text-[13px] font-semibold leading-[44px] text-neutral-700"
             >
               📞 সরাসরি কল করুন

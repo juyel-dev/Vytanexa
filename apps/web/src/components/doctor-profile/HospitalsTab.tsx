@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { getLocalizedField } from '@/lib/i18n';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 
@@ -42,7 +43,21 @@ export function HospitalsTab({
             href={`/hospitals/${link.hospitals.slug}`}
             className="mb-2 flex items-center gap-3 rounded-lg border border-neutral-200 p-3"
           >
-            <div className="h-16 w-16 shrink-0 rounded-md bg-neutral-100" />
+            {/* TODO.md Phase 9.1: cover_image_url was already being
+                fetched by doctor-detail.ts's join but never rendered —
+                this was a hardcoded empty gray box regardless of
+                whether the hospital had a real photo. */}
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+              {link.hospitals.cover_image_url && (
+                <Image
+                  src={link.hospitals.cover_image_url}
+                  alt={getLocalizedField(link.hospitals.name_translations)}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              )}
+            </div>
             <div>
               <p className="text-[14px] font-semibold text-neutral-900">
                 {getLocalizedField(link.hospitals.name_translations)}
