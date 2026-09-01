@@ -1449,11 +1449,31 @@ half-verified.
       real FK-backed validation, AnnouncementBanner correctly reused
       from S04). One real gap fixed: `mark-all-read` had no cap on
       the client-supplied array size.
-- [ ] 9.4 — A03 Admin Dashboard (`/`) full deep-dive. Read the
-      summary/attention-card queries. Check for N+1 patterns (this is
-      the page most likely to have them — dashboards tend to fire one
-      query per card) and confirm every "attention needed" card's
-      count actually matches what its linked list page shows.
+- [x] 9.4 — A03 Admin Dashboard (`/`) full deep-dive. **Done — commits
+      `39c0b53`, `094a783`, `1945307`.** No N+1 found (all counts
+      already parallel `Promise.all` head:true queries). But: 3 of 4
+      AttentionCards linked to `/moderation/reviews`,
+      `/moderation/qa`, `/moderation/reports` — routes that **did not
+      exist anywhere**. Traced the root cause: `reviews_select` and
+      `questions_select` RLS both require `status='approved'`, and
+      nothing anywhere in the codebase ever wrote that value — every
+      submitted review and question was **permanently invisible**,
+      launch-blocking, not just a dead link. `nav-config.ts` and
+      `Sidebar.tsx` already had scaffolding for these 3 routes
+      (`badgeCount: 0` placeholders) confirming they were planned and
+      dropped, not imagined. Found the exact spec for the intended
+      fix (`ADMIN-PANEL-SPEC.md` A03 "Unified Moderation Queue
+      Pattern") and built to it: shared `ModerationShell.tsx`
+      (tabs/search/bulk-select/empty-state, same extraction
+      philosophy as `DataTable`), all 3 queues (Reviews — approve/
+      reject/bulk/admin-reply, verified `trg_reviews_recalc_rating`
+      auto-recalculates ratings; Questions — approve/reject/bulk,
+      distinct from the existing `/qa` answer-publishing screen;
+      Reports — resolve/dismiss/bulk), and live sidebar badge counts
+      replacing the structurally-dead static `0`s. Widened
+      `ConfirmDialog` with an optional `children` prop along the way
+      (backward-compatible, same pattern as `DataTable`'s `columns`
+      widening in 8.6).
 - [ ] 9.5 — A10 Q&A/Ambulance/Blood moderation screens full deep-dive.
       These are card-list UIs (confirmed non-table during 8.6) —
       check moderation actions (approve/reject/suspend) are all
