@@ -8,7 +8,7 @@
  * soft-delete + audit log. Usage: render `<ConfirmDialog open=... />`
  * with `onConfirm`/`onCancel`; the parent keeps its own state.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 export type ConfirmVariant = 'danger' | 'warning' | 'info';
@@ -23,6 +23,7 @@ export function ConfirmDialog({
   busy = false,
   onConfirm,
   onCancel,
+  children,
 }: {
   open: boolean;
   title: string;
@@ -33,6 +34,12 @@ export function ConfirmDialog({
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  // TODO.md Phase 9.4: optional extra content between the description
+  // and the action buttons (e.g. an inline reject-reason textarea) —
+  // widened rather than building a second dialog component, same
+  // backward-compatible approach as DataTable's `columns` widening.
+  // No existing caller passes this, so nothing else changes.
+  children?: ReactNode;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
 
@@ -73,6 +80,7 @@ export function ConfirmDialog({
               {title}
             </h2>
             <p className="mt-1 text-admin-body text-neutral-600">{description}</p>
+            {children}
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
