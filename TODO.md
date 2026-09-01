@@ -1483,12 +1483,17 @@ half-verified.
       discipline. **Done — confirmed clean, no fix needed.** Both
       `api/admin/qa/answer/route.ts` and
       `api/admin/notifications/route.ts` have both.
-- [ ] 9.6 — Real accessibility pass on the highest-traffic flows (Home,
+- [x] 9.6 — Real accessibility pass on the highest-traffic flows (Home,
       Doctor List, Doctor Profile, Emergency FAB, Search) — not a
       grep count this time, actually reason through keyboard/
       screen-reader navigation for each interactive element: focus
       order, missing `aria-label` on icon-only buttons, color-only
-      status indicators, touch target sizes.
+      status indicators, touch target sizes. **Done.** DoctorProfile
+      fixed in 9.1. Search mic button already labeled (8.2). Home/
+      DoctorList: checked, all interactive elements have visible
+      text (no icon-only gaps). EmergencyFAB: main FAB + sub-options
+      already labeled; found + fixed one real gap — icon-only phone
+      link in the hospital sheet had no accessible name at all.
 - [ ] 9.7 — Re-verify Menu Manager and any other "documented as
       working" claims found while reading 9.1–9.5, the way Theme
       Editor's claim turned out false (H1) — grep-first, trace-the-
