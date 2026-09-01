@@ -172,7 +172,11 @@ export function EmergencyFAB() {
             <span className="text-[14px] text-neutral-800">
               {getLocalizedField(h.name_translations)}
             </span>
-            <a href={`tel:${h.phone}`} onClick={() => trackCall('local_hospital', h.id)}>
+            <a
+              href={`tel:${h.phone}`}
+              onClick={() => trackCall('local_hospital', h.id)}
+              aria-label={`${getLocalizedField(h.name_translations)}-এ কল করুন`}
+            >
               <Phone className="h-4 w-4 text-emergency-600" />
             </a>
           </div>
