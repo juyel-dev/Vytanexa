@@ -1387,7 +1387,70 @@ design, not oversight.
   Community hub, S20 Settings, A03 Dashboard, A10 moderation screens —
   do a dedicated pass before considering any of these "audited."
 
+## PHASE 9 — Remaining Deep-Dive Coverage (checklist, follow in order)
+Per explicit instruction: systematic, not random — work this list top
+to bottom, one item at a time, no shallow passes. Each item = actually
+open and read every file involved (page + client components + queries
+it calls), cross-check against the spec section, look for the same
+bug categories Phase 7/8 found elsewhere (dead features, missing
+sanitization, IDOR, missing empty/loading states, N+1 queries,
+accessibility gaps) — not just a grep sweep. Fix small clear bugs
+inline (typecheck + build + commit, same discipline as Phase 8); log
+anything bigger as its own numbered finding rather than fixing it
+half-verified.
+
+- [ ] 9.1 — S07 Doctor Profile (`/doctors/[slug]`) full deep-dive.
+      Read the page, `DoctorDetailClient.tsx`, chamber list/schedule
+      rendering, review section, related-doctors, and the
+      `doctor-detail.ts` query. Specifically check: does anything here
+      also mishandle chamber phone vs. whatsapp_number the way
+      DoctorCard did (H2, already fixed at the card level — the detail
+      page has real chamber.phone data available, worth confirming it
+      actually uses it correctly)?
+- [ ] 9.2 — S16 Community hub (`/community`) full deep-dive. Read the
+      page and however it aggregates Q&A + Polls + Articles teasers.
+      Check it correctly respects the `community_qa`/`polls` flags
+      fixed in 8.2 — this page wasn't touched during that fix and is
+      a plausible place the flag-gating was missed (a third
+      surface beyond the page route + nav row).
+- [ ] 9.3 — S20 Settings (`/settings`) full deep-dive. Read
+      `SettingsClient.tsx` in full (already partially seen while
+      checking terms/privacy links) plus whatever it calls for
+      language/notification-prefs/location. Cross-check every toggle
+      actually persists and actually gates the thing it claims to.
+- [ ] 9.4 — A03 Admin Dashboard (`/`) full deep-dive. Read the
+      summary/attention-card queries. Check for N+1 patterns (this is
+      the page most likely to have them — dashboards tend to fire one
+      query per card) and confirm every "attention needed" card's
+      count actually matches what its linked list page shows.
+- [ ] 9.5 — A10 Q&A/Ambulance/Blood moderation screens full deep-dive.
+      These are card-list UIs (confirmed non-table during 8.6) —
+      check moderation actions (approve/reject/suspend) are all
+      properly `requireRole` + audit-logged, matching the discipline
+      seen elsewhere in admin.
+- [ ] 9.6 — Real accessibility pass on the highest-traffic flows (Home,
+      Doctor List, Doctor Profile, Emergency FAB, Search) — not a
+      grep count this time, actually reason through keyboard/
+      screen-reader navigation for each interactive element: focus
+      order, missing `aria-label` on icon-only buttons, color-only
+      status indicators, touch target sizes.
+- [ ] 9.7 — Re-verify Menu Manager and any other "documented as
+      working" claims found while reading 9.1–9.5, the way Theme
+      Editor's claim turned out false (H1) — grep-first, trace-the-
+      actual-code-path-second, same method that caught H1/H2/H3/H4.
+- [ ] 9.8 — Doctor phone data model product decision (H2's deferred
+      part): now that 9.1 will have looked at chamber.phone usage on
+      the detail page, come back with a concrete recommendation
+      (option a/b/c from DEEPDIVE-REFACTOR-PLAN.md §4.1) instead of
+      leaving it purely open.
+- [ ] 9.9 — Re-run `get_advisors(security)` and `get_advisors(performance)`
+      given how much schema/function code has changed since the last
+      run (migration 0018, several route changes) — confirm zero new
+      regressions, same as after every migration in this project's
+      history.
+
 ## WORKING RULES (reaffirmed)
+
 1. Check items off only after real verification (typecheck + build,
    not assumption). If something can't be verified in this sandbox
    (e.g. network-gated), say so explicitly rather than guessing.
