@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notificationPrefsUpdateSchema } from '@/lib/validations/account';
 
 /**
  * PATCH /api/account/notification-prefs — VYTANEXA-BLUEPRINT.md § S18
@@ -20,7 +21,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'সাইন ইন করুন' }, { status: 401 });
   }
 
-  const { general, articles } = await request.json();
+  const body = await request.json();
+  const parsed = notificationPrefsUpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'অবৈধ ডেটা' }, { status: 400 });
+  }
+  const { general, articles } = parsed.data;
 
   const { data: current } = await supabase
     .from('users')

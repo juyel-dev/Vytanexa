@@ -25,3 +25,18 @@ export const profileUpdateSchema = z.object({
 });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+
+/**
+ * PATCH /api/account/notification-prefs — TODO.md Phase 9.3. Was the
+ * one other account route (besides the profile route fixed in 8.6)
+ * still hand-destructuring `request.json()` with no schema. Low risk
+ * either way (values were already boolean-coerced with `!!`, route is
+ * IDOR-safe), but every other write route in the app uses a schema
+ * from this folder — bringing this one in line for consistency.
+ */
+export const notificationPrefsUpdateSchema = z.object({
+  general: z.boolean().optional(),
+  articles: z.boolean().optional(),
+});
+
+export type NotificationPrefsUpdateInput = z.infer<typeof notificationPrefsUpdateSchema>;

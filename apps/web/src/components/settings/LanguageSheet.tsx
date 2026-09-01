@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { Check } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
@@ -41,7 +41,7 @@ export function LanguageSheet({
   currentLanguage: string;
   isSignedIn: boolean;
 }) {
-  const t = useTranslations('common');
+  const locale = useLocale();
   const router = useRouter();
   const [selected, setSelected] = useState(currentLanguage);
   const [saving, setSaving] = useState(false);
@@ -63,7 +63,7 @@ export function LanguageSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('close') === 'Close' ? 'Select language' : 'ভাষা নির্বাচন করুন'}>
+    <BottomSheet open={open} onClose={onClose} title={locale === 'en' ? 'Select language' : 'ভাষা নির্বাচন করুন'}>
       <div className="flex flex-col gap-2.5">
         {LANGUAGES.map((lang) => {
           const isSelected = selected === lang.code;
