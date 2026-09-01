@@ -1399,14 +1399,20 @@ inline (typecheck + build + commit, same discipline as Phase 8); log
 anything bigger as its own numbered finding rather than fixing it
 half-verified.
 
-- [ ] 9.1 — S07 Doctor Profile (`/doctors/[slug]`) full deep-dive.
+- [x] 9.1 — S07 Doctor Profile (`/doctors/[slug]`) full deep-dive.
       Read the page, `DoctorDetailClient.tsx`, chamber list/schedule
       rendering, review section, related-doctors, and the
       `doctor-detail.ts` query. Specifically check: does anything here
       also mishandle chamber phone vs. whatsapp_number the way
       DoctorCard did (H2, already fixed at the card level — the detail
       page has real chamber.phone data available, worth confirming it
-      actually uses it correctly)?
+      actually uses it correctly)? **Done — commit `3026873`.** Found
+      ChambersTab already does phone handling correctly (reference
+      pattern for 9.8). Found + fixed 3 real issues:
+      AppointmentSheet's call button ignored the selected chamber and
+      used unsorted chambers[0]; HospitalsTab fetched
+      `cover_image_url` but never rendered it; 3 header icon buttons
+      had no `aria-label`.
 - [ ] 9.2 — S16 Community hub (`/community`) full deep-dive. Read the
       page and however it aggregates Q&A + Polls + Articles teasers.
       Check it correctly respects the `community_qa`/`polls` flags
