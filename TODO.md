@@ -1424,11 +1424,26 @@ half-verified.
       `LANGUAGE_NAMES` into `lib/i18n.ts` as a shared export in the
       process. Also confirmed `community_qa`/`polls` flags (fixed in
       8.2) are correctly respected on this page — no third gap found.
-- [ ] 9.3 — S20 Settings (`/settings`) full deep-dive. Read
-      `SettingsClient.tsx` in full (already partially seen while
-      checking terms/privacy links) plus whatever it calls for
-      language/notification-prefs/location. Cross-check every toggle
-      actually persists and actually gates the thing it claims to.
+- [x] 9.3 — ~~S20 Settings~~ **Correction (second one):** Settings is
+      actually S18 in the spec; S20 is a different, genuinely unread
+      screen (Notifications Center · Announcement Banner) — added
+      below as 9.3b instead of silently substituted. S18 (Settings)
+      full deep-dive done — commit `aaabb97`. Read `SettingsClient.tsx`,
+      `settings/page.tsx`, `LanguageSheet.tsx`, `LocationPickerSheet.tsx`,
+      `notification-prefs/route.ts`. Fixed a fragile locale-detection
+      hack (now uses next-intl's `useLocale()`) and added the one
+      remaining unvalidated account route onto a Zod schema
+      (consistency, not security — route was already IDOR-safe).
+      LocationPickerSheet confirmed well-built, GPS auto-detect
+      honestly deferred rather than faked.
+- [ ] 9.3b — S20 Notifications Center · Announcement Banner
+      (`/notifications`) full deep-dive — the actual unread screen
+      this slot was supposed to cover. Read the page, its query, and
+      whatever renders the announcement banner. Check `emergency`
+      notifications really can't be dismissed/hidden (matching the
+      "always-on" enforcement already confirmed server-side in
+      notification-prefs), and check mark-read/mark-all-read routes
+      for the same IDOR/validation discipline seen elsewhere.
 - [ ] 9.4 — A03 Admin Dashboard (`/`) full deep-dive. Read the
       summary/attention-card queries. Check for N+1 patterns (this is
       the page most likely to have them — dashboards tend to fire one
