@@ -1601,8 +1601,14 @@ fixed gets logged with a reason, not silently skipped.
       **Done — all real.** Leads PATCH, Q&A answer POST, notification
       broadcast composer all confirmed wired to real routes with
       correct payloads.
-- [ ] 10.8 — Polls + Subscriptions + Ads (`/polls`, `/subscriptions`,
-      `/ads`) — create/edit, cancel, stats correctness.
+- [x] 10.8 — Polls + Subscriptions + Ads (`/polls`, `/subscriptions`,
+      `/ads`) — create/edit, cancel, stats correctness. **Done —
+      commit `a5b6fa7`.** Polls and Ads traced clean, all real. Found
+      + fixed a real UX gap in Subscriptions: "assign subscription"
+      had a raw UUID text field with no lookup — built a debounced
+      entity-search autocomplete to replace it. Caught a build-time
+      bug while shipping it (new GET route needed `force-dynamic` or
+      `next build` fails trying to statically prerender it).
 - [ ] 10.9 — Admins + Audit Log + Analytics (`/admins`, `/audit-log`,
       `/analytics`) — role edit, suspend, self-lockout guard, filters.
 - [ ] 10.10 — God Mode (homepage/theme/footer/flags/menu) — re-verify
