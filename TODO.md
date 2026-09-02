@@ -1538,6 +1538,47 @@ half-verified.
 **PHASE 9 COMPLETE.** All 9 items done, each with real verification
 (typecheck + build, or advisor re-run) before being checked off.
 
+## PHASE 10 — Full Admin App Polish + E2E Trace (checklist, follow in order)
+Triggered by a real reported crash (sidebar collapse) that traced to
+two genuine bugs (5547687) — user reasonably now wants every admin
+screen verified for real, not assumed working. "E2E test" here means:
+trace every interactive element's actual code path (click → request →
+response handling → UI update) since no browser tool is available in
+this environment — same rigor as reading code line-by-line, applied
+systematically to every screen, not a quantity target. Findings get
+fixed inline (typecheck+build+commit) same as Phase 8/9; anything not
+fixed gets logged with a reason, not silently skipped.
+
+- [x] 10.0 — Sidebar collapse crash + fixed/flex layout overlap.
+      **Done — commit `5547687`.**
+- [ ] 10.1 — Dashboard home (`/`) — trace AttentionCards links (now
+      real), SummaryCards, RecentActivity for any stale assumptions
+      post-moderation-build.
+- [ ] 10.2 — Doctors (`/doctors`, `/doctors/[id]`) — full CRUD trace:
+      create, edit, verify/suspend modal, bulk actions, delete,
+      filters, pagination.
+- [ ] 10.3 — Hospitals (`/hospitals`, `/hospitals/[id]`) — same CRUD
+      trace as doctors.
+- [ ] 10.4 — Ambulance + Blood (`/ambulance`, `/blood-donors`) — CRUD
+      + donor active-toggle + inventory tab.
+- [ ] 10.5 — Articles + Custom Pages (`/articles`, `/pages`) — CRUD,
+      publish toggle, PageBuilder block editor interactions.
+- [ ] 10.6 — Categories + Locations (`/categories`, `/locations`) —
+      reorder, CSV import, tree expand/collapse.
+- [ ] 10.7 — Leads + Q&A answer + Notifications composer (`/leads`,
+      `/qa`, `/notifications`) — status changes, send/compose flows.
+- [ ] 10.8 — Polls + Subscriptions + Ads (`/polls`, `/subscriptions`,
+      `/ads`) — create/edit, cancel, stats correctness.
+- [ ] 10.9 — Admins + Audit Log + Analytics (`/admins`, `/audit-log`,
+      `/analytics`) — role edit, suspend, self-lockout guard, filters.
+- [ ] 10.10 — God Mode (homepage/theme/footer/flags/menu) — re-verify
+      all 5 post-8.1 trim, drag-reorder interactions.
+- [ ] 10.11 — Moderation (reviews/qa/reports) — re-verify own 9.4
+      build end-to-end now that it's had time to settle.
+- [ ] 10.12 — Cross-cutting UI polish pass: toast consistency, button
+      disabled/busy states, empty states, mobile/narrow-viewport
+      check on every screen touched above, keyboard nav on modals.
+
 ## WORKING RULES (reaffirmed)
 
 1. Check items off only after real verification (typecheck + build,
