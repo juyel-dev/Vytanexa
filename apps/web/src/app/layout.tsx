@@ -77,7 +77,28 @@ export default async function RootLayout({
       className={`${hindSiliguri.variable} ${notoSansBengali.variable} ${plusJakartaSans.variable}`}
     >
       <body>
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
+          {/*
+            BUGFIX (2026-09): the app had zero responsive/desktop styling
+            anywhere in the codebase (confirmed: zero sm:/md:/lg:/xl:
+            Tailwind usages in apps/web/src). On viewports wider than a
+            phone, mobile-width flex/card layouts stretched full-bleed
+            edge-to-edge, which reads as broken rather than intentional.
+            This wraps every route group (main/seo/auth) in a single
+            centered "app shell" column — a no-op on mobile (already
+            narrower than 480px) and a bounded, centered column on
+            desktop, matching how e.g. X/Twitter Web and WhatsApp Web
+            present a mobile-shaped app inside a wide browser window.
+            BottomNav and EmergencyFAB are fixed-position and therefore
+            NOT bounded by this wrapper automatically (fixed positioning
+            escapes normal-flow ancestors) — they're centered/offset to
+            match this same 480px column independently; see BottomNav.tsx
+            and EmergencyFAB.tsx.
+          */}
+          <div className="mx-auto min-h-dvh w-full max-w-[480px] bg-white lg:border-x lg:border-neutral-200 lg:shadow-sm">
+            {children}
+          </div>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

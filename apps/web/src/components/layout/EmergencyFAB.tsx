@@ -92,7 +92,14 @@ export function EmergencyFAB() {
         />
       )}
 
-      <div className="fixed bottom-[calc(theme(spacing.navbar)+16px+env(safe-area-inset-bottom))] right-4 z-fab flex flex-col items-end gap-2">
+      {/* BUGFIX (2026-09): right-4 anchored to the raw browser-window edge,
+          so on desktop (after layout.tsx's centered 480px app-shell fix)
+          the FAB floated in open space far right of the actual content
+          column. This calc re-derives the same 16px inset from the app
+          shell's right edge instead: on mobile 100vw ≤ 480px so it's
+          identical to right-4 (16px); on desktop it sits 16px inside the
+          visible column, matching BottomNav's bounded width. */}
+      <div className="fixed bottom-[calc(theme(spacing.navbar)+16px+env(safe-area-inset-bottom))] right-[calc((100vw-min(100vw,480px))/2+1rem)] z-fab flex flex-col items-end gap-2">
         {expanded && (
           <>
             <FabOption

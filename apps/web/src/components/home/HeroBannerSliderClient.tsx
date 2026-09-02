@@ -26,10 +26,17 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
     const interval = setInterval(() => {
       if (isInteracting.current) return;
       const next = (activeIndex + 1) % ads.length;
-      scrollRef.current?.children[next]?.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'start',
-      });
+      // BUGFIX (2026-09): scrollIntoView() without an explicit `block`
+      // defaults to block: 'center', which walks every scrollable
+      // ancestor — including the page itself — and vertically re-centers
+      // the slide in the viewport on every auto-advance tick. Combined
+      // with `html { scroll-behavior: smooth }` this made the whole page
+      // smoothly jump back up to the banner every ~4.5s. Scrolling the
+      // slider's own container directly avoids touching page scroll.
+      const child = scrollRef.current?.children[next] as HTMLElement | undefined;
+      if (child && scrollRef.current) {
+        scrollRef.current.scrollTo({ left: child.offsetLeft, behavior: 'smooth' });
+      }
       setActiveIndex(next);
     }, 4500);
     return () => clearInterval(interval);
