@@ -1581,8 +1581,16 @@ fixed gets logged with a reason, not silently skipped.
       bugs found.** All fetch targets (create/edit/delete for
       ambulance, toggle/delete for donors, inventory POST) confirmed
       to hit real, correctly-implemented routes.
-- [ ] 10.5 — Articles + Custom Pages (`/articles`, `/pages`) — CRUD,
-      publish toggle, PageBuilder block editor interactions.
+- [x] 10.5 — Articles + Custom Pages (`/articles`, `/pages`) — CRUD,
+      publish toggle, PageBuilder block editor interactions. **Done —
+      all real.** Articles: create/edit/autosave (every 30s) all wired
+      correctly. Custom Pages: create flow lives in `PagesList.tsx`
+      (POST → redirect into `PageBuilder`, which only needs PATCH from
+      then on — not a gap, just needed a second file to see); also has
+      a working duplicate-page feature. `doctor_grid`/`hospital_grid`
+      blocks require typing raw UUIDs by hand — confirmed, matches the
+      already-agreed low-priority assessment from the Custom Page
+      Builder scope decision, not a new finding.
 - [ ] 10.6 — Categories + Locations (`/categories`, `/locations`) —
       reorder, CSV import, tree expand/collapse.
 - [ ] 10.7 — Leads + Q&A answer + Notifications composer (`/leads`,
