@@ -1630,9 +1630,22 @@ fixed gets logged with a reason, not silently skipped.
       the time) — no code has touched these files since, so a repeat
       full re-read would be redundant token spend; skipped straight to
       confirming via git log instead.
-- [ ] 10.12 — Cross-cutting UI polish pass: toast consistency, button
+- [x] 10.12 — Cross-cutting UI polish pass: toast consistency, button
       disabled/busy states, empty states, mobile/narrow-viewport
       check on every screen touched above, keyboard nav on modals.
+      **Done.** Found + fixed a real gap: `ConfirmDialog` (used ~15+
+      times across the app) had no Escape-key handler — standard
+      modal expectation, now fixed once, propagates everywhere.
+      Confirmed already correct: disabled/busy states + focus-visible
+      outlines on dialog buttons, z-index stack (Toast 900 >
+      ConfirmDialog 800 > Sidebar 300, no overlap conflicts).
+
+**PHASE 10 COMPLETE.** Sidebar crash fixed (critical). 10.1–10.11: 19
+admin screens traced end-to-end. Real bugs found and fixed: dashboard
+count mismatch (10.1), missing invite email on admin creation (10.9),
+missing entity-search autocomplete (10.8), drag-copy mismatch (10.10),
+Escape-key gap (10.12). Everything else confirmed genuinely real, not
+fake — no more open findings.
 
 ## WORKING RULES (reaffirmed)
 
