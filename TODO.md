@@ -1558,9 +1558,17 @@ fixed gets logged with a reason, not silently skipped.
       counts didn't exclude soft-deleted rows, while the moderation
       pages' own counts and the sidebar badges already did — dashboard
       could show a higher number than the queue actually contains.
-- [ ] 10.2 — Doctors (`/doctors`, `/doctors/[id]`) — full CRUD trace:
+- [x] 10.2 — Doctors (`/doctors`, `/doctors/[id]`) — full CRUD trace:
       create, edit, verify/suspend modal, bulk actions, delete,
-      filters, pagination.
+      filters, pagination. **Done — all real, no fake behavior found.**
+      Traced create (`/doctors/new` → `DoctorForm` → POST), edit (PATCH
+      with `doctorUpdateSchema`), verify/reject/suspend modal, delete
+      (soft-delete), and bulk (5 actions, all handled server-side).
+      One hypothesis checked and cleared: `verificationSchema.optional()
+      .default('pending')` could have silently reset a verified
+      doctor's status to pending on any unrelated edit if the client
+      ever omitted the field — confirmed `DoctorForm` always explicitly
+      round-trips the current value, so this never actually fires.
 - [ ] 10.3 — Hospitals (`/hospitals`, `/hospitals/[id]`) — same CRUD
       trace as doctors.
 - [ ] 10.4 — Ambulance + Blood (`/ambulance`, `/blood-donors`) — CRUD
