@@ -1591,8 +1591,11 @@ fixed gets logged with a reason, not silently skipped.
       blocks require typing raw UUIDs by hand — confirmed, matches the
       already-agreed low-priority assessment from the Custom Page
       Builder scope decision, not a new finding.
-- [ ] 10.6 — Categories + Locations (`/categories`, `/locations`) —
-      reorder, CSV import, tree expand/collapse.
+- [x] 10.6 — Categories + Locations (`/categories`, `/locations`) —
+      reorder, CSV import, tree expand/collapse. **Done — all real.**
+      Categories: reorder uses optimistic update with rollback on
+      failure (good UX, not fake). Locations: create/edit/delete/CSV
+      import all confirmed to hit real, correctly-implemented routes.
 - [ ] 10.7 — Leads + Q&A answer + Notifications composer (`/leads`,
       `/qa`, `/notifications`) — status changes, send/compose flows.
 - [ ] 10.8 — Polls + Subscriptions + Ads (`/polls`, `/subscriptions`,
