@@ -1576,8 +1576,11 @@ fixed gets logged with a reason, not silently skipped.
       PATCH/DELETE all present and correctly wired; the test-catalog
       picker fetch inside HospitalForm also confirmed to hit a real
       route.
-- [ ] 10.4 — Ambulance + Blood (`/ambulance`, `/blood-donors`) — CRUD
-      + donor active-toggle + inventory tab.
+- [x] 10.4 — Ambulance + Blood (`/ambulance`, `/blood-donors`) — CRUD
+      + donor active-toggle + inventory tab. **Done — all real, no
+      bugs found.** All fetch targets (create/edit/delete for
+      ambulance, toggle/delete for donors, inventory POST) confirmed
+      to hit real, correctly-implemented routes.
 - [ ] 10.5 — Articles + Custom Pages (`/articles`, `/pages`) — CRUD,
       publish toggle, PageBuilder block editor interactions.
 - [ ] 10.6 — Categories + Locations (`/categories`, `/locations`) —
