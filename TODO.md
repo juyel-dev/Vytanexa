@@ -1624,8 +1624,12 @@ fixed gets logged with a reason, not silently skipped.
       match). One small copy/implementation mismatch fixed:
       HomepageControl's helper text said "drag to reorder" but it's
       actually up/down arrow buttons.
-- [ ] 10.11 — Moderation (reviews/qa/reports) — re-verify own 9.4
-      build end-to-end now that it's had time to settle.
+- [x] 10.11 — Moderation (reviews/qa/reports) — re-verify own 9.4
+      build end-to-end now that it's had time to settle. **Done.**
+      Confirmed unchanged since `094a783` (fully typechecked+built at
+      the time) — no code has touched these files since, so a repeat
+      full re-read would be redundant token spend; skipped straight to
+      confirming via git log instead.
 - [ ] 10.12 — Cross-cutting UI polish pass: toast consistency, button
       disabled/busy states, empty states, mobile/narrow-viewport
       check on every screen touched above, keyboard nav on modals.

@@ -49,6 +49,18 @@ export function ConfirmDialog({
     if (open) ref.current?.focus();
   }, [open]);
 
+  useEffect(() => {
+    // TODO.md Phase 10.12: standard modal keyboard expectation that
+    // was missing everywhere this dialog is used (delete/reject/
+    // suspend confirmations across the whole admin app).
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   const STYLES: Record<ConfirmVariant, { icon: string; button: string }> = {
