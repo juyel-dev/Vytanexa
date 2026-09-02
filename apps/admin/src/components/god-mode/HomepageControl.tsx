@@ -81,7 +81,7 @@ export function HomepageControl({ initialSections }: { initialSections: Section[
       <div className="flex flex-col gap-3">
         <div className="rounded-xl border border-admin-border bg-white p-4">
           <h2 className="text-admin-h3 text-neutral-900">সেকশন সাজান</h2>
-          <p className="mt-1 text-admin-small text-neutral-500">টেনে-নামিয়ে ক্রম বদলান, ☑ টগল বন্ধ করলে সেকশন লুকাবে। প্রকাশ না করা পর্যন্ত লাইভে যাবে না।</p>
+          <p className="mt-1 text-admin-small text-neutral-500">উপরে/নিচে তীর চিহ্নে ক্রম বদলান, ☑ টগল বন্ধ করলে সেকশন লুকাবে। প্রকাশ না করা পর্যন্ত লাইভে যাবে না।</p>
           <ul className="mt-4 flex flex-col gap-1.5">
             {sections.map((s, idx) => {
               const label = LABELS[s.id] ?? { bn: s.id, emoji: '📄' };
