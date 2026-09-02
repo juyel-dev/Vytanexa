@@ -1569,8 +1569,13 @@ fixed gets logged with a reason, not silently skipped.
       doctor's status to pending on any unrelated edit if the client
       ever omitted the field — confirmed `DoctorForm` always explicitly
       round-trips the current value, so this never actually fires.
-- [ ] 10.3 — Hospitals (`/hospitals`, `/hospitals/[id]`) — same CRUD
-      trace as doctors.
+- [x] 10.3 — Hospitals (`/hospitals`, `/hospitals/[id]`) — same CRUD
+      trace as doctors. **Done — all real, no bugs found.** Verification
+      is set via the full edit form here (not a quick-action modal like
+      doctors) — confirmed intentional, not a missing feature. POST/
+      PATCH/DELETE all present and correctly wired; the test-catalog
+      picker fetch inside HospitalForm also confirmed to hit a real
+      route.
 - [ ] 10.4 — Ambulance + Blood (`/ambulance`, `/blood-donors`) — CRUD
       + donor active-toggle + inventory tab.
 - [ ] 10.5 — Articles + Custom Pages (`/articles`, `/pages`) — CRUD,
