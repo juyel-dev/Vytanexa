@@ -7,7 +7,9 @@ import { adminCreateSchema } from '@/lib/validations/admins';
 
 /**
  * POST /api/admin/admins — create new admin (super_admin only).
- * Creates auth user via service-role + admin_users row. Sends invite email via Supabase if configured.
+ * Creates an unconfirmed auth user via inviteUserByEmail, which sends
+ * a real Supabase invite email (magic link to set a password) — plus
+ * the admin_users row.
  */
 export async function POST(request: Request) {
   const session = await requireRole('super_admin');
@@ -21,11 +23,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'শুধু super_admin অন্য super_admin তৈরি করতে পারেন' }, { status: 403 });
   }
 
-  // create auth user
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    email_confirm: true,
-    user_metadata: { name },
+  // TODO.md Phase 10.9: this used to be
+  // `supabase.auth.admin.createUser({ email, email_confirm: true, ... })`
+  // - creates the user pre-confirmed with no password and sends
+  // absolutely no email, while the frontend toast told the operator
+  // "ইমেইলে ইনভাইট গেছে" (an invite has been sent). The new admin had
+  // no way to ever log in. inviteUserByEmail is the actual Supabase
+  // method that creates the user AND sends a real invite email with a
+  // magic link to set a password.
+  const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    data: { name },
   });
 
   if (authError || !authData.user) {
