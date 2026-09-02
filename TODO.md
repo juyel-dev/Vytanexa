@@ -1551,9 +1551,13 @@ fixed gets logged with a reason, not silently skipped.
 
 - [x] 10.0 — Sidebar collapse crash + fixed/flex layout overlap.
       **Done — commit `5547687`.**
-- [ ] 10.1 — Dashboard home (`/`) — trace AttentionCards links (now
+- [x] 10.1 — Dashboard home (`/`) — trace AttentionCards links (now
       real), SummaryCards, RecentActivity for any stale assumptions
-      post-moderation-build.
+      post-moderation-build. **Done — commit `7510fe7`.** Found + fixed
+      a real count-mismatch: dashboard's pending reviews/questions
+      counts didn't exclude soft-deleted rows, while the moderation
+      pages' own counts and the sidebar badges already did — dashboard
+      could show a higher number than the queue actually contains.
 - [ ] 10.2 — Doctors (`/doctors`, `/doctors/[id]`) — full CRUD trace:
       create, edit, verify/suspend modal, bulk actions, delete,
       filters, pagination.
