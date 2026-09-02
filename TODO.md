@@ -1618,8 +1618,12 @@ fixed gets logged with a reason, not silently skipped.
       the real method. Everything else (self-lockout guard, escalation
       guard, role-gate consistency, audit filters, CSV export) traced
       clean and real.
-- [ ] 10.10 — God Mode (homepage/theme/footer/flags/menu) — re-verify
-      all 5 post-8.1 trim, drag-reorder interactions.
+- [x] 10.10 — God Mode (homepage/theme/footer/flags/menu) — re-verify
+      all 5 post-8.1 trim, drag-reorder interactions. **Done — commit
+      `5ce508e`.** All 5 confirmed real (POST routes exist, payloads
+      match). One small copy/implementation mismatch fixed:
+      HomepageControl's helper text said "drag to reorder" but it's
+      actually up/down arrow buttons.
 - [ ] 10.11 — Moderation (reviews/qa/reports) — re-verify own 9.4
       build end-to-end now that it's had time to settle.
 - [ ] 10.12 — Cross-cutting UI polish pass: toast consistency, button
