@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { DataTable } from '@/components/ui/DataTable';
@@ -27,8 +27,25 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
   const [assignOpen, setAssignOpen] = useState(false);
   const [entityType, setEntityType] = useState<'doctor' | 'hospital'>('doctor');
   const [entityId, setEntityId] = useState('');
+  const [entityQuery, setEntityQuery] = useState('');
+  const [entityResults, setEntityResults] = useState<{ id: string; name: string }[]>([]);
+  const [entityName, setEntityName] = useState('');
   const [planId, setPlanId] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
+
+  // TODO.md Phase 10.8: debounced entity search backing the
+  // autocomplete below — replaces the old raw-UUID text field.
+  useEffect(() => {
+    if (entityQuery.trim().length < 2) {
+      setEntityResults([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      const res = await fetch(`/api/admin/entity-search?type=${entityType}&q=${encodeURIComponent(entityQuery.trim())}`).catch(() => null);
+      if (res?.ok) setEntityResults((await res.json()).results ?? []);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [entityQuery, entityType]);
 
   const openEdit = (p: Plan) => {
     setEditPlan(p);
@@ -87,6 +104,8 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
     toast.push('সাবস্ক্রিপশন যোগ হয়েছে ✅', 'success');
     setAssignOpen(false);
     setEntityId('');
+    setEntityName('');
+    setEntityQuery('');
     router.refresh();
   };
 
@@ -198,9 +217,53 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
             <p className="mt-1 text-admin-small text-neutral-500">পেমেন্ট গেটওয়ের আগে ম্যানুয়াল গ্রান্ট — UPI/bank-এর পর এখানে যোগ করুন।</p>
             <div className="mt-4 flex flex-col gap-3">
               <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">এন্টিটি ধরন</span>
-                <select value={entityType} onChange={(e) => setEntityType(e.target.value as 'doctor' | 'hospital')} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"><option value="doctor">ডাক্তার</option><option value="hospital">হাসপাতাল</option></select>
+                <select
+                  value={entityType}
+                  onChange={(e) => {
+                    setEntityType(e.target.value as 'doctor' | 'hospital');
+                    setEntityId('');
+                    setEntityName('');
+                    setEntityQuery('');
+                  }}
+                  className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
+                >
+                  <option value="doctor">ডাক্তার</option>
+                  <option value="hospital">হাসপাতাল</option>
+                </select>
               </label>
-              <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">এন্টিটি ID (UUID)</span><input value={entityId} onChange={(e) => setEntityId(e.target.value)} placeholder="doctor/hospital id" className="h-9 rounded-md border border-admin-border px-3 text-admin-body" /></label>
+              <label className="flex flex-col gap-1">
+                <span className="text-admin-small font-medium text-neutral-700">এন্টিটি খুঁজুন</span>
+                <input
+                  value={entityName || entityQuery}
+                  onChange={(e) => {
+                    setEntityQuery(e.target.value);
+                    setEntityName('');
+                    setEntityId('');
+                  }}
+                  placeholder="ডাক্তার বা হাসপাতালের নাম লিখুন..."
+                  className="h-9 rounded-md border border-admin-border px-3 text-admin-body"
+                />
+                {entityResults.length > 0 && !entityId && (
+                  <div className="mt-1 max-h-40 overflow-y-auto rounded-md border border-admin-border bg-white shadow-sm">
+                    {entityResults.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => {
+                          setEntityId(r.id);
+                          setEntityName(r.name);
+                          setEntityQuery('');
+                          setEntityResults([]);
+                        }}
+                        className="block w-full px-3 py-1.5 text-left text-admin-small text-neutral-700 hover:bg-neutral-50"
+                      >
+                        {r.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {entityId && <span className="text-admin-small text-life-700">✓ নির্বাচিত: {entityName}</span>}
+              </label>
               <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">প্ল্যান</span>
                 <select value={planId} onChange={(e) => setPlanId(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
                   <option value="">নির্বাচন করুন</option>
