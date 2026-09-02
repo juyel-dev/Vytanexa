@@ -1609,8 +1609,15 @@ fixed gets logged with a reason, not silently skipped.
       entity-search autocomplete to replace it. Caught a build-time
       bug while shipping it (new GET route needed `force-dynamic` or
       `next build` fails trying to statically prerender it).
-- [ ] 10.9 — Admins + Audit Log + Analytics (`/admins`, `/audit-log`,
+- [x] 10.9 — Admins + Audit Log + Analytics (`/admins`, `/audit-log`,
       `/analytics`) — role edit, suspend, self-lockout guard, filters.
+      **Done — commit `7408c71`.** Found + fixed an important bug:
+      creating a new admin used `createUser({ email_confirm: true })`
+      (no email sent, no password, unusable account) while the toast
+      claimed an invite was sent — switched to `inviteUserByEmail()`,
+      the real method. Everything else (self-lockout guard, escalation
+      guard, role-gate consistency, audit filters, CSV export) traced
+      clean and real.
 - [ ] 10.10 — God Mode (homepage/theme/footer/flags/menu) — re-verify
       all 5 post-8.1 trim, drag-reorder interactions.
 - [ ] 10.11 — Moderation (reviews/qa/reports) — re-verify own 9.4
