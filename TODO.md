@@ -1596,8 +1596,11 @@ fixed gets logged with a reason, not silently skipped.
       Categories: reorder uses optimistic update with rollback on
       failure (good UX, not fake). Locations: create/edit/delete/CSV
       import all confirmed to hit real, correctly-implemented routes.
-- [ ] 10.7 — Leads + Q&A answer + Notifications composer (`/leads`,
+- [x] 10.7 — Leads + Q&A answer + Notifications composer (`/leads`,
       `/qa`, `/notifications`) — status changes, send/compose flows.
+      **Done — all real.** Leads PATCH, Q&A answer POST, notification
+      broadcast composer all confirmed wired to real routes with
+      correct payloads.
 - [ ] 10.8 — Polls + Subscriptions + Ads (`/polls`, `/subscriptions`,
       `/ads`) — create/edit, cancel, stats correctness.
 - [ ] 10.9 — Admins + Audit Log + Analytics (`/admins`, `/audit-log`,
