@@ -33,11 +33,13 @@ export default async function DashboardPage() {
     supabase
       .from('reviews')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
+      .eq('status', 'pending')
+      .is('deleted_at', null),
     supabase
       .from('questions')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
+      .eq('status', 'pending')
+      .is('deleted_at', null),
     supabase
       .from('data_reports')
       .select('id', { count: 'exact', head: true })
