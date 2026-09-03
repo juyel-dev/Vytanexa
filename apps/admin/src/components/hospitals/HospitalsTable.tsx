@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@/components/ui/DataTable';
 import { hospitalName, HOSPITAL_TYPE_LABEL } from '@/lib/hospital-utils';
+import { sortLocationsHierarchically } from '@/lib/location-hierarchy';
 
 type Row = {
   id: string;
@@ -29,7 +30,7 @@ type Props = {
   total: number;
   page: number;
   perPage: number;
-  locations: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
+  locations: import('@/lib/location-hierarchy').LocationNode[];
   currentFilters: { q: string; status: string; type: string; locationId: string; emergency: string };
 };
 
@@ -99,10 +100,11 @@ export function HospitalsTable({ hospitals, total, page, perPage, locations, cur
         </select>
         <select value={currentFilters.locationId} onChange={(e) => push({ locationId: e.target.value })} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
           <option value="">সব এলাকা</option>
-          {locations.map((l) => {
-            const t = l.name_translations as { bn?: string; en?: string } | null;
-            return <option key={l.id} value={l.id}>{(t?.bn || t?.en || l.slug) as string}</option>;
-          })}
+          {sortLocationsHierarchically(locations).map((l) => (
+            // Filter context (unlike a required create-field): every level
+            // stays selectable — "just West Bengal" is a legitimate filter.
+            <option key={l.id} value={l.id}>{'\u00A0\u00A0'.repeat(l.depth)}{l.label}</option>
+          ))}
         </select>
         <label className="flex items-center gap-1.5 text-admin-small text-neutral-600">
           <input type="checkbox" checked={currentFilters.emergency === '1'} onChange={(e) => push({ emergency: e.target.checked ? '1' : '' })} className="h-4 w-4 rounded border-admin-border" />

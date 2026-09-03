@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@/components/ui/DataTable';
+import { sortLocationsHierarchically } from '@/lib/location-hierarchy';
 
 type Donor = { id: string; name: string; phone: string; blood_group: string; location_id: string; location_name: string; last_donated_at: string | null; is_active: boolean };
 type HospInv = { id: string; name: string; inventory: { blood_group: string; stock_level: string; reported_at: string }[] };
@@ -12,7 +13,7 @@ type HospInv = { id: string; name: string; inventory: { blood_group: string; sto
 const GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as const;
 const STOCK_LABEL: Record<string, string> = { available: '✅ উপলব্ধ', low: '⚠️ কম', unavailable: '❌ নেই', unknown: '—' };
 
-export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]; hospitals: HospInv[]; locations: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[] }) {
+export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]; hospitals: HospInv[]; locations: import('@/lib/location-hierarchy').LocationNode[] }) {
   const router = useRouter();
   const toast = useToast();
   const [tab, setTab] = useState<'donors' | 'inventory'>('donors');
@@ -84,10 +85,9 @@ export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]
             </select>
             <select value={qLoc} onChange={(e) => setQLoc(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
               <option value="">সব এলাকা</option>
-              {locations.map((l) => {
-                const t = l.name_translations as { bn?: string; en?: string } | null;
-                return <option key={l.id} value={l.id}>{(t?.bn || t?.en || l.slug) as string}</option>;
-              })}
+              {sortLocationsHierarchically(locations).map((l) => (
+                <option key={l.id} value={l.id}>{'\u00A0\u00A0'.repeat(l.depth)}{l.label}</option>
+              ))}
             </select>
           </div>
 

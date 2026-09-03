@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 import { hospitalSlugBase, FACILITY_OPTIONS } from '@/lib/hospital-utils';
 import { slugify } from '@/lib/location-utils';
+import { sortLocationsHierarchically } from '@/lib/location-hierarchy';
 
 type Initial = {
   id?: string;
@@ -35,7 +36,7 @@ type Initial = {
 type Props = {
   mode: 'create' | 'edit';
   initial?: Initial | null;
-  locations: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
+  locations: import('@/lib/location-hierarchy').LocationNode[];
   testCatalog: { canonical_key: string; name_translations: { bn?: string; en?: string } | null }[];
 };
 
@@ -240,10 +241,11 @@ export function HospitalForm({ mode, initial, locations, testCatalog }: Props) {
               <span className="text-admin-small font-medium text-neutral-700">এলাকা *</span>
               <select value={locationId} onChange={(e) => setLocationId(e.target.value)} required className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
                 <option value="">এলাকা নির্বাচন করুন</option>
-                {locations.map((l) => {
-                  const t = l.name_translations as { bn?: string; en?: string } | null;
-                  return <option key={l.id} value={l.id}>{(t?.bn || t?.en || l.slug) as string}</option>;
-                })}
+                {sortLocationsHierarchically(locations).map((l) => (
+                  <option key={l.id} value={l.id} disabled={!l.selectable} className={l.selectable ? '' : 'font-semibold text-neutral-400'}>
+                    {'\u00A0\u00A0'.repeat(l.depth)}{l.selectable ? '' : '— '}{l.label}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

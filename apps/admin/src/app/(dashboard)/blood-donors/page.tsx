@@ -10,7 +10,7 @@ export default async function BloodPage() {
 
   const [{ data: donors }, { data: locations }, { data: hospitals }, { data: inventories }] = await Promise.all([
     supabase.from('blood_donors').select('id, name, blood_group, location_id, last_donated_at, is_active, phone').is('deleted_at', null).order('created_at', { ascending: false }).limit(200),
-    supabase.from('locations').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
+    supabase.from('locations').select('id, parent_id, type, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
     supabase.from('hospitals').select('id, name_translations, slug, facility_tags').is('deleted_at', null).contains('facility_tags', ['blood_bank']).limit(100),
     supabase.from('blood_bank_inventory').select('hospital_id, blood_group, stock_level, reported_at'),
   ]);

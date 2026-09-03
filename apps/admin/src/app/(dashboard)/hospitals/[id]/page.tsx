@@ -10,7 +10,7 @@ export default async function EditHospitalPage({ params }: { params: { id: strin
   const supabase = createServiceRoleClient();
   const [{ data: hospital }, { data: locations }, { data: testCatalog }] = await Promise.all([
     supabase.from('hospitals').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle(),
-    supabase.from('locations').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
+    supabase.from('locations').select('id, parent_id, type, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
     supabase.from('test_catalog').select('canonical_key, name_translations').eq('is_active', true).order('display_order').limit(200),
   ]);
   if (!hospital) notFound();

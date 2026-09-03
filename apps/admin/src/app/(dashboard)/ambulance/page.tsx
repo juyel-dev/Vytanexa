@@ -10,7 +10,7 @@ export default async function AmbulancePage() {
 
   const [{ data: ambulances }, { data: locations }, { data: hospitals }] = await Promise.all([
     supabase.from('ambulance_services').select('id, name_translations, location_id, phone, whatsapp_number, hospital_id, vehicle_count, is_icu_equipped, per_km_rate, coverage_radius_km, is_24x7, verification_status, is_active').is('deleted_at', null).order('created_at', { ascending: false }).limit(200),
-    supabase.from('locations').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
+    supabase.from('locations').select('id, parent_id, type, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
     supabase.from('hospitals').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(200),
   ]);
 

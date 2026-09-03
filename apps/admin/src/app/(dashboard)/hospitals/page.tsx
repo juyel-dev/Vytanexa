@@ -19,7 +19,7 @@ export default async function HospitalsPage({ searchParams }: { searchParams: SP
   const perPage = 25;
 
   const [{ data: locations }] = await Promise.all([
-    supabase.from('locations').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
+    supabase.from('locations').select('id, parent_id, type, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
   ]);
 
   let query = supabase.from('hospitals').select('id, slug, name_translations, type, cover_image_url, location_id, has_emergency_dept, verification_status, is_featured, is_trending, rating_avg, rating_count, created_at', { count: 'exact' }).is('deleted_at', null);

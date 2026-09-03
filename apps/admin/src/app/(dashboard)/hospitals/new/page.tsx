@@ -8,7 +8,7 @@ export default async function NewHospitalPage() {
   await requireAdmin();
   const supabase = createServiceRoleClient();
   const [{ data: locations }, { data: testCatalog }] = await Promise.all([
-    supabase.from('locations').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
+    supabase.from('locations').select('id, parent_id, type, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
     supabase.from('test_catalog').select('canonical_key, name_translations').eq('is_active', true).order('display_order').limit(200),
   ]);
   return (

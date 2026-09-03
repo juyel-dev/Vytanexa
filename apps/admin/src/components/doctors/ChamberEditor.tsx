@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Trash2, Plus } from 'lucide-react';
+import { sortLocationsHierarchically } from '@/lib/location-hierarchy';
 
 type ScheduleEntry = { day: 'sat' | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri'; open: string; close: string };
 
@@ -36,10 +37,11 @@ export type ChamberFormValue = {
 type Props = {
   chambers: ChamberFormValue[];
   onChange: (next: ChamberFormValue[]) => void;
-  locations: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
+  locations: import('@/lib/location-hierarchy').LocationNode[];
 };
 
 export function ChamberEditor({ chambers, onChange, locations }: Props) {
+  const sortedLocations = sortLocationsHierarchically(locations);
   const update = (idx: number, patch: Partial<ChamberFormValue>) => {
     const next = [...chambers];
     next[idx] = { ...next[idx]!, ...patch };
@@ -119,14 +121,13 @@ export function ChamberEditor({ chambers, onChange, locations }: Props) {
                 <span className="text-admin-small font-medium text-neutral-700">এলাকা *</span>
                 <select value={ch.location_id} onChange={(e) => update(idx, { location_id: e.target.value })} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
                   <option value="">এলাকা নির্বাচন করুন</option>
-                  {locations.map((l) => {
-                    const t = l.name_translations as { bn?: string; en?: string } | null;
-                    return (
-                      <option key={l.id} value={l.id}>
-                        {(t?.bn || t?.en || l.slug) as string}
-                      </option>
-                    );
-                  })}
+                  {sortedLocations.map((l) => (
+                    <option key={l.id} value={l.id} disabled={!l.selectable} className={l.selectable ? '' : 'font-semibold text-neutral-400'}>
+                      {'\u00A0\u00A0'.repeat(l.depth)}
+                      {l.selectable ? '' : '— '}
+                      {l.label}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="flex flex-col gap-1">

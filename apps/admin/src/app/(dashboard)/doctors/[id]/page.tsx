@@ -15,7 +15,7 @@ export default async function EditDoctorPage({ params }: { params: { id: string 
   const [{ data: doctor }, { data: categories }, { data: locations }] = await Promise.all([
     supabase.from('doctors').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle(),
     supabase.from('categories').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(200),
-    supabase.from('locations').select('id, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
+    supabase.from('locations').select('id, parent_id, type, name_translations, slug').is('deleted_at', null).order('display_order').limit(500),
   ]);
 
   if (!doctor) notFound();

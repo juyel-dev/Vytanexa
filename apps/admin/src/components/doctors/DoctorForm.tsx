@@ -36,7 +36,7 @@ type Props = {
   mode: 'create' | 'edit';
   initial?: DoctorInitial | null;
   categories: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
-  locations: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
+  locations: import('@/lib/location-hierarchy').LocationNode[];
 };
 
 function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {

@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { DataTable } from '@/components/ui/DataTable';
+import { sortLocationsHierarchically } from '@/lib/location-hierarchy';
 
 type Row = {
   id: string;
@@ -28,7 +29,7 @@ type Row = {
 
 type Props = {
   ambulances: Row[];
-  locations: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
+  locations: import('@/lib/location-hierarchy').LocationNode[];
   hospitals: { id: string; name_translations: { bn?: string; en?: string } | null; slug: string }[];
 };
 
@@ -155,10 +156,11 @@ export function AmbulanceManager({ ambulances, locations, hospitals }: Props) {
               <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">এলাকা *</span>
                 <select value={locId} onChange={(e) => setLocId(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
                   <option value="">নির্বাচন করুন</option>
-                  {locations.map((l) => {
-                    const t = l.name_translations as { bn?: string; en?: string } | null;
-                    return <option key={l.id} value={l.id}>{(t?.bn || t?.en || l.slug) as string}</option>;
-                  })}
+                  {sortLocationsHierarchically(locations).map((l) => (
+                    <option key={l.id} value={l.id} disabled={!l.selectable} className={l.selectable ? '' : 'font-semibold text-neutral-400'}>
+                      {'\u00A0\u00A0'.repeat(l.depth)}{l.selectable ? '' : '— '}{l.label}
+                    </option>
+                  ))}
                 </select>
               </label>
               <div className="grid grid-cols-2 gap-3">
