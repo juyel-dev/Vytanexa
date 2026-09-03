@@ -69,7 +69,7 @@ export function HospitalProfileClient({
     <div className="pb-24">
       {/* Top bar — overlays gallery, no scroll-reactivity in this
           first pass, same pragmatic call as S07 */}
-      <div className="sticky top-0 z-topbar flex h-topbar items-center justify-between bg-transparent px-2">
+      <div className="sticky top-0 z-topbar flex h-topbar items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-2">
         <Link
           href="/hospitals"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
@@ -186,7 +186,7 @@ export function HospitalProfileClient({
       {/* Sticky bottom bar — call + directions, no fee display
           (S08: "hospitals don't have single appointment fee like
           doctors") */}
-      <div className="fixed bottom-0 left-0 right-0 z-navbar grid h-[72px] grid-cols-2 gap-2 border-t border-neutral-200 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+      <div className="fixed bottom-0 left-1/2 z-navbar grid h-[72px] w-full max-w-[480px] -translate-x-1/2 grid-cols-2 gap-2 border-t border-neutral-200 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <a
           href={`tel:${callNumber}`}
           className="flex items-center justify-center gap-2 rounded-md bg-brand-600 text-[15px] font-semibold text-white"

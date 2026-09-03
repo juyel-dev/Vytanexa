@@ -14,7 +14,7 @@ import { Phone } from 'lucide-react';
  * heavier `EmergencyDataSections` bundle. See `emergency/page.tsx`
  * for why that split matters for bundle size, not just semantics.
  */
-const NATIONAL_NUMBERS = [
+export const NATIONAL_NUMBERS = [
   { label: 'অ্যাম্বুলেন্স', number: '102', type: 'ambulance' },
   { label: 'পুলিশ', number: '100', type: 'police' },
   { label: 'ফায়ার সার্ভিস', number: '101', type: 'fire' },

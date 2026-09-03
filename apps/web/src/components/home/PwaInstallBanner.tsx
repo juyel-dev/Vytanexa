@@ -19,11 +19,13 @@ export function PwaInstallBanner() {
     const dismissed = localStorage.getItem('vytanexa_pwa_banner_dismissed');
     if (dismissed) return;
 
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) return;
+
     const visits = Number(localStorage.getItem('vytanexa_visit_count') ?? '0') + 1;
     localStorage.setItem('vytanexa_visit_count', String(visits));
 
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (visits >= 2 && !isStandalone) {
+    if (visits >= 2) {
       setVisible(true);
     }
 

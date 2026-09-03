@@ -71,7 +71,7 @@ export function DoctorProfileClient({
       {/* Top bar — overlays hero, no scroll-reactivity in this first
           pass (S07's Variant C transparent->solid transition is a
           nice-to-have polish item, not required for correctness) */}
-      <div className="sticky top-0 z-topbar flex h-topbar items-center justify-between bg-brand-600/0 px-2">
+      <div className="sticky top-0 z-topbar flex h-topbar items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-2">
         <Link
           href="/doctors"
           aria-label="পেছনে যান"
@@ -207,7 +207,7 @@ export function DoctorProfileClient({
       )}
 
       {/* Sticky bottom action bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-navbar flex h-[72px] items-center justify-between border-t border-neutral-200 bg-white px-4 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+      <div className="fixed bottom-0 left-1/2 z-navbar flex h-[72px] w-full max-w-[480px] -translate-x-1/2 items-center justify-between border-t border-neutral-200 bg-white px-4 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <div>
           <p className="text-[12px] text-neutral-500">💰 ভিজিট ফি</p>
           <p className="text-[18px] font-bold text-neutral-900">{feeText ?? '—'}</p>
