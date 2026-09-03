@@ -111,12 +111,29 @@ export async function requireAdmin(): Promise<AdminSession> {
  * `admin_users.permissions` JSONB so super_admin can grant a one-off
  * override (e.g. "this specific admin CAN also touch god-mode") without
  * inventing a new role (A02).
+ *
+ * Hierarchy (admin > moderator > editor): a higher role passes a lower
+ * role's gate (e.g. an admin passes `requireRole('moderator')`), so
+ * future per-route downgrades (moderation queue → 'moderator', draft
+ * content → 'editor') work correctly. Existing call sites all require
+ * 'admin'/'super_admin', so this changes no current access — it only
+ * makes the gate correct for the moderator/editor roles that
+ * `APP_ROLES` advertises. Fine-grained capabilities (verify/publish/
+ * god-mode) live in `nav-config.ts` `ROLE_DEFAULTS`/`roleAllows()` for
+ * UI-level checks; route gates stay role-level by design.
  */
+const ROLE_RANK: Record<AppRole, number> = {
+  editor: 0,
+  moderator: 1,
+  admin: 2,
+  super_admin: 3,
+};
+
 export async function requireRole(required: AppRole): Promise<AdminSession> {
   const session = await requireAdmin();
   if (session.role === 'super_admin') return session;
 
-  const hasRole = session.role === required;
+  const hasRole = ROLE_RANK[session.role] >= ROLE_RANK[required];
   const hasOverride =
     session.permissions?.[`${required}_access`] === true ||
     session.permissions?.all_access === true;
