@@ -24,8 +24,10 @@ export async function POST(request: NextRequest) {
   const supabase = createClient();
   const ip = getClientIp(request);
 
+  // Global per-IP key (no page_id) — a per-page key lets a script
+  // bypass the limit by cycling through many pages.
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-    p_key: `page_submission:${ip}:${page_id}`,
+    p_key: `page_submission:${ip}`,
     p_max_count: 5,
     p_window: '1 hour',
   });

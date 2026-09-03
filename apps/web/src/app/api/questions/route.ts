@@ -79,12 +79,15 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Keep the real author_name even when anonymous — list/detail views
+  // render "একজন ব্যবহারকারী" when is_anonymous (see
+  // QuestionDetailClient), but moderation needs to know who submitted it.
   const { error } = await supabase.from('questions').insert({
     title: title.trim(),
     body: questionBody?.trim() || null,
     category_id,
     is_anonymous: !!is_anonymous,
-    author_name: is_anonymous ? null : author_name?.trim() || null,
+    author_name: author_name?.trim() || null,
     author_phone: author_phone?.trim() || null,
     status: 'pending',
     user_id: user?.id ?? null,
