@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Siren, X, Ambulance, Building2, Droplet, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { NATIONAL_NUMBERS } from '@/components/emergency/NationalNumbersSection';
 import { getLocalizedField } from '@/lib/i18n';
 import type { Json } from '@vytanexa/database';
 
@@ -24,7 +25,7 @@ type SheetKind = 'ambulance' | 'hospital' | 'blood' | null;
  * hardcoded here rather than fetched is the correctness precondition
  * for that to work later without a code change.
  */
-const NATIONAL_AMBULANCE = { label: 'জাতীয় অ্যাম্বুলেন্স সেবা', number: '102' };
+
 
 /**
  * VYTANEXA-BLUEPRINT.md § S12 "Analytics": `emergency_call_click
@@ -134,16 +135,19 @@ export function EmergencyFAB() {
         onClose={() => setActiveSheet(null)}
         title="অ্যাম্বুলেন্স"
       >
-        <a
-          href={`tel:${NATIONAL_AMBULANCE.number}`}
-          onClick={() => trackCall('national', NATIONAL_AMBULANCE.number)}
-          className="mb-2 flex items-center justify-between rounded-lg bg-emergency-50 p-3"
-        >
-          <span className="text-[14px] font-semibold text-emergency-700">
-            📞 {NATIONAL_AMBULANCE.number} — {NATIONAL_AMBULANCE.label}
-          </span>
-          <Phone className="h-5 w-5 text-emergency-600" />
-        </a>
+        {NATIONAL_NUMBERS.map((n) => (
+          <a
+            key={n.number}
+            href={`tel:${n.number}`}
+            onClick={() => trackCall('national', n.number)}
+            className="mb-2 flex items-center justify-between rounded-lg bg-emergency-50 p-3"
+          >
+            <span className="text-[14px] font-semibold text-emergency-700">
+              📞 {n.number} — {n.label}
+            </span>
+            <Phone className="h-5 w-5 text-emergency-600" />
+          </a>
+        ))}
         {loading && <p className="py-3 text-center text-[13px] text-neutral-400">লোড হচ্ছে...</p>}
         {ambulances.map((a) => (
           <a

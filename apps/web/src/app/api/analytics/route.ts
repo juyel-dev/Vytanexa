@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getClientIp } from '@/lib/get-client-ip';
 import type { Json } from '@vytanexa/database';
 import { analyticsSchema } from '@/lib/validations/analytics';
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createClient();
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const ip = getClientIp(request);
 
     const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
       p_key: `analytics:${ip}`,
