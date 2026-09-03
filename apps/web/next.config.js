@@ -46,14 +46,25 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    // Supabase Storage origin — replace <project-ref> once the real
-    // Supabase project exists (PROJECT-CONTEXT.md § 4, Phase 1)
+    // Crawler found placeholder ads (via.placeholder.com) caused _next/image 500s + 13s timeouts.
+    // For dummy/seed data we still allow external placeholder hosts, but set unoptimized to avoid
+    // server-side fetch during dev (direct browser fetch is fast and doesn't block crawling).
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '*.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: '*.placeholder.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'picsum.photos' },
+      // imgbb direct image links (https://i.ibb.co/...) — admin AdsManager
+      // accepts any https image URL and its table uses plain <img>, but the
+      // user app renders banners via next/image which rejects unlisted hosts.
+      { protocol: 'https', hostname: 'i.ibb.co' },
     ],
   },
   // next-pwa wiring happens here in Phase 3 (S22) — deliberately not
