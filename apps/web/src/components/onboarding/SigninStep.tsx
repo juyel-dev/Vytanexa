@@ -35,6 +35,7 @@ export function SigninStep() {
   const completeAsGuest = () => {
     localStorage.setItem('vytanexa_first_run', 'done');
     localStorage.setItem('vytanexa_user_guest', 'true');
+    document.cookie = 'vytanexa_first_run=done; path=/; max-age=31536000';
     router.replace('/');
   };
 
@@ -54,6 +55,8 @@ export function SigninStep() {
   };
 
   const handleGoogleSignin = async () => {
+    localStorage.setItem('vytanexa_first_run', 'done');
+    document.cookie = 'vytanexa_first_run=done; path=/; max-age=31536000';
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',

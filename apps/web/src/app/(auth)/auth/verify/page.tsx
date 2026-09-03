@@ -58,6 +58,7 @@ function VerifyPageContent() {
 
     localStorage.setItem('vytanexa_first_run', 'done');
     localStorage.removeItem('vytanexa_user_guest');
+    document.cookie = 'vytanexa_first_run=done; path=/; max-age=31536000';
     router.replace(returnUrl);
   };
 

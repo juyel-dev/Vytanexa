@@ -11,7 +11,18 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Pattern copied from Supabase SSR docs for Next.js App Router:
  * https://supabase.com/docs/guides/auth/server-side/nextjs
  */
+const FIRST_RUN_BYPASS_PREFIXES = ['/onboarding', '/auth', '/api', '/offline'];
+
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const hasFirstRun = request.cookies.get('vytanexa_first_run')?.value === 'done';
+  const isBypassed = FIRST_RUN_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
+  if (!hasFirstRun && !isBypassed) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/onboarding';
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
