@@ -6,3 +6,4 @@ export * from './data-reports';
 export * from './page-submissions';
 export * from './answers';
 export * from './polls';
+export * from './analytics';

@@ -116,7 +116,10 @@ export function ReviewsTab({
         )}
       </div>
 
-      <div className="fixed bottom-[calc(theme(spacing.navbar)+72px+env(safe-area-inset-bottom))] left-4 right-4 z-sticky">
+      {/* Sticky (not fixed): sits at the end of the review list instead of
+          floating over content + the global EmergencyFAB + the detail
+          page's bottom action bar. Scrolls away naturally at list end. */}
+      <div className="sticky bottom-[calc(72px+16px+env(safe-area-inset-bottom))] px-4 pb-2">
         <button
           onClick={() => setModalOpen(true)}
           className="h-11 w-full rounded-md border-2 border-life-600 bg-white text-[14px] font-semibold text-life-600 shadow-lg"

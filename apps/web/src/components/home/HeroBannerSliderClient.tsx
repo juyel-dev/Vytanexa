@@ -20,25 +20,39 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isInteracting = useRef(false);
+  const indexRef = useRef(0);
 
   useEffect(() => {
     if (ads.length <= 1) return;
     const interval = setInterval(() => {
       if (isInteracting.current) return;
-      const next = (activeIndex + 1) % ads.length;
-      scrollRef.current?.children[next]?.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'start',
-      });
+      if (document.hidden) return;
+      const next = (indexRef.current + 1) % ads.length;
+      // BUGFIX (2026-09): scrollIntoView() without an explicit `block`
+      // defaults to block: 'center', which walks every scrollable
+      // ancestor — including the page itself — and vertically re-centers
+      // the slide in the viewport on every auto-advance tick. Combined
+      // with `html { scroll-behavior: smooth }` this made the whole page
+      // smoothly jump back up to the banner every ~4.5s. Scrolling the
+      // slider's own container directly avoids touching page scroll.
+      // indexRef (not state) drives the interval so the timer isn't
+      // recreated on every slide change (no drift/double-speed).
+      const container = scrollRef.current;
+      const child = container?.children[next] as HTMLElement | undefined;
+      if (container && child) {
+        container.scrollTo({ left: child.offsetLeft, behavior: 'smooth' });
+      }
+      indexRef.current = next;
       setActiveIndex(next);
     }, 4500);
     return () => clearInterval(interval);
-  }, [activeIndex, ads.length]);
+  }, [ads.length]);
 
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
     const index = Math.round(el.scrollLeft / el.clientWidth);
+    indexRef.current = index;
     setActiveIndex(index);
   };
 
@@ -59,6 +73,10 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
         onScroll={handleScroll}
         onTouchStart={() => (isInteracting.current = true)}
         onTouchEnd={() => (isInteracting.current = false)}
+        onPointerDown={() => (isInteracting.current = true)}
+        onPointerUp={() => (isInteracting.current = false)}
+        onMouseEnter={() => (isInteracting.current = true)}
+        onMouseLeave={() => (isInteracting.current = false)}
         className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
       >
         {ads.map((ad) => (

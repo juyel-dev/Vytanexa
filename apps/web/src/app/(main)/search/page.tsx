@@ -40,6 +40,9 @@ export default function SearchPage() {
   // app: absent/false means off), same pattern as S14's community_qa.
   const [voiceSearchEnabled, setVoiceSearchEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'doctors' | 'hospitals' | 'symptoms'>('all');
+  // Monotonic request id — a slow older response must never overwrite a
+  // newer one when the user types fast.
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -60,11 +63,17 @@ export default function SearchPage() {
     }
     const expanded = BENGALI_ALIASES[query] ? `${query} ${BENGALI_ALIASES[query]}` : query;
     const timer = setTimeout(() => {
+      const id = ++requestIdRef.current;
       setLoading(true);
       fetch(`/api/search?q=${encodeURIComponent(expanded)}&limit=3`)
         .then((r) => r.json())
-        .then(setDropdown)
-        .finally(() => setLoading(false));
+        .then((json) => {
+          if (requestIdRef.current === id) setDropdown(json);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (requestIdRef.current === id) setLoading(false);
+        });
     }, 300);
     return () => clearTimeout(timer);
   }, [query, submittedQuery]);
@@ -78,11 +87,17 @@ export default function SearchPage() {
     saveRecentSearch(trimmed);
     setRecent(getRecentSearches());
     setLoading(true);
+    const id = ++requestIdRef.current;
     const expanded = BENGALI_ALIASES[trimmed] ? `${trimmed} ${BENGALI_ALIASES[trimmed]}` : trimmed;
     fetch(`/api/search?q=${encodeURIComponent(expanded)}&limit=20`)
       .then((r) => r.json())
-      .then(setResults)
-      .finally(() => setLoading(false));
+      .then((json) => {
+        if (requestIdRef.current === id) setResults(json);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (requestIdRef.current === id) setLoading(false);
+      });
   };
 
   const clearSearch = () => {

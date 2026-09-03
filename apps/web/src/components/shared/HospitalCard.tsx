@@ -52,11 +52,12 @@ export function HospitalCard({
   const name = getLocalizedField(hospital.name_translations);
 
   return (
-    <Link
-      href={`/hospitals/${hospital.slug}`}
-      className="mx-4 mb-3 block overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card"
-    >
-      <div className="relative h-[140px] w-full bg-neutral-100">
+    <div className="mx-4 mb-3 block overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">
+      <Link
+        href={`/hospitals/${hospital.slug}`}
+        className="relative block h-[140px] w-full bg-neutral-100"
+        aria-label={name}
+      >
         {hospital.cover_image_url && (
           <Image
             src={hospital.cover_image_url}
@@ -71,12 +72,20 @@ export function HospitalCard({
             🚨 জরুরি বিভাগ
           </span>
         )}
-        <div className="absolute left-2 top-2">
+        <div
+          className="absolute left-2 top-2"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
           <FavoriteToggle entityType="hospital" entityId={hospital.id} />
         </div>
-      </div>
+      </Link>
       <div className="p-4">
-        <h3 className="text-[16px] font-bold text-neutral-900">{name}</h3>
+        <Link href={`/hospitals/${hospital.slug}`}>
+          <h3 className="text-[16px] font-bold text-neutral-900">{name}</h3>
+        </Link>
         {matchedTestLabel && (
           <p className="mt-1 text-[12px] font-medium text-life-600">
             ✅ এই টেস্ট পাওয়া যায়: {matchedTestLabel}
@@ -109,16 +118,18 @@ export function HospitalCard({
         <div className="mt-3 grid grid-cols-2 gap-2">
           <a
             href={`tel:${hospital.phone}`}
-            onClick={(e) => e.stopPropagation()}
             className="flex h-9 items-center justify-center gap-1 rounded-md bg-brand-600 text-[12px] font-semibold text-white"
           >
             <Phone className="h-3.5 w-3.5" /> কল করুন
           </a>
-          <span className="flex h-9 items-center justify-center gap-1 rounded-md border border-neutral-200 text-[12px] font-semibold text-neutral-700">
+          <Link
+            href={`/hospitals/${hospital.slug}`}
+            className="flex h-9 items-center justify-center gap-1 rounded-md border border-neutral-200 text-[12px] font-semibold text-neutral-700"
+          >
             <Navigation className="h-3.5 w-3.5" /> বিস্তারিত
-          </span>
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

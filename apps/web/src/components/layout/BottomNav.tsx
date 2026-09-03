@@ -39,11 +39,17 @@ export function BottomNav() {
   const pathname = usePathname();
   const t = useTranslations();
 
+  // BUGFIX (2026-09): was `inset-x-0`, stretching edge-to-edge across the
+  // whole viewport even inside layout.tsx's centered 480px app shell
+  // (fixed positioning escapes normal-flow ancestors, so a bounded parent
+  // alone doesn't constrain it). left-1/2 + -translate centers a
+  // 480px-max column instead, matching the shell on desktop while staying
+  // identical on mobile (viewport already ≤480px).
+  const navClassName =
+    'fixed bottom-0 left-1/2 z-navbar flex h-navbar w-full max-w-[480px] -translate-x-1/2 items-stretch border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)]';
+
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-navbar flex h-navbar items-stretch border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
-      aria-label="প্রধান নেভিগেশন"
-    >
+    <nav className={navClassName} aria-label="প্রধান নেভিগেশন">
       {NAV_ITEMS.map(({ href, labelKey, icon: Icon, isCenter }) => {
         const label = t(labelKey);
         const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);

@@ -21,6 +21,14 @@ export function FirstRunGate() {
     const firstRun = localStorage.getItem('vytanexa_first_run');
     if (!firstRun) {
       router.replace('/onboarding');
+      return;
+    }
+    // Migrate legacy localStorage-only completions to the cookie the
+    // middleware reads (server can't see localStorage). Without this,
+    // users who finished onboarding before the cookie existed would be
+    // bounced back to /onboarding by the middleware on every visit.
+    if (!document.cookie.includes('vytanexa_first_run=done')) {
+      document.cookie = 'vytanexa_first_run=done; path=/; max-age=31536000';
     }
   }, [router]);
 

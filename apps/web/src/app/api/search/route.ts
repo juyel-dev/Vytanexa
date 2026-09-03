@@ -22,7 +22,12 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createClient();
-  const pattern = `%${q}%`;
+  // Escape ILIKE wildcards so a user typing % or _ can't inject their
+  // own wildcards (broken/unexpected results, slow scans on big tables).
+  // Also neutralize ,()" — PostgREST's `or=` param uses commas/parens
+  // as syntax, so a raw comma in the query would corrupt the filter.
+  const safe = q.replace(/[,()"']/g, ' ');
+  const pattern = `%${safe.replace(/[%_\\]/g, '\\$&')}%`;
 
   const [doctorsRes, hospitalsRes, categoriesRes, symptomsRes] = await Promise.all([
     supabase
