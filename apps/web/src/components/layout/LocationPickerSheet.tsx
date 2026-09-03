@@ -138,6 +138,7 @@ export function LocationPickerSheet({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={stepLabel}
+          aria-label={stepLabel}
           className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-neutral-400"
         />
       </div>

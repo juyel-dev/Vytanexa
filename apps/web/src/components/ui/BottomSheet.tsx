@@ -30,11 +30,23 @@ export function BottomSheet({
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
+    // overflow:hidden alone doesn't stop background touch-scroll on iOS
+    // Safari — lock via position:fixed + saved offset, restore on close.
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prevPosition = body.style.position;
+    const prevTop = body.style.top;
+    const prevOverflow = body.style.overflow;
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleKey);
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
+      body.style.position = prevPosition;
+      body.style.top = prevTop;
+      body.style.overflow = prevOverflow;
+      window.scrollTo(0, scrollY);
     };
   }, [open, onClose]);
 

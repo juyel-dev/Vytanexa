@@ -63,12 +63,11 @@ export function SettingsClient({
   };
 
   /**
-   * VYTANEXA-BLUEPRINT.md § S18 "Clear Cache": "Clears service-worker
-   * cache + IndexedDB offline data." No service worker is registered
-   * yet (S22 PWA scope) — these calls are real browser APIs that
-   * simply find nothing to clear today, not a fake button. Forward-
-   * compatible: once S22 adds a service worker, this starts doing
-   * real work with no changes needed here.
+   * VYTANEXA-BLUEPRINT.md § S18 "Clear Cache": clears cached data so a
+   * misbehaving app can recover. Only `caches.delete()` — never
+   * `registration.unregister()`: unregistering would destroy the PWA's
+   * offline capability (emergency numbers precache) and force a
+   * re-install, which is the opposite of a "fix my app" button.
    */
   const handleClearCache = async () => {
     setClearingCache(true);
@@ -76,10 +75,6 @@ export function SettingsClient({
       if ('caches' in window) {
         const keys = await caches.keys();
         await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrations.map((r) => r.unregister()));
       }
     } catch {
       // best-effort — clearing cache should never surface an error to the user

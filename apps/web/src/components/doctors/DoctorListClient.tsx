@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { SlidersHorizontal } from 'lucide-react';
 import { DoctorCard, type DoctorCardData } from '@/components/shared/DoctorCard';
@@ -53,6 +53,25 @@ export function DoctorListClient({
     setHasMore(initialDoctors.length < initialCount);
   }, [initialDoctors, initialCount]);
 
+  // useCallback with real deps — the observer always calls the latest
+  // closure, so a slow in-flight page can't append with a stale `page`.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(nextPage));
+    try {
+      const res = await fetch(`/api/doctors?${params.toString()}`);
+      const json = await res.json();
+      setDoctors((prev) => [...prev, ...(json.doctors ?? [])]);
+      setHasMore(json.hasMore);
+      setPage(nextPage);
+    } catch {
+      // network failure — stop spinning, keep existing results
+    }
+    setLoadingMore(false);
+  }, [page, searchParams]);
+
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || !hasMore) return;
@@ -66,21 +85,7 @@ export function DoctorListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loadingMore, page]);
-
-  const loadMore = async () => {
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', String(nextPage));
-    const res = await fetch(`/api/doctors?${params.toString()}`);
-    const json = await res.json();
-    setDoctors((prev) => [...prev, ...json.doctors]);
-    setHasMore(json.hasMore);
-    setPage(nextPage);
-    setLoadingMore(false);
-  };
+  }, [hasMore, loadingMore, loadMore]);
 
   const activeSpecialty = searchParams.get('specialty')?.split(',')[0];
   const activeSort = searchParams.get('sort') ?? 'rating';

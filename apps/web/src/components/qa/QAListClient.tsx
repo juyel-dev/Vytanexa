@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ChevronUp } from 'lucide-react';
@@ -66,6 +66,25 @@ export function QAListClient({
     setHasMore(initialQuestions.length < initialCount);
   }, [initialQuestions, initialCount]);
 
+  // useCallback with real deps — the observer always calls the latest
+  // closure, so a slow in-flight page can't append with a stale `page`.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(nextPage));
+    try {
+      const res = await fetch(`/api/questions?${params.toString()}`);
+      const json = await res.json();
+      setQuestions((prev) => [...prev, ...(json.questions ?? [])]);
+      setHasMore(json.hasMore);
+      setPage(nextPage);
+    } catch {
+      // network failure — stop spinning, keep existing results
+    }
+    setLoadingMore(false);
+  }, [page, searchParams]);
+
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || !hasMore) return;
@@ -77,21 +96,7 @@ export function QAListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loadingMore, page]);
-
-  const loadMore = async () => {
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', String(nextPage));
-    const res = await fetch(`/api/questions?${params.toString()}`);
-    const json = await res.json();
-    setQuestions((prev) => [...prev, ...(json.questions ?? [])]);
-    setHasMore(json.hasMore);
-    setPage(nextPage);
-    setLoadingMore(false);
-  };
+  }, [hasMore, loadingMore, loadMore]);
 
   const activeFilter = searchParams.get('filter') ?? 'all';
   const updateParam = (key: string, value: string | null) => {

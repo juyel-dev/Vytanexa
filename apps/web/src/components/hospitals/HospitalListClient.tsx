@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { HospitalCard, type HospitalCardData } from '@/components/shared/HospitalCard';
 import { LocationChip } from '@/components/layout/LocationChip';
@@ -55,6 +55,25 @@ export function HospitalListClient({
     setHasMore(initialHospitals.length < initialCount);
   }, [initialHospitals, initialCount]);
 
+  // useCallback with real deps — the observer always calls the latest
+  // closure, so a slow in-flight page can't append with a stale `page`.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(nextPage));
+    try {
+      const res = await fetch(`/api/hospitals?${params.toString()}`);
+      const json = await res.json();
+      setHospitals((prev) => [...prev, ...(json.hospitals ?? [])]);
+      setHasMore(json.hasMore);
+      setPage(nextPage);
+    } catch {
+      // network failure — stop spinning, keep existing results
+    }
+    setLoadingMore(false);
+  }, [page, searchParams]);
+
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || !hasMore) return;
@@ -66,21 +85,7 @@ export function HospitalListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loadingMore, page]);
-
-  const loadMore = async () => {
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', String(nextPage));
-    const res = await fetch(`/api/hospitals?${params.toString()}`);
-    const json = await res.json();
-    setHospitals((prev) => [...prev, ...json.hospitals]);
-    setHasMore(json.hasMore);
-    setPage(nextPage);
-    setLoadingMore(false);
-  };
+  }, [hasMore, loadingMore, loadMore]);
 
   const activeType = searchParams.get('type');
   const emergencyOnly = searchParams.get('emergencyOnly') === 'true';
@@ -88,14 +93,17 @@ export function HospitalListClient({
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     value ? params.set(key, value) : params.delete(key);
-    router.push(`${pathname}?${params.toString()}`);
+    // replace, not push — filter changes shouldn't spam history, and
+    // pushing from an effect risks a push → re-render → effect loop.
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
   useEffect(() => {
     const currentDistrict = searchParams.get('district');
-    if ((districtId ?? null) !== currentDistrict) {
-      updateParam('district', districtId ?? null);
-    }
+    if ((districtId ?? null) === currentDistrict) return;
+    const params = new URLSearchParams(searchParams.toString());
+    districtId ? params.set('district', districtId) : params.delete('district');
+    router.replace(`${pathname}?${params.toString()}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [districtId]);
 

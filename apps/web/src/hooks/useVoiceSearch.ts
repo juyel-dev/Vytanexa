@@ -55,6 +55,13 @@ export function useVoiceSearch(onResult: (transcript: string) => void) {
       };
 
       recognition.onerror = () => {
+        // Stop the failed session before retrying — otherwise the old
+        // mic session leaks alongside the new one.
+        try {
+          recognition.stop();
+        } catch {
+          // already stopped — safe to ignore
+        }
         if (langAttemptRef.current < LANG_FALLBACKS.length - 1) {
           langAttemptRef.current += 1;
           runRecognition(Ctor);
