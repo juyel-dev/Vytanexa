@@ -28,6 +28,34 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
 
 ---
 
+## BLOOD SERVICE — DEEP DIVE (NEXT UP)
+Full plan in `BLOOD-SERVICE-PLAN.md` (audit-grounded, code-verified). Work top to
+bottom within that file: Phase A (8 bug fixes, no migration) → Phase B (`blood_requests`
+migration) → Phase C (missing features incl. full request flow) → Phase D (polish).
+- [ ] Phase A.1 — donor phone validation mismatch (client `/^[0-9+]{10,14}$/` vs
+      server `/^[6-9]\d{9}$/`)
+- [ ] Phase A.2 — blood bank header count uses unfiltered length
+- [ ] Phase A.3 — "has stock" filter ignores stock_level, presence-only check
+- [ ] Phase A.4 — "২৪ ঘণ্টা খোলা" wrongly derived from has_emergency_dept instead of
+      operating_hours (already fetched, unused)
+- [ ] Phase A.5 — contact route fails OPEN on rate-limit error (privacy leak)
+- [ ] Phase A.6 — donor list doesn't refresh after registration
+- [ ] Phase A.7 — admin donor list hard-capped at 200, no pagination
+- [ ] Phase A.8 — no name/phone search in admin donor list
+- [ ] Phase A.9 — desktop blank-tab on donor contact tap (tel: redirect)
+- [ ] Phase B — `blood_requests` table + RLS + `get_blood_request_phone()` RPC
+      (mirrors `get_donor_phone`), get_advisors pass
+- [ ] Phase C.1 — Blood Request ("রক্ত চাই") flow end-to-end, user + admin
+- [ ] Phase C.2 — admin donor edit (name/phone/group/location)
+- [ ] Phase C.3 — blood bank detail page
+- [ ] Phase C.4 — WhatsApp CTA (whatsapp_number already fetched, unused)
+- [ ] Phase C.5 — homepage blood-group pills wired (currently dead spans)
+- [ ] Phase C.6 — Emergency FAB → direct nearest-bank-call shortcut
+- [ ] Phase D — last_donated_at/district on donor cards, stock legend, per-IP
+      registration rate limit, admin stale-stock badge/banner
+
+---
+
 ## S04 — HOME PAGE ✅ ALL SECTIONS DONE
 - [x] SEC-03 Quick Stats Bar (done)
 - [x] SEC-04 Quick Actions Row (done)
