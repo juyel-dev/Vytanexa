@@ -29,9 +29,17 @@ alongside `PROJECT-CONTEXT.md` §5 and `IMPLEMENTATION-ROADMAP.md`.
 ---
 
 ## BLOOD SERVICE — DEEP DIVE (NEXT UP)
-Full plan in `BLOOD-SERVICE-PLAN.md` (audit-grounded, code-verified). Work top to
-bottom within that file: Phase A (8 bug fixes, no migration) → Phase B (`blood_requests`
-migration) → Phase C (missing features incl. full request flow) → Phase D (polish).
+Full plan in `BLOOD-SERVICE-PLAN.md` (audit-grounded, code-verified) for Phase A/D.
+Phase B/C.1 (the request/donation lifecycle) is superseded by `BLOOD-SERVICE-SPEC.md`
+— that's the authoritative spec now: tracks a donor commit all the way through
+donor-confirms + requester-confirms + admin dispute resolution, not just "post a
+request, reveal a phone." **BLOCKER flagged in that spec §4: donor/requester phone
+OTP verification needs an SMS/WhatsApp provider — real cost, needs Juyel's vendor
+decision. v1 ships without it using the two-sided-confirm + report/dispute mitigations
+in §4 instead; proceed with everything else while that decision is pending.**
+Work order: Phase A (8 bug fixes, no migration) → migration for
+`blood_requests`+`blood_request_responses` (BLOOD-SERVICE-SPEC.md §3) → lifecycle flow
+(§2/§6) → admin disputes tab (§5) → remaining Phase C/D polish.
 - [ ] Phase A.1 — donor phone validation mismatch (client `/^[0-9+]{10,14}$/` vs
       server `/^[6-9]\d{9}$/`)
 - [ ] Phase A.2 — blood bank header count uses unfiltered length

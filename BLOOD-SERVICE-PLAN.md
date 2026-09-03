@@ -54,6 +54,12 @@
 
 ## Phase B — Schema Additions (migration)
 
+> **Superseded by `BLOOD-SERVICE-SPEC.md`.** The version below only covers "post a
+> request, reveal a phone" — it never tracks whether the donor actually showed up or
+> donated. `BLOOD-SERVICE-SPEC.md` is the authoritative spec for Phase B/C.1
+> (adds `blood_request_responses`, a two-sided confirm state machine, admin dispute
+> queue, and reuses `data_reports` for moderation). Left here for history only.
+
 - **`blood_requests` table** (new — the "রক্ত চাই" flow, currently fully absent):
   ```sql
   CREATE TABLE blood_requests (
