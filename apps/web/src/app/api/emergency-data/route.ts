@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getBloodBanks } from '@/lib/queries/blood-services';
+import { getLocationSubtreeIds } from '@/lib/queries/location-subtree';
 
 /**
  * GET /api/emergency-data?district=... — VYTANEXA-BLUEPRINT.md § S12.
@@ -30,7 +31,14 @@ export async function GET(request: NextRequest) {
     .eq('has_emergency_dept', true)
     .order('is_featured', { ascending: false })
     .limit(10);
-  if (districtId) hospitalQuery = hospitalQuery.eq('location_id', districtId);
+  // Hierarchy-aware: a district also matches facilities tagged at
+  // sub_district/ward level (see location-subtree.ts). Blood banks stay
+  // national on purpose — in an emergency, hiding a nearby bank because
+  // of a district boundary is worse than showing one extra row.
+  const districtIds = districtId
+    ? await getLocationSubtreeIds(supabase, districtId)
+    : null;
+  if (districtIds) hospitalQuery = hospitalQuery.in('location_id', districtIds);
 
   let ambulanceQuery = supabase
     .from('ambulance_services')
@@ -38,7 +46,7 @@ export async function GET(request: NextRequest) {
     .eq('verification_status', 'verified')
     .eq('is_active', true)
     .limit(5);
-  if (districtId) ambulanceQuery = ambulanceQuery.eq('location_id', districtId);
+  if (districtIds) ambulanceQuery = ambulanceQuery.in('location_id', districtIds);
 
   const [hospitalRes, ambulanceRes, bloodBanks] = await Promise.all([
     hospitalQuery,

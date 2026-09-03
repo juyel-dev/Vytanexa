@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@vytanexa/database';
+import { getLocationSubtreeIds } from './location-subtree';
 
 /**
  * Lab Test Search — VYTANEXA-BLUEPRINT.md § S10 "SEARCH BEHAVIOR":
@@ -20,10 +21,8 @@ import type { Database, Json } from '@vytanexa/database';
  * tagged with which of the searched-for tests it actually offers (for
  * the result card's "✅ এই টেস্ট পাওয়া যায়: CBC" confirmation line).
  *
- * `locationId` (optional) scopes results to a district via
- * `location_id` equality — added after S12 uncovered that the
- * Location Chip + Zustand store this depends on already existed in
- * the app (see TODO.md's S12 correction note). Omitting it searches
+ * `locationId` (optional) scopes results to a district + all its
+ * descendants (see `location-subtree.ts`). Omitting it searches
  * nationally, same as before.
  */
 export type TestSearchResult = {
@@ -79,7 +78,12 @@ export async function searchTests(
     )
     .eq('verification_status', 'verified')
     .overlaps('services', canonicalKeys);
-  if (locationId) hospitalQuery = hospitalQuery.eq('location_id', locationId);
+  if (locationId) {
+    hospitalQuery = hospitalQuery.in(
+      'location_id',
+      await getLocationSubtreeIds(supabase, locationId)
+    );
+  }
 
   const { data: hospitals, error: hospitalError } = await hospitalQuery
     .order('is_featured', { ascending: false })

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@vytanexa/database';
+import { getLocationSubtreeIds } from './location-subtree';
 
 /**
  * Blood Banks — VYTANEXA-BLUEPRINT.md § S11. A "blood bank" is a
@@ -15,11 +16,10 @@ import type { Database } from '@vytanexa/database';
  * indicators at all, per spec: "stale data hidden entirely rather
  * than shown wrong."
  *
- * `locationId` (optional) scopes to a district via `location_id`
- * equality — added after S12 uncovered that the Location Chip +
- * Zustand store this depends on already existed in the app (see
- * TODO.md's S12 correction note). Omitting it returns results
- * nationally, same as before.
+ * `locationId` (optional) scopes to a district + all its descendants
+ * (see `location-subtree.ts`) — blood banks are hospitals tagged at
+ * their lowest level, so exact-match would miss most of them.
+ * Omitting it returns results nationally, same as before.
  */
 export async function getBloodBanks(supabase: SupabaseClient<Database>, locationId?: string) {
   let hospitalQuery = supabase
@@ -29,7 +29,12 @@ export async function getBloodBanks(supabase: SupabaseClient<Database>, location
     )
     .eq('verification_status', 'verified')
     .contains('facility_tags', ['blood_bank']);
-  if (locationId) hospitalQuery = hospitalQuery.eq('location_id', locationId);
+  if (locationId) {
+    hospitalQuery = hospitalQuery.in(
+      'location_id',
+      await getLocationSubtreeIds(supabase, locationId)
+    );
+  }
 
   const { data: hospitals, error: hospitalError } = await hospitalQuery.order('is_featured', {
     ascending: false,
@@ -69,8 +74,9 @@ export type BloodBank = Awaited<ReturnType<typeof getBloodBanks>>[number];
  * never the raw `blood_donors` table, and RLS blocks that table
  * entirely for the anon key regardless (`blood_donors_service_only`).
  *
- * `locationId` (optional) scopes to a district, same rationale as
- * `getBloodBanks`'s equivalent param above.
+ * `locationId` (optional) scopes to a district via EXACT match —
+ * deliberately NOT subtree-expanded: donor registration only allows
+ * district-level selection, so donor rows are always district-tagged.
  */
 export async function getBloodDonors(
   supabase: SupabaseClient<Database>,
