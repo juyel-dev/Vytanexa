@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { getLocalizedField } from '@/lib/i18n';
+import { normalizeIndianPhone } from '@/lib/validations/blood-donors';
 import type { Json } from '@vytanexa/database';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
@@ -16,14 +17,23 @@ type District = { id: string; slug: string; name_translations: Json };
  * gate only, see `/api/blood-donors` route comment for why it isn't
  * persisted) and contact consent (`consent_contact`, persisted and
  * DB-enforced via `chk_donor_consent`).
+ *
+ * BLOOD-SERVICE-PLAN.md Phase A.1/A.6 — phone check now runs the same
+ * `normalizeIndianPhone` the server uses (was a bare 10-digit regex
+ * here vs. a stricter server rule, so "+91XXXXXXXXXX" — literally the
+ * placeholder text — got rejected on submit). `onSuccess` lets the
+ * parent refetch the donor list instead of the new donor only showing
+ * up after a manual reload.
  */
 export function DonorRegistrationSheet({
   open,
   onClose,
+  onSuccess,
   districts,
 }: {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   districts: District[];
 }) {
   const [name, setName] = useState('');
@@ -38,7 +48,7 @@ export function DonorRegistrationSheet({
 
   const canSubmit =
     name.trim().length >= 2 &&
-    /^[0-9+]{10,14}$/.test(phone.trim()) &&
+    /^[6-9]\d{9}$/.test(normalizeIndianPhone(phone)) &&
     bloodGroup &&
     districtId &&
     eligible &&
@@ -50,21 +60,23 @@ export function DonorRegistrationSheet({
     setError(null);
     const res = await fetch('/api/blood-donors', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name,
-        phone: phone.trim(),
+        phone: normalizeIndianPhone(phone),
         blood_group: bloodGroup,
         location_id: districtId,
         consent_contact: consent,
       }),
-    });
+    }).catch(() => null);
     setSubmitting(false);
-    if (!res.ok) {
-      const json = await res.json();
-      setError(json.error ?? 'নিবন্ধন করতে সমস্যা হয়েছে');
+    if (!res || !res.ok) {
+      const json = res ? await res.json().catch(() => null) : null;
+      setError(json?.error ?? 'নিবন্ধন করতে সমস্যা হয়েছে');
       return;
     }
     setSuccess(true);
+    onSuccess?.();
     setTimeout(() => {
       onClose();
       setSuccess(false);
@@ -99,7 +111,7 @@ export function DonorRegistrationSheet({
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             type="tel"
-            placeholder="+91XXXXXXXXXX"
+            placeholder="XXXXXXXXXX"
             className="mb-3 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           />
 

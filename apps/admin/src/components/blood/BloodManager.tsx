@@ -5,31 +5,75 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@/components/ui/DataTable';
-import { sortLocationsHierarchically } from '@/lib/location-hierarchy';
+import { Search } from 'lucide-react';
 
 type Donor = { id: string; name: string; phone: string; blood_group: string; location_id: string; location_name: string; last_donated_at: string | null; is_active: boolean };
 type HospInv = { id: string; name: string; inventory: { blood_group: string; stock_level: string; reported_at: string }[] };
+type District = { id: string; name_translations: { bn?: string; en?: string } | null; slug: string };
+type Filters = { q: string; group: string; locationId: string };
 
 const GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as const;
 const STOCK_LABEL: Record<string, string> = { available: '✅ উপলব্ধ', low: '⚠️ কম', unavailable: '❌ নেই', unknown: '—' };
 
-export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]; hospitals: HospInv[]; locations: import('@/lib/location-hierarchy').LocationNode[] }) {
+function districtName(d: District) {
+  return d.name_translations?.bn || d.name_translations?.en || d.slug;
+}
+
+function buildUrl(filters: Filters & { page?: number }) {
+  const p = new URLSearchParams();
+  if (filters.q) p.set('q', filters.q);
+  if (filters.group) p.set('group', filters.group);
+  if (filters.locationId) p.set('location', filters.locationId);
+  if (filters.page && filters.page > 1) p.set('page', String(filters.page));
+  const s = p.toString();
+  return s ? `/blood-donors?${s}` : '/blood-donors';
+}
+
+export function BloodManager({
+  donors,
+  total,
+  page,
+  perPage,
+  currentFilters,
+  hospitals,
+  districts,
+}: {
+  donors: Donor[];
+  total: number;
+  page: number;
+  perPage: number;
+  currentFilters: Filters;
+  hospitals: HospInv[];
+  districts: District[];
+}) {
   const router = useRouter();
   const toast = useToast();
   const [tab, setTab] = useState<'donors' | 'inventory'>('donors');
-  const [qGroup, setQGroup] = useState('');
-  const [qLoc, setQLoc] = useState('');
+  const [qInput, setQInput] = useState(currentFilters.q);
   const [del, setDel] = useState<Donor | null>(null);
   const [busy, setBusy] = useState(false);
 
   // inventory editing state: hospId -> group -> stock
   const [invEdits, setInvEdits] = useState<Record<string, Record<string, string>>>({});
 
-  const filteredDonors = donors.filter((d) => {
-    if (qGroup && d.blood_group !== qGroup) return false;
-    if (qLoc && d.location_id !== qLoc) return false;
-    return true;
-  });
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+  // BLOOD-SERVICE-PLAN.md Phase A.7/A.8 — filters are now URL-driven
+  // (server re-queries with search + pagination), matching the same
+  // pattern DoctorsTable already uses, rather than filtering a
+  // client-side array capped at 200 rows.
+  const pushFilters = (patch: Partial<Filters> & { page?: number }) => {
+    const next: Filters & { page?: number } = { ...currentFilters, ...patch };
+    if (patch.q !== undefined || patch.group !== undefined || patch.locationId !== undefined) {
+      if (patch.page === undefined) next.page = 1;
+    }
+    router.push(buildUrl(next));
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    pushFilters({ q: qInput });
+  };
 
   const handleToggleActive = async (d: Donor) => {
     const res = await fetch(`/api/admin/blood-donors/${d.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !d.is_active }) }).catch(() => null);
@@ -78,24 +122,51 @@ export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]
 
       {tab === 'donors' ? (
         <>
-          <div className="flex gap-2">
-            <select value={qGroup} onChange={(e) => setQGroup(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
+          <div className="flex flex-wrap gap-2">
+            <form onSubmit={handleSearchSubmit} className="flex h-9">
+              <input
+                value={qInput}
+                onChange={(e) => setQInput(e.target.value)}
+                placeholder="নাম বা ফোন দিয়ে খুঁজুন"
+                className="h-9 w-48 rounded-l-md border border-r-0 border-admin-border bg-white px-2 text-admin-body"
+              />
+              <button type="submit" className="flex h-9 w-9 items-center justify-center rounded-r-md border border-admin-border bg-white text-neutral-500 hover:bg-neutral-50">
+                <Search className="h-4 w-4" />
+              </button>
+            </form>
+            <select
+              value={currentFilters.group}
+              onChange={(e) => pushFilters({ group: e.target.value })}
+              className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
+            >
               <option value="">সব গ্রুপ</option>
               {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
-            <select value={qLoc} onChange={(e) => setQLoc(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
-              <option value="">সব এলাকা</option>
-              {sortLocationsHierarchically(locations).map((l) => (
-                <option key={l.id} value={l.id}>{'\u00A0\u00A0'.repeat(l.depth)}{l.label}</option>
+            <select
+              value={currentFilters.locationId}
+              onChange={(e) => pushFilters({ locationId: e.target.value })}
+              className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
+            >
+              <option value="">সব জেলা</option>
+              {districts.map((d) => (
+                <option key={d.id} value={d.id}>{districtName(d)}</option>
               ))}
             </select>
           </div>
 
           <DataTable
             columns={['নাম', 'গ্রুপ', 'এলাকা', 'শেষ দান', 'ফোন', 'স্ট্যাটাস', 'একশন']}
-            rows={filteredDonors}
+            rows={donors}
             rowKey={(d) => d.id}
             emptyMessage="কোনো রক্তদাতা নেই।"
+            pagination={{
+              total,
+              page,
+              totalPages,
+              itemLabel: 'জন দাতা',
+              onPrev: () => pushFilters({ page: page - 1 }),
+              onNext: () => pushFilters({ page: page + 1 }),
+            }}
             renderRow={(d) => (
               <>
                 <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{d.name}</td>
@@ -117,13 +188,36 @@ export function BloodManager({ donors, hospitals, locations }: { donors: Donor[]
         </>
       ) : (
         <div className="flex flex-col gap-4">
+          {(() => {
+            const staleCount = hospitals.filter((h) => {
+              const latest = h.inventory.length ? Math.max(...h.inventory.map((b) => new Date(b.reported_at).getTime())) : null;
+              return latest === null || Date.now() - latest > 48 * 60 * 60 * 1000;
+            }).length;
+            return staleCount > 0 ? (
+              <div className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-admin-body text-accent-700">
+                ⚠️ {staleCount}টি ব্যাংকের স্টক পুরনো বা রিপোর্ট করা নেই — ব্যবহারকারী অ্যাপে এগুলোর স্টক দেখানো হচ্ছে না।
+              </div>
+            ) : null;
+          })()}
           {hospitals.length === 0 ? <div className="rounded-lg border border-admin-border bg-white p-6 text-admin-body text-neutral-500">কোনো হাসপাতালে ব্লাড ব্যাংক ট্যাগ নেই — হাসপাতাল ফর্মে facility_tags এ "ব্লাড ব্যাংক" টিক দিন।</div> : hospitals.map((h) => {
             const base = h.inventory;
             const edits = invEdits[h.id] ?? {};
-            const updatedAt = base.length ? new Date(Math.max(...base.map((b) => new Date(b.reported_at).getTime()))).toLocaleString('bn-BD') : '—';
+            const latestMs = base.length ? Math.max(...base.map((b) => new Date(b.reported_at).getTime())) : null;
+            const updatedAt = latestMs ? new Date(latestMs).toLocaleString('bn-BD') : '—';
+            // BLOOD-SERVICE-PLAN.md Phase D — public read RLS hides stock
+            // past 48h with no admin-facing signal at all; a bank could
+            // go silently blank on the user app and nobody here would know.
+            const isStale = latestMs === null || Date.now() - latestMs > 48 * 60 * 60 * 1000;
             return (
               <div key={h.id} className="rounded-xl border border-admin-border bg-white p-4">
-                <h3 className="text-admin-h3 text-neutral-900">{h.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-admin-h3 text-neutral-900">{h.name}</h3>
+                  {isStale && (
+                    <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[11px] font-medium text-accent-700">
+                      ⚠️ স্টক পুরনো — ব্যবহারকারী অ্যাপে দেখানো হচ্ছে না
+                    </span>
+                  )}
+                </div>
                 <p className="text-admin-small text-neutral-400">সর্বশেষ আপডেট: {updatedAt}</p>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {GROUPS.map((g) => {

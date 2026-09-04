@@ -18,13 +18,17 @@ export function BloodServicesCTA() {
       <p className="text-[13px] text-neutral-600">আপনার কাছের ব্লাড ব্যাংক খুঁজুন</p>
 
       <div className="my-3 flex flex-wrap gap-1.5">
+        {/* BLOOD-SERVICE-PLAN.md Phase C.5 — these were plain <span>s,
+            not tappable at all; now each jumps straight to the blood
+            services page pre-filtered to that group. */}
         {BLOOD_GROUPS.map((g) => (
-          <span
+          <Link
             key={g}
+            href={`/health/blood-services?group=${encodeURIComponent(g)}`}
             className="rounded-full bg-emergency-100 px-2 py-0.5 text-[11px] font-semibold text-emergency-700"
           >
             {g}
-          </span>
+          </Link>
         ))}
       </div>
 

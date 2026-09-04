@@ -1,17 +1,20 @@
 import 'server-only';
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
-import { requireRole } from '@/lib/supabase/auth-verify';
+import { requireRoleApi } from '@/lib/supabase/auth-verify';
 import { writeAudit } from '@/lib/audit';
 import { inventorySchema } from '@/lib/validations/blood';
 
 /**
  * POST /api/admin/blood-inventory — upsert stock levels for a hospital.
  * Body: { hospital_id, inventory: [{blood_group, stock_level}] }
- * Gate: admin. Writes to blood_bank_inventory with UNIQUE(hospital_id, blood_group).
+ * Gate: admin (requireRoleApi — see auth-verify.ts comment for why not requireRole here)
+ * Writes to blood_bank_inventory with UNIQUE(hospital_id, blood_group).
  */
 export async function POST(request: Request) {
-  const session = await requireRole('admin');
+  const gate = await requireRoleApi('admin');
+  if ('error' in gate) return gate.error;
+  const session = gate.session;
   const parsed = inventorySchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: 'অবৈধ ডেটা' }, { status: 400 });
   const { hospital_id, inventory } = parsed.data;

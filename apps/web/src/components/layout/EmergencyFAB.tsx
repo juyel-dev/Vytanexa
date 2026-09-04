@@ -52,6 +52,9 @@ export function EmergencyFAB() {
   const [ambulances, setAmbulances] = useState<
     { id: string; name_translations: Json; phone: string }[]
   >([]);
+  const [bloodBanks, setBloodBanks] = useState<
+    { id: string; name_translations: Json; phone: string }[]
+  >([]);
   const [loading, setLoading] = useState(false);
 
   const openSheet = async (kind: SheetKind) => {
@@ -79,6 +82,22 @@ export function EmergencyFAB() {
         .eq('is_active', true)
         .limit(5);
       setAmbulances(data ?? []);
+      setLoading(false);
+    }
+    // BLOOD-SERVICE-PLAN.md Phase C.6 — this sheet used to be a single
+    // dead-end link with no direct number, unlike its 'hospital'
+    // sibling above. Same pattern now: a few nearby blood banks with a
+    // direct call button, "see all" link still there for the rest.
+    if (kind === 'blood' && bloodBanks.length === 0) {
+      setLoading(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('hospitals')
+        .select('id, name_translations, phone')
+        .eq('verification_status', 'verified')
+        .contains('facility_tags', ['blood_bank'])
+        .limit(5);
+      setBloodBanks(data ?? []);
       setLoading(false);
     }
   };
@@ -202,11 +221,28 @@ export function EmergencyFAB() {
         onClose={() => setActiveSheet(null)}
         title="ব্লাড সার্ভিস"
       >
-        <Link
-          href="/health/blood-services"
-          className="block rounded-md bg-emergency-600 py-3 text-center text-[14px] font-semibold text-white"
-        >
-          ব্লাড ব্যাংক ও রক্তদাতা দেখুন →
+        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">লোড হচ্ছে...</p>}
+        {!loading && bloodBanks.length === 0 && (
+          <p className="py-3 text-center text-[13px] text-neutral-400">
+            এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই
+          </p>
+        )}
+        {bloodBanks.map((b) => (
+          <div key={b.id} className="mb-2 flex items-center justify-between rounded-lg border border-neutral-100 p-3">
+            <span className="text-[14px] text-neutral-800">
+              🩸 {getLocalizedField(b.name_translations)}
+            </span>
+            <a
+              href={`tel:${b.phone}`}
+              onClick={() => trackCall('blood_bank', b.id)}
+              aria-label={`${getLocalizedField(b.name_translations)}-এ কল করুন`}
+            >
+              <Phone className="h-4 w-4 text-emergency-600" />
+            </a>
+          </div>
+        ))}
+        <Link href="/health/blood-services" className="block py-2 text-center text-[13px] text-brand-600">
+          ব্লাড ব্যাংক ও রক্তদাতা তালিকা দেখুন →
         </Link>
       </BottomSheet>
     </>

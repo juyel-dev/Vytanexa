@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-  } else if (!allowed) {
+    return NextResponse.json({ error: 'এখন নিবন্ধন করা যাচ্ছে না, একটু পরে চেষ্টা করুন' }, { status: 503 });
+  }
+  if (!allowed) {
     return NextResponse.json(
       { error: 'এই নম্বর দিয়ে ৯০ দিনের মধ্যে ইতিমধ্যে নিবন্ধন করা হয়েছে' },
       { status: 429 }

@@ -33,34 +33,68 @@ Full plan in `BLOOD-SERVICE-PLAN.md` (audit-grounded, code-verified) for Phase A
 Phase B/C.1 (the request/donation lifecycle) is superseded by `BLOOD-SERVICE-SPEC.md`
 — that's the authoritative spec now: tracks a donor commit all the way through
 donor-confirms + requester-confirms + admin dispute resolution, not just "post a
-request, reveal a phone." **BLOCKER flagged in that spec §4: donor/requester phone
-OTP verification needs an SMS/WhatsApp provider — real cost, needs Juyel's vendor
-decision. v1 ships without it using the two-sided-confirm + report/dispute mitigations
-in §4 instead; proceed with everything else while that decision is pending.**
-Work order: Phase A (8 bug fixes, no migration) → migration for
-`blood_requests`+`blood_request_responses` (BLOOD-SERVICE-SPEC.md §3) → lifecycle flow
-(§2/§6) → admin disputes tab (§5) → remaining Phase C/D polish.
-- [ ] Phase A.1 — donor phone validation mismatch (client `/^[0-9+]{10,14}$/` vs
-      server `/^[6-9]\d{9}$/`)
-- [ ] Phase A.2 — blood bank header count uses unfiltered length
-- [ ] Phase A.3 — "has stock" filter ignores stock_level, presence-only check
-- [ ] Phase A.4 — "২৪ ঘণ্টা খোলা" wrongly derived from has_emergency_dept instead of
-      operating_hours (already fetched, unused)
-- [ ] Phase A.5 — contact route fails OPEN on rate-limit error (privacy leak)
-- [ ] Phase A.6 — donor list doesn't refresh after registration
-- [ ] Phase A.7 — admin donor list hard-capped at 200, no pagination
-- [ ] Phase A.8 — no name/phone search in admin donor list
-- [ ] Phase A.9 — desktop blank-tab on donor contact tap (tel: redirect)
-- [ ] Phase B — `blood_requests` table + RLS + `get_blood_request_phone()` RPC
-      (mirrors `get_donor_phone`), get_advisors pass
-- [ ] Phase C.1 — Blood Request ("রক্ত চাই") flow end-to-end, user + admin
-- [ ] Phase C.2 — admin donor edit (name/phone/group/location)
+request, reveal a phone." **The two-sided-confirm/request-flow model in
+BLOOD-SERVICE-SPEC.md (§2/§3/§6, Phase B/C.1) was itself superseded in a later
+discussion: no matching/commit/confirm system at all — Vytanexa stays a directory only.
+Donor register + donor-list-view will be login-gated (Google sign-in, infra already
+exists via SigninStep.tsx); donors publish instantly, moderator suspends fakes later
+via WhatsApp. Not yet built — next up after this batch.**
+Phase A (9 bug fixes) + several Phase C/D items done in this pass (typecheck + build
+verified both apps):
+- [x] Phase A.1 — donor phone validation mismatch — fixed via shared
+      `normalizeIndianPhone()` in validations/blood-donors.ts, used by both the
+      client's canSubmit check and the server schema
+- [x] Phase A.2 — blood bank header count — now counts the same filtered array that
+      renders (`visibleBanks`)
+- [x] Phase A.3 — "has stock" filter — now checks `stock_level` (available/low), not
+      just row presence
+- [x] Phase A.4 — "২৪ ঘণ্টা খোলা" — now reads `operating_hours.is_24x7` instead of
+      `has_emergency_dept`
+- [x] Phase A.5 — contact route + donor registration route both now fail-closed on a
+      rate-limit RPC error (was fail-open on both, not just contact)
+- [x] Phase A.6 — donor list refreshes via `onSuccess` callback after registration
+- [x] Phase A.7 — admin donor list — server-side pagination wired to DataTable's
+      existing (previously unused) `pagination` prop
+- [x] Phase A.8 — admin name/phone search box added (server-side `.ilike` OR)
+- [x] Phase A.9 — desktop contact reveal — `?format=json` + copy-to-clipboard UI on
+      non-touch devices (`matchMedia('(pointer: coarse)')`); mobile keeps the tel:
+      redirect nav
+- [x] Phase C.4 — WhatsApp CTA added next to bank call button (data was already
+      fetched, just unrendered)
+- [x] Phase C.5 — homepage blood-group pills now link to
+      `/health/blood-services?group=X`
+- [x] Phase C.6 — Emergency FAB's blood sheet now shows direct call buttons (+
+      tracking) for nearby banks, matching the sibling hospital sheet, instead of a
+      single dead-end link
+- [x] Phase D (partial) — last_donated_at + district now shown on donor cards, stock
+      icon legend added, admin per-bank + page-level stale-stock (>48h) warning added
+- [x] **New, found during deep-dive, not in original list** — admin `requireRole()`
+      redirects on failure, which a route handler's `fetch()` follows and reports as a
+      false "success" (only dormant because just one super_admin exists today; would
+      break the planned moderator/WhatsApp workflow). Added `requireRoleApi()` in
+      auth-verify.ts (returns 401/403 JSON instead of redirecting) and applied it to
+      blood-donors `[id]` PATCH/DELETE + blood-inventory POST. The other ~58
+      `requireRole()` call sites are Server Components/pages, where redirect is
+      correct — left alone, out of scope here.
+- [x] **New** — admin donor location filter dropdown was built from ALL location
+      types via `sortLocationsHierarchically` (built for chamber-address precision);
+      `blood_donors.location_id` is district-only, so picking a state/sub_district/
+      ward silently matched zero donors. `page.tsx` now fetches districts only.
+
+Still open from the original list:
+- [ ] Phase C.2 — admin donor edit (name/phone/group/location) — no PATCH support for
+      these fields yet, only is_active toggle + soft delete
 - [ ] Phase C.3 — blood bank detail page
-- [ ] Phase C.4 — WhatsApp CTA (whatsapp_number already fetched, unused)
-- [ ] Phase C.5 — homepage blood-group pills wired (currently dead spans)
-- [ ] Phase C.6 — Emergency FAB → direct nearest-bank-call shortcut
-- [ ] Phase D — last_donated_at/district on donor cards, stock legend, per-IP
-      registration rate limit, admin stale-stock badge/banner
+- [ ] Phase D remainder — per-IP registration rate limit (only per-phone exists)
+- [ ] Admin: no manual "add donor" endpoint (found during deep-dive — staff can't add
+      a phoned-in donor directly, only edit-via-PATCH once C.2 exists)
+- [ ] `app_settings.features.blood_services` flag — orphaned (in DB default, not
+      enforced in web app, not exposed in admin FeatureFlags.tsx UI) — found during
+      deep-dive, not fixed yet
+- [ ] Blood service actions (bank call, donor contact reveal, registration) still
+      untracked in `analytics_events` on the main page — found during deep-dive
+- [ ] Login-gated donor directory (Google sign-in) — the actual next feature per the
+      simplified model above
 
 ---
 

@@ -19,18 +19,31 @@ export const metadata: Metadata = {
  * for a round-trip per filter tap — same reasoning as S09's symptom
  * search).
  */
-export default async function BloodServicesPage() {
+const VALID_GROUPS = new Set(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']);
+
+export default async function BloodServicesPage({
+  searchParams,
+}: {
+  searchParams: { group?: string };
+}) {
   const supabase = createClient();
   const [bloodBanks, donors, districts] = await Promise.all([
     getBloodBanks(supabase),
     getBloodDonors(supabase),
     getDistricts(supabase),
   ]);
+  // Phase C.5 — homepage blood-group pills link here with ?group=X.
+  const initialGroup = VALID_GROUPS.has(searchParams.group ?? '') ? searchParams.group! : null;
 
   return (
     <>
       <TopBarSection title="ব্লাড সার্ভিস" />
-      <BloodServicesClient bloodBanks={bloodBanks} donors={donors} districts={districts} />
+      <BloodServicesClient
+        bloodBanks={bloodBanks}
+        donors={donors}
+        districts={districts}
+        initialGroup={initialGroup}
+      />
     </>
   );
 }

@@ -33,7 +33,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-  } else if (!allowed) {
+    return NextResponse.json({ error: 'এখন যোগাযোগের তথ্য দেখানো যাচ্ছে না, একটু পরে চেষ্টা করুন' }, {
+      status: 503,
+    });
+  }
+  if (!allowed) {
     return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, {
       status: 429,
     });
@@ -49,6 +53,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
   if (!phone) {
     return NextResponse.json({ error: 'এই দাতা এখন যোগাযোগের জন্য উপলব্ধ নয়' }, { status: 404 });
+  }
+
+  // BLOOD-SERVICE-PLAN.md Phase A.9 — desktop has no tel: handler, so a
+  // top-level nav to one just opens a blank tab. The client fetches
+  // with ?format=json on non-touch devices to show the number as
+  // copyable text instead; mobile keeps the original redirect (a real
+  // top-level nav, so the dialer intent still fires the same way).
+  if (request.nextUrl.searchParams.get('format') === 'json') {
+    return NextResponse.json({ phone });
   }
 
   return NextResponse.redirect(`tel:${phone}`);

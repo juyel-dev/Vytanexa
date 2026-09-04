@@ -143,3 +143,60 @@ export async function requireRole(required: AppRole): Promise<AdminSession> {
   }
   return session;
 }
+
+/**
+ * BLOOD-SERVICE-PLAN.md / deep-dive finding: `requireRole()` calls
+ * `redirect()` on failure, which is correct for Server Components but
+ * wrong inside a Route Handler answering a PATCH/DELETE/POST — Next.js
+ * turns that into a redirect the browser's `fetch()` follows
+ * automatically, landing on `/login` (a 200 GET), so `res.ok` reads
+ * true and the caller shows a false "success" toast even though the
+ * mutation never ran. Only mattered while every admin account was
+ * `super_admin` (no gate to fail); becomes a real, silent-failure bug
+ * the moment a `moderator`/`editor` account exists — exactly what the
+ * blood-donor moderation workflow needs. This variant returns a proper
+ * 401/403 JSON response instead, so the client's `!res.ok` check
+ * actually fires. Scoped to the blood-donor/blood-inventory routes for
+ * now; the other ~58 `requireRole()` call sites are Server
+ * Components/pages, where the redirect behavior is correct as-is.
+ */
+export async function requireRoleApi(
+  required: AppRole
+): Promise<{ session: AdminSession } | { error: Response }> {
+  const supabase = createSessionClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return { error: Response.json({ error: 'লগইন প্রয়োজন' }, { status: 401 }) };
+  }
+
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('id, name, role, permissions, is_active')
+    .eq('id', user.id)
+    .eq('is_active', true)
+    .single();
+  if (error || !data || !data.is_active) {
+    return { error: Response.json({ error: 'লগইন প্রয়োজন' }, { status: 401 }) };
+  }
+
+  const session: AdminSession = {
+    id: data.id,
+    name: data.name,
+    role: data.role as AppRole,
+    permissions: (data.permissions ?? {}) as Record<string, unknown>,
+    isActive: true,
+  };
+  if (session.role === 'super_admin') return { session };
+
+  const hasRole = ROLE_RANK[session.role] >= ROLE_RANK[required];
+  const hasOverride =
+    session.permissions?.[`${required}_access`] === true ||
+    session.permissions?.all_access === true;
+  if (!hasRole && !hasOverride) {
+    return { error: Response.json({ error: 'এই কাজের অনুমতি নেই' }, { status: 403 }) };
+  }
+  return { session };
+}

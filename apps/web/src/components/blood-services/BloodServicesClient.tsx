@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Phone } from 'lucide-react';
+import { Phone, MessageCircle, Copy, Check } from 'lucide-react';
 import { getLocalizedField } from '@/lib/i18n';
 import { DonorRegistrationSheet } from './DonorRegistrationSheet';
 import { LocationChip } from '@/components/layout/LocationChip';
@@ -16,6 +16,15 @@ const STOCK_ICON: Record<string, string> = {
   low: '⚠️',
   unavailable: '❌',
 };
+const STOCK_LEGEND: [string, string][] = [
+  ['✅', 'উপলব্ধ'],
+  ['⚠️', 'কম আছে'],
+  ['❌', 'নেই'],
+];
+// BLOOD-SERVICE-PLAN.md Phase A.3 — presence of a stock row is NOT the
+// same as it actually being available; a bank with only an
+// "unavailable" row for a group must not count as "has that group".
+const HAS_STOCK_LEVELS = new Set(['available', 'low']);
 
 type Donor = {
   id: string;
@@ -44,16 +53,45 @@ export function BloodServicesClient({
   bloodBanks: initialBloodBanks,
   donors: initialDonors,
   districts,
+  initialGroup = null,
 }: {
   bloodBanks: BloodBank[];
   donors: Donor[];
   districts: District[];
+  initialGroup?: string | null;
 }) {
   const { districtId } = useLocationStore();
   const [bloodBanks, setBloodBanks] = useState(initialBloodBanks);
   const [donors, setDonors] = useState(initialDonors);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(initialGroup);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [isTouch, setIsTouch] = useState(true); // default to the mobile-safe path until we know better
+  const [revealed, setRevealed] = useState<Record<string, string>>({});
+  const [revealing, setRevealing] = useState<string | null>(null);
+  const [contactError, setContactError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsTouch(window.matchMedia('(pointer: coarse)').matches);
+  }, []);
+
+  const districtNameById = useMemo(
+    () => new Map(districts.map((d) => [d.id, getLocalizedField(d.name_translations)])),
+    [districts]
+  );
+
+  const refetchServices = () => {
+    const params = new URLSearchParams();
+    if (districtId) params.set('district', districtId);
+    if (selectedGroup) params.set('bloodGroup', selectedGroup);
+    fetch(`/api/blood-services?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        setBloodBanks(json.bloodBanks ?? []);
+        setDonors(json.donors ?? []);
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!districtId) {
@@ -82,6 +120,50 @@ export function BloodServicesClient({
     () => (selectedGroup ? donors.filter((d) => d.blood_group === selectedGroup) : donors),
     [donors, selectedGroup]
   );
+
+  // BLOOD-SERVICE-PLAN.md Phase A.2/A.3 — compute the *rendered* set
+  // once, reuse its length for the header (was bloodBanks.length,
+  // uncorrelated with what's actually shown) and its "has stock" check
+  // against stock_level (was presence-only, so an "unavailable" row
+  // still counted as "has this group").
+  const visibleBanks = useMemo(
+    () =>
+      bloodBanks.filter(
+        (b) =>
+          !selectedGroup ||
+          b.stock.some((s) => s.blood_group === selectedGroup && HAS_STOCK_LEVELS.has(s.stock_level))
+      ),
+    [bloodBanks, selectedGroup]
+  );
+
+  // BLOOD-SERVICE-PLAN.md Phase A.9 — mobile keeps the direct tel:
+  // dialer intent; desktop has no dialer, so a top-level nav to a
+  // tel: URL just opens a blank tab. Reveal as copyable text instead.
+  const handleContact = async (donorId: string) => {
+    setContactError(null);
+    if (isTouch) {
+      window.location.href = `/api/blood-donors/${donorId}/contact`;
+      return;
+    }
+    if (revealed[donorId]) return;
+    setRevealing(donorId);
+    const res = await fetch(`/api/blood-donors/${donorId}/contact?format=json`).catch(() => null);
+    setRevealing(null);
+    if (!res || !res.ok) {
+      const json = res ? await res.json().catch(() => null) : null;
+      setContactError(json?.error ?? 'যোগাযোগের তথ্য পাওয়া যায়নি');
+      return;
+    }
+    const json = await res.json().catch(() => null);
+    if (json?.phone) setRevealed((prev) => ({ ...prev, [donorId]: json.phone }));
+  };
+
+  const handleCopy = (donorId: string, phone: string) => {
+    navigator.clipboard?.writeText(phone).then(() => {
+      setCopiedId(donorId);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  };
 
   return (
     <div className="pb-6">
@@ -128,52 +210,73 @@ export function BloodServicesClient({
 
       <section className="px-4 py-4">
         <h2 className="mb-3 text-[15px] font-bold text-neutral-800">
-          ব্লাড ব্যাংক ({bloodBanks.length}টি)
+          ব্লাড ব্যাংক ({visibleBanks.length}টি)
         </h2>
-        {bloodBanks.length === 0 ? (
+        {visibleBanks.length === 0 ? (
           <p className="text-[13px] text-neutral-400">এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই।</p>
         ) : (
-          bloodBanks
-            .filter(
-              (b) => !selectedGroup || b.stock.some((s) => s.blood_group === selectedGroup)
-            )
-            .map((bank) => (
-              <div
-                key={bank.id}
-                className="mb-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-card"
-              >
-                <h3 className="text-[15px] font-bold text-neutral-900">
-                  🏥 {getLocalizedField(bank.name_translations)}
-                </h3>
-                <p className="mt-0.5 text-[13px] text-neutral-500">
-                  📍 {bank.address_line}
-                  {bank.has_emergency_dept && '  ·  🕐 ২৪ ঘণ্টা খোলা'}
-                </p>
-
-                {bank.stock.length > 0 && (
-                  <div className="mt-2">
-                    <p className="mb-1 text-[12px] text-neutral-500">
-                      স্টক (যদি রিপোর্ট করা থাকে):
-                    </p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
-                      {bank.stock.map((s) => (
-                        <span key={s.blood_group}>
-                          {s.blood_group}
-                          {STOCK_ICON[s.stock_level] ?? ''}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <a
-                  href={`tel:${bank.phone}`}
-                  className="mt-3 flex h-10 items-center justify-center gap-2 rounded-md bg-emergency-600 text-[13px] font-semibold text-white"
+          <>
+            <div className="mb-3 flex gap-3 text-[12px] text-neutral-500">
+              {STOCK_LEGEND.map(([icon, label]) => (
+                <span key={label}>
+                  {icon} {label}
+                </span>
+              ))}
+            </div>
+            {visibleBanks.map((bank) => {
+              const hours = bank.operating_hours as { is_24x7?: boolean } | null;
+              return (
+                <div
+                  key={bank.id}
+                  className="mb-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-card"
                 >
-                  <Phone className="h-4 w-4" /> এখনই কল করুন
-                </a>
-              </div>
-            ))
+                  <h3 className="text-[15px] font-bold text-neutral-900">
+                    🏥 {getLocalizedField(bank.name_translations)}
+                  </h3>
+                  <p className="mt-0.5 text-[13px] text-neutral-500">
+                    📍 {bank.address_line}
+                    {hours?.is_24x7 && '  ·  🕐 ২৪ ঘণ্টা খোলা'}
+                  </p>
+
+                  {bank.stock.length > 0 && (
+                    <div className="mt-2">
+                      <p className="mb-1 text-[12px] text-neutral-500">
+                        স্টক (যদি রিপোর্ট করা থাকে):
+                      </p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
+                        {bank.stock.map((s) => (
+                          <span key={s.blood_group}>
+                            {s.blood_group}
+                            {STOCK_ICON[s.stock_level] ?? ''}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href={`tel:${bank.phone}`}
+                      className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-emergency-600 text-[13px] font-semibold text-white"
+                    >
+                      <Phone className="h-4 w-4" /> এখনই কল করুন
+                    </a>
+                    {bank.whatsapp_number && (
+                      <a
+                        href={`https://wa.me/${bank.whatsapp_number.replace(/[^\d]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-10 w-12 shrink-0 items-center justify-center rounded-md border border-life-600 text-life-600"
+                        aria-label="WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
       </section>
 
@@ -186,29 +289,57 @@ export function BloodServicesClient({
               : 'এখনো কোনো নিবন্ধিত রক্তদাতা নেই। প্রথম হোন!'}
           </p>
         ) : (
-          filteredDonors.map((donor) => (
+          filteredDonors.map((donor) => {
+            const revealedPhone = revealed[donor.id];
+            return (
             <div
               key={donor.id}
               className="mb-2 flex items-center justify-between rounded-lg border border-neutral-200 p-3"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="text-[14px] font-semibold text-neutral-900">{donor.name}</p>
-                <p className="text-[12px] text-neutral-500">{donor.blood_group}</p>
+                <p className="text-[12px] text-neutral-500">
+                  {donor.blood_group}
+                  {districtNameById.get(donor.location_id) && ` · ${districtNameById.get(donor.location_id)}`}
+                  {donor.last_donated_at &&
+                    ` · শেষ দান ${new Date(donor.last_donated_at).toLocaleDateString('bn-BD')}`}
+                </p>
               </div>
-              <a
-                href={`/api/blood-donors/${donor.id}/contact`}
-                className="flex h-9 items-center gap-1.5 rounded-md bg-brand-600 px-3 text-[12px] font-semibold text-white"
-              >
-                <Phone className="h-3.5 w-3.5" /> যোগাযোগ করুন
-              </a>
+              {revealedPhone ? (
+                <button
+                  onClick={() => handleCopy(donor.id, revealedPhone)}
+                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-neutral-100 px-3 text-[12px] font-semibold text-neutral-800"
+                >
+                  {copiedId === donor.id ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" /> কপি হয়েছে
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" /> {revealedPhone}
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleContact(donor.id)}
+                  disabled={revealing === donor.id}
+                  className="flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-brand-600 px-3 text-[12px] font-semibold text-white disabled:opacity-60"
+                >
+                  <Phone className="h-3.5 w-3.5" /> {revealing === donor.id ? '...' : 'যোগাযোগ করুন'}
+                </button>
+              )}
             </div>
-          ))
+            );
+          })
         )}
+        {contactError && <p className="mt-2 text-[12px] text-emergency-600">{contactError}</p>}
       </section>
 
       <DonorRegistrationSheet
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
+        onSuccess={refetchServices}
         districts={districts}
       />
     </div>
