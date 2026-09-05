@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Phone, MessageCircle, Copy, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Phone, MessageCircle, Copy, Check, Lock } from 'lucide-react';
 import { getLocalizedField } from '@/lib/i18n';
 import { DonorRegistrationSheet } from './DonorRegistrationSheet';
 import { LocationChip } from '@/components/layout/LocationChip';
@@ -54,12 +55,15 @@ export function BloodServicesClient({
   donors: initialDonors,
   districts,
   initialGroup = null,
+  isLoggedIn,
 }: {
   bloodBanks: BloodBank[];
   donors: Donor[];
   districts: District[];
   initialGroup?: string | null;
+  isLoggedIn: boolean;
 }) {
+  const router = useRouter();
   const { districtId } = useLocationStore();
   const [bloodBanks, setBloodBanks] = useState(initialBloodBanks);
   const [donors, setDonors] = useState(initialDonors);
@@ -165,6 +169,13 @@ export function BloodServicesClient({
     });
   };
 
+  // Login-gate (post-launch decision, see BLOOD-SERVICE-PLAN.md): both
+  // registering as a donor and viewing the donor list require a
+  // signed-in account. `/auth/login` already supports `returnUrl` and
+  // Google sign-in's redirectTo lands back here automatically.
+  const goToSignIn = () => router.push('/auth/login?returnUrl=/health/blood-services');
+  const handleRegisterClick = () => (isLoggedIn ? setRegisterOpen(true) : goToSignIn());
+
   return (
     <div className="pb-6">
       <LocationChip />
@@ -201,7 +212,7 @@ export function BloodServicesClient({
 
       <div className="px-4 py-3">
         <button
-          onClick={() => setRegisterOpen(true)}
+          onClick={handleRegisterClick}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-life-600 text-[14px] font-semibold text-white"
         >
           🩸 + রক্তদাতা হিসেবে নাম লেখান
@@ -282,7 +293,20 @@ export function BloodServicesClient({
 
       <section className="border-t border-neutral-100 px-4 py-4">
         <h2 className="mb-3 text-[15px] font-bold text-neutral-800">রক্তদাতা তালিকা</h2>
-        {filteredDonors.length === 0 ? (
+        {!isLoggedIn ? (
+          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-neutral-200 py-6 text-center">
+            <Lock className="h-5 w-5 text-neutral-400" />
+            <p className="text-[13px] text-neutral-500">
+              দাতাদের নিরাপত্তার জন্য তালিকা ও যোগাযোগের তথ্য শুধু সাইন-ইন করা ব্যবহারকারীরা দেখতে পারেন।
+            </p>
+            <button
+              onClick={goToSignIn}
+              className="mt-1 h-10 rounded-md bg-brand-600 px-5 text-[13px] font-semibold text-white"
+            >
+              সাইন ইন করুন
+            </button>
+          </div>
+        ) : filteredDonors.length === 0 ? (
           <p className="text-[13px] text-neutral-400">
             {selectedGroup
               ? `${selectedGroup} গ্রুপের কোনো নিবন্ধিত রক্তদাতা এখনো নেই।`

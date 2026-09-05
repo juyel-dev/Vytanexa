@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@/components/ui/DataTable';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Search } from 'lucide-react';
 
-type Donor = { id: string; name: string; phone: string; blood_group: string; location_id: string; location_name: string; last_donated_at: string | null; is_active: boolean };
+type VerificationStatus = 'pending' | 'verified' | 'rejected' | 'suspended';
+type Donor = { id: string; name: string; phone: string; blood_group: string; location_id: string; location_name: string; last_donated_at: string | null; verification_status: VerificationStatus };
 type HospInv = { id: string; name: string; inventory: { blood_group: string; stock_level: string; reported_at: string }[] };
 type District = { id: string; name_translations: { bn?: string; en?: string } | null; slug: string };
 type Filters = { q: string; group: string; locationId: string };
@@ -75,8 +77,13 @@ export function BloodManager({
     pushFilters({ q: qInput });
   };
 
-  const handleToggleActive = async (d: Donor) => {
-    const res = await fetch(`/api/admin/blood-donors/${d.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: !d.is_active }) }).catch(() => null);
+  // BLOOD-SERVICE-PLAN.md follow-up (login-gate + scalability pass) —
+  // is_active replaced by the same verification_status enum
+  // hospitals/ambulance_services already use. Donors publish instantly
+  // (default 'verified'); this is the moderator's manual-WhatsApp-check
+  // suspend/reinstate action, not an approval queue.
+  const handleSetStatus = async (d: Donor, status: VerificationStatus) => {
+    const res = await fetch(`/api/admin/blood-donors/${d.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ verification_status: status }) }).catch(() => null);
     if (!res || !res.ok) { const j = res ? await res.json().catch(() => null) : null; toast.push(j?.error ?? 'আপডেট করা যায়নি', 'error'); return; }
     toast.push('আপডেট হয়েছে ✅', 'success');
     router.refresh();
@@ -174,10 +181,19 @@ export function BloodManager({
                 <td className="px-3 py-2 text-admin-body text-neutral-600">{d.location_name}</td>
                 <td className="px-3 py-2 text-admin-body text-neutral-600">{d.last_donated_at ? new Date(d.last_donated_at).toLocaleDateString('bn-BD') : '—'}</td>
                 <td className="px-3 py-2 text-admin-body text-neutral-700">{d.phone}</td>
-                <td className="px-3 py-2">{d.is_active ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅ সক্রিয়</span> : <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-600">নিষ্ক্রিয়</span>}</td>
+                <td className="px-3 py-2">
+                  <StatusBadge
+                    status={d.verification_status === 'verified' ? 'verified' : d.verification_status === 'suspended' ? 'suspended' : d.verification_status === 'rejected' ? 'rejected' : 'pending'}
+                    label={d.verification_status === 'verified' ? '✅ সক্রিয়' : d.verification_status === 'suspended' ? 'স্থগিত' : d.verification_status === 'rejected' ? 'প্রত্যাখ্যাত' : 'পর্যালোচনাধীন'}
+                  />
+                </td>
                 <td className="px-3 py-2">
                   <span className="flex gap-1">
-                    <button onClick={() => handleToggleActive(d)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">{d.is_active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}</button>
+                    {d.verification_status === 'verified' ? (
+                      <button onClick={() => handleSetStatus(d, 'suspended')} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">স্থগিত করুন</button>
+                    ) : (
+                      <button onClick={() => handleSetStatus(d, 'verified')} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">সক্রিয় করুন</button>
+                    )}
                     <button onClick={() => setDel(d)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-emergency-600 hover:bg-emergency-50">মুছুন</button>
                   </span>
                 </td>

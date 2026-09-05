@@ -96,6 +96,36 @@ Still open from the original list:
 - [ ] Login-gated donor directory (Google sign-in) — the actual next feature per the
       simplified model above
 
+**Login-gate shipped** (migrations 0017-0019, code + build verified):
+- [x] `blood_donors` gets `user_id` (FK to auth.users, one donor row per account via
+      partial unique index) and `verification_status` (reused enum, replaces
+      `is_active` entirely — dropped, not kept alongside)
+- [x] `public_blood_donors` view + `get_donor_phone()` RPC: anon access revoked,
+      `authenticated` only — donor list + phone reveal both require login now
+- [x] Donor registration (`POST /api/blood-donors`) requires a session, tags the row
+      with `user_id`, RLS enforces `user_id = (select auth.uid())` independently of
+      the app-layer check (defense in depth)
+- [x] Web: donor-list section + "register" button both route a guest to
+      `/auth/login?returnUrl=/health/blood-services` (existing page, already supports
+      Google + phone-OTP + returnUrl — reused as-is)
+- [x] Admin: donor status column/actions now use `verification_status`
+      (verified/suspended) via the shared `StatusBadge` component instead of a
+      bespoke is_active pill — same component hospitals/ambulance already use
+- [x] `get_advisors` clean after 3 migrations (one ERROR caught + fixed mid-pass:
+      recreating the view dropped its `security_invoker=true`; one perf WARN fixed:
+      `auth.uid()` wrapped in `(select ...)` per Supabase's RLS perf guidance)
+- [x] `packages/database/types.ts` regenerated
+
+Scalability choices made deliberately here (per Juyel's explicit ask): `user_id` link
+means a future "my donor listing" self-service page (edit/deactivate) needs no new
+schema; one-donor-per-account index keeps that unambiguous; reusing the existing
+`verification_status` enum instead of a bespoke status field means blood_donors slots
+into whatever admin tooling/patterns exist for hospitals/ambulance for free.
+
+Still not done: the actual onboarding *psychology* (making sign-in feel worth it
+rather than a wall) — Juyel wants this designed deliberately later, not bolted on now.
+The current gate is functionally correct but plain (a locked-state card + button).
+
 ---
 
 ## S04 — HOME PAGE ✅ ALL SECTIONS DONE

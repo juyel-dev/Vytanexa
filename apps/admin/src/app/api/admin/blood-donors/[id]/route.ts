@@ -5,25 +5,32 @@ import { requireRoleApi } from '@/lib/supabase/auth-verify';
 import { writeAudit } from '@/lib/audit';
 
 /**
- * PATCH /api/admin/blood-donors/[id] — toggle is_active / is_active=false
+ * PATCH /api/admin/blood-donors/[id] — set verification_status
+ *   (verified/suspended/rejected/pending — matches hospitals/
+ *   ambulance_services' shared enum; see BLOOD-SERVICE-PLAN.md
+ *   login-gate follow-up for why is_active was replaced with this)
  * DELETE — soft-delete (spam/fake)
  * Gate: admin (requireRoleApi — see its comment for why not requireRole here)
  */
+const VALID_STATUSES = new Set(['pending', 'verified', 'rejected', 'suspended']);
+
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const gate = await requireRoleApi('admin');
   if ('error' in gate) return gate.error;
   const session = gate.session;
-  const body = (await request.json()) as { is_active?: boolean };
-  if (typeof body.is_active !== 'boolean') return NextResponse.json({ error: 'অবৈধ ডেটা' }, { status: 400 });
+  const body = (await request.json()) as { verification_status?: string };
+  if (typeof body.verification_status !== 'string' || !VALID_STATUSES.has(body.verification_status)) {
+    return NextResponse.json({ error: 'অবৈধ ডেটা' }, { status: 400 });
+  }
 
   const supabase = createServiceRoleClient();
   const { data: existing } = await supabase.from('blood_donors').select('*').eq('id', params.id).is('deleted_at', null).maybeSingle();
   if (!existing) return NextResponse.json({ error: 'রক্তদাতা পাওয়া যায়নি' }, { status: 404 });
 
-  const { error } = await supabase.from('blood_donors').update({ is_active: body.is_active } as never).eq('id', params.id);
+  const { error } = await supabase.from('blood_donors').update({ verification_status: body.verification_status } as never).eq('id', params.id);
   if (error) return NextResponse.json({ error: 'আপডেট করা যায়নি: ' + error.message }, { status: 500 });
 
-  await writeAudit(supabase, session.id, 'update', 'blood_donor', params.id, { before: existing, after: { is_active: body.is_active } });
+  await writeAudit(supabase, session.id, 'update', 'blood_donor', params.id, { before: existing, after: { verification_status: body.verification_status } });
   return NextResponse.json({ ok: true });
 }
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { TopBarSection } from '@/components/layout/TopBar';
 import { BloodServicesClient } from '@/components/blood-services/BloodServicesClient';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/current-user';
 import { getBloodBanks, getBloodDonors, getDistricts } from '@/lib/queries/blood-services';
 
 export const metadata: Metadata = {
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
  * against whichever set is currently loaded (small dataset, no need
  * for a round-trip per filter tap — same reasoning as S09's symptom
  * search).
+ *
+ * Bank directory stays fully public. The donor list + registration are
+ * login-gated (post-launch decision, see BLOOD-SERVICE-PLAN.md) —
+ * `public_blood_donors` now revokes anon SELECT at the DB level, so a
+ * guest's query would just error; skip it entirely for guests instead
+ * of hitting that error path on every page view.
  */
 const VALID_GROUPS = new Set(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']);
 
@@ -27,9 +34,10 @@ export default async function BloodServicesPage({
   searchParams: { group?: string };
 }) {
   const supabase = createClient();
+  const currentUser = await getCurrentUser(supabase);
   const [bloodBanks, donors, districts] = await Promise.all([
     getBloodBanks(supabase),
-    getBloodDonors(supabase),
+    currentUser ? getBloodDonors(supabase) : Promise.resolve([]),
     getDistricts(supabase),
   ]);
   // Phase C.5 — homepage blood-group pills link here with ?group=X.
@@ -43,6 +51,7 @@ export default async function BloodServicesPage({
         donors={donors}
         districts={districts}
         initialGroup={initialGroup}
+        isLoggedIn={!!currentUser}
       />
     </>
   );

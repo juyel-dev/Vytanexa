@@ -4,8 +4,9 @@
  * Do not hand-edit — regenerate after any migration change instead.
  *
  * Source project: Vytanexa (ref: lfrvzdhonsnemdfmxthw)
- * Regenerated: after migration 0014 (questions_own_read RLS policy,
- * reviews.user_id column + reviews_own_read RLS policy)
+ * Regenerated: after migrations 0017-0019 (blood_donors login-gate:
+ * user_id + verification_status replacing is_active, view re-gated to
+ * authenticated only)
  */
 
 export type Json =
@@ -504,12 +505,13 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
-          is_active: boolean
           last_donated_at: string | null
           location_id: string
           name: string
           phone: string
           updated_at: string
+          user_id: string | null
+          verification_status: Database["public"]["Enums"]["verification_status"]
         }
         Insert: {
           blood_group: string
@@ -517,12 +519,13 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
-          is_active?: boolean
           last_donated_at?: string | null
           location_id: string
           name: string
           phone: string
           updated_at?: string
+          user_id?: string | null
+          verification_status?: Database["public"]["Enums"]["verification_status"]
         }
         Update: {
           blood_group?: string
@@ -530,12 +533,13 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
-          is_active?: boolean
           last_donated_at?: string | null
           location_id?: string
           name?: string
           phone?: string
           updated_at?: string
+          user_id?: string | null
+          verification_status?: Database["public"]["Enums"]["verification_status"]
         }
         Relationships: [
           {
@@ -1959,12 +1963,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1988,11 +1992,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2013,11 +2017,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2038,11 +2042,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2055,11 +2059,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

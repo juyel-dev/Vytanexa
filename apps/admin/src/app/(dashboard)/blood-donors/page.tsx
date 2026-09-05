@@ -34,7 +34,7 @@ export default async function BloodPage({ searchParams }: { searchParams: SP }) 
 
   let donorQuery = supabase
     .from('blood_donors')
-    .select('id, name, blood_group, location_id, last_donated_at, is_active, phone', { count: 'exact' })
+    .select('id, name, blood_group, location_id, last_donated_at, verification_status, phone', { count: 'exact' })
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
   if (q) donorQuery = donorQuery.or(`name.ilike.%${q}%,phone.ilike.%${q}%`);
