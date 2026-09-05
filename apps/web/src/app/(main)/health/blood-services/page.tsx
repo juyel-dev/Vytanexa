@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { TopBarSection } from '@/components/layout/TopBar';
 import { BloodServicesClient } from '@/components/blood-services/BloodServicesClient';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getBloodBanks, getBloodDonors, getDistricts } from '@/lib/queries/blood-services';
 
 export const metadata: Metadata = {
@@ -34,6 +36,9 @@ export default async function BloodServicesPage({
   searchParams: { group?: string };
 }) {
   const supabase = createClient();
+  if (!(await isFeatureEnabled(supabase, 'blood_services'))) {
+    notFound();
+  }
   const currentUser = await getCurrentUser(supabase);
   const [bloodBanks, donors, districts] = await Promise.all([
     getBloodBanks(supabase),

@@ -5,6 +5,7 @@ export type FeatureFlags = {
   community_qa?: boolean;
   polls?: boolean;
   voice_search?: boolean;
+  blood_services?: boolean;
 };
 
 /**

@@ -82,19 +82,28 @@ verified both apps):
       ward silently matched zero donors. `page.tsx` now fetches districts only.
 
 Still open from the original list:
-- [ ] Phase C.2 — admin donor edit (name/phone/group/location) — no PATCH support for
-      these fields yet, only is_active toggle + soft delete
+- [x] Phase C.2 — admin donor edit (name/phone/group/location) — done via a create/edit
+      modal in BloodManager (same pattern as AmbulanceManager), backed by an extended
+      PATCH (partial update, any field) and a new POST route
 - [ ] Phase C.3 — blood bank detail page
-- [ ] Phase D remainder — per-IP registration rate limit (only per-phone exists)
-- [ ] Admin: no manual "add donor" endpoint (found during deep-dive — staff can't add
-      a phoned-in donor directly, only edit-via-PATCH once C.2 exists)
-- [ ] `app_settings.features.blood_services` flag — orphaned (in DB default, not
-      enforced in web app, not exposed in admin FeatureFlags.tsx UI) — found during
-      deep-dive, not fixed yet
+- [x] Phase D remainder (per-IP limit) — reconsidered, not implemented: the login-gate
+      already caps one donor listing per account (DB-level unique index) plus the
+      existing per-phone 90-day limit; a per-IP layer adds little now that spamming
+      requires a distinct Google account AND a distinct phone per attempt. Revisit if
+      abuse is actually observed.
+- [x] Admin: manual "add donor" endpoint — `POST /api/admin/blood-donors`, same modal
+      as edit; `user_id` stays null for these (no linked account), consistent with any
+      donor who existed before the login-gate migration
+- [x] `app_settings.features.blood_services` flag — wired into
+      `lib/feature-flags.ts` + `/health/blood-services/page.tsx` (notFound() when off)
+      + added to admin's `FeatureFlags.tsx` UI (was in the DB default, never checked
+      or exposed anywhere). Left `BloodServicesCTA` (homepage banner) alone — it's
+      already gated by a separate, intentional mechanism (homepage_settings section
+      list, see its own comment), not this flag.
 - [ ] Blood service actions (bank call, donor contact reveal, registration) still
-      untracked in `analytics_events` on the main page — found during deep-dive
-- [ ] Login-gated donor directory (Google sign-in) — the actual next feature per the
-      simplified model above
+      untracked in `analytics_events` on the main page — found during deep-dive, not
+      fixed yet
+- [x] Login-gated donor directory (Google sign-in) — done, see below
 
 **Login-gate shipped** (migrations 0017-0019, code + build verified):
 - [x] `blood_donors` gets `user_id` (FK to auth.users, one donor row per account via

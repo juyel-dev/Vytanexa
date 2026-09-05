@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { Search } from 'lucide-react';
+import { Search, Pencil } from 'lucide-react';
 
 type VerificationStatus = 'pending' | 'verified' | 'rejected' | 'suspended';
 type Donor = { id: string; name: string; phone: string; blood_group: string; location_id: string; location_name: string; last_donated_at: string | null; verification_status: VerificationStatus };
@@ -54,6 +54,39 @@ export function BloodManager({
   const [qInput, setQInput] = useState(currentFilters.q);
   const [del, setDel] = useState<Donor | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // BLOOD-SERVICE-PLAN.md Phase C.2 + deep-dive finding (no way to add
+  // a phoned-in donor manually) — create/edit modal, same
+  // undefined/null/Row pattern as AmbulanceManager for consistency.
+  const [modal, setModal] = useState<Donor | null | undefined>(undefined);
+  const [fName, setFName] = useState('');
+  const [fPhone, setFPhone] = useState('');
+  const [fGroup, setFGroup] = useState<string>('A+');
+  const [fLocation, setFLocation] = useState('');
+  const [fStatus, setFStatus] = useState<VerificationStatus>('verified');
+
+  const openCreate = () => {
+    setFName(''); setFPhone(''); setFGroup('A+'); setFLocation(''); setFStatus('verified');
+    setModal(null);
+  };
+  const openEdit = (d: Donor) => {
+    setFName(d.name); setFPhone(d.phone); setFGroup(d.blood_group); setFLocation(d.location_id); setFStatus(d.verification_status);
+    setModal(d);
+  };
+  const handleSaveDonor = async () => {
+    if (!fName.trim() || !fPhone.trim() || !fLocation) { toast.push('নাম, ফোন ও এলাকা বাধ্যতামূলক', 'error'); return; }
+    setBusy(true);
+    const isEdit = modal && typeof modal !== 'undefined';
+    const payload = { name: fName.trim(), phone: fPhone.trim(), blood_group: fGroup, location_id: fLocation, verification_status: fStatus };
+    const url = isEdit ? `/api/admin/blood-donors/${(modal as Donor).id}` : '/api/admin/blood-donors';
+    const method = isEdit ? 'PATCH' : 'POST';
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => null);
+    setBusy(false);
+    if (!res || !res.ok) { const j = res ? await res.json().catch(() => null) : null; toast.push(j?.error ?? 'সংরক্ষণ করা যায়নি', 'error'); return; }
+    toast.push('সংরক্ষিত হয়েছে ✅', 'success');
+    setModal(undefined);
+    router.refresh();
+  };
 
   // inventory editing state: hospId -> group -> stock
   const [invEdits, setInvEdits] = useState<Record<string, Record<string, string>>>({});
@@ -129,36 +162,41 @@ export function BloodManager({
 
       {tab === 'donors' ? (
         <>
-          <div className="flex flex-wrap gap-2">
-            <form onSubmit={handleSearchSubmit} className="flex h-9">
-              <input
-                value={qInput}
-                onChange={(e) => setQInput(e.target.value)}
-                placeholder="নাম বা ফোন দিয়ে খুঁজুন"
-                className="h-9 w-48 rounded-l-md border border-r-0 border-admin-border bg-white px-2 text-admin-body"
-              />
-              <button type="submit" className="flex h-9 w-9 items-center justify-center rounded-r-md border border-admin-border bg-white text-neutral-500 hover:bg-neutral-50">
-                <Search className="h-4 w-4" />
-              </button>
-            </form>
-            <select
-              value={currentFilters.group}
-              onChange={(e) => pushFilters({ group: e.target.value })}
-              className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
-            >
-              <option value="">সব গ্রুপ</option>
-              {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
-            </select>
-            <select
-              value={currentFilters.locationId}
-              onChange={(e) => pushFilters({ locationId: e.target.value })}
-              className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
-            >
-              <option value="">সব জেলা</option>
-              {districts.map((d) => (
-                <option key={d.id} value={d.id}>{districtName(d)}</option>
-              ))}
-            </select>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-2">
+              <form onSubmit={handleSearchSubmit} className="flex h-9">
+                <input
+                  value={qInput}
+                  onChange={(e) => setQInput(e.target.value)}
+                  placeholder="নাম বা ফোন দিয়ে খুঁজুন"
+                  className="h-9 w-48 rounded-l-md border border-r-0 border-admin-border bg-white px-2 text-admin-body"
+                />
+                <button type="submit" className="flex h-9 w-9 items-center justify-center rounded-r-md border border-admin-border bg-white text-neutral-500 hover:bg-neutral-50">
+                  <Search className="h-4 w-4" />
+                </button>
+              </form>
+              <select
+                value={currentFilters.group}
+                onChange={(e) => pushFilters({ group: e.target.value })}
+                className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
+              >
+                <option value="">সব গ্রুপ</option>
+                {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
+              </select>
+              <select
+                value={currentFilters.locationId}
+                onChange={(e) => pushFilters({ locationId: e.target.value })}
+                className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body"
+              >
+                <option value="">সব জেলা</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>{districtName(d)}</option>
+                ))}
+              </select>
+            </div>
+            <button onClick={openCreate} className="h-9 rounded-lg bg-brand-600 px-4 text-admin-body font-semibold text-white hover:bg-brand-700">
+              + নতুন দাতা (ফোনে যোগাযোগ হলে)
+            </button>
           </div>
 
           <DataTable
@@ -189,6 +227,7 @@ export function BloodManager({
                 </td>
                 <td className="px-3 py-2">
                   <span className="flex gap-1">
+                    <button onClick={() => openEdit(d)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50"><Pencil className="h-3.5 w-3.5" /></button>
                     {d.verification_status === 'verified' ? (
                       <button onClick={() => handleSetStatus(d, 'suspended')} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">স্থগিত করুন</button>
                     ) : (
@@ -201,6 +240,49 @@ export function BloodManager({
             )}
           />
           <ConfirmDialog open={!!del} title="রক্তদাতা মুছবেন?" description={del ? `"${del.name}" সফট-ডিলিট হবে।` : ''} confirmLabel="মুছুন" variant="danger" busy={busy} onConfirm={handleDelete} onCancel={() => setDel(null)} />
+
+          {modal !== undefined && (
+            <div className="fixed inset-0 z-[700] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm" aria-hidden onClick={() => setModal(undefined)} />
+              <div className="relative w-full max-w-md rounded-xl border border-admin-border bg-white p-5 shadow-xl">
+                <h2 className="text-admin-h2 text-neutral-900">{modal ? 'রক্তদাতা সম্পাদনা' : 'নতুন রক্তদাতা'}</h2>
+                {!modal && (
+                  <p className="mt-1 text-admin-small text-neutral-500">
+                    ফোনে যোগাযোগ করা দাতার তথ্য সরাসরি এখানে যোগ করুন — সম্মতি (consent) নেওয়া ধরে নেওয়া হচ্ছে।
+                  </p>
+                )}
+                <div className="mt-4 flex flex-col gap-3">
+                  <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">নাম *</span><input value={fName} onChange={(e) => setFName(e.target.value)} className="h-9 rounded-md border border-admin-border px-3 text-admin-body outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" /></label>
+                  <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">ফোন *</span><input value={fPhone} onChange={(e) => setFPhone(e.target.value)} className="h-9 rounded-md border border-admin-border px-3 text-admin-body outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" /></label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">রক্তের গ্রুপ</span>
+                      <select value={fGroup} onChange={(e) => setFGroup(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
+                        {GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">এলাকা *</span>
+                      <select value={fLocation} onChange={(e) => setFLocation(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
+                        <option value="">নির্বাচন করুন</option>
+                        {districts.map((d) => <option key={d.id} value={d.id}>{districtName(d)}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">স্ট্যাটাস</span>
+                    <select value={fStatus} onChange={(e) => setFStatus(e.target.value as VerificationStatus)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
+                      <option value="verified">সক্রিয় (verified)</option>
+                      <option value="suspended">স্থগিত (suspended)</option>
+                      <option value="pending">পর্যালোচনাধীন (pending)</option>
+                      <option value="rejected">প্রত্যাখ্যাত (rejected)</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-5 flex justify-end gap-2">
+                  <button onClick={() => setModal(undefined)} className="h-10 rounded-md border border-admin-border px-4 text-admin-body font-medium text-neutral-700 hover:bg-neutral-50">বাতিল</button>
+                  <button onClick={handleSaveDonor} disabled={busy} className="h-10 rounded-md bg-brand-600 px-5 text-admin-body font-semibold text-white hover:bg-brand-700 disabled:opacity-50">{busy ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}</button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="flex flex-col gap-4">
