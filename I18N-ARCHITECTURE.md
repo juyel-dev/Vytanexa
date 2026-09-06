@@ -31,6 +31,17 @@ Inspected before deciding anything:
   decision (`VYTANEXA-BLUEPRINT.md` § S02 §7: "same URL serves all languages").
   This redesign does not revisit that decision — see § 6 for why, and what changes
   if it's revisited later.
+- **Market**: **India** (correction — an earlier draft of this document
+  incorrectly assumed Bangladesh; verified directly from code, not from the
+  Bengali UI language alone). Evidence: `+91` country code and 🇮🇳 flag on every
+  phone input (`SigninStep.tsx`, `AppointmentSheet.tsx`, `auth/login/page.tsx`),
+  `₹` currency throughout (`DoctorCard.tsx`, `ChambersTab.tsx`,
+  `SubscriptionsManager.tsx`), and India's real national helpline numbers in
+  `NationalNumbersSection.tsx` (100 police / 101 fire / 102 ambulance / 1098
+  child helpline / 1930 cyber crime / 14416 Kiran mental health). Bengali is the
+  default UI language because the audience is West Bengal, India — not Bangladesh.
+  This changes currency (`INR`, not `BDT`) and ICU locale tags (`bn-IN`, not
+  `bn-BD`) throughout this design — see § 7.
 - **State management**: Zustand for client UI state (onboarding, filters, location).
   Locale is *not* a Zustand concern — it's request/session identity, not UI state —
   so no new store is introduced for it.
@@ -145,7 +156,10 @@ Because components only ever see `t()`, `getLocalizedField()`, and
   cookie) — again, `t()`/`getLocalizedField()` call sites are untouched.
 - **Currency/number/date formatting per locale**: already designed in from day one
   (`getFormatter()`/`useFormatter()`, see IMPLEMENTATION-SPEC § 5) rather than
-  bolted on later.
+  bolted on later. Using a proper `Intl` locale tag (`en-IN`/`bn-IN`/`hi-IN`) also
+  gives correct Indian digit grouping (lakh/crore — `₹1,00,000`, not
+  `₹100,000`) automatically, which the old hand-rolled `toBengaliDigits()` never
+  produced and could not have.
 
 ## 6. Explicit trade-offs
 
@@ -153,7 +167,7 @@ Because components only ever see `t()`, `getLocalizedField()`, and
   cookie) will only ever see the default-locale (`bn`) version of every page. This
   is unchanged from today and is *not* a regression introduced by this redesign —
   it is an inherited, previously-made business decision (Bengali-first SEO for a
-  Bangladesh audience). It is called out here because it is the one place "add a
+  West Bengal, India audience). It is called out here because it is the one place "add a
   language" does **not** mean "get that language indexed by Google" — that would be
   a separate, larger project (URL routing + hreflang + sitemap changes), out of
   scope here, and the architecture above is deliberately structured so that project
@@ -183,11 +197,11 @@ Because components only ever see `t()`, `getLocalizedField()`, and
 
 ## 7. Assumptions made explicit
 
-- English locale is mapped to ICU locale `en-US` for number/date formatting
-  (Bangladesh has no distinct `en-BD` CLDR data commonly available); Bengali maps
-  to `bn-BD`, Hindi to `hi-IN`. Currency is always `BDT` regardless of UI locale
-  (the business operates in Bangladesh; only the *label language* changes, not the
-  transaction currency).
+- All three locales map to their Indian regional ICU tags: `bn` → `bn-IN`,
+  `en` → `en-IN`, `hi` → `hi-IN` — this gives correct Indian digit grouping
+  (lakh/crore) and is a straightforward, non-speculative choice given the
+  confirmed India market (§1). Currency is always `INR` (`₹`) regardless of UI
+  locale — only the *label language* changes, not the transaction currency.
 - Admin panel stays Bengali-only by product decision (already documented,
   unchanged) — it adopts the *same package* for consistency and future-proofing,
   not because it needs multiple languages today.

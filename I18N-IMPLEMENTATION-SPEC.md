@@ -83,11 +83,11 @@ export const localeConfig = {
   locales: ['bn', 'en', 'hi'],
   defaultLocale: 'bn',
   // ICU locale used for Intl.NumberFormat / DateTimeFormat / RelativeTimeFormat.
-  // Assumption (stated in ARCHITECTURE §7): no distinct en-BD/hi-BD CLDR data in
-  // common use, so en/hi map to their standard national locales; currency stays
-  // BDT regardless of UI language.
-  intlLocale: { bn: 'bn-BD', en: 'en-US', hi: 'hi-IN' },
-  currency: 'BDT',
+  // India market (ARCHITECTURE §1) — all three map to their Indian regional
+  // tags so number grouping is lakh/crore-correct; currency stays INR
+  // regardless of UI language.
+  intlLocale: { bn: 'bn-IN', en: 'en-IN', hi: 'hi-IN' },
+  currency: 'INR',
 } as const satisfies LocaleConfig;
 
 export type WebLocale = (typeof localeConfig.locales)[number]; // 'bn' | 'en' | 'hi'
@@ -98,8 +98,8 @@ export type WebLocale = (typeof localeConfig.locales)[number]; // 'bn' | 'en' | 
 export const localeConfig = {
   locales: ['bn'],
   defaultLocale: 'bn',
-  intlLocale: { bn: 'bn-BD' },
-  currency: 'BDT',
+  intlLocale: { bn: 'bn-IN' },
+  currency: 'INR',
 } as const satisfies LocaleConfig;
 
 export type AdminLocale = 'bn';
@@ -213,7 +213,7 @@ export function createFormatter(locale: string, config: LocaleConfig) {
 }
 ```
 
-`Intl.NumberFormat('bn-BD').format(...)` already produces native Bengali digits
+`Intl.NumberFormat('bn-IN').format(...)` already produces native Bengali digits
 (the CLDR `beng` numbering system is the default for `bn`) — so `formatter.number()`
 subsumes what `toBengaliDigits()` did by hand, but now also works correctly for
 `en`/`hi`. `toBengaliDigits` / `formatRelativeTimeBn` in the current
@@ -334,6 +334,15 @@ boundary in ARCHITECTURE §2 is enforced by tooling, not convention alone.
   addition and is noted here as a recommendation, not implemented now — it would
   be the first test runner introduced into the repo, which is a decision bigger
   than i18n alone.
+
+## 10a. Related bug found during the India/Bangladesh correction
+
+`apps/admin/src/components/subscriptions/SubscriptionsManager.tsx` hardcodes
+`.toLocaleString('bn-BD')` for subscription price display — wrong regional tag
+(Bangladesh Bengali, not India Bengali) even before this redesign existed, and a
+concrete example of exactly the kind of one-off formatting call this design
+replaces. Fixed as part of Phase 2 by routing that display through
+`getFormatter().currency()` (§5) instead of a hand-written `toLocaleString` call.
 
 ## 11. Known duplication to fold in during migration
 
