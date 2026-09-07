@@ -1773,9 +1773,14 @@ rationale) and `I18N-IMPLEMENTATION-SPEC.md` (concrete API + phased
 migration checklist, actively maintained/checked off as work lands).
 Phase 1 (foundation: `@vytanexa/i18n` facade package, the actual
 locale-threading bug fix, namespace message files, type safety,
-completeness-check tooling) is done — see that doc's § 12 for status and
-`git log` for the corresponding commits. Phases 2–5 are open, tracked
-there, not duplicated here.
+completeness-check tooling) and Phase 2 (migrated all 40 DB-content call
+sites; found and fixed a Rules-of-Hooks bug and a `server-only`
+module-taint bug in Phase 1's own output along the way — see
+I18N-IMPLEMENTATION-SPEC.md § 12 for both; folded the duplicate
+language-label definitions) are done — see that doc's § 12 for status and
+`git log` for the corresponding commits. Phases 3–5 (incremental
+hardcoded-string migration, formatter consolidation, optional URL-locale
+routing) are open, tracked there, not duplicated here.
 
 ## WORKING RULES (reaffirmed)
 
