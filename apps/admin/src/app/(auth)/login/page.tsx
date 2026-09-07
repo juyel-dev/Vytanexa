@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useT } from '@vytanexa/i18n/client';
 
 /**
  * Admin Login — ADMIN-PANEL-SPEC.md § A02 "Authentication Flow".
@@ -17,7 +17,7 @@ import { useTranslations } from 'next-intl';
  * documented in CHECKPOINT.md §6 and applied across apps/web.
  */
 export default function AdminLogin() {
-  const t = useTranslations('auth');
+  const t = useT('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
   // The dashboard lives at `/` (the `(dashboard)` route group adds no

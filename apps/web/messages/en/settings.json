@@ -1,0 +1,10 @@
+{
+  "title": "Settings",
+  "language": "Language",
+  "location": "Default location",
+  "notifications": "Notifications",
+  "privacy": "Privacy",
+  "about": "About app",
+  "version": "Version",
+  "clearCache": "Clear cache"
+}

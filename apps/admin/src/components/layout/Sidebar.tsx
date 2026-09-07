@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useT } from '@vytanexa/i18n/client';
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { NAV_GROUPS } from '@/lib/nav-config';
@@ -31,7 +31,18 @@ export function AdminSidebar({
   // never actually show anything.
   badgeCounts?: Record<string, number>;
 }) {
-  const t = useTranslations();
+  const t = useT();
+  // NAV_GROUPS' labelKey is a plain `string` (lib/nav-config.ts is
+  // deliberately i18n-library-agnostic — see that file's own doc comment
+  // on why it's the single source of truth for both nav rendering and
+  // role gating, and shouldn't import next-intl's types just for this).
+  // Contained cast at this one dynamic-lookup call site, not a type
+  // relaxation anywhere else — a real key typo in nav-config.ts still
+  // shows up at runtime as next-intl's own missing-key fallback (§9 of
+  // I18N-IMPLEMENTATION-SPEC.md), it's just not caught at compile time
+  // for this specific config-driven case the way literal `t('nav.x')`
+  // calls elsewhere in the app are.
+  const tDynamic = (key: string) => t(key as Parameters<typeof t>[0]);
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -104,7 +115,7 @@ export function AdminSidebar({
                 collapsed ? 'h-0 opacity-0' : 'h-6 pb-1 opacity-100'
               }`}
             >
-              {t(group.labelKey)}
+              {tDynamic(group.labelKey)}
             </p>
             <ul className="flex flex-col gap-0.5">
               {group.items.map((item) => {
@@ -114,7 +125,7 @@ export function AdminSidebar({
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      title={collapsed ? t(item.labelKey) : undefined}
+                      title={collapsed ? tDynamic(item.labelKey) : undefined}
                       className={`flex h-9 items-center gap-3 overflow-hidden rounded-md px-3 text-admin-body transition-colors ${
                         isActive
                           ? 'bg-brand-50 font-semibold text-brand-700'
@@ -130,7 +141,7 @@ export function AdminSidebar({
                           collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
                         }`}
                       >
-                        {t(item.labelKey)}
+                        {tDynamic(item.labelKey)}
                         {liveCount !== undefined && liveCount > 0 && (
                           <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emergency-600 px-1 text-[11px] font-bold text-white">
                             {liveCount > 99 ? '99+' : liveCount}

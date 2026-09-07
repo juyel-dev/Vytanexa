@@ -1,0 +1,19 @@
+{
+  "splash_tagline": "Your Health, Your Connection",
+  "language_title": "Select your language",
+  "language_hint": "You can change it later",
+  "slides": [
+    {
+      "title": "Find the right doctor",
+      "desc": "Verified profiles & reviews to choose the specialist"
+    },
+    {
+      "title": "Hospitals & tests made easy",
+      "desc": "Nearby hospitals, diagnostics and lab tests in one place"
+    },
+    {
+      "title": "Emergency by your side",
+      "desc": "Ambulance, blood banks, emergency hospitals — in 2 taps"
+    }
+  ]
+}

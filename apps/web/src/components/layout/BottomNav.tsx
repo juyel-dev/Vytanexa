@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useT } from '@vytanexa/i18n/client';
 import { Home, Stethoscope, Search, Building2, Menu, type LucideIcon } from 'lucide-react';
 
 /**
@@ -22,7 +22,7 @@ import { Home, Stethoscope, Search, Building2, Menu, type LucideIcon } from 'luc
 
 type NavItem = {
   href: string;
-  labelKey: string;
+  labelKey: 'nav.home' | 'nav.doctors' | 'nav.search' | 'nav.hospitals' | 'nav.more';
   icon: LucideIcon;
   isCenter?: boolean;
 };
@@ -37,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const t = useTranslations();
+  const t = useT();
 
   // BUGFIX (2026-09): was `inset-x-0`, stretching edge-to-edge across the
   // whole viewport even inside layout.tsx's centered 480px app shell

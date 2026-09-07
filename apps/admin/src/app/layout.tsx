@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { I18nProvider } from '@vytanexa/i18n/client';
 import './globals.css';
 import { cookies } from 'next/headers';
-import { isValidLocale, defaultLocale } from '@/i18n/config';
+import { isValidLocale, defaultLocale, localeConfig } from '@/i18n/config';
 import { ToastProvider } from '@/components/ui/Toast';
 
 export const metadata: Metadata = {
@@ -17,6 +17,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // See apps/web/src/app/layout.tsx's comment — identical pattern.
   const rawLocale = cookies().get('locale')?.value;
   const locale = isValidLocale(rawLocale) ? rawLocale : defaultLocale;
   const messages = await getMessages();
@@ -24,9 +25,9 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body>
-        <NextIntlClientProvider messages={messages}>
+        <I18nProvider locale={locale} config={localeConfig} messages={messages}>
           <ToastProvider>{children}</ToastProvider>
-        </NextIntlClientProvider>
+        </I18nProvider>
       </body>
     </html>
   );

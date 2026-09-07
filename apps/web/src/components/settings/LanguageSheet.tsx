@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useT } from '@vytanexa/i18n/client';
 import { Check } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
@@ -23,12 +23,13 @@ const LANGUAGES: { code: 'bn' | 'en' | 'hi'; native: string; english: string }[]
  * the onboarding store here would be a mismatched dependency. Same
  * three language options, same visual language, correct surface.
  *
- * S22: now wired to next-intl — the locale cookie is read server-side
- * (RootLayout + i18n/request.ts) and BottomNav/nav etc. re-render via
- * `useTranslations()`. The `router.refresh()` forces a soft RSC
- * revalidation so the new messages are fetched without a full hard
- * reload. DB-content `getLocalizedField()` threading remains incremental
- * (see `lib/getLocale.ts`), but chrome translation is now live.
+ * S22 + I18N-ARCHITECTURE.md: wired to `@vytanexa/i18n` — the locale
+ * cookie is read server-side (RootLayout + i18n/request.ts) and
+ * BottomNav/nav etc. re-render via `useT()`. The `router.refresh()`
+ * forces a soft RSC revalidation so the new messages are fetched without
+ * a full hard reload. DB-content `getLocalizedField()`/`useLocalizedField()`
+ * now resolve the real locale too (previously always defaulted to 'bn' —
+ * see I18N-ARCHITECTURE.md for the full history).
  */
 export function LanguageSheet({
   open,
@@ -41,7 +42,7 @@ export function LanguageSheet({
   currentLanguage: string;
   isSignedIn: boolean;
 }) {
-  const locale = useLocale();
+  const t = useT('common');
   const router = useRouter();
   const [selected, setSelected] = useState(currentLanguage);
   const [saving, setSaving] = useState(false);
@@ -63,7 +64,7 @@ export function LanguageSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={locale === 'en' ? 'Select language' : 'ভাষা নির্বাচন করুন'}>
+    <BottomSheet open={open} onClose={onClose} title={t('selectLanguage')}>
       <div className="flex flex-col gap-2.5">
         {LANGUAGES.map((lang) => {
           const isSelected = selected === lang.code;

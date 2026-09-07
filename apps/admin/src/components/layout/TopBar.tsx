@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useT } from '@vytanexa/i18n/client';
 import { Bell, Search } from 'lucide-react';
 
 /**
@@ -17,8 +17,8 @@ export function TopBar({
 }: {
   session: { name: string; role: string };
 }) {
-  const tNav = useTranslations('nav');
-  const tCommon = useTranslations('common');
+  const tNav = useT('nav');
+  const tCommon = useT('common');
   const initials = session.name
     .split(/\s+/)
     .map((p) => p[0])

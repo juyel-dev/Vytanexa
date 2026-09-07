@@ -206,6 +206,13 @@ export async function getOtherCategories(
 }
 
 // Display name resolver honoring the *_translations fallback chain.
-export function seoDisplayName(translations: Json, locale: string = 'bn'): string {
-  return getLocalizedField(translations as never, locale);
+// The `locale` parameter used to exist but was never actually passed by
+// any caller (all 8 call sites use the default) — the exact same bug
+// class documented in I18N-ARCHITECTURE.md, just under a locally-named
+// wrapper the original text-based audit didn't happen to grep for.
+// `getLocalizedField` now resolves the real request locale itself, so
+// there's nothing left for this wrapper to do except exist for the
+// (SEO-namespaced) call sites that already import it by this name.
+export function seoDisplayName(translations: Json): string {
+  return getLocalizedField(translations);
 }

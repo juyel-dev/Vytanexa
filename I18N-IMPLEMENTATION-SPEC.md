@@ -5,6 +5,13 @@
 > behavior, tooling, and a phased migration checklist grounded in the real,
 > currently-existing call sites (counted directly from the codebase, not
 > estimated).
+>
+> **Status: Phase 1 (foundation) is implemented, verified, and merged** — this
+> document was updated after implementation to match what was actually built,
+> not left as an unexecuted plan. Two design details changed from the original
+> draft during implementation, both are called out inline where relevant
+> (§ 1's `dictionary/` removal, § 1a's `resolve-field.ts` addition). Everything
+> else matches the original plan as written.
 
 ---
 
@@ -16,23 +23,40 @@ workspace resolution.
 
 ```
 packages/i18n/
-  package.json                 # name "@vytanexa/i18n", exports map below
+  package.json          # name "@vytanexa/i18n", "exports" map: ".", "./server", "./client"
   src/
-    types.ts                   # Locale, Namespace-agnostic shared types
-    locale-config.ts           # per-app locale list + ICU-locale mapping (§3)
-    dictionary/
-      loadMessages.ts          # ONLY file that dynamically imports namespace JSON
-                                # — the swap point for a future remote message source
-    server.ts                  # 'server-only' guarded — getT, getLocalizedField,
-                                # getLocalizedArray, getFormatter, getResolvedLocale
-    client.tsx                 # 'use client' — I18nProvider, useT, useLocalizedField,
-                                # useLocalizedArray, useFormatter, useResolvedLocale
-    format.ts                  # shared number/date/currency/relative-time logic,
-                                # used by both server.ts and client.tsx
-    index.ts                   # re-exports types.ts + locale-config.ts ONLY
-                                # (server.ts / client.tsx are separate entry points,
-                                # never bundled together — see exports map)
+    types.ts            # Locale, Json, LocalizedText, LocaleConfig, Messages —
+                         # no dependency on @vytanexa/database or next-intl
+    resolve-field.ts     # pure fallback-chain logic (resolveLocalizedField,
+                         # resolveLocalizedArray, resolveLocale) — no I/O, no
+                         # 'server-only' guard, safe to import from either
+                         # server.ts or client.tsx without pulling one into
+                         # the other's bundle
+    format.ts            # createFormatter(locale, config) — Intl-based
+                         # number/date/currency/relative-time, used by both
+    server.ts            # 'server-only' guarded — getT (next-intl passthrough),
+                         # getResolvedLocale, getLocalizedField, getLocalizedArray,
+                         # getFormatter
+    client.tsx            # 'use client' — I18nProvider, useT (next-intl
+                         # passthrough), useResolvedLocale, useLocalizedField,
+                         # useLocalizedArray, useFormatter
+    index.ts              # re-exports types.ts ONLY (server.ts / client.tsx
+                         # are separate entry points, never bundled together)
 ```
+
+**Changed from the original draft**: no `dictionary/loadMessages.ts` inside
+this package. During implementation it became clear the "how are messages
+loaded" boundary already existed, correctly, in each app's own
+`i18n/request.ts` (next-intl's own documented seam, pre-dating this redesign)
+— duplicating that as a second layer inside the shared package would have
+been the exact kind of speculative abstraction the brief said not to add.
+The swap-the-message-source-later boundary (§ 7's requirement) is
+`apps/{app}/src/i18n/request.ts`, unchanged in *responsibility*, just
+updated to aggregate multiple namespace files instead of one flat one.
+`resolve-field.ts` was added (not in the original draft) once it became
+clear `server.ts` and `client.tsx` needed to share the exact same fallback
+logic without either importing the other (`server.ts` has a `server-only`
+guard that would throw if reachable from client code).
 
 ```json
 // packages/i18n/package.json
@@ -368,26 +392,76 @@ conflated:
 ## 12. Phased migration checklist
 
 **Phase 1 — foundation (this is the "small architectural change," the rest is
-incremental):**
-- [ ] Create `packages/i18n` per § 1–5.
-- [ ] Replace `apps/{web,admin}/src/lib/i18n.ts` internals with the thin
-      pre-bound wrapper (§ 4); keep exact same exported names/signatures for
-      `getLocalizedField`, add `getResolvedLocale`, add deprecated re-exports of
-      `toBengaliDigits`/`formatRelativeTimeBn` pointing at `getFormatter`.
-- [ ] Add `apps/{web,admin}/src/lib/i18n-client.ts` (hook wrapper).
-- [ ] Update root `layout.tsx` in both apps: swap `NextIntlClientProvider` for
-      `<I18nProvider>` from the facade (1 file per app).
-- [ ] Migrate the 3 already-`useTranslations`-using files per app
-      (`BottomNav.tsx`, `LanguageSheet.tsx`, `layout.tsx` / `TopBar.tsx`,
-      `Sidebar.tsx`, `(auth)/login/page.tsx`) to `useT`/`getT` from the facade.
-- [ ] Split `messages/*.json` into namespace files (§ 7) — mechanical, no new
-      copy.
-- [ ] Add `global.d.ts` type augmentation (§ 6).
-- [ ] Add `scripts/i18n-check.mjs`, wire into `typecheck` (§ 8a).
-- [ ] **Verify**: language switch in Settings now visibly changes the 3+3
-      already-converted surfaces, `getLocalizedField` resolves the cookie-set
-      locale on a Server-Component page (spot check `doctors/[slug]`), `tsc
-      --noEmit` and `i18n:check` both pass.
+incremental). Status: ✅ DONE, verified, merged.**
+- [x] Create `packages/i18n` per § 1–5 (`resolve-field.ts` added,
+      `dictionary/` dropped — see § 1's "Changed from the original draft").
+- [x] Replace `apps/{web,admin}/src/lib/i18n.ts` internals with the thin
+      pre-bound wrapper (§ 4); exact same exported name/signature for
+      `getLocalizedField`, added `getResolvedLocale`, added deprecated
+      re-exports of `toBengaliDigits`/`formatRelativeTimeBn` pointing at
+      `getFormatter`. (Admin didn't have a `lib/i18n.ts` before — created
+      fresh, for parity; nothing calls it yet, see § 10 note below.)
+- [x] Add `apps/{web,admin}/src/lib/i18n-client.ts` (hook wrapper).
+- [x] Update root `layout.tsx` in both apps: swap `NextIntlClientProvider` for
+      `<I18nProvider>` from the facade.
+- [x] Migrate the 6 already-`useTranslations`-using files
+      (`BottomNav.tsx`, `LanguageSheet.tsx`, admin `TopBar.tsx`,
+      `Sidebar.tsx`, `(auth)/login/page.tsx`, plus each root `layout.tsx`) to
+      `useT`/`getT` from the facade.
+- [x] Split `messages/*.json` into namespace files (§ 7) — mechanically
+      verified byte-for-byte content-equivalent to the originals before the
+      old flat files were deleted (a Python round-trip diff, not eyeballed).
+- [x] Add `types/i18n.d.ts` type augmentation (§ 6) in both apps.
+- [x] Add `scripts/i18n-check.mjs`, wire into `typecheck` in both apps
+      (`npm run typecheck` at the repo root now runs it for both workspaces).
+- [x] **Verify**: `npm run typecheck` at the repo root passes clean for both
+      workspaces (real `tsc --noEmit` + `i18n:check`, run against a real
+      `npm install`, not just read — see "Verification method" below).
+
+**Real bugs found and fixed while implementing this phase** (none were in
+the original audit — a text-grep audit doesn't catch everything a
+type-checker does):
+- `apps/web/src/lib/queries/seo.ts`'s `seoDisplayName()` was a *second*,
+  locally-named wrapper around `getLocalizedField` with its own
+  `locale: string = 'bn'` parameter — same bug class, invisible to the
+  original grep-based audit because it doesn't contain the string
+  `getLocalizedField(` at any of its own 8 call sites in the `(seo)/*`
+  pages. Fixed the same way: dropped the dead parameter, delegates to the
+  real resolver.
+- `BottomNav.tsx`'s `NavItem.labelKey` and admin's `nav-config.ts`-driven
+  `Sidebar.tsx` both build translation keys from a data array rather than
+  literal strings — the new `IntlMessages` type augmentation (§ 6) doesn't
+  accept a plain `string` there. `BottomNav.tsx` (5 fixed nav items) got a
+  literal union type. `nav-config.ts` (dozens of entries across 6 groups,
+  also consumed by `auth-verify.ts`'s role gating — not i18n's file to
+  couple to next-intl's types) keeps `labelKey: string`; `Sidebar.tsx`
+  instead does one small, documented, contained cast
+  (`t(key as Parameters<typeof t>[0])`) at the two dynamic-lookup call
+  sites — the standard, accepted pattern for genuinely data-driven i18n
+  keys. A real typo in `nav-config.ts` still surfaces at runtime via
+  next-intl's own missing-key fallback (§ 9); it's just not caught at
+  compile time for this specific case, same trade-off any next-intl
+  consumer with config-driven nav faces.
+- Confirmed (while touching `formatRelativeTimeBn`, deprecated but still
+  live) the `toLocaleDateString('bn-BD')` bug mentioned in § 10a — fixed to
+  `'bn-IN'` in passing, one line, zero behavior risk.
+
+**Verification method** (honest account, not just "should work"): a real
+`npm install` was run (this repo's `node_modules` doesn't ship with the
+source), then `npm run typecheck` at the repo root — which runs `tsc
+--noEmit && npm run i18n:check` in both `apps/web` and `apps/admin` — was
+run repeatedly until clean. `next build` was **not** run: it requires live
+`NEXT_PUBLIC_SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` credentials (several
+pages fetch from Supabase during metadata/static generation) that aren't
+available in this environment, and attempting it without them would fail
+for reasons unrelated to this change, not validate anything real. `next
+lint` was tried and confirmed to still have no ESLint config at all
+(pre-existing gap, unrelated to this work, matches ARCHITECTURE § 8b).
+**Recommended next step for whoever deploys this**: run `next build` for
+both apps in an environment with real credentials before merging further,
+as a final check `tsc` can't cover (route generation, the dynamic
+`import()` namespace-loading in `i18n/request.ts` actually resolving at
+build time, etc.).
 
 **Phase 2 — de-risk the DB-content fix across all existing call sites:**
 - [ ] 17 Server-Component files: swap import path only (§ 4) — no other change.
@@ -396,8 +470,14 @@ incremental):**
 - [ ] Fold the 3 true UI-locale-label duplicates into `common.json` (§ 11).
 - [ ] Fold the 3 doctor-spoken-language ternaries into their own namespace
       entry (§ 11) — kept separate, not merged with UI locale.
+- [ ] Route admin's `SubscriptionsManager.tsx` price display through
+      `getFormatter().currency()` instead of its direct `.bn` access +
+      `toLocaleString('bn-BD')` (§ 10a) — small, contained, not done in
+      Phase 1 since admin's `lib/i18n.ts` had zero existing callers to
+      de-risk against; this is genuinely new adoption, not a fix-in-place.
 
 **Phase 3 — incremental hardcoded-string migration (ongoing, not one PR):**
+
 Highest-reuse-first order (biggest blast radius per hour of work):
 1. `components/shared/*` (Article/Doctor/Hospital cards — used on nearly every
    list page).
