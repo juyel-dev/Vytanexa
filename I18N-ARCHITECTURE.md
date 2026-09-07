@@ -118,16 +118,31 @@ resolves the current locale internally instead of defaulting to `'bn'`.
   change for any Server-Component call site (~25 of the 44 existing sites are pure
   Server Components — only the import path changes, mechanically, for those).
 - **Client side**: Client Components cannot call `cookies()`. They read the
-  resolved locale from React Context via a hook (`useLocalizedField()`,
-  `useT()`), fed by a single `<I18nProvider locale messages>` at the root layout —
-  which wraps (and internally is) `NextIntlClientProvider`, so no second provider
-  tree is introduced. The ~15–20 call sites that are Client Components (e.g.
-  `ArticleCard.tsx`, `DoctorListClient.tsx`) do need a small, mechanical edit: the
-  plain function call becomes a hook call. This is stated honestly as a real,
-  scoped piece of migration work — not zero-cost — but it is a rename, not a
-  rewrite, and it's the only way to give Client Components a locale without prop-
-  drilling it through every component tree (which the codebase doesn't do today
-  and shouldn't start doing now).
+  resolved locale from React Context, fed by a single `<I18nProvider locale
+  messages>` at the root layout — which wraps (and internally is)
+  `NextIntlClientProvider`, so no second provider tree is introduced. Actual
+  implementation detail found while migrating call sites, corrected here
+  rather than left to silently diverge from this doc: `useLocalizedField()`
+  is **not** itself the per-value resolver — it's a hook, called once, that
+  *returns* the resolver function (`const localize = useLocalizedField();
+  localize(translations)`), the exact same shape `useTranslations()` → `t()`
+  already uses successfully everywhere in this codebase. That distinction
+  is required, not stylistic: this app renders lists constantly (doctor
+  cards, article cards, category grids), and a hook cannot be called a
+  variable number of times inside `.map()` — that breaks React's Rules of
+  Hooks. A first draft of this hook resolved the value directly and shipped
+  broken for exactly that reason before being caught during Phase 2's
+  migration; see I18N-IMPLEMENTATION-SPEC.md § 12 for the full account. The
+  27 Client-Component call sites (23 originally counted calling
+  `getLocalizedField`, plus 4 more found only during migration that called
+  the deprecated `toBengaliDigits`/`formatRelativeTimeBn`/`LANGUAGE_NAMES`
+  helpers, which turned out to be transitively `server-only`-tainted by
+  living in the same file as the cookie-reading resolver — another
+  implementation-time finding, not anticipated in this doc's first draft)
+  needed a small, mechanical edit each: not zero-cost, but a rename/rebind,
+  not a rewrite, and the only way to give Client Components a locale
+  without prop-drilling it through every component tree (which the
+  codebase doesn't do today and shouldn't start doing now).
 
 Net effect: after this fix, it is **structurally impossible** to "forget" to pass
 a locale, because the API never accepts one. The previous bug class cannot recur.

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Phone, Ambulance, Droplet, Building2 } from 'lucide-react';
 import { useLocationStore } from '@/stores/location-store';
 import { LocationChip } from '@/components/layout/LocationChip';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 type EmergencyHospital = {
@@ -66,6 +66,7 @@ function trackCall(numberType: string, label: string) {
  */
 export function EmergencyDataSections() {
   const { districtId, districtName } = useLocationStore();
+  const localize = useLocalizedField();
   const [hospitals, setHospitals] = useState<EmergencyHospital[]>([]);
   const [bloodBanks, setBloodBanks] = useState<BloodBankRow[]>([]);
   const [ambulances, setAmbulances] = useState<AmbulanceProvider[]>([]);
@@ -123,7 +124,7 @@ export function EmergencyDataSections() {
                   href={`/hospitals/${h.slug}`}
                   className="block truncate text-[14px] font-semibold text-neutral-900"
                 >
-                  {getLocalizedField(h.name_translations)}
+                  {localize(h.name_translations)}
                 </Link>
                 <p className="truncate text-[12px] text-neutral-500">{h.address_line}</p>
               </div>
@@ -154,7 +155,7 @@ export function EmergencyDataSections() {
               className="mb-2 flex items-center justify-between rounded-lg border border-neutral-200 p-3"
             >
               <span className="truncate text-[14px] font-semibold text-neutral-900">
-                {getLocalizedField(b.name_translations)}
+                {localize(b.name_translations)}
               </span>
               <a
                 href={`tel:${b.phone}`}
@@ -193,7 +194,7 @@ export function EmergencyDataSections() {
               className="mb-2 flex items-center justify-between rounded-lg border border-neutral-200 p-3"
             >
               <span className="truncate text-[14px] font-semibold text-neutral-900">
-                {getLocalizedField(a.name_translations)}
+                {localize(a.name_translations)}
               </span>
               <a
                 href={`tel:${a.phone}`}

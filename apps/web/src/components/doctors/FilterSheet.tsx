@@ -3,16 +3,12 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 type Category = { id: string; slug: string; name_translations: Json };
 
-const LANGUAGES = [
-  { code: 'bn', label: 'বাংলা' },
-  { code: 'en', label: 'English' },
-  { code: 'hi', label: 'हिन्दी' },
-];
+const LANGUAGES = Object.entries(SPOKEN_LANGUAGE_LABELS).map(([code, label]) => ({ code, label }));
 
 /**
  * Filter Sheet — VYTANEXA-BLUEPRINT.md § S06 "FILTER SHEET — Full Modal"
@@ -35,6 +31,7 @@ export function FilterSheet({
   const router = useRouter();
   const pathname = usePathname();
 
+  const localize = useLocalizedField();
   const [specialties, setSpecialties] = useState<string[]>(
     currentParams.get('specialty')?.split(',').filter(Boolean) ?? []
   );
@@ -85,7 +82,7 @@ export function FilterSheet({
                 }`}
               >
                 {active && '✓ '}
-                {getLocalizedField(c.name_translations)}
+                {localize(c.name_translations)}
               </button>
             );
           })}

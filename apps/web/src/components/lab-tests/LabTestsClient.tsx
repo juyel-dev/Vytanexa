@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { HospitalCard } from '@/components/shared/HospitalCard';
 import { LocationChip } from '@/components/layout/LocationChip';
 import { useLocationStore } from '@/stores/location-store';
@@ -39,6 +39,7 @@ type SearchResult = {
  */
 export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }) {
   const { districtId } = useLocationStore();
+  const localize = useLocalizedField();
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [results, setResults] = useState<SearchResult[] | null>(null);
@@ -88,10 +89,10 @@ export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }
               {popularTests.map((t) => (
                 <button
                   key={t.canonical_key}
-                  onClick={() => setQuery(getLocalizedField(t.name_translations))}
+                  onClick={() => setQuery(localize(t.name_translations))}
                   className="rounded-full border border-neutral-200 px-3.5 py-2 text-[13px] font-medium text-neutral-700 active:bg-neutral-50"
                 >
-                  {getLocalizedField(t.name_translations)}
+                  {localize(t.name_translations)}
                 </button>
               ))}
             </div>
@@ -134,7 +135,7 @@ export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }
             <HospitalCard
               key={r.hospital.id}
               hospital={r.hospital}
-              matchedTestLabel={r.matchedTestNames.map((n) => getLocalizedField(n)).join(', ')}
+              matchedTestLabel={r.matchedTestNames.map((n) => localize(n)).join(', ')}
             />
           ))}
         </div>

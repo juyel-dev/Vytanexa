@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Search as SearchIcon, X, Mic } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import {
   getRecentSearches,
   saveRecentSearch,
@@ -28,6 +28,7 @@ export default function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [query, setQuery] = useState('');
+  const localize = useLocalizedField();
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [dropdown, setDropdown] = useState<SearchApiResponse | null>(null);
   const [results, setResults] = useState<SearchApiResponse | null>(null);
@@ -220,7 +221,7 @@ export default function SearchPage() {
                     href={`/doctors?specialty=${c.slug}`}
                     className="flex h-16 items-center justify-center rounded-lg border border-neutral-200 px-2 text-center text-[12px] text-neutral-700"
                   >
-                    {getLocalizedField(c.name_translations)}
+                    {localize(c.name_translations)}
                   </Link>
                 ))}
               </div>
@@ -246,8 +247,8 @@ export default function SearchPage() {
                   label="ডাক্তার"
                   items={dropdown.doctors.map((d) => ({
                     id: d.id,
-                    label: getLocalizedField(d.name_translations),
-                    sub: d.categories ? getLocalizedField(d.categories.name_translations) : '',
+                    label: localize(d.name_translations),
+                    sub: d.categories ? localize(d.categories.name_translations) : '',
                     href: `/doctors/${d.slug}`,
                   }))}
                 />
@@ -255,7 +256,7 @@ export default function SearchPage() {
                   label="হাসপাতাল"
                   items={dropdown.hospitals.map((h) => ({
                     id: h.id,
-                    label: getLocalizedField(h.name_translations),
+                    label: localize(h.name_translations),
                     sub: h.type,
                     href: `/hospitals/${h.slug}`,
                   }))}
@@ -264,7 +265,7 @@ export default function SearchPage() {
                   label="বিভাগ"
                   items={dropdown.categories.map((c) => ({
                     id: c.id,
-                    label: getLocalizedField(c.name_translations),
+                    label: localize(c.name_translations),
                     sub: 'সব ডাক্তার দেখুন',
                     href: `/doctors?specialty=${c.slug}`,
                   }))}
@@ -273,7 +274,7 @@ export default function SearchPage() {
                   label="উপসর্গ"
                   items={dropdown.symptoms.map((s) => ({
                     id: s.id,
-                    label: getLocalizedField(s.title_translations),
+                    label: localize(s.title_translations),
                     sub: '',
                     href: `/symptoms/${s.slug}`,
                   }))}
@@ -349,11 +350,11 @@ export default function SearchPage() {
                     className="mb-2 block rounded-lg border border-neutral-200 p-3"
                   >
                     <p className="text-[14px] font-semibold text-neutral-900">
-                      {getLocalizedField(d.name_translations)}
+                      {localize(d.name_translations)}
                     </p>
                     {d.categories && (
                       <p className="text-[12px] text-brand-600">
-                        {getLocalizedField(d.categories.name_translations)}
+                        {localize(d.categories.name_translations)}
                       </p>
                     )}
                   </Link>
@@ -366,7 +367,7 @@ export default function SearchPage() {
                     className="mb-2 block rounded-lg border border-neutral-200 p-3"
                   >
                     <p className="text-[14px] font-semibold text-neutral-900">
-                      {getLocalizedField(h.name_translations)}
+                      {localize(h.name_translations)}
                     </p>
                   </Link>
                 ))}
@@ -378,7 +379,7 @@ export default function SearchPage() {
                     className="mb-2 block rounded-lg border border-neutral-200 p-3"
                   >
                     <p className="text-[14px] font-semibold text-neutral-900">
-                      {getLocalizedField(s.title_translations)}
+                      {localize(s.title_translations)}
                     </p>
                   </Link>
                 ))}

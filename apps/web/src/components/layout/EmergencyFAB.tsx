@@ -6,7 +6,7 @@ import { Siren, X, Ambulance, Building2, Droplet, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { NATIONAL_NUMBERS } from '@/components/emergency/NationalNumbersSection';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 type SheetKind = 'ambulance' | 'hospital' | 'blood' | null;
@@ -44,6 +44,7 @@ function trackCall(numberType: string, label: string) {
 }
 
 export function EmergencyFAB() {
+  const localize = useLocalizedField();
   const [expanded, setExpanded] = useState(false);
   const [activeSheet, setActiveSheet] = useState<SheetKind>(null);
   const [hospitals, setHospitals] = useState<
@@ -176,7 +177,7 @@ export function EmergencyFAB() {
             className="mb-2 flex items-center justify-between rounded-lg border border-neutral-100 p-3"
           >
             <span className="text-[14px] text-neutral-800">
-              📞 {getLocalizedField(a.name_translations)}
+              📞 {localize(a.name_translations)}
             </span>
             <Phone className="h-4 w-4 text-neutral-500" />
           </a>
@@ -200,12 +201,12 @@ export function EmergencyFAB() {
         {hospitals.map((h) => (
           <div key={h.id} className="mb-2 flex items-center justify-between rounded-lg border border-neutral-100 p-3">
             <span className="text-[14px] text-neutral-800">
-              {getLocalizedField(h.name_translations)}
+              {localize(h.name_translations)}
             </span>
             <a
               href={`tel:${h.phone}`}
               onClick={() => trackCall('local_hospital', h.id)}
-              aria-label={`${getLocalizedField(h.name_translations)}-এ কল করুন`}
+              aria-label={`${localize(h.name_translations)}-এ কল করুন`}
             >
               <Phone className="h-4 w-4 text-emergency-600" />
             </a>
@@ -230,12 +231,12 @@ export function EmergencyFAB() {
         {bloodBanks.map((b) => (
           <div key={b.id} className="mb-2 flex items-center justify-between rounded-lg border border-neutral-100 p-3">
             <span className="text-[14px] text-neutral-800">
-              🩸 {getLocalizedField(b.name_translations)}
+              🩸 {localize(b.name_translations)}
             </span>
             <a
               href={`tel:${b.phone}`}
               onClick={() => trackCall('blood_bank', b.id)}
-              aria-label={`${getLocalizedField(b.name_translations)}-এ কল করুন`}
+              aria-label={`${localize(b.name_translations)}-এ কল করুন`}
             >
               <Phone className="h-4 w-4 text-emergency-600" />
             </a>

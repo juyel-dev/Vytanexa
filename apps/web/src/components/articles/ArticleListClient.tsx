@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { getLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n';
+import { useLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n-client';
 import { ArticleCard, ArticleMeta } from '@/components/shared/ArticleCard';
 import type { Json } from '@vytanexa/database';
 
@@ -41,6 +41,7 @@ export function ArticleListClient({
   const searchParams = useSearchParams();
 
   const [articles, setArticles] = useState(initialArticles);
+  const localize = useLocalizedField();
   const [count, setCount] = useState(initialCount);
   const [page, setPage] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -130,7 +131,7 @@ export function ArticleListClient({
                 {featured.cover_image_url && (
                   <Image
                     src={featured.cover_image_url}
-                    alt={getLocalizedField(featured.title_translations)}
+                    alt={localize(featured.title_translations)}
                     fill
                     className="object-cover"
                   />
@@ -142,7 +143,7 @@ export function ArticleListClient({
                 )}
               </div>
               <h2 className="mt-2 line-clamp-2 text-[17px] font-bold text-neutral-900">
-                {getLocalizedField(featured.title_translations)}
+                {localize(featured.title_translations)}
               </h2>
               <ArticleMeta article={featured} />
             </Link>

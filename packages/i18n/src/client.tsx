@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
 import { NextIntlClientProvider, useTranslations, type AbstractIntlMessages } from 'next-intl';
 import { createFormatter, type Formatter } from './format';
 import { resolveLocalizedArray, resolveLocalizedField } from './resolve-field';
@@ -70,17 +70,40 @@ export function useResolvedLocale<L extends string = string>(): L {
   return useLocaleCtx().locale as L;
 }
 
-/** Client-side equivalent of `getLocalizedField` — same fallback chain,
- *  locale read from `<I18nProvider>` context instead of a cookie. */
-export function useLocalizedField(translations: Json | null | undefined): string {
+/**
+ * Client-side equivalent of `getLocalizedField` — matches next-intl's own
+ * `useTranslations()` → `t(key)` shape on purpose: this is a hook that
+ * returns a plain function, NOT a hook that resolves one value directly.
+ *
+ * That distinction matters for correctness, not just style: this app
+ * renders lists constantly (doctor cards, article cards, category grids),
+ * and a hook cannot be called once per array item inside `.map()` —
+ * that breaks React's Rules of Hooks (hook call order must be identical
+ * every render, which a variable-length list can't guarantee). Calling
+ * the hook once — `const localize = useLocalizedField();` — and then
+ * calling the plain function it returns per item —
+ * `items.map((i) => localize(i.name_translations))` — is the same
+ * pattern every consumer of this codebase already uses successfully for
+ * static messages, and is safe anywhere: top level, inside `.map()`,
+ * inside conditionals.
+ */
+export function useLocalizedField(): (translations: Json | null | undefined) => string {
   const { locale, config } = useLocaleCtx();
-  return resolveLocalizedField(translations, locale, config);
+  return useCallback(
+    (translations: Json | null | undefined) => resolveLocalizedField(translations, locale, config),
+    [locale, config],
+  );
 }
 
-/** Client-side equivalent of `getLocalizedArray`. */
-export function useLocalizedArray(translations: Json | null | undefined): string[] {
+/** Client-side equivalent of `getLocalizedArray` — same "call the hook
+ *  once, call the returned function many times" shape as
+ *  `useLocalizedField` above, for the same Rules-of-Hooks reason. */
+export function useLocalizedArray(): (translations: Json | null | undefined) => string[] {
   const { locale, config } = useLocaleCtx();
-  return resolveLocalizedArray(translations, locale, config);
+  return useCallback(
+    (translations: Json | null | undefined) => resolveLocalizedArray(translations, locale, config),
+    [locale, config],
+  );
 }
 
 /** Client-side equivalent of `getFormatter`. */

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Phone, MessageCircle, Copy, Check, Lock } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { DonorRegistrationSheet } from './DonorRegistrationSheet';
 import { LocationChip } from '@/components/layout/LocationChip';
 import { useLocationStore } from '@/stores/location-store';
@@ -63,6 +63,7 @@ export function BloodServicesClient({
   initialGroup?: string | null;
   isLoggedIn: boolean;
 }) {
+  const localize = useLocalizedField();
   const router = useRouter();
   const { districtId } = useLocationStore();
   const [bloodBanks, setBloodBanks] = useState(initialBloodBanks);
@@ -80,8 +81,8 @@ export function BloodServicesClient({
   }, []);
 
   const districtNameById = useMemo(
-    () => new Map(districts.map((d) => [d.id, getLocalizedField(d.name_translations)])),
-    [districts]
+    () => new Map(districts.map((d) => [d.id, localize(d.name_translations)])),
+    [districts, localize]
   );
 
   const refetchServices = () => {
@@ -242,7 +243,7 @@ export function BloodServicesClient({
                   className="mb-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-card"
                 >
                   <h3 className="text-[15px] font-bold text-neutral-900">
-                    🏥 {getLocalizedField(bank.name_translations)}
+                    🏥 {localize(bank.name_translations)}
                   </h3>
                   <p className="mt-0.5 text-[13px] text-neutral-500">
                     📍 {bank.address_line}

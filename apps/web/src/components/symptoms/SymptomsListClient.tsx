@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { SymptomListItem } from '@/lib/queries/symptom-list';
 
 /**
@@ -18,14 +18,15 @@ import type { SymptomListItem } from '@/lib/queries/symptom-list';
  */
 export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }) {
   const [query, setQuery] = useState('');
+  const localize = useLocalizedField();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return symptoms;
     return symptoms.filter((s) =>
-      getLocalizedField(s.title_translations).toLowerCase().includes(q)
+      localize(s.title_translations).toLowerCase().includes(q)
     );
-  }, [symptoms, query]);
+  }, [symptoms, query, localize]);
 
   const emergency = filtered.filter((s) => s.is_emergency);
   const general = filtered.filter((s) => !s.is_emergency);
@@ -38,14 +39,14 @@ export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }
       )[0];
       const key = firstLink?.categories?.id ?? 'other';
       const label = firstLink?.categories
-        ? getLocalizedField(firstLink.categories.name_translations)
+        ? localize(firstLink.categories.name_translations)
         : 'অন্যান্য';
       const group = map.get(key) ?? { label, items: [] };
       group.items.push(s);
       map.set(key, group);
     }
     return [...map.values()];
-  }, [general]);
+  }, [general, localize]);
 
   return (
     <div className="pb-6">
@@ -93,7 +94,8 @@ export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }
 }
 
 function SymptomCard({ symptom }: { symptom: SymptomListItem }) {
-  const title = getLocalizedField(symptom.title_translations);
+  const localize = useLocalizedField();
+  const title = localize(symptom.title_translations);
   return (
     <Link
       href={`/symptoms/${symptom.slug}`}

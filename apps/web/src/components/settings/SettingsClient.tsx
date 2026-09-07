@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { ChevronRight, Trash2 } from 'lucide-react';
 import { LanguageSheet } from './LanguageSheet';
 import { useLocationStore } from '@/stores/location-store';
-import { LANGUAGE_NAMES } from '@/lib/i18n';
+import { LANGUAGE_NAMES } from '@/lib/i18n-client';
 
 // Same code-splitting rationale as LocationChip.tsx: LocationPickerSheet
 // pulls in the browser Supabase client for its district/state queries,

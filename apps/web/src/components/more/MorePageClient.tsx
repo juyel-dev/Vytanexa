@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocationStore } from '@/stores/location-store';
-import { LANGUAGE_NAMES } from '@/lib/i18n';
+import { LANGUAGE_NAMES } from '@/lib/i18n-client';
 import {
   Heart,
   User,

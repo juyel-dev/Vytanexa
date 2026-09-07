@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getDeviceId } from '@/lib/device-id';
-import { toBengaliDigits } from '@/lib/i18n';
+import { toBengaliDigits } from '@/lib/i18n-client';
 import type { PollWithOptions } from '@/lib/queries/polls';
 
 /**

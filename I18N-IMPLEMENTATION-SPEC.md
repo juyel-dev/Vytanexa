@@ -164,10 +164,12 @@ export function getLocalizedField(
 ```
 
 ```tsx
-// packages/i18n/src/client.tsx
+// packages/i18n/src/client.tsx (actual shape, corrected from this doc's
+// first draft — see the note below the code)
 'use client';
-import { createContext, useContext } from 'react';
-import type { LocaleConfig } from './types';
+import { createContext, useCallback, useContext } from 'react';
+import type { LocaleConfig, Json } from './types';
+import { resolveLocalizedField } from './resolve-field';
 
 const LocaleContext = createContext<{ locale: string; config: LocaleConfig } | null>(null);
 
@@ -183,40 +185,80 @@ export function useResolvedLocale(): string {
   return ctx.locale;
 }
 
-export function useLocalizedField(translations: LocalizedText | null | undefined): string {
+// NOT `useLocalizedField(translations): string`. The hook is called once
+// and returns a plain function — the exact shape `useTranslations()` →
+// `t(key)` already uses everywhere in this codebase — because a hook
+// cannot be called a variable number of times inside `.map()` without
+// breaking React's Rules of Hooks, and this app renders lists constantly
+// (doctor cards, article cards, category grids). A first version of this
+// function resolved the value directly and shipped broken for exactly
+// that reason — caught only once real Client-Component call sites
+// (`DoctorListClient.tsx`) were migrated in Phase 2, not by `tsc`, which
+// can't see this class of bug. See § 12 Phase 2 for the full account.
+export function useLocalizedField(): (translations: Json | null | undefined) => string {
   const { locale, config } = useContext(LocaleContext)!;
-  return translations?.[locale] || translations?.[config.defaultLocale] || translations?.['en']
-    || Object.values(translations ?? {}).find(Boolean) || '';
+  return useCallback((t) => resolveLocalizedField(t, locale, config), [locale, config]);
 }
+```
+
+Consumer shape, everywhere in the app:
+```tsx
+const localize = useLocalizedField();     // called once, top of component
+// ... later, anywhere, including inside .map(), a conditional, a useMemo:
+items.map((item) => <span>{localize(item.name_translations)}</span>)
 ```
 
 To avoid every app re-passing `config` at every call site, each app creates one
 thin, pre-bound wrapper in its own `lib/`:
 
 ```ts
-// apps/web/src/lib/i18n.ts  (thin — ~10 lines, app-specific binding only)
+// apps/web/src/lib/i18n.ts  (thin — server-specific bindings only)
 import { getLocalizedField as _get, getResolvedLocale as _resolve } from '@vytanexa/i18n/server';
-import { localeConfig } from '@/i18n/locales';
+import { localeConfig } from '@/i18n/config';
 
 export const getResolvedLocale = () => _resolve(localeConfig);
-export const getLocalizedField = (t: LocalizedText | null | undefined) => _get(t, localeConfig);
+export const getLocalizedField = (t: Json | null | undefined) => _get(t, localeConfig);
 ```
 
 This preserves the **exact existing call signature** —
 `getLocalizedField(doctor.name_translations)` — for every one of the 17 Server-
 Component call sites. Only the import line changes
 (`from '@/lib/i18n'` stays the same path; only its internal implementation is
-replaced). **Zero call-site edits for Server Components.**
+replaced). **Zero call-site edits for Server Components** — verified true for
+all 17 during Phase 2, not just claimed (I18N-IMPLEMENTATION-SPEC.md § 12).
 
-For the 23 Client-Component call sites, the equivalent thin wrapper exports a hook:
+**Second real finding from Phase 2, worth stating plainly**: `lib/i18n.ts`
+imports from `@vytanexa/i18n/server`, which carries a `server-only` guard.
+Bundlers apply that guard's browser-field substitution at the *whole
+module* level, not per export — so `lib/i18n.ts` also originally held the
+deprecated `toBengaliDigits`/`formatRelativeTimeBn`/`LANGUAGE_NAMES`
+helpers, and ANY Client Component importing even those pure, cookie-free
+functions from that file would fail to bundle. `tsc --noEmit` cannot catch
+this (it's a bundler-time check); it surfaced only by manually tracing
+every Client-Component importer of `lib/i18n.ts` during Phase 2. Fixed by
+extracting those pure, environment-agnostic helpers into a third file,
+`lib/i18n-shared.ts` (no `server-only`, no `cookies()`), which both
+`lib/i18n.ts` and `lib/i18n-client.ts` re-export — so existing import paths
+for those helpers didn't need to change, only the module they resolve
+from.
+
+For the Client-Component call sites, the equivalent thin wrapper re-exports the
+facade's hooks directly (no extra binding needed — `config` lives in
+`<I18nProvider>`'s context already, not passed per call):
 
 ```ts
 // apps/web/src/lib/i18n-client.ts
-export const useLocalizedField = /* pre-bound to localeConfig, calls @vytanexa/i18n/client */
+export { useLocalizedField, useLocalizedArray, useFormatter } from '@vytanexa/i18n/client';
+export { LANGUAGE_NAMES, LANGUAGE_OPTIONS, SPOKEN_LANGUAGE_LABELS, toBengaliDigits, formatRelativeTimeBn } from './i18n-shared';
 ```
 
-and those 23 files change `getLocalizedField(x)` → `useLocalizedField(x)` — a
-mechanical rename, not a logic change, tracked as an explicit checklist in § 8.
+27 files (not 23 — the original count only grepped for `getLocalizedField(`;
+4 more turned up during migration that only used the deprecated
+`toBengaliDigits`/`formatRelativeTimeBn`/`LANGUAGE_NAMES` helpers, which
+needed the exact same import-path fix for the `server-only` taint reason
+above) changed `getLocalizedField(x)` → `const localize =
+useLocalizedField(); ... localize(x)` — a mechanical rebind-and-rename,
+not a logic change, done and verified in § 12 Phase 2.
 
 ## 5. Formatting
 
@@ -368,26 +410,44 @@ concrete example of exactly the kind of one-off formatting call this design
 replaces. Fixed as part of Phase 2 by routing that display through
 `getFormatter().currency()` (§5) instead of a hand-written `toLocaleString` call.
 
-## 11. Known duplication to fold in during migration
+## 11. Known duplication to fold in during migration — ✅ done in Phase 2
 
-Six places currently define language display labels, two distinct concerns
-conflated:
+Six places originally defined language display labels, two distinct
+concerns conflated. **Status: folded, verified, merged** — actual
+implementation differed slightly from this section's original plan (noted
+inline), corrected here rather than left inaccurate:
 
 - **App-UI-locale labels** (true duplicates, same concept): canonical
-  `LANGUAGE_NAMES` in `lib/i18n.ts`, re-duplicated as local `LANGUAGES` arrays in
-  `onboarding/LanguageStep.tsx` and `settings/LanguageSheet.tsx`. These three
-  collapse into one: the namespace file `common.json`'s language names (e.g.
-  `common.languages.bn = "বাংলা"`), read via `t()` everywhere, single source.
+  `LANGUAGE_NAMES`, re-duplicated as local, byte-for-byte identical
+  `LANGUAGES` arrays in `onboarding/LanguageStep.tsx` and
+  `settings/LanguageSheet.tsx`. **Changed from the original plan**: these
+  did *not* move into `common.json` as `t()`-resolved keys. Reason found
+  during implementation: this data isn't UI copy in one active language —
+  it's "show all three language names simultaneously, in a picker,
+  regardless of which locale is currently selected" (the whole point of a
+  language switcher), which doesn't fit `t()`'s one-active-locale model
+  cleanly. It became a single TypeScript constant, `LANGUAGE_OPTIONS` (a
+  `{code, native, english}[]` array) in `lib/i18n-shared.ts`, with
+  `LANGUAGE_NAMES` (the lookup-map form other call sites want) now
+  *derived* from it via `Object.fromEntries` instead of hand-duplicated —
+  one source, two shapes for two different consumption patterns, matching
+  how this exact kind of data (a static, locale-agnostic label set) was
+  already handled elsewhere in the codebase rather than inventing a new
+  pattern.
 - **Doctor spoken-language labels** (a *different*, Tier-B-adjacent concept —
   which human languages a doctor speaks, not the app's UI language, even though
   the value set happens to overlap `bn`/`en`/`hi`): ad-hoc ternaries in
   `doctor-profile/DoctorProfileClient.tsx`, `doctor-profile/InfoTab.tsx`, and
-  `doctors/FilterSheet.tsx`. These should **not** be forced into `LANGUAGE_NAMES`
+  a differently-shaped `{code, label}[]` array in `doctors/FilterSheet.tsx`.
+  Not forced into `LANGUAGE_NAMES`/`LANGUAGE_OPTIONS`
   (conflating "UI language" with "doctor's spoken language" is a category error
   waiting to happen the day these two lists diverge — e.g. a doctor who speaks
-  Urdu, which will never be an app UI locale). They get their own small,
-  explicit `SPOKEN_LANGUAGE_LABELS` namespace entry, resolved with the same
-  `t()`, but namespaced separately (`doctor.spokenLanguages.bn`).
+  Urdu, which will never be an app UI locale). Folded into their own
+  `SPOKEN_LANGUAGE_LABELS: Record<string, string>` constant, same file —
+  same reasoning as above (a static label lookup, not sentence-shaped UI
+  copy) for why it's a TS constant rather than a namespace key, kept in a
+  clearly-documented separate export so the two concepts can't silently
+  merge later.
 
 ## 12. Phased migration checklist
 
@@ -463,24 +523,84 @@ as a final check `tsc` can't cover (route generation, the dynamic
 `import()` namespace-loading in `i18n/request.ts` actually resolving at
 build time, etc.).
 
-**Phase 2 — de-risk the DB-content fix across all existing call sites:**
-- [ ] 17 Server-Component files: swap import path only (§ 4) — no other change.
-- [ ] 23 Client-Component files: rename `getLocalizedField` → `useLocalizedField`
-      call (§ 4) — mechanical, one line each.
-- [ ] Fold the 3 true UI-locale-label duplicates into `common.json` (§ 11).
-- [ ] Fold the 3 doctor-spoken-language ternaries into their own namespace
-      entry (§ 11) — kept separate, not merged with UI locale.
-- [ ] Route admin's `SubscriptionsManager.tsx` price display through
-      `getFormatter().currency()` instead of its direct `.bn` access +
-      `toLocaleString('bn-BD')` (§ 10a) — small, contained, not done in
-      Phase 1 since admin's `lib/i18n.ts` had zero existing callers to
-      de-risk against; this is genuinely new adoption, not a fix-in-place.
+**Phase 2 — de-risk the DB-content fix across all existing call sites.
+Status: ✅ DONE, verified, merged.**
+- [x] 17 Server-Component files: confirmed **zero code changes needed** —
+      all 17 already imported `getLocalizedField` from `@/lib/i18n`
+      unchanged since Phase 1, so Phase 1's fix already covers them.
+      Verified individually, not assumed (every one of the 17 files'
+      import line was greped and checked).
+- [x] 27 Client-Component files (not 23 — see the finding below) migrated.
+- [x] Fold the 2 true UI-locale-label duplicates
+      (`onboarding/LanguageStep.tsx`, `settings/LanguageSheet.tsx` — both
+      had a byte-for-byte identical `LANGUAGES` array) into one
+      `LANGUAGE_OPTIONS` constant in `lib/i18n-shared.ts`, with
+      `LANGUAGE_NAMES` now *derived* from it instead of hand-duplicated
+      (§ 11 undercounted this as "3 duplicates" — the third,
+      `LANGUAGE_NAMES` itself, was already the canonical source, not a
+      duplicate of the other two; fixed count: 2 duplicates folded into 1
+      source plus the pre-existing map).
+- [x] Fold the 3 doctor-spoken-language ternaries/arrays
+      (`DoctorProfileClient.tsx`, `doctor-profile/InfoTab.tsx`,
+      `doctors/FilterSheet.tsx`) into `SPOKEN_LANGUAGE_LABELS` in
+      `lib/i18n-shared.ts` — kept separate from `LANGUAGE_NAMES` as
+      designed (§ 11), not merged.
+- [x] Routed admin's `SubscriptionsManager.tsx` price display through
+      `useFormatter().currency()` and its two direct `.bn` accesses
+      through `useLocalizedField()`.
+
+**Two real, load-bearing bugs found during Phase 2's own implementation**
+(neither was anticipated by Phase 1's plan or its `tsc`-only verification
+— both are documented in detail, with the fix, in § 4 above; summarized
+here for the checklist record):
+
+1. **Rules-of-Hooks violation.** The first draft of `useLocalizedField`
+   (Phase 1) resolved a value directly:
+   `useLocalizedField(translations): string`. The very first
+   Client-Component migration (`DoctorListClient.tsx`) revealed this is
+   called inside `.map()` for every list in the app — a hook cannot be
+   called a variable number of times per render. Redesigned to the
+   `useTranslations()` → `t()` shape: `useLocalizedField()` returns a
+   plain function, called once per component, safe to invoke anywhere
+   afterward including inside `.map()`, `useMemo`, conditionals. This
+   changed `@vytanexa/i18n/client`'s public API (not just an internal
+   detail) after Phase 1 had already shipped it — corrected before wider
+   adoption made it expensive to fix, but a real design mistake, stated
+   plainly rather than glossed over.
+2. **`server-only` module-level taint.** `lib/i18n.ts` transitively
+   carries `server-only` (via `@vytanexa/i18n/server`). Bundlers apply
+   `server-only`'s guard to the *whole importing module*, not per export
+   — so the deprecated `toBengaliDigits`/`formatRelativeTimeBn` and the
+   `LANGUAGE_NAMES` constant, despite being pure and cookie-free, were
+   unimportable from any Client Component as long as they lived in
+   `lib/i18n.ts`. This is invisible to `tsc --noEmit` (bundler-time
+   check, not a type error) and could not be verified with a real `next
+   build` in this sandbox (network restrictions block the Google Fonts
+   fetch during the build's compile step, before webpack would even
+   reach the violation — see § 12's "Verification method" above). Found
+   by manually tracing every Client-Component importer of `lib/i18n.ts`.
+   Fixed by extracting the pure helpers into `lib/i18n-shared.ts` (no
+   `server-only`, no `cookies()`), re-exported by both `lib/i18n.ts` and
+   `lib/i18n-client.ts` so existing import *names* didn't need to change,
+   only which module they resolve from.
+
+Also fixed in passing while migrating: several `useMemo`/`useCallback`
+call sites (`BloodServicesClient.tsx`'s `districtNameById`,
+`SymptomsListClient.tsx`'s `filtered`/`groups`) used the new `localize`
+function inside their body without listing it in the dependency array —
+harmless under the old always-`'bn'` behavior (nothing to react to), a
+real stale-memo bug now that locale is live. Caught by a small
+purpose-written script (not manual inspection) that parses every
+`useMemo`/`useCallback` in a file using either hook and flags a missing
+dependency; re-run as a final sweep across both apps with zero remaining
+hits.
 
 **Phase 3 — incremental hardcoded-string migration (ongoing, not one PR):**
 
 Highest-reuse-first order (biggest blast radius per hour of work):
 1. `components/shared/*` (Article/Doctor/Hospital cards — used on nearly every
    list page).
+
 2. `components/layout/*` (nav, top bar, FABs, sheets — visible on every page).
 3. Feature verticals one at a time (`doctors/`, `hospitals/`, `blood-services/`,
    `symptoms/`, `qa/`, `polls/`, `articles/`, `account/`, `settings/`,

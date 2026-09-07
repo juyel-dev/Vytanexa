@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
+import { useLocalizedField, useFormatter } from '@/lib/i18n-client';
 import { DataTable } from '@/components/ui/DataTable';
 
 type Plan = { id: string; tier: string; name_translations: { bn?: string; en?: string } | null; applies_to: string[]; price_monthly: number; price_yearly: number | null; benefits: Record<string, unknown> | null; is_active: boolean };
@@ -13,6 +14,8 @@ const TIER_EMOJI: Record<string, string> = { free: '🆓', basic: '🟢', pro: '
 export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Plan[]; subscriptions: Sub[]; tab: 'plans' | 'entities' }) {
   const router = useRouter();
   const toast = useToast();
+  const localize = useLocalizedField();
+  const format = useFormatter();
   const [editPlan, setEditPlan] = useState<Plan | null>(null);
   const [priceM, setPriceM] = useState('');
   const [priceY, setPriceY] = useState('');
@@ -130,13 +133,13 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
       {tab === 'plans' ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {plans.map((p) => {
-            const t = p.name_translations as { bn?: string; en?: string } | null;
+            const planName = localize(p.name_translations) || p.tier;
             return (
               <div key={p.id} className="rounded-xl border border-admin-border bg-white p-4">
                 <div className="flex items-center gap-2">
                   <span className="text-[20px]">{TIER_EMOJI[p.tier] ?? '📦'}</span>
-                  <span className="text-admin-h3 text-neutral-900">{t?.bn || p.tier}</span>
-                  <span className="ml-auto text-admin-small text-neutral-500">₹{Number(p.price_monthly).toLocaleString('bn-BD')}/মাস</span>
+                  <span className="text-admin-h3 text-neutral-900">{planName}</span>
+                  <span className="ml-auto text-admin-small text-neutral-500">{format.currency(Number(p.price_monthly))}/মাস</span>
                 </div>
                 <p className="mt-1 text-admin-small text-neutral-500">প্রয়োগ: {p.applies_to.join(', ')}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -267,7 +270,7 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
               <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">প্ল্যান</span>
                 <select value={planId} onChange={(e) => setPlanId(e.target.value)} className="h-9 rounded-md border border-admin-border bg-white px-2 text-admin-body">
                   <option value="">নির্বাচন করুন</option>
-                  {plans.map((p) => { const t = p.name_translations as { bn?: string } | null; return <option key={p.id} value={p.id}>{TIER_EMOJI[p.tier] ?? ''} {(t?.bn || p.tier) as string} — ₹{Number(p.price_monthly).toString()}</option>; })}
+                  {plans.map((p) => { const planName = localize(p.name_translations) || p.tier; return <option key={p.id} value={p.id}>{TIER_EMOJI[p.tier] ?? ''} {planName} — {format.currency(Number(p.price_monthly))}</option>; })}
                 </select>
               </label>
               <label className="flex flex-col gap-1"><span className="text-admin-small font-medium text-neutral-700">মেয়াদ শেষ (ঐচ্ছিক)</span><input type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} className="h-9 rounded-md border border-admin-border px-3 text-admin-body" /></label>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 type District = { id: string; slug: string; name_translations: Json };
@@ -30,6 +30,7 @@ export function ProfileEditClient({
   initialLocationId: string | null;
   districts: District[];
 }) {
+  const localize = useLocalizedField();
   const router = useRouter();
   const [name, setName] = useState(initialName ?? '');
   const [email, setEmail] = useState(initialEmail ?? '');
@@ -99,7 +100,7 @@ export function ProfileEditClient({
         <option value="">নির্বাচন করুন</option>
         {districts.map((d) => (
           <option key={d.id} value={d.id}>
-            {getLocalizedField(d.name_translations)}
+            {localize(d.name_translations)}
           </option>
         ))}
       </select>

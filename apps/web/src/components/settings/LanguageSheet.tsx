@@ -5,12 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useT } from '@vytanexa/i18n/client';
 import { Check } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-
-const LANGUAGES: { code: 'bn' | 'en' | 'hi'; native: string; english: string }[] = [
-  { code: 'bn', native: 'বাংলা', english: 'Bengali' },
-  { code: 'en', native: 'English', english: 'English' },
-  { code: 'hi', native: 'हिन्दी', english: 'Hindi' },
-];
+import { LANGUAGE_OPTIONS } from '@/lib/i18n-client';
 
 /**
  * Language Selection Sheet — VYTANEXA-BLUEPRINT.md § S18 "Language
@@ -66,7 +61,7 @@ export function LanguageSheet({
   return (
     <BottomSheet open={open} onClose={onClose} title={t('selectLanguage')}>
       <div className="flex flex-col gap-2.5">
-        {LANGUAGES.map((lang) => {
+        {LANGUAGE_OPTIONS.map((lang) => {
           const isSelected = selected === lang.code;
           return (
             <button

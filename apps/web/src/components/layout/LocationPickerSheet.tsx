@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Search, ChevronRight, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { useLocationStore } from '@/stores/location-store';
 import type { Json } from '@vytanexa/database';
 
@@ -31,6 +31,7 @@ export function LocationPickerSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const localize = useLocalizedField();
   const setLocation = useLocationStore((s) => s.setLocation);
 
   const [step, setStep] = useState<Step>('state');
@@ -79,7 +80,7 @@ export function LocationPickerSheet({
   }, [open, step, selectedState, selectedDistrict]);
 
   const filtered = options.filter((o) =>
-    getLocalizedField(o.name_translations).toLowerCase().includes(search.toLowerCase())
+    localize(o.name_translations).toLowerCase().includes(search.toLowerCase())
   );
 
   const selectState = (loc: LocationRow) => {
@@ -97,8 +98,8 @@ export function LocationPickerSheet({
     setLocation({
       stateId: selectedState!.id,
       districtId: loc.id,
-      stateName: getLocalizedField(selectedState!.name_translations),
-      districtName: getLocalizedField(loc.name_translations),
+      stateName: localize(selectedState!.name_translations),
+      districtName: localize(loc.name_translations),
     });
     setStep('sub_district');
     setSearch('');
@@ -109,9 +110,9 @@ export function LocationPickerSheet({
       stateId: selectedState!.id,
       districtId: selectedDistrict!.id,
       subDistrictId: loc.id,
-      stateName: getLocalizedField(selectedState!.name_translations),
-      districtName: getLocalizedField(selectedDistrict!.name_translations),
-      subDistrictName: getLocalizedField(loc.name_translations),
+      stateName: localize(selectedState!.name_translations),
+      districtName: localize(selectedDistrict!.name_translations),
+      subDistrictName: localize(loc.name_translations),
     });
     onClose();
   };
@@ -127,8 +128,8 @@ export function LocationPickerSheet({
     <BottomSheet open={open} onClose={onClose} title="আপনার অবস্থান বেছে নিন">
       {(selectedState || selectedDistrict) && (
         <p className="mb-2 text-[12px] text-neutral-500">
-          {getLocalizedField(selectedState?.name_translations)}
-          {selectedDistrict && ` › ${getLocalizedField(selectedDistrict.name_translations)}`}
+          {localize(selectedState?.name_translations)}
+          {selectedDistrict && ` › ${localize(selectedDistrict.name_translations)}`}
         </p>
       )}
 
@@ -168,7 +169,7 @@ export function LocationPickerSheet({
           >
             <span className="flex items-center gap-2 text-[15px] text-neutral-800">
               <MapPin className="h-4 w-4 text-neutral-400" />
-              {getLocalizedField(loc.name_translations)}
+              {localize(loc.name_translations)}
             </span>
             <ChevronRight className="h-4 w-4 text-neutral-300" />
           </button>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Share2, MoreVertical, Phone, Navigation, Star } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { HospitalDetail } from '@/lib/queries/hospital-detail';
 import type { MatchedService } from './ServicesTab';
 import { GalleryCarousel } from './GalleryCarousel';
@@ -49,12 +49,13 @@ export function HospitalProfileClient({
   unmatchedServiceKeys: string[];
   pageUrl: string;
 }) {
+  const localize = useLocalizedField();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number][0]>('info');
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
-  const name = getLocalizedField(hospital.name_translations);
+  const name = localize(hospital.name_translations);
   const doctorCount = hospital.doctor_hospital_links.filter((l) => l.doctors !== null).length;
   const callNumber = hospital.has_emergency_dept
     ? (hospital.whatsapp_number ?? hospital.phone)

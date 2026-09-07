@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2, AlertTriangle } from 'lucide-react';
-import { getLocalizedField, getLocalizedArray } from '@/lib/i18n';
+import { useLocalizedField, useLocalizedArray } from '@/lib/i18n-client';
 import type { SymptomDetail } from '@/lib/queries/symptom-detail';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 
@@ -28,12 +28,14 @@ export function SymptomDetailClient({
   doctorCounts: Map<string, number>;
   pageUrl: string;
 }) {
+  const localize = useLocalizedField();
+  const localizeArray = useLocalizedArray();
   const [shareOpen, setShareOpen] = useState(false);
 
-  const title = getLocalizedField(symptom.title_translations);
-  const description = getLocalizedField(symptom.description_translations);
-  const commonCauses = getLocalizedArray(symptom.common_causes_translations);
-  const whenToSeeDoctor = getLocalizedArray(symptom.when_to_see_doctor_translations);
+  const title = localize(symptom.title_translations);
+  const description = localize(symptom.description_translations);
+  const commonCauses = localizeArray(symptom.common_causes_translations);
+  const whenToSeeDoctor = localizeArray(symptom.when_to_see_doctor_translations);
   const specialties = [...symptom.symptom_categories]
     .filter((l): l is SpecialtyLink & { categories: NonNullable<SpecialtyLink['categories']> } =>
       l.categories !== null
@@ -128,7 +130,7 @@ export function SymptomDetailClient({
           <h3 className="mb-3 text-[15px] font-bold text-neutral-800">এই বিশেষজ্ঞ দেখুন</h3>
           <div className="grid grid-cols-2 gap-2.5">
             {specialties.map((link) => {
-              const name = getLocalizedField(link.categories.name_translations);
+              const name = localize(link.categories.name_translations);
               const count = doctorCounts.get(link.categories.id) ?? 0;
               return (
                 <Link

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { groupSchedule, getClosedDaysLabel, type ScheduleEntry } from '@/lib/chamber-schedule';
 import type { HospitalDetail } from '@/lib/queries/hospital-detail';
 
@@ -30,7 +30,8 @@ const FACILITY_LABELS: Record<string, string> = {
  */
 export function InfoTab({ hospital }: { hospital: HospitalDetail }) {
   const [aboutExpanded, setAboutExpanded] = useState(false);
-  const about = getLocalizedField(hospital.description_translations);
+  const localize = useLocalizedField();
+  const about = localize(hospital.description_translations);
 
   const operatingHours = hospital.operating_hours as unknown as
     | { is_24x7: true }

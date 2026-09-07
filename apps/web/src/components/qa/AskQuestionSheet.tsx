@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 type Category = { id: string; slug: string; name_translations: Json };
@@ -25,6 +25,7 @@ export function AskQuestionSheet({
   onClose: () => void;
   categories: Category[];
 }) {
+  const localize = useLocalizedField();
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -105,7 +106,7 @@ export function AskQuestionSheet({
             <option value="">নির্বাচন করুন</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {getLocalizedField(c.name_translations)}
+                {localize(c.name_translations)}
               </option>
             ))}
           </select>

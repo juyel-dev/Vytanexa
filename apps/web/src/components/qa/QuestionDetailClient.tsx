@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronUp } from 'lucide-react';
-import { getLocalizedField, formatRelativeTimeBn } from '@/lib/i18n';
+import { useLocalizedField, formatRelativeTimeBn } from '@/lib/i18n-client';
 import { getDeviceId } from '@/lib/device-id';
 import type { QuestionDetail } from '@/lib/queries/qa-detail';
 import type { Json } from '@vytanexa/database';
@@ -44,6 +44,7 @@ export function QuestionDetailClient({
   doctorAnswers: Answer[];
   communityAnswers: Answer[];
 }) {
+  const localize = useLocalizedField();
   const [upvoted, setUpvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(question.upvote_count);
   const [answerBody, setAnswerBody] = useState('');
@@ -145,7 +146,7 @@ export function QuestionDetailClient({
         )}
         <p className="mt-2 text-[12px] text-neutral-500">
           {displayName} · {formatRelativeTimeBn(question.created_at)}
-          {question.categories && ` · 🏷️ ${getLocalizedField(question.categories.name_translations)}`}
+          {question.categories && ` · 🏷️ ${localize(question.categories.name_translations)}`}
         </p>
 
         <button
@@ -185,12 +186,12 @@ export function QuestionDetailClient({
                         href={`/doctors/${a.doctors.slug}`}
                         className="text-[13px] font-semibold text-life-700"
                       >
-                        ✅ {getLocalizedField(a.doctors.name_translations)}
+                        ✅ {localize(a.doctors.name_translations)}
                       </Link>
                     )}
                     {a.doctors?.categories && (
                       <p className="text-[11px] text-neutral-500">
-                        {getLocalizedField(a.doctors.categories.name_translations)}
+                        {localize(a.doctors.categories.name_translations)}
                       </p>
                     )}
                   </div>

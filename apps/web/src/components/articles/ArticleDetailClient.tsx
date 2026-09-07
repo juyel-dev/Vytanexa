@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2 } from 'lucide-react';
-import { getLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n';
+import { useLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n-client';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 import type { ArticleDetail } from '@/lib/queries/article-detail';
 import type { Json } from '@vytanexa/database';
@@ -35,10 +35,11 @@ export function ArticleDetailClient({
   pageUrl: string;
 }) {
   const [shareOpen, setShareOpen] = useState(false);
-  const title = getLocalizedField(article.title_translations);
+  const localize = useLocalizedField();
+  const title = localize(article.title_translations);
   const authorName =
     article.author_name ??
-    (article.author ? getLocalizedField(article.author.name_translations) : null);
+    (article.author ? localize(article.author.name_translations) : null);
 
   useEffect(() => {
     fetch('/api/analytics', {
@@ -181,7 +182,7 @@ export function ArticleDetailClient({
                   {r.cover_image_url && (
                     <Image
                       src={r.cover_image_url}
-                      alt={getLocalizedField(r.title_translations)}
+                      alt={localize(r.title_translations)}
                       fill
                       sizes="50vw"
                       className="object-cover"
@@ -189,7 +190,7 @@ export function ArticleDetailClient({
                   )}
                 </div>
                 <h4 className="mt-1.5 line-clamp-2 text-[13px] font-semibold text-neutral-900">
-                  {getLocalizedField(r.title_translations)}
+                  {localize(r.title_translations)}
                 </h4>
               </Link>
             ))}

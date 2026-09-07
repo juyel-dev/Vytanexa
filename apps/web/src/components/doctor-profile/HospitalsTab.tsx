@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 
 type HospitalLink = DoctorDetail['doctor_hospital_links'][number];
@@ -18,6 +18,7 @@ export function HospitalsTab({
   links: HospitalLink[];
   onGoToChambers: () => void;
 }) {
+  const localize = useLocalizedField();
   if (links.length === 0) {
     return (
       <div className="px-6 py-10 text-center">
@@ -51,7 +52,7 @@ export function HospitalsTab({
               {link.hospitals.cover_image_url && (
                 <Image
                   src={link.hospitals.cover_image_url}
-                  alt={getLocalizedField(link.hospitals.name_translations)}
+                  alt={localize(link.hospitals.name_translations)}
                   fill
                   sizes="64px"
                   className="object-cover"
@@ -60,7 +61,7 @@ export function HospitalsTab({
             </div>
             <div>
               <p className="text-[14px] font-semibold text-neutral-900">
-                {getLocalizedField(link.hospitals.name_translations)}
+                {localize(link.hospitals.name_translations)}
               </p>
               {link.role && <p className="text-[12px] text-brand-600">{link.role}</p>}
               <p className="mt-1 text-[12px] text-brand-600">বিস্তারিত দেখুন →</p>

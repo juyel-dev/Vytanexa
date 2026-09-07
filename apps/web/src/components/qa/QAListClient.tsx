@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ChevronUp } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { AskQuestionSheet } from './AskQuestionSheet';
 import type { Json } from '@vytanexa/database';
 
@@ -47,6 +47,7 @@ export function QAListClient({
   doctorAnsweredIds: Set<string>;
   categories: Category[];
 }) {
+  const localize = useLocalizedField();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -154,7 +155,7 @@ export function QAListClient({
                 </span>
                 <span>💬 {q.answer_count} উত্তর</span>
                 {q.categories && (
-                  <span>🏷️ {getLocalizedField(q.categories.name_translations)}</span>
+                  <span>🏷️ {localize(q.categories.name_translations)}</span>
                 )}
               </p>
               {doctorAnsweredIds.has(q.id) && (

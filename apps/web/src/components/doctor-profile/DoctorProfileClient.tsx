@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Share2, MoreVertical, Star, Calendar } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 import { InfoTab } from './InfoTab';
 import { ChambersTab } from './ChambersTab';
@@ -44,15 +44,16 @@ export function DoctorProfileClient({
   reviews: Review[];
   pageUrl: string;
 }) {
+  const localize = useLocalizedField();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number][0]>('info');
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
-  const name = getLocalizedField(doctor.name_translations);
+  const name = localize(doctor.name_translations);
   const specialty = doctor.categories
-    ? getLocalizedField(doctor.categories.name_translations)
+    ? localize(doctor.categories.name_translations)
     : '';
   const initials = name.slice(0, 1) || 'D';
   const primaryChamber = doctor.chambers.find((c) => c.is_primary) ?? doctor.chambers[0];
@@ -161,7 +162,7 @@ export function DoctorProfileClient({
             <span>
               🗣️{' '}
               {doctor.languages
-                .map((l) => (l === 'bn' ? 'বাংলা' : l === 'en' ? 'English' : 'हिन्दी'))
+                .map((l) => SPOKEN_LANGUAGE_LABELS[l] ?? l)
                 .join(', ')}
             </span>
           )}

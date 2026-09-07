@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 
 /**
@@ -18,7 +18,8 @@ import type { DoctorDetail } from '@/lib/queries/doctor-detail';
  */
 export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
   const [bioExpanded, setBioExpanded] = useState(false);
-  const bio = getLocalizedField(doctor.bio_translations);
+  const localize = useLocalizedField();
+  const bio = localize(doctor.bio_translations);
 
   return (
     <div className="divide-y divide-neutral-100">
@@ -91,7 +92,7 @@ export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
                 key={lang}
                 className="rounded-full bg-life-50 px-3 py-1 text-[12px] text-life-700"
               >
-                {lang === 'bn' ? 'বাংলা' : lang === 'en' ? 'English' : lang === 'hi' ? 'हिन्दी' : lang}
+                {SPOKEN_LANGUAGE_LABELS[lang] ?? lang}
               </span>
             ))}
           </div>

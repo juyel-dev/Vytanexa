@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { normalizeIndianPhone } from '@/lib/validations/blood-donors';
 import type { Json } from '@vytanexa/database';
 
@@ -36,6 +36,7 @@ export function DonorRegistrationSheet({
   onSuccess?: () => void;
   districts: District[];
 }) {
+  const localize = useLocalizedField();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [bloodGroup, setBloodGroup] = useState('');
@@ -143,7 +144,7 @@ export function DonorRegistrationSheet({
             <option value="">নির্বাচন করুন</option>
             {districts.map((d) => (
               <option key={d.id} value={d.id}>
-                {getLocalizedField(d.name_translations)}
+                {localize(d.name_translations)}
               </option>
             ))}
           </select>

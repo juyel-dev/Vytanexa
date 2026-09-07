@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { useOnboardingStore } from '@/stores/onboarding-store';
-
-const LANGUAGES: { code: 'bn' | 'en' | 'hi'; native: string; english: string }[] = [
-  { code: 'bn', native: 'বাংলা', english: 'Bengali' },
-  { code: 'en', native: 'English', english: 'English' },
-  { code: 'hi', native: 'हिन्दी', english: 'Hindi' },
-];
+import { LANGUAGE_OPTIONS } from '@/lib/i18n-client';
 
 /**
  * Language Selection — VYTANEXA-BLUEPRINT.md § S03 "SCREEN 2"
@@ -39,7 +34,7 @@ export function LanguageStep() {
       <p className="text-center text-[15px] text-neutral-600">अपनी भाषा चुनें</p>
 
       <div className="mt-6 flex flex-col gap-3">
-        {LANGUAGES.map((lang) => {
+        {LANGUAGE_OPTIONS.map((lang) => {
           const isSelected = selected === lang.code;
           return (
             <button

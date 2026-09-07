@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Heart, ClipboardList, HelpCircle, Star, ChevronRight, Pencil } from 'lucide-react';
-import { toBengaliDigits } from '@/lib/i18n';
+import { toBengaliDigits } from '@/lib/i18n-client';
 
 /**
  * Account Home Client — VYTANEXA-BLUEPRINT.md § S17 "Account Home".

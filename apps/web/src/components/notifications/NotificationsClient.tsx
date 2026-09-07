@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Info, MessageCircle } from 'lucide-react';
-import { formatRelativeTimeBn } from '@/lib/i18n';
+import { formatRelativeTimeBn } from '@/lib/i18n-client';
 
 const STORAGE_KEY = 'vytanexa_read_notification_ids';
 

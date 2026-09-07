@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { SlidersHorizontal } from 'lucide-react';
 import { DoctorCard, type DoctorCardData } from '@/components/shared/DoctorCard';
 import { FilterSheet } from '@/components/doctors/FilterSheet';
-import { getLocalizedField } from '@/lib/i18n';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 type Category = { id: string; slug: string; name_translations: Json };
@@ -37,6 +37,7 @@ export function DoctorListClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const localize = useLocalizedField();
   const [doctors, setDoctors] = useState(initialDoctors);
   const [count, setCount] = useState(initialCount);
   const [page, setPage] = useState(0);
@@ -125,7 +126,7 @@ export function DoctorListClient({
                 : 'border border-neutral-200 text-neutral-700'
             }`}
           >
-            {getLocalizedField(c.name_translations)}
+            {localize(c.name_translations)}
           </button>
         ))}
         <button
