@@ -1756,6 +1756,27 @@ missing entity-search autocomplete (10.8), drag-copy mismatch (10.10),
 Escape-key gap (10.12). Everything else confirmed genuinely real, not
 fake — no more open findings.
 
+## i18n system — superseded (see dedicated docs)
+
+The `next-intl` setup and `lib/i18n.ts` helpers referenced throughout this
+file (e.g. lines ~335, ~464, ~568, ~685–703, ~862–863, ~1533) describe the
+system as it existed when those entries were written. That system was
+audited, found to be infrastructure without adoption (correctly wired,
+~99% of UI text hardcoded anyway, `getLocalizedField` never receiving a
+real locale at any of its ~40 call sites), and **fully redesigned** —
+not patched. The historical entries above are left as-is (they were
+accurate at the time; rewriting them would erase real project history),
+but they no longer describe the current system.
+
+**Current, authoritative source**: `I18N-ARCHITECTURE.md` (decisions +
+rationale) and `I18N-IMPLEMENTATION-SPEC.md` (concrete API + phased
+migration checklist, actively maintained/checked off as work lands).
+Phase 1 (foundation: `@vytanexa/i18n` facade package, the actual
+locale-threading bug fix, namespace message files, type safety,
+completeness-check tooling) is done — see that doc's § 12 for status and
+`git log` for the corresponding commits. Phases 2–5 are open, tracked
+there, not duplicated here.
+
 ## WORKING RULES (reaffirmed)
 
 1. Check items off only after real verification (typecheck + build,
