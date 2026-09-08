@@ -1,0 +1,19 @@
+{
+  "basedOnCount": "{count, plural, one {# समीक्षा के आधार पर} other {# समीक्षाओं के आधार पर}}",
+  "noReviews": "अभी तक कोई समीक्षा नहीं है। पहली समीक्षा दें!",
+  "responseFrom": {
+    "hospital": "अस्पताल की प्रतिक्रिया",
+    "doctor": "डॉक्टर की प्रतिक्रिया"
+  },
+  "writeYourReview": "+ अपनी समीक्षा दें",
+  "modalTitle": "समीक्षा दें",
+  "submitFailed": "सबमिट करने में समस्या हुई",
+  "thanksAfterApproval": "✅ धन्यवाद! अनुमोदन के बाद दिखाई देगा",
+  "rateEntity": "{name} को रेट करें",
+  "yourName": "आपका नाम *",
+  "yourExperience": "आपका अनुभव * (कम से कम 20 अक्षर)",
+  "charCount": "{count}/500 अक्षर",
+  "submitting": "सबमिट हो रहा है...",
+  "submit": "समीक्षा सबमिट करें",
+  "publishedAfterApproval": "आपकी समीक्षा अनुमोदन के बाद प्रकाशित होगी"
+}

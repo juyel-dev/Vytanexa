@@ -1,0 +1,19 @@
+{
+  "basedOnCount": "{count, plural, one {based on # review} other {based on # reviews}}",
+  "noReviews": "No reviews yet. Be the first to write one!",
+  "responseFrom": {
+    "hospital": "Hospital's response",
+    "doctor": "Doctor's response"
+  },
+  "writeYourReview": "+ Write your review",
+  "modalTitle": "Write a review",
+  "submitFailed": "Failed to submit",
+  "thanksAfterApproval": "✅ Thank you! It will appear after approval",
+  "rateEntity": "Rate {name}",
+  "yourName": "Your name *",
+  "yourExperience": "Your experience * (at least 20 characters)",
+  "charCount": "{count}/500 characters",
+  "submitting": "Submitting...",
+  "submit": "Submit review",
+  "publishedAfterApproval": "Your review will be published after approval"
+}

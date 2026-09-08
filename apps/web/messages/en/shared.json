@@ -13,5 +13,21 @@
     "add": "Add to favorites",
     "remove": "Remove from favorites",
     "signInPrompt": "Sign in to save"
+  },
+  "dataReport": {
+    "title": "Report incorrect info",
+    "thanks": "✅ Thanks! We'll look into it",
+    "whatsWrong": "What's wrong? *",
+    "detailOptional": "Details (optional)",
+    "submitFailed": "Failed to submit report",
+    "submitting": "Submitting...",
+    "submit": "Submit",
+    "reason": {
+      "wrong_phone": "Wrong phone number",
+      "wrong_address": "Wrong address",
+      "wrong_hours": "Wrong operating hours",
+      "closed": "Permanently closed",
+      "other": "Other"
+    }
   }
 }

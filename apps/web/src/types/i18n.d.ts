@@ -19,6 +19,7 @@ import type offline from '../../messages/bn/offline.json';
 import type articles from '../../messages/bn/articles.json';
 import type hospital from '../../messages/bn/hospital.json';
 import type shared from '../../messages/bn/shared.json';
+import type reviews from '../../messages/bn/reviews.json';
 
 type Messages = {
   common: typeof common;
@@ -31,6 +32,7 @@ type Messages = {
   articles: typeof articles;
   hospital: typeof hospital;
   shared: typeof shared;
+  reviews: typeof reviews;
 };
 
 declare global {

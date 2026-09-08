@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
+import { useFormatter } from '@/lib/i18n-client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
 export type Review = {
@@ -42,6 +44,8 @@ export function ReviewsTab({
   ratingCount: number;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const t = useT('reviews');
+  const format = useFormatter();
 
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
@@ -60,7 +64,7 @@ export function ReviewsTab({
             />
           ))}
         </div>
-        <p className="text-[13px] text-neutral-500">{ratingCount} রিভিউ ভিত্তিতে</p>
+        <p className="text-[13px] text-neutral-500">{t('basedOnCount', { count: ratingCount })}</p>
       </div>
 
       {ratingCount > 0 && (
@@ -83,7 +87,7 @@ export function ReviewsTab({
       <div className="border-t border-neutral-100 px-4 py-3">
         {reviews.length === 0 ? (
           <p className="py-6 text-center text-[13px] text-neutral-400">
-            এখনো কোনো রিভিউ নেই। প্রথম রিভিউ দিন!
+            {t('noReviews')}
           </p>
         ) : (
           reviews.map((r) => (
@@ -91,7 +95,7 @@ export function ReviewsTab({
               <div className="flex items-center justify-between">
                 <p className="text-[14px] font-semibold text-neutral-900">{r.reviewer_name}</p>
                 <p className="text-[12px] text-neutral-400">
-                  {new Date(r.created_at).toLocaleDateString('bn-BD')}
+                  {format.dateTime(new Date(r.created_at))}
                 </p>
               </div>
               <div className="mt-0.5 flex gap-0.5">
@@ -106,7 +110,7 @@ export function ReviewsTab({
               {r.admin_reply && (
                 <div className="mt-2 rounded-md bg-brand-50 p-2.5">
                   <p className="text-[12px] font-semibold text-brand-700">
-                    💬 {entityType === 'hospital' ? 'হাসপাতালের প্রতিক্রিয়া' : 'ডাক্তারের প্রতিক্রিয়া'}:
+                    💬 {t(`responseFrom.${entityType}`)}:
                   </p>
                   <p className="text-[13px] text-neutral-700">{r.admin_reply}</p>
                 </div>
@@ -124,7 +128,7 @@ export function ReviewsTab({
           onClick={() => setModalOpen(true)}
           className="h-11 w-full rounded-md border-2 border-life-600 bg-white text-[14px] font-semibold text-life-600 shadow-lg"
         >
-          + আপনার রিভিউ দিন
+          {t('writeYourReview')}
         </button>
       </div>
 
@@ -159,6 +163,7 @@ function ReviewSubmissionModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const t = useT('reviews');
 
   const canSubmit = rating > 0 && name.trim().length >= 2 && text.trim().length >= 20;
 
@@ -180,7 +185,7 @@ function ReviewSubmissionModal({
     setSubmitting(false);
     if (!res.ok) {
       const json = await res.json();
-      setError(json.error ?? 'সাবমিট করতে সমস্যা হয়েছে');
+      setError(json.error ?? t('submitFailed'));
       return;
     }
     setSuccess(true);
@@ -194,14 +199,14 @@ function ReviewSubmissionModal({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="রিভিউ দিন">
+    <BottomSheet open={open} onClose={onClose} title={t('modalTitle')}>
       {success ? (
         <p className="py-8 text-center text-[15px] font-semibold text-life-600">
-          ✅ ধন্যবাদ! অনুমোদনের পর দেখা যাবে
+          {t('thanksAfterApproval')}
         </p>
       ) : (
         <>
-          <p className="mb-3 text-center text-[14px] text-neutral-700">{entityName} কে রেট করুন</p>
+          <p className="mb-3 text-center text-[14px] text-neutral-700">{t('rateEntity', { name: entityName })}</p>
           <div className="mb-4 flex justify-center gap-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <button key={i} onClick={() => setRating(i)} aria-label={`${i} star`}>
@@ -215,7 +220,7 @@ function ReviewSubmissionModal({
           </div>
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            আপনার নাম *
+            {t('yourName')}
           </label>
           <input
             value={name}
@@ -224,7 +229,7 @@ function ReviewSubmissionModal({
           />
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            আপনার অভিজ্ঞতা * (কমপক্ষে ২০ অক্ষর)
+            {t('yourExperience')}
           </label>
           <textarea
             value={text}
@@ -232,7 +237,7 @@ function ReviewSubmissionModal({
             rows={4}
             className="mb-1 w-full rounded-md border border-neutral-200 px-3 py-2 text-[14px]"
           />
-          <p className="mb-3 text-right text-[11px] text-neutral-400">{text.length}/500 অক্ষর</p>
+          <p className="mb-3 text-right text-[11px] text-neutral-400">{t('charCount', { count: text.length })}</p>
 
           {/* Honeypot -- visually hidden, never seen by real users */}
           <input
@@ -251,10 +256,10 @@ function ReviewSubmissionModal({
             disabled={!canSubmit || submitting}
             className="h-12 w-full rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
           >
-            {submitting ? 'সাবমিট হচ্ছে...' : 'রিভিউ সাবমিট করুন'}
+            {submitting ? t('submitting') : t('submit')}
           </button>
           <p className="mt-2 text-center text-[11px] text-neutral-400">
-            আপনার রিভিউ অনুমোদনের পর প্রকাশিত হবে
+            {t('publishedAfterApproval')}
           </p>
         </>
       )}

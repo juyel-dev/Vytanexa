@@ -1,0 +1,19 @@
+{
+  "basedOnCount": "{count, plural, other {# রিভিউ ভিত্তিতে}}",
+  "noReviews": "এখনো কোনো রিভিউ নেই। প্রথম রিভিউ দিন!",
+  "responseFrom": {
+    "hospital": "হাসপাতালের প্রতিক্রিয়া",
+    "doctor": "ডাক্তারের প্রতিক্রিয়া"
+  },
+  "writeYourReview": "+ আপনার রিভিউ দিন",
+  "modalTitle": "রিভিউ দিন",
+  "submitFailed": "সাবমিট করতে সমস্যা হয়েছে",
+  "thanksAfterApproval": "✅ ধন্যবাদ! অনুমোদনের পর দেখা যাবে",
+  "rateEntity": "{name} কে রেট করুন",
+  "yourName": "আপনার নাম *",
+  "yourExperience": "আপনার অভিজ্ঞতা * (কমপক্ষে ২০ অক্ষর)",
+  "charCount": "{count}/500 অক্ষর",
+  "submitting": "সাবমিট হচ্ছে...",
+  "submit": "রিভিউ সাবমিট করুন",
+  "publishedAfterApproval": "আপনার রিভিউ অনুমোদনের পর প্রকাশিত হবে"
+}
