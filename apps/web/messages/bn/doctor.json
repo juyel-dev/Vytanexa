@@ -3,6 +3,5 @@
   "experience": "{years}+ বছর অভিজ্ঞতা",
   "fee": "ভিজিট: {fee}",
   "bookLead": "অ্যাপয়েন্টমেন্ট অনুরোধ",
-  "call": "কল করুন",
-  "details": "বিস্তারিত"
+  "reviewCount": "{count, plural, other {# রিভিউ}}"
 }

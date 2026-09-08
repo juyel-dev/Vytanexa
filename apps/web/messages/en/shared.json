@@ -1,0 +1,17 @@
+{
+  "moreOptions": {
+    "title": "More options",
+    "reportIncorrectInfo": "Is the information wrong?"
+  },
+  "shareSheet": {
+    "whatsappSuffix": "See it on Vytanexa",
+    "copied": "Copied",
+    "copy": "Copy",
+    "more": "More..."
+  },
+  "favoriteToggle": {
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "signInPrompt": "Sign in to save"
+  }
+}

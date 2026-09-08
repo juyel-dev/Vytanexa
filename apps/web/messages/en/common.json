@@ -10,5 +10,7 @@
   "cancel": "Cancel",
   "continue": "Continue",
   "close": "Close",
-  "selectLanguage": "Select language"
+  "selectLanguage": "Select language",
+  "call": "Call",
+  "details": "Details"
 }

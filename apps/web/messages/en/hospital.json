@@ -1,0 +1,38 @@
+{
+  "type": {
+    "hospital": "Hospital",
+    "clinic": "Clinic",
+    "diagnostic": "Diagnostic",
+    "nursing_home": "Nursing Home"
+  },
+  "facility": {
+    "icu": "🩺 ICU",
+    "ambulance": "🚑 Ambulance",
+    "emergency_24h": "🚨 24/7 Emergency",
+    "blood_bank": "🩸 Blood Bank"
+  },
+  "emergencyDeptBadge": "🚨 Emergency Dept.",
+  "matchedTest": "✅ This test is available: {label}",
+  "services": {
+    "category": {
+      "blood": "🩸 Blood Tests",
+      "imaging": "📷 Imaging",
+      "cardiac": "🫀 Cardiac Tests",
+      "general": "🩺 General Services"
+    },
+    "generalKey": {
+      "icu": "🩺 ICU",
+      "ambulance": "🚑 Ambulance Service",
+      "emergency_24h": "🚨 24/7 Emergency Dept.",
+      "blood_bank": "🩸 Blood Bank",
+      "pharmacy": "💊 Pharmacy",
+      "parking": "🅿️ Parking"
+    },
+    "empty": "No service information added yet.",
+    "callForInfo": "Call for more information",
+    "generalSectionHeading": "🏥 General Services"
+  },
+  "doctorsTab": {
+    "empty": "No doctor information added yet."
+  }
+}

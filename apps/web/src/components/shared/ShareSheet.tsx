@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessageCircle, Copy, Share2, Check } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
 /**
@@ -23,8 +24,9 @@ export function ShareSheet({
   url: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const t = useT('shared.shareSheet');
 
-  const whatsappText = encodeURIComponent(`${title} - ${subtitle}\n${url}\n\nVytanexa-এ দেখুন`);
+  const whatsappText = encodeURIComponent(`${title} - ${subtitle}\n${url}\n\n${t('whatsappSuffix')}`);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url);
@@ -62,7 +64,7 @@ export function ShareSheet({
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
             {copied ? <Check className="h-5 w-5 text-life-600" /> : <Copy className="h-5 w-5" />}
           </span>
-          <span className="text-[11px] text-neutral-600">{copied ? 'কপি হয়েছে' : 'কপি'}</span>
+          <span className="text-[11px] text-neutral-600">{copied ? t('copied') : t('copy')}</span>
         </button>
 
         {typeof navigator !== 'undefined' && 'share' in navigator && (
@@ -70,7 +72,7 @@ export function ShareSheet({
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
               <Share2 className="h-5 w-5" />
             </span>
-            <span className="text-[11px] text-neutral-600">আরো...</span>
+            <span className="text-[11px] text-neutral-600">{t('more')}</span>
           </button>
         )}
       </div>

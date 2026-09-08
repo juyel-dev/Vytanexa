@@ -1,26 +1,13 @@
-import { getLocalizedField } from '@/lib/i18n';
+'use client';
+
+import { useT } from '@vytanexa/i18n/client';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 export type MatchedService = {
   canonical_key: string;
   name_translations: Json;
   category: string | null;
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  blood: '🩸 রক্ত পরীক্ষা',
-  imaging: '📷 ইমেজিং',
-  cardiac: '🫀 হৃদরোগ পরীক্ষা',
-  general: '🩺 সাধারণ সেবা',
-};
-
-const GENERAL_KEY_LABELS: Record<string, string> = {
-  icu: '🩺 ICU',
-  ambulance: '🚑 অ্যাম্বুলেন্স সেবা',
-  emergency_24h: '🚨 ২৪/৭ জরুরি বিভাগ',
-  blood_bank: '🩸 ব্লাড ব্যাংক',
-  pharmacy: '💊 ফার্মেসি',
-  parking: '🅿️ পার্কিং',
 };
 
 /**
@@ -46,10 +33,15 @@ export function ServicesTab({
   matched: MatchedService[];
   unmatchedKeys: string[];
 }) {
+  const t = useT('hospital');
+  const localize = useLocalizedField();
+  const categoryLabels = t.raw('services.category' as Parameters<typeof t.raw>[0]) as Record<string, string>;
+  const generalKeyLabels = t.raw('services.generalKey' as Parameters<typeof t.raw>[0]) as Record<string, string>;
+
   if (matched.length === 0 && unmatchedKeys.length === 0) {
     return (
       <div className="px-6 py-10 text-center">
-        <p className="text-[14px] text-neutral-500">এখনো কোনো সেবার তথ্য যোগ হয়নি।</p>
+        <p className="text-[14px] text-neutral-500">{t('services.empty')}</p>
       </div>
     );
   }
@@ -65,7 +57,7 @@ export function ServicesTab({
       {[...grouped.entries()].map(([category, items]) => (
         <section key={category} className="px-4 py-4">
           <h3 className="mb-2 text-[15px] font-bold text-neutral-800">
-            {CATEGORY_LABELS[category] ?? category}
+            {categoryLabels[category] ?? category}
           </h3>
           <div className="space-y-1">
             {items.map((item) => (
@@ -74,9 +66,9 @@ export function ServicesTab({
                 className="flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2.5"
               >
                 <span className="text-[13px] text-neutral-700">
-                  {getLocalizedField(item.name_translations)}
+                  {localize(item.name_translations)}
                 </span>
-                <span className="text-[11px] text-neutral-400">অন্যান্য তথ্যের জন্য কল করুন</span>
+                <span className="text-[11px] text-neutral-400">{t('services.callForInfo')}</span>
               </div>
             ))}
           </div>
@@ -85,14 +77,14 @@ export function ServicesTab({
 
       {unmatchedKeys.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🏥 সাধারণ সেবা</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('services.generalSectionHeading')}</h3>
           <div className="grid grid-cols-2 gap-2">
             {unmatchedKeys.map((key) => (
               <span
                 key={key}
                 className="rounded-md bg-neutral-50 px-3 py-2 text-[13px] text-neutral-700"
               >
-                {GENERAL_KEY_LABELS[key] ?? key}
+                {generalKeyLabels[key] ?? key}
               </span>
             ))}
           </div>

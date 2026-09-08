@@ -1,7 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, Navigation } from 'lucide-react';
-import { getLocalizedField } from '@/lib/i18n';
+import { useT } from '@vytanexa/i18n/client';
+import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 import { FavoriteToggle } from './FavoriteToggle';
 
@@ -16,18 +19,6 @@ export type HospitalCardData = {
   phone: string;
   rating_avg: number;
   rating_count: number;
-};const TYPE_LABELS: Record<string, string> = {
-  hospital: 'হাসপাতাল',
-  clinic: 'ক্লিনিক',
-  diagnostic: 'ডায়াগনস্টিক',
-  nursing_home: 'নার্সিং হোম',
-};
-
-const FACILITY_LABELS: Record<string, string> = {
-  icu: '🩺 ICU',
-  ambulance: '🚑 অ্যাম্বুলেন্স',
-  emergency_24h: '🚨 ২৪/৭ জরুরি',
-  blood_bank: '🩸 ব্লাড ব্যাংক',
 };
 
 /**
@@ -49,7 +40,19 @@ export function HospitalCard({
   hospital: HospitalCardData;
   matchedTestLabel?: string;
 }) {
-  const name = getLocalizedField(hospital.name_translations);
+  const t = useT('hospital');
+  const tc = useT('common');
+  const localize = useLocalizedField();
+  const name = localize(hospital.name_translations);
+  // Static lookup tables indexed by a data-driven enum value (hospital.type,
+  // facility_tags[]), not sentence-shaped UI copy with variables — next-intl's
+  // `t.raw()` is typed for statically-known leaf keys only, so a runtime
+  // object-key lookup needs the same kind of contained, documented cast used
+  // for admin/nav-config.ts's dynamic keys (Phase 1). Real unknown values
+  // (e.g. a new hospital.type the label sets haven't caught up with yet)
+  // still degrade to the raw code, same as before this migration.
+  const typeLabels = t.raw('type' as Parameters<typeof t.raw>[0]) as Record<string, string>;
+  const facilityLabels = t.raw('facility' as Parameters<typeof t.raw>[0]) as Record<string, string>;
 
   return (
     <div className="mx-4 mb-3 block overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">
@@ -69,7 +72,7 @@ export function HospitalCard({
         )}
         {hospital.has_emergency_dept && (
           <span className="absolute right-2 top-2 rounded-full bg-emergency-600 px-2 py-1 text-[11px] font-semibold text-white">
-            🚨 জরুরি বিভাগ
+            {t('emergencyDeptBadge')}
           </span>
         )}
         <div
@@ -88,12 +91,12 @@ export function HospitalCard({
         </Link>
         {matchedTestLabel && (
           <p className="mt-1 text-[12px] font-medium text-life-600">
-            ✅ এই টেস্ট পাওয়া যায়: {matchedTestLabel}
+            {t('matchedTest', { label: matchedTestLabel })}
           </p>
         )}
         <div className="mt-1 flex items-center gap-2">
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-600">
-            {TYPE_LABELS[hospital.type] ?? hospital.type}
+            {typeLabels[hospital.type] ?? hospital.type}
           </span>
           {hospital.rating_count > 0 && (
             <span className="text-[12px] text-neutral-500">
@@ -109,7 +112,7 @@ export function HospitalCard({
                 key={tag}
                 className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-600"
               >
-                {FACILITY_LABELS[tag] ?? tag}
+                {facilityLabels[tag] ?? tag}
               </span>
             ))}
           </div>
@@ -120,13 +123,13 @@ export function HospitalCard({
             href={`tel:${hospital.phone}`}
             className="flex h-9 items-center justify-center gap-1 rounded-md bg-brand-600 text-[12px] font-semibold text-white"
           >
-            <Phone className="h-3.5 w-3.5" /> কল করুন
+            <Phone className="h-3.5 w-3.5" /> {tc('call')}
           </a>
           <Link
             href={`/hospitals/${hospital.slug}`}
             className="flex h-9 items-center justify-center gap-1 rounded-md border border-neutral-200 text-[12px] font-semibold text-neutral-700"
           >
-            <Navigation className="h-3.5 w-3.5" /> বিস্তারিত
+            <Navigation className="h-3.5 w-3.5" /> {tc('details')}
           </Link>
         </div>
       </div>

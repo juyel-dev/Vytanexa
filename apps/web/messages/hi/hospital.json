@@ -1,0 +1,38 @@
+{
+  "type": {
+    "hospital": "अस्पताल",
+    "clinic": "क्लिनिक",
+    "diagnostic": "डायग्नोस्टिक",
+    "nursing_home": "नर्सिंग होम"
+  },
+  "facility": {
+    "icu": "🩺 ICU",
+    "ambulance": "🚑 एम्बुलेंस",
+    "emergency_24h": "🚨 24/7 आपातकाल",
+    "blood_bank": "🩸 ब्लड बैंक"
+  },
+  "emergencyDeptBadge": "🚨 आपातकालीन विभाग",
+  "matchedTest": "✅ यह टेस्ट उपलब्ध है: {label}",
+  "services": {
+    "category": {
+      "blood": "🩸 रक्त परीक्षण",
+      "imaging": "📷 इमेजिंग",
+      "cardiac": "🫀 हृदय परीक्षण",
+      "general": "🩺 सामान्य सेवाएं"
+    },
+    "generalKey": {
+      "icu": "🩺 ICU",
+      "ambulance": "🚑 एम्बुलेंस सेवा",
+      "emergency_24h": "🚨 24/7 आपातकालीन विभाग",
+      "blood_bank": "🩸 ब्लड बैंक",
+      "pharmacy": "💊 फार्मेसी",
+      "parking": "🅿️ पार्किंग"
+    },
+    "empty": "अभी तक कोई सेवा जानकारी नहीं जोड़ी गई है।",
+    "callForInfo": "अधिक जानकारी के लिए कॉल करें",
+    "generalSectionHeading": "🏥 सामान्य सेवाएं"
+  },
+  "doctorsTab": {
+    "empty": "अभी तक कोई डॉक्टर की जानकारी नहीं जोड़ी गई है।"
+  }
+}

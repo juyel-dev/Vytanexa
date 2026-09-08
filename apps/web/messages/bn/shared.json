@@ -1,0 +1,17 @@
+{
+  "moreOptions": {
+    "title": "আরও অপশন",
+    "reportIncorrectInfo": "তথ্য ভুল আছে?"
+  },
+  "shareSheet": {
+    "whatsappSuffix": "Vytanexa-এ দেখুন",
+    "copied": "কপি হয়েছে",
+    "copy": "কপি",
+    "more": "আরো..."
+  },
+  "favoriteToggle": {
+    "add": "পছন্দের তালিকায় যোগ করুন",
+    "remove": "পছন্দের তালিকা থেকে সরান",
+    "signInPrompt": "সাইন ইন করে সেভ করুন"
+  }
+}

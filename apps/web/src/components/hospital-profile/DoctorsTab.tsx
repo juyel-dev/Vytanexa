@@ -1,3 +1,6 @@
+'use client';
+
+import { useT } from '@vytanexa/i18n/client';
 import { DoctorCard } from '@/components/shared/DoctorCard';
 import type { HospitalDetail } from '@/lib/queries/hospital-detail';
 
@@ -12,6 +15,7 @@ type Link = HospitalDetail['doctor_hospital_links'][number];
  * different data source.
  */
 export function DoctorsTab({ links }: { links: Link[] }) {
+  const t = useT('hospital');
   const sorted = [...links]
     .filter((l): l is Link & { doctors: NonNullable<Link['doctors']> } => l.doctors !== null)
     .sort((a, b) => a.display_order - b.display_order);
@@ -19,7 +23,7 @@ export function DoctorsTab({ links }: { links: Link[] }) {
   if (sorted.length === 0) {
     return (
       <div className="px-6 py-10 text-center">
-        <p className="text-[14px] text-neutral-500">এখনো কোনো ডাক্তারের তথ্য যোগ হয়নি।</p>
+        <p className="text-[14px] text-neutral-500">{t('doctorsTab.empty')}</p>
       </div>
     );
   }

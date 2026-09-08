@@ -1,0 +1,38 @@
+{
+  "type": {
+    "hospital": "হাসপাতাল",
+    "clinic": "ক্লিনিক",
+    "diagnostic": "ডায়াগনস্টিক",
+    "nursing_home": "নার্সিং হোম"
+  },
+  "facility": {
+    "icu": "🩺 ICU",
+    "ambulance": "🚑 অ্যাম্বুলেন্স",
+    "emergency_24h": "🚨 ২৪/৭ জরুরি",
+    "blood_bank": "🩸 ব্লাড ব্যাংক"
+  },
+  "emergencyDeptBadge": "🚨 জরুরি বিভাগ",
+  "matchedTest": "✅ এই টেস্ট পাওয়া যায়: {label}",
+  "services": {
+    "category": {
+      "blood": "🩸 রক্ত পরীক্ষা",
+      "imaging": "📷 ইমেজিং",
+      "cardiac": "🫀 হৃদরোগ পরীক্ষা",
+      "general": "🩺 সাধারণ সেবা"
+    },
+    "generalKey": {
+      "icu": "🩺 ICU",
+      "ambulance": "🚑 অ্যাম্বুলেন্স সেবা",
+      "emergency_24h": "🚨 ২৪/৭ জরুরি বিভাগ",
+      "blood_bank": "🩸 ব্লাড ব্যাংক",
+      "pharmacy": "💊 ফার্মেসি",
+      "parking": "🅿️ পার্কিং"
+    },
+    "empty": "এখনো কোনো সেবার তথ্য যোগ হয়নি।",
+    "callForInfo": "অন্যান্য তথ্যের জন্য কল করুন",
+    "generalSectionHeading": "🏥 সাধারণ সেবা"
+  },
+  "doctorsTab": {
+    "empty": "এখনো কোনো ডাক্তারের তথ্য যোগ হয়নি।"
+  }
+}

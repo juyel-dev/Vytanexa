@@ -1,7 +1,10 @@
+'use client';
+
 import Link from 'next/link';
 import { Star, Phone, MessageCircle } from 'lucide-react';
 import type { Json } from '@vytanexa/database';
-import { getLocalizedField } from '@/lib/i18n';
+import { useT } from '@vytanexa/i18n/client';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { FavoriteToggle } from './FavoriteToggle';
 
 export type DoctorCardData = {
@@ -30,9 +33,12 @@ export type DoctorCardData = {
  * used today).
  */
 export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
-  const name = getLocalizedField(doctor.name_translations);
+  const t = useT('doctor');
+  const tc = useT('common');
+  const localize = useLocalizedField();
+  const name = localize(doctor.name_translations);
   const specialty = doctor.categories
-    ? getLocalizedField(doctor.categories.name_translations)
+    ? localize(doctor.categories.name_translations)
     : '';
   const initials = name.slice(0, 1) || 'D';
   const feeText =
@@ -71,7 +77,7 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
           {specialty && (
             <p className="text-[14px] font-medium text-brand-600">{specialty}</p>
           )}
-          <p className="text-[13px] text-neutral-500">{doctor.experience_years}+ বছর অভিজ্ঞতা</p>
+          <p className="text-[13px] text-neutral-500">{t('experience', { years: doctor.experience_years })}</p>
           {doctor.rating_count > 0 && (
             <div className="mt-1 flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-accent-500 text-accent-500" />
@@ -79,7 +85,7 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
                 {doctor.rating_avg}
               </span>
               <span className="text-[13px] text-neutral-500">
-                ({doctor.rating_count} রিভিউ)
+                ({t('reviewCount', { count: doctor.rating_count })})
               </span>
             </div>
           )}
@@ -88,7 +94,7 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
 
       {feeText && (
         <span className="mt-3 inline-block rounded-full bg-neutral-100 px-2.5 py-1 text-[12px] font-semibold text-neutral-700">
-          💰 ভিজিট: {feeText}
+          💰 {t('fee', { fee: feeText })}
         </span>
       )}
 
@@ -116,7 +122,7 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
             href={`tel:${doctor.whatsapp_number}`}
             className="flex h-10 items-center justify-center gap-1 rounded-md bg-brand-600 text-[13px] font-semibold text-white"
           >
-            <Phone className="h-4 w-4" /> কল করুন
+            <Phone className="h-4 w-4" /> {tc('call')}
           </a>
         ) : (
           <span className="col-span-1" />
@@ -125,7 +131,7 @@ export function DoctorCard({ doctor }: { doctor: DoctorCardData }) {
           href={`/doctors/${doctor.slug}`}
           className="flex h-10 items-center justify-center rounded-md border border-neutral-200 text-[13px] font-semibold text-neutral-700"
         >
-          বিস্তারিত
+          {tc('details')}
         </Link>
       </div>
     </div>

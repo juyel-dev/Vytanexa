@@ -3,6 +3,5 @@
   "experience": "{years}+ years experience",
   "fee": "Visit: {fee}",
   "bookLead": "Request appointment",
-  "call": "Call",
-  "details": "Details"
+  "reviewCount": "{count, plural, one {# review} other {# reviews}}"
 }

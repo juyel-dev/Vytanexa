@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { getLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n';
+import { useT } from '@vytanexa/i18n/client';
+import { useLocalizedField, formatRelativeTimeBn } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
 export type ArticleCardData = {
@@ -25,13 +28,16 @@ export type ArticleCardData = {
  * `ArticleMeta` already degrades gracefully when fields are absent.
  */
 export function ArticleCard({ article }: { article: ArticleCardData }) {
+  const localize = useLocalizedField();
+  const title = localize(article.title_translations);
+
   return (
     <Link href={`/community/articles/${article.slug}`} className="block">
       <div className="relative h-[100px] w-full overflow-hidden rounded-lg bg-neutral-100">
         {article.cover_image_url && (
           <Image
             src={article.cover_image_url}
-            alt={getLocalizedField(article.title_translations)}
+            alt={title}
             fill
             sizes="50vw"
             className="object-cover"
@@ -44,7 +50,7 @@ export function ArticleCard({ article }: { article: ArticleCardData }) {
         )}
       </div>
       <h3 className="mt-1.5 line-clamp-2 text-[13px] font-semibold text-neutral-900">
-        {getLocalizedField(article.title_translations)}
+        {title}
       </h3>
       <ArticleMeta article={article} compact />
     </Link>
@@ -58,9 +64,10 @@ export function ArticleMeta({
   article: ArticleCardData;
   compact?: boolean;
 }) {
+  const t = useT('articles');
   const bits = [
     article.author_name,
-    article.read_time_minutes ? `${toBengaliDigits(article.read_time_minutes)} মিনিট পড়া` : null,
+    article.read_time_minutes ? t('readTime', { minutes: article.read_time_minutes }) : null,
     article.published_at ? formatRelativeTimeBn(article.published_at) : null,
   ].filter(Boolean);
 

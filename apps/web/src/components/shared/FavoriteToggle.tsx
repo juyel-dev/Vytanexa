@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 import { useFavoritesStore } from '@/stores/favorites-store';
 
 /**
@@ -23,6 +24,7 @@ export function FavoriteToggle({
   className?: string;
 }) {
   const { fetchFavorites, isFavorited, toggle } = useFavoritesStore();
+  const t = useT('shared.favoriteToggle');
   const [showPrompt, setShowPrompt] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -50,7 +52,7 @@ export function FavoriteToggle({
     <div className="relative">
       <button
         onClick={handleClick}
-        aria-label={favorited ? 'পছন্দের তালিকা থেকে সরান' : 'পছন্দের তালিকায় যোগ করুন'}
+        aria-label={favorited ? t('remove') : t('add')}
         className={
           className ??
           'flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm'
@@ -64,7 +66,7 @@ export function FavoriteToggle({
       </button>
       {showPrompt && (
         <div className="absolute right-0 top-9 z-dropdown w-max max-w-[200px] rounded-md bg-neutral-900 px-3 py-2 text-[12px] text-white shadow-lg">
-          সাইন ইন করে সেভ করুন
+          {t('signInPrompt')}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
 /**
@@ -20,8 +21,9 @@ export function MoreOptionsSheet({
   onClose: () => void;
   onReportClick: () => void;
 }) {
+  const t = useT('shared');
   return (
-    <BottomSheet open={open} onClose={onClose} title="আরও অপশন">
+    <BottomSheet open={open} onClose={onClose} title={t('moreOptions.title')}>
       <button
         onClick={() => {
           onClose();
@@ -30,7 +32,7 @@ export function MoreOptionsSheet({
         className="flex w-full items-center gap-3 rounded-md border border-neutral-200 px-4 py-3.5 text-left text-[14px] font-medium text-neutral-800"
       >
         <AlertTriangle className="h-4 w-4 text-neutral-500" />
-        তথ্য ভুল আছে?
+        {t('moreOptions.reportIncorrectInfo')}
       </button>
     </BottomSheet>
   );

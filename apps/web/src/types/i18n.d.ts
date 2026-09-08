@@ -16,6 +16,9 @@ import type home from '../../messages/bn/home.json';
 import type doctor from '../../messages/bn/doctor.json';
 import type settings from '../../messages/bn/settings.json';
 import type offline from '../../messages/bn/offline.json';
+import type articles from '../../messages/bn/articles.json';
+import type hospital from '../../messages/bn/hospital.json';
+import type shared from '../../messages/bn/shared.json';
 
 type Messages = {
   common: typeof common;
@@ -25,6 +28,9 @@ type Messages = {
   doctor: typeof doctor;
   settings: typeof settings;
   offline: typeof offline;
+  articles: typeof articles;
+  hospital: typeof hospital;
+  shared: typeof shared;
 };
 
 declare global {
