@@ -6,6 +6,7 @@ import { Siren, X, Ambulance, Building2, Droplet, Phone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { NATIONAL_NUMBERS } from '@/components/emergency/NationalNumbersSection';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
@@ -45,6 +46,8 @@ function trackCall(numberType: string, label: string) {
 
 export function EmergencyFAB() {
   const localize = useLocalizedField();
+  const t = useT('emergency');
+  const tc = useT('common');
   const [expanded, setExpanded] = useState(false);
   const [activeSheet, setActiveSheet] = useState<SheetKind>(null);
   const [hospitals, setHospitals] = useState<
@@ -125,17 +128,17 @@ export function EmergencyFAB() {
           <>
             <FabOption
               icon={<Ambulance className="h-5 w-5" />}
-              label="অ্যাম্বুলেন্স"
+              label={t('fab.ambulance')}
               onClick={() => openSheet('ambulance')}
             />
             <FabOption
               icon={<Droplet className="h-5 w-5" />}
-              label="ব্লাড সার্ভিস"
+              label={t('fab.bloodService')}
               onClick={() => openSheet('blood')}
             />
             <FabOption
               icon={<Building2 className="h-5 w-5" />}
-              label="নিকট হাসপাতাল"
+              label={t('fab.nearbyHospital')}
               onClick={() => openSheet('hospital')}
             />
           </>
@@ -143,7 +146,7 @@ export function EmergencyFAB() {
 
         <button
           onClick={() => setExpanded((v) => !v)}
-          aria-label="জরুরি সেবা"
+          aria-label={t('fab.ariaLabel')}
           className="flex h-14 w-14 items-center justify-center rounded-full bg-emergency-600 text-white shadow-xl transition-transform active:scale-90"
         >
           {expanded ? <X className="h-6 w-6" /> : <Siren className="h-6 w-6" />}
@@ -153,7 +156,7 @@ export function EmergencyFAB() {
       <BottomSheet
         open={activeSheet === 'ambulance'}
         onClose={() => setActiveSheet(null)}
-        title="অ্যাম্বুলেন্স"
+        title={t('fab.ambulance')}
       >
         {NATIONAL_NUMBERS.map((n) => (
           <a
@@ -168,7 +171,7 @@ export function EmergencyFAB() {
             <Phone className="h-5 w-5 text-emergency-600" />
           </a>
         ))}
-        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">লোড হচ্ছে...</p>}
+        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
         {ambulances.map((a) => (
           <a
             key={a.id}
@@ -183,19 +186,19 @@ export function EmergencyFAB() {
           </a>
         ))}
         <Link href="/emergency" className="block py-2 text-center text-[13px] text-brand-600">
-          সব জরুরি নম্বর দেখুন →
+          {t('seeAllNumbers')}
         </Link>
       </BottomSheet>
 
       <BottomSheet
         open={activeSheet === 'hospital'}
         onClose={() => setActiveSheet(null)}
-        title="নিকট হাসপাতাল"
+        title={t('fab.nearbyHospital')}
       >
-        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">লোড হচ্ছে...</p>}
+        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
         {!loading && hospitals.length === 0 && (
           <p className="py-3 text-center text-[13px] text-neutral-400">
-            এই মুহূর্তে জরুরি বিভাগসহ হাসপাতাল যোগ করা হয়নি
+            {t('noEmergencyHospitalsYet')}
           </p>
         )}
         {hospitals.map((h) => (
@@ -206,26 +209,26 @@ export function EmergencyFAB() {
             <a
               href={`tel:${h.phone}`}
               onClick={() => trackCall('local_hospital', h.id)}
-              aria-label={`${localize(h.name_translations)}-এ কল করুন`}
+              aria-label={t('callAriaLabel', { name: localize(h.name_translations) })}
             >
               <Phone className="h-4 w-4 text-emergency-600" />
             </a>
           </div>
         ))}
         <Link href="/emergency" className="block py-2 text-center text-[13px] text-brand-600">
-          সব জরুরি সেবা দেখুন →
+          {t('seeAllServices')}
         </Link>
       </BottomSheet>
 
       <BottomSheet
         open={activeSheet === 'blood'}
         onClose={() => setActiveSheet(null)}
-        title="ব্লাড সার্ভিস"
+        title={t('fab.bloodService')}
       >
-        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">লোড হচ্ছে...</p>}
+        {loading && <p className="py-3 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
         {!loading && bloodBanks.length === 0 && (
           <p className="py-3 text-center text-[13px] text-neutral-400">
-            এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই
+            {t('noBloodBanksYet')}
           </p>
         )}
         {bloodBanks.map((b) => (
@@ -236,14 +239,14 @@ export function EmergencyFAB() {
             <a
               href={`tel:${b.phone}`}
               onClick={() => trackCall('blood_bank', b.id)}
-              aria-label={`${localize(b.name_translations)}-এ কল করুন`}
+              aria-label={t('callAriaLabel', { name: localize(b.name_translations) })}
             >
               <Phone className="h-4 w-4 text-emergency-600" />
             </a>
           </div>
         ))}
         <Link href="/health/blood-services" className="block py-2 text-center text-[13px] text-brand-600">
-          ব্লাড ব্যাংক ও রক্তদাতা তালিকা দেখুন →
+          {t('seeBloodBankList')}
         </Link>
       </BottomSheet>
     </>

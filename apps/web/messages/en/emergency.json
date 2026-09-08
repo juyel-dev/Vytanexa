@@ -1,0 +1,14 @@
+{
+  "fab": {
+    "ariaLabel": "Emergency services",
+    "ambulance": "Ambulance",
+    "bloodService": "Blood Service",
+    "nearbyHospital": "Nearby Hospital"
+  },
+  "callAriaLabel": "Call {name}",
+  "seeAllNumbers": "See all emergency numbers →",
+  "seeAllServices": "See all emergency services →",
+  "seeBloodBankList": "See blood bank & donor list →",
+  "noEmergencyHospitalsYet": "No hospitals with an emergency department added yet",
+  "noBloodBanksYet": "No blood banks listed at the moment"
+}

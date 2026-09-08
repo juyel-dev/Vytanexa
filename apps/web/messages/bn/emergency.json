@@ -1,0 +1,14 @@
+{
+  "fab": {
+    "ariaLabel": "জরুরি সেবা",
+    "ambulance": "অ্যাম্বুলেন্স",
+    "bloodService": "ব্লাড সার্ভিস",
+    "nearbyHospital": "নিকট হাসপাতাল"
+  },
+  "callAriaLabel": "{name}-এ কল করুন",
+  "seeAllNumbers": "সব জরুরি নম্বর দেখুন →",
+  "seeAllServices": "সব জরুরি সেবা দেখুন →",
+  "seeBloodBankList": "ব্লাড ব্যাংক ও রক্তদাতা তালিকা দেখুন →",
+  "noEmergencyHospitalsYet": "এই মুহূর্তে জরুরি বিভাগসহ হাসপাতাল যোগ করা হয়নি",
+  "noBloodBanksYet": "এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই"
+}

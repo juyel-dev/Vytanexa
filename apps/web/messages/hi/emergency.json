@@ -1,0 +1,14 @@
+{
+  "fab": {
+    "ariaLabel": "आपातकालीन सेवाएं",
+    "ambulance": "एम्बुलेंस",
+    "bloodService": "ब्लड सेवा",
+    "nearbyHospital": "नज़दीकी अस्पताल"
+  },
+  "callAriaLabel": "{name} को कॉल करें",
+  "seeAllNumbers": "सभी आपातकालीन नंबर देखें →",
+  "seeAllServices": "सभी आपातकालीन सेवाएं देखें →",
+  "seeBloodBankList": "ब्लड बैंक और डोनर सूची देखें →",
+  "noEmergencyHospitalsYet": "अभी तक आपातकालीन विभाग वाला कोई अस्पताल नहीं जोड़ा गया",
+  "noBloodBanksYet": "अभी कोई ब्लड बैंक सूचीबद्ध नहीं है"
+}
