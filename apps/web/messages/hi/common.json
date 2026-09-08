@@ -12,5 +12,7 @@
   "close": "बंद करें",
   "selectLanguage": "भाषा चुनें",
   "call": "कॉल करें",
-  "details": "विवरण"
+  "details": "विवरण",
+  "notifications": "सूचनाएं",
+  "goBack": "वापस जाएं"
 }

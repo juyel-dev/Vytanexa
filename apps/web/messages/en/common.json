@@ -12,5 +12,7 @@
   "close": "Close",
   "selectLanguage": "Select language",
   "call": "Call",
-  "details": "Details"
+  "details": "Details",
+  "notifications": "Notifications",
+  "goBack": "Go back"
 }

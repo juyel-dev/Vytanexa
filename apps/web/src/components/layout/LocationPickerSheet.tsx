@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Search, ChevronRight, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useLocationStore } from '@/stores/location-store';
 import type { Json } from '@vytanexa/database';
@@ -32,6 +33,8 @@ export function LocationPickerSheet({
   onClose: () => void;
 }) {
   const localize = useLocalizedField();
+  const t = useT('location');
+  const tc = useT('common');
   const setLocation = useLocationStore((s) => s.setLocation);
 
   const [step, setStep] = useState<Step>('state');
@@ -117,15 +120,10 @@ export function LocationPickerSheet({
     onClose();
   };
 
-  const stepLabel =
-    step === 'state'
-      ? 'রাজ্য বেছে নিন'
-      : step === 'district'
-        ? 'জেলা বেছে নিন'
-        : 'এলাকা বেছে নিন (ঐচ্ছিক)';
+  const stepLabel = t(`step.${step}`);
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="আপনার অবস্থান বেছে নিন">
+    <BottomSheet open={open} onClose={onClose} title={t('sheetTitle')}>
       {(selectedState || selectedDistrict) && (
         <p className="mb-2 text-[12px] text-neutral-500">
           {localize(selectedState?.name_translations)}
@@ -144,13 +142,11 @@ export function LocationPickerSheet({
         />
       </div>
 
-      {loading && <p className="py-6 text-center text-[13px] text-neutral-400">লোড হচ্ছে...</p>}
+      {loading && <p className="py-6 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
 
       {!loading && filtered.length === 0 && (
         <p className="py-6 text-center text-[13px] text-neutral-400">
-          {step === 'state'
-            ? 'এখনো কোনো রাজ্য যোগ করা হয়নি'
-            : 'এই এলাকায় এখনো কোনো উপবিভাগ যোগ করা হয়নি'}
+          {step === 'state' ? t('noStatesYet') : t('noSubDivisionsYet')}
         </p>
       )}
 
@@ -180,7 +176,7 @@ export function LocationPickerSheet({
           onClick={onClose}
           className="mt-3 w-full rounded-md border border-neutral-200 py-2.5 text-[13px] font-medium text-neutral-600"
         >
-          এড়িয়ে যান — শুধু জেলা ব্যবহার করুন
+          {t('skipUseDistrictOnly')}
         </button>
       )}
     </BottomSheet>

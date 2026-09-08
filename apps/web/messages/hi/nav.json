@@ -3,5 +3,6 @@
   "doctors": "डॉक्टर",
   "search": "खोज",
   "hospitals": "अस्पताल",
-  "more": "अधिक"
+  "more": "अधिक",
+  "mainNavAriaLabel": "मुख्य नेविगेशन"
 }

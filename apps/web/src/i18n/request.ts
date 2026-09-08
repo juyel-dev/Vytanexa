@@ -7,7 +7,7 @@ import { defaultLocale, isValidLocale, type Locale } from './config';
 // § 7) — intentionally explicit rather than a filesystem glob, so "what
 // messages does this app ship" is always visible in one place instead of
 // discovered at request time.
-const NAMESPACES = ['common', 'nav', 'onboarding', 'home', 'doctor', 'settings', 'offline', 'articles', 'hospital', 'shared', 'reviews'] as const;
+const NAMESPACES = ['common', 'nav', 'onboarding', 'home', 'doctor', 'settings', 'offline', 'articles', 'hospital', 'shared', 'reviews', 'location'] as const;
 
 async function loadMessages(locale: Locale) {
   const entries = await Promise.all(

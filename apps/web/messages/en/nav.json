@@ -3,5 +3,6 @@
   "doctors": "Doctors",
   "search": "Search",
   "hospitals": "Hospitals",
-  "more": "More"
+  "more": "More",
+  "mainNavAriaLabel": "Main navigation"
 }

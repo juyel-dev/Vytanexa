@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 type FooterLink = { label: string; href: string };
 type SocialLinks = Record<string, string>;
@@ -20,6 +21,7 @@ const SOCIAL_LABELS: Record<string, string> = {
  */
 export async function Footer() {
   const supabase = createClient();
+  const t = await getT('common');
 
   const { data: settings } = await supabase
     .from('app_settings')
@@ -41,7 +43,7 @@ export async function Footer() {
           {settings?.app_name ?? 'Vytanexa'}
         </span>
       </div>
-      <p className="text-[13px] text-neutral-500">আপনার স্বাস্থ্য, আপনার সংযোগ</p>
+      <p className="text-[13px] text-neutral-500">{t('tagline')}</p>
 
       {hasSocial && (
         <div className="mt-3 flex gap-3">

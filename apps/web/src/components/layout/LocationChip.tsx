@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { MapPin, ChevronDown } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocationStore } from '@/stores/location-store';
 
 // Same code-splitting rationale as EmergencyFAB (see (main)/layout.tsx)
@@ -22,12 +23,13 @@ const LocationPickerSheet = dynamic(
 export function LocationChip() {
   const [open, setOpen] = useState(false);
   const { districtName, stateName, subDistrictName } = useLocationStore();
+  const t = useT('location');
 
   const label = stateName
     ? subDistrictName
       ? `${stateName} · ${districtName} · ${subDistrictName}`
       : `${stateName} · ${districtName}`
-    : 'অবস্থান বেছে নিন';
+    : t('chipPlaceholder');
 
   return (
     <>

@@ -1,0 +1,12 @@
+{
+  "chipPlaceholder": "Select location",
+  "sheetTitle": "Select your location",
+  "step": {
+    "state": "Select state",
+    "district": "Select district",
+    "sub_district": "Select area (optional)"
+  },
+  "noStatesYet": "No states added yet",
+  "noSubDivisionsYet": "No sub-divisions added in this area yet",
+  "skipUseDistrictOnly": "Skip — use district only"
+}

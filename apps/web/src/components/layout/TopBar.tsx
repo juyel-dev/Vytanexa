@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Bell, ChevronLeft } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 import { useLogoUrl } from './LogoContext';
 
 /**
@@ -15,6 +16,7 @@ import { useLogoUrl } from './LogoContext';
 
 export function TopBarHome() {
   const logoUrl = useLogoUrl();
+  const t = useT();
   return (
     <header className="sticky top-0 z-topbar flex h-topbar items-center justify-between border-b border-neutral-100 bg-white px-4 shadow-sm">
       <div className="flex items-center gap-2">
@@ -30,14 +32,14 @@ export function TopBarHome() {
       <div className="flex items-center">
         <Link
           href="/search"
-          aria-label="সার্চ"
+          aria-label={t('nav.search')}
           className="flex h-11 w-11 items-center justify-center text-neutral-600"
         >
           <Search className="h-6 w-6" />
         </Link>
         <Link
           href="/notifications"
-          aria-label="নোটিফিকেশন"
+          aria-label={t('common.notifications')}
           className="relative flex h-11 w-11 items-center justify-center text-neutral-600"
         >
           <Bell className="h-6 w-6" />
@@ -57,11 +59,12 @@ export function TopBarSection({
   title: string;
   backHref?: string;
 }) {
+  const t = useT();
   return (
     <header className="sticky top-0 z-topbar flex h-topbar items-center border-b border-neutral-100 bg-white px-2 shadow-sm">
       <Link
         href={backHref}
-        aria-label="পেছনে যান"
+        aria-label={t('common.goBack')}
         className="flex h-11 w-11 items-center justify-center text-neutral-700"
       >
         <ChevronLeft className="h-6 w-6" />
