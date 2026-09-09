@@ -10,7 +10,6 @@
   "submitFailed": "सबमिट करने में समस्या हुई",
   "thanksAfterApproval": "✅ धन्यवाद! अनुमोदन के बाद दिखाई देगा",
   "rateEntity": "{name} को रेट करें",
-  "yourName": "आपका नाम *",
   "yourExperience": "आपका अनुभव * (कम से कम 20 अक्षर)",
   "charCount": "{count}/500 अक्षर",
   "submitting": "सबमिट हो रहा है...",

@@ -10,7 +10,6 @@
   "submitFailed": "Failed to submit",
   "thanksAfterApproval": "✅ Thank you! It will appear after approval",
   "rateEntity": "Rate {name}",
-  "yourName": "Your name *",
   "yourExperience": "Your experience * (at least 20 characters)",
   "charCount": "{count}/500 characters",
   "submitting": "Submitting...",

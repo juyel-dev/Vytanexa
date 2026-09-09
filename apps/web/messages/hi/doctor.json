@@ -3,5 +3,25 @@
   "experience": "{years}+ वर्ष अनुभव",
   "fee": "विज़िट: {fee}",
   "bookLead": "अपॉइंटमेंट अनुरोध",
-  "reviewCount": "{count, plural, one {# समीक्षा} other {# समीक्षाएं}}"
+  "reviewCount": "{count, plural, one {# समीक्षा} other {# समीक्षाएं}}",
+  "appointment": {
+    "time": {
+      "any": "कोई भी समय",
+      "morning": "सुबह",
+      "afternoon": "दोपहर",
+      "evening": "शाम"
+    },
+    "sendFailed": "भेजने में समस्या हुई",
+    "sent": "✅ अनुरोध भेज दिया गया! चेंबर से जल्द ही संपर्क किया जाएगा।",
+    "selectChamber": "चेंबर चुनें *",
+    "mobileNumber": "मोबाइल नंबर *",
+    "preferredTime": "पसंदीदा समय",
+    "message": "संदेश (वैकल्पिक)",
+    "messagePlaceholder": "जैसे: बुखार की समस्या के लिए दिखाना है",
+    "sending": "भेजा जा रहा है...",
+    "send": "अनुरोध भेजें",
+    "callDirect": "📞 सीधे कॉल करें",
+    "whatsapp": "💬 WhatsApp करें",
+    "disclaimer": "यह सीधी अपॉइंटमेंट बुकिंग नहीं है। चेंबर से संपर्क किया जाएगा।"
+  }
 }

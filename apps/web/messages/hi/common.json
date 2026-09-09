@@ -14,5 +14,8 @@
   "call": "कॉल करें",
   "details": "विवरण",
   "notifications": "सूचनाएं",
-  "goBack": "वापस जाएं"
+  "goBack": "वापस जाएं",
+  "yourName": "आपका नाम *",
+  "optional": "वैकल्पिक",
+  "or": "या"
 }

@@ -164,6 +164,7 @@ function ReviewSubmissionModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const t = useT('reviews');
+  const tc = useT('common');
 
   const canSubmit = rating > 0 && name.trim().length >= 2 && text.trim().length >= 20;
 
@@ -220,7 +221,7 @@ function ReviewSubmissionModal({
           </div>
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            {t('yourName')}
+            {tc('yourName')}
           </label>
           <input
             value={name}

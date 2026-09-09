@@ -3,5 +3,25 @@
   "experience": "{years}+ years experience",
   "fee": "Visit: {fee}",
   "bookLead": "Request appointment",
-  "reviewCount": "{count, plural, one {# review} other {# reviews}}"
+  "reviewCount": "{count, plural, one {# review} other {# reviews}}",
+  "appointment": {
+    "time": {
+      "any": "Any time",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening"
+    },
+    "sendFailed": "Failed to send",
+    "sent": "✅ Request sent! The chamber will contact you shortly.",
+    "selectChamber": "Select chamber *",
+    "mobileNumber": "Mobile number *",
+    "preferredTime": "Preferred time",
+    "message": "Message (optional)",
+    "messagePlaceholder": "e.g. want to see about a fever",
+    "sending": "Sending...",
+    "send": "Send request",
+    "callDirect": "📞 Call directly",
+    "whatsapp": "💬 WhatsApp",
+    "disclaimer": "This is not a direct appointment booking. The chamber will contact you."
+  }
 }

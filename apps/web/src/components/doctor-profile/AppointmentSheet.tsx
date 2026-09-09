@@ -1,17 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 
 type Chamber = DoctorDetail['chambers'][number];
-
-const TIME_OPTIONS = [
-  ['any', 'যেকোনো সময়'],
-  ['morning', 'সকাল'],
-  ['afternoon', 'দুপুর'],
-  ['evening', 'সন্ধ্যা'],
-];
 
 /**
  * Appointment Lead Capture — VYTANEXA-BLUEPRINT.md § S07. Direct call/
@@ -33,6 +27,10 @@ export function AppointmentSheet({
   chambers: Chamber[];
   whatsappNumber: string | null;
 }) {
+  const tDoctor = useT('doctor');
+  const tc = useT('common');
+  const t = useT('doctor.appointment');
+  const timeLabels = t.raw('time' as Parameters<typeof t.raw>[0]) as Record<string, string>;
   const sortedChambers = [...chambers].sort((a, b) => {
     if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
     return a.display_order - b.display_order;
@@ -79,7 +77,7 @@ export function AppointmentSheet({
     setSubmitting(false);
     if (!res.ok) {
       const json = await res.json();
-      setError(json.error ?? 'পাঠাতে সমস্যা হয়েছে');
+      setError(json.error ?? t('sendFailed'));
       return;
     }
     setSuccess(true);
@@ -93,10 +91,10 @@ export function AppointmentSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="অ্যাপয়েন্টমেন্ট অনুরোধ">
+    <BottomSheet open={open} onClose={onClose} title={tDoctor('bookLead')}>
       {success ? (
         <p className="py-8 text-center text-[15px] font-semibold text-life-600">
-          ✅ অনুরোধ পাঠানো হয়েছে! চেম্বার থেকে শীঘ্রই যোগাযোগ করা হবে।
+          {t('sent')}
         </p>
       ) : (
         <>
@@ -105,7 +103,7 @@ export function AppointmentSheet({
           {chambers.length > 1 && (
             <>
               <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-                চেম্বার বেছে নিন *
+                {t('selectChamber')}
               </label>
               <div className="mb-3 flex flex-col gap-1.5">
                 {sortedChambers.map((c) => (
@@ -126,7 +124,7 @@ export function AppointmentSheet({
           )}
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            আপনার নাম *
+            {tc('yourName')}
           </label>
           <input
             value={name}
@@ -135,7 +133,7 @@ export function AppointmentSheet({
           />
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            মোবাইল নম্বর *
+            {t('mobileNumber')}
           </label>
           <div className="mb-3 flex h-11 items-center rounded-md border border-neutral-200 px-3">
             <span className="mr-2 text-[13px] text-neutral-500">🇮🇳 +91</span>
@@ -148,14 +146,14 @@ export function AppointmentSheet({
           </div>
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            পছন্দের সময়
+            {t('preferredTime')}
           </label>
           <select
             value={preferredTime}
             onChange={(e) => setPreferredTime(e.target.value)}
             className="mb-3 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           >
-            {TIME_OPTIONS.map(([value, label]) => (
+            {Object.entries(timeLabels).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -163,12 +161,12 @@ export function AppointmentSheet({
           </select>
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            বার্তা (ঐচ্ছিক)
+            {t('message')}
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, 200))}
-            placeholder="যেমন: জ্বরের সমস্যার জন্য দেখাতে চাই"
+            placeholder={t('messagePlaceholder')}
             rows={2}
             className="mb-3 w-full rounded-md border border-neutral-200 px-3 py-2 text-[14px]"
           />
@@ -180,12 +178,12 @@ export function AppointmentSheet({
             disabled={!canSubmit || submitting}
             className="h-12 w-full rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
           >
-            {submitting ? 'পাঠানো হচ্ছে...' : 'অনুরোধ পাঠান'}
+            {submitting ? t('sending') : t('send')}
           </button>
 
           <div className="my-3 flex items-center gap-2">
             <span className="h-px flex-1 bg-neutral-200" />
-            <span className="text-[12px] text-neutral-400">অথবা</span>
+            <span className="text-[12px] text-neutral-400">{tc('or')}</span>
             <span className="h-px flex-1 bg-neutral-200" />
           </div>
 
@@ -194,7 +192,7 @@ export function AppointmentSheet({
               href={`tel:${selectedChamber?.phone ?? ''}`}
               className="h-11 flex-1 rounded-md border border-neutral-200 text-center text-[13px] font-semibold leading-[44px] text-neutral-700"
             >
-              📞 সরাসরি কল করুন
+              {t('callDirect')}
             </a>
             {whatsappNumber && (
               <a
@@ -203,13 +201,13 @@ export function AppointmentSheet({
                 rel="noopener noreferrer"
                 className="h-11 flex-1 rounded-md border border-neutral-200 text-center text-[13px] font-semibold leading-[44px] text-neutral-700"
               >
-                💬 WhatsApp করুন
+                {t('whatsapp')}
               </a>
             )}
           </div>
 
           <p className="mt-3 text-center text-[11px] text-neutral-400">
-            এটি সরাসরি অ্যাপয়েন্টমেন্ট বুকিং নয়। চেম্বার থেকে যোগাযোগ করা হবে।
+            {t('disclaimer')}
           </p>
         </>
       )}

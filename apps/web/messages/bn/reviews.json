@@ -10,7 +10,6 @@
   "submitFailed": "সাবমিট করতে সমস্যা হয়েছে",
   "thanksAfterApproval": "✅ ধন্যবাদ! অনুমোদনের পর দেখা যাবে",
   "rateEntity": "{name} কে রেট করুন",
-  "yourName": "আপনার নাম *",
   "yourExperience": "আপনার অভিজ্ঞতা * (কমপক্ষে ২০ অক্ষর)",
   "charCount": "{count}/500 অক্ষর",
   "submitting": "সাবমিট হচ্ছে...",

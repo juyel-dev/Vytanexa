@@ -14,5 +14,8 @@
   "call": "Call",
   "details": "Details",
   "notifications": "Notifications",
-  "goBack": "Go back"
+  "goBack": "Go back",
+  "yourName": "Your name *",
+  "optional": "optional",
+  "or": "or"
 }

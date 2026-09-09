@@ -3,5 +3,25 @@
   "experience": "{years}+ বছর অভিজ্ঞতা",
   "fee": "ভিজিট: {fee}",
   "bookLead": "অ্যাপয়েন্টমেন্ট অনুরোধ",
-  "reviewCount": "{count, plural, other {# রিভিউ}}"
+  "reviewCount": "{count, plural, other {# রিভিউ}}",
+  "appointment": {
+    "time": {
+      "any": "যেকোনো সময়",
+      "morning": "সকাল",
+      "afternoon": "দুপুর",
+      "evening": "সন্ধ্যা"
+    },
+    "sendFailed": "পাঠাতে সমস্যা হয়েছে",
+    "sent": "✅ অনুরোধ পাঠানো হয়েছে! চেম্বার থেকে শীঘ্রই যোগাযোগ করা হবে।",
+    "selectChamber": "চেম্বার বেছে নিন *",
+    "mobileNumber": "মোবাইল নম্বর *",
+    "preferredTime": "পছন্দের সময়",
+    "message": "বার্তা (ঐচ্ছিক)",
+    "messagePlaceholder": "যেমন: জ্বরের সমস্যার জন্য দেখাতে চাই",
+    "sending": "পাঠানো হচ্ছে...",
+    "send": "অনুরোধ পাঠান",
+    "callDirect": "📞 সরাসরি কল করুন",
+    "whatsapp": "💬 WhatsApp করুন",
+    "disclaimer": "এটি সরাসরি অ্যাপয়েন্টমেন্ট বুকিং নয়। চেম্বার থেকে যোগাযোগ করা হবে।"
+  }
 }
