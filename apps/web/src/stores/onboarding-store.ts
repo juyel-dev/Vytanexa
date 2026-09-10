@@ -9,7 +9,8 @@ import { persist } from 'zustand/middleware';
  *
  * Persisted so the flow resumes from the last completed step if the
  * app is killed mid-onboarding (S03 "Edge Cases" § "App killed
- * mid-onboarding").
+ * mid-onboarding"). Hydration is explicitly tracked so step effects
+ * (notably the 2s splash timer) never race persisted state rehydration.
  */
 export type OnboardingStep = 'splash' | 'language' | 'slides' | 'location' | 'signin' | 'done';
 
@@ -17,9 +18,11 @@ type OnboardingState = {
   step: OnboardingStep;
   language: 'bn' | 'en' | 'hi';
   slideIndex: number;
+  hasHydrated: boolean;
   setStep: (step: OnboardingStep) => void;
   setLanguage: (lang: 'bn' | 'en' | 'hi') => void;
   setSlideIndex: (index: number) => void;
+  markHydrated: () => void;
   reset: () => void;
 };
 
@@ -29,11 +32,18 @@ export const useOnboardingStore = create<OnboardingState>()(
       step: 'splash',
       language: 'bn',
       slideIndex: 0,
+      hasHydrated: false,
       setStep: (step) => set({ step }),
       setLanguage: (language) => set({ language }),
       setSlideIndex: (slideIndex) => set({ slideIndex }),
+      markHydrated: () => set({ hasHydrated: true }),
       reset: () => set({ step: 'splash', language: 'bn', slideIndex: 0 }),
     }),
-    { name: 'vytanexa_onboarding' }
+    {
+      name: 'vytanexa_onboarding',
+      onRehydrateStorage: () => (state) => {
+        state?.markHydrated();
+      },
+    }
   )
 );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useOnboardingStore } from '@/stores/onboarding-store';
 
 const SLIDES = [
@@ -28,26 +28,33 @@ const SLIDES = [
 ];
 
 /**
- * Onboarding Slides — VYTANEXA-BLUEPRINT.md § S03 "SCREEN 3A-3C"
- * Real illustration assets don't exist yet — using a large emoji +
- * tinted background as an honest placeholder rather than blocking
- * this step on asset production. Swap-in point is isolated to the
- * `emoji`/`bg` fields in SLIDES above.
+ * Onboarding Slides — VYTANEXA-BLUEPRINT.md § S03 "SCREEN 3A-3C".
+ * The active slide is persisted with the onboarding flow so a killed
+ * session resumes at the exact slide rather than restarting this step.
  */
 export function SlidesStep() {
   const setStep = useOnboardingStore((s) => s.setStep);
-  const [index, setIndex] = useState(0);
+  const index = useOnboardingStore((s) => s.slideIndex);
+  const setSlideIndex = useOnboardingStore((s) => s.setSlideIndex);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.clientWidth, behavior: 'auto' });
+  }, [index]);
+
   const goToSlide = (i: number) => {
-    scrollRef.current?.children[i]?.scrollIntoView({ behavior: 'smooth', inline: 'start' });
-    setIndex(i);
+    const next = Math.max(0, Math.min(i, SLIDES.length - 1));
+    scrollRef.current?.children[next]?.scrollIntoView({ behavior: 'smooth', inline: 'start' });
+    setSlideIndex(next);
   };
 
   const handleScroll = () => {
     const el = scrollRef.current;
-    if (!el) return;
-    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+    if (!el || !el.clientWidth) return;
+    const next = Math.max(0, Math.min(Math.round(el.scrollLeft / el.clientWidth), SLIDES.length - 1));
+    if (next !== index) setSlideIndex(next);
   };
 
   const isLast = index === SLIDES.length - 1;

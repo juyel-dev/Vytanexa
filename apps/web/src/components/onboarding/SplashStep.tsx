@@ -5,17 +5,23 @@ import { useOnboardingStore } from '@/stores/onboarding-store';
 
 /**
  * Splash — VYTANEXA-BLUEPRINT.md § S03 "SCREEN 1 — SPLASH"
- * 2s brand-600 full-bleed screen, then auto-advances. On a resumed
- * onboarding session (app was killed mid-flow) this step is skipped
- * entirely since the store's persisted step already moved past it.
+ * 2s brand-600 full-bleed screen, then auto-advances.
+ *
+ * The timer waits for Zustand persistence to hydrate. Without that guard,
+ * a slow browser could mount the default `splash` state, start the 2s timer,
+ * then hydrate a saved mid-onboarding step and have the old timer overwrite
+ * that restored progress. The persisted step is the source of truth.
  */
 export function SplashStep() {
   const setStep = useOnboardingStore((s) => s.setStep);
+  const hasHydrated = useOnboardingStore((s) => s.hasHydrated);
 
   useEffect(() => {
+    if (!hasHydrated) return;
+
     const timer = setTimeout(() => setStep('language'), 2000);
     return () => clearTimeout(timer);
-  }, [setStep]);
+  }, [hasHydrated, setStep]);
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-brand-600 px-6">
