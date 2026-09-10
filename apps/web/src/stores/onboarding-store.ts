@@ -22,6 +22,7 @@ type OnboardingState = {
   setStep: (step: OnboardingStep) => void;
   setLanguage: (lang: 'bn' | 'en' | 'hi') => void;
   setSlideIndex: (index: number) => void;
+  markHydrated: () => void;
   reset: () => void;
 };
 
@@ -35,12 +36,13 @@ export const useOnboardingStore = create<OnboardingState>()(
       setStep: (step) => set({ step }),
       setLanguage: (language) => set({ language }),
       setSlideIndex: (slideIndex) => set({ slideIndex }),
+      markHydrated: () => set({ hasHydrated: true }),
       reset: () => set({ step: 'splash', language: 'bn', slideIndex: 0 }),
     }),
     {
       name: 'vytanexa_onboarding',
       onRehydrateStorage: () => (state) => {
-        if (state) state.hasHydrated = true;
+        state?.markHydrated();
       },
     }
   )
