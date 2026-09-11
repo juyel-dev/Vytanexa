@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 
@@ -19,13 +20,14 @@ import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
   const [bioExpanded, setBioExpanded] = useState(false);
   const localize = useLocalizedField();
+  const t = useT('doctor.info');
   const bio = localize(doctor.bio_translations);
 
   return (
     <div className="divide-y divide-neutral-100">
       {bio && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">📝 সম্পর্কে</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('about')}</h3>
           <p
             className={`text-[14px] leading-relaxed text-neutral-700 ${!bioExpanded ? 'line-clamp-4' : ''}`}
           >
@@ -36,7 +38,7 @@ export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
               onClick={() => setBioExpanded((v) => !v)}
               className="mt-1 text-[13px] text-brand-600"
             >
-              {bioExpanded ? 'কম দেখুন ▲' : 'আরো পড়ুন ▾'}
+              {bioExpanded ? t('showLess') : t('showMore')}
             </button>
           )}
         </section>
@@ -44,7 +46,7 @@ export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
 
       {doctor.degree.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🎓 শিক্ষাগত যোগ্যতা</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('education')}</h3>
           {doctor.degree.map((d) => (
             <p key={d} className="flex items-start gap-2 py-1 text-[14px] text-neutral-700">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" />
@@ -56,7 +58,7 @@ export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
 
       {doctor.expertise_tags.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🏆 বিশেষজ্ঞতার ক্ষেত্র</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('expertiseAreas')}</h3>
           <div className="flex flex-wrap gap-2">
             {doctor.expertise_tags.map((tag) => (
               <span
@@ -72,7 +74,7 @@ export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
 
       {doctor.treats_conditions.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">💊 যেসব রোগের চিকিৎসা দেন</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('treatsConditions')}</h3>
           <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
             {doctor.treats_conditions.map((c) => (
               <p key={c} className="flex items-start gap-1.5 text-[13px] text-neutral-700">
@@ -85,7 +87,7 @@ export function InfoTab({ doctor }: { doctor: DoctorDetail }) {
 
       {doctor.languages.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🗣️ ভাষা</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('languages')}</h3>
           <div className="flex flex-wrap gap-2">
             {doctor.languages.map((lang) => (
               <span

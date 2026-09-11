@@ -23,5 +23,45 @@
     "callDirect": "📞 सीधे कॉल करें",
     "whatsapp": "💬 WhatsApp करें",
     "disclaimer": "यह सीधी अपॉइंटमेंट बुकिंग नहीं है। चेंबर से संपर्क किया जाएगा।"
-  }
+  },
+  "chambers": {
+    "empty": "अभी तक कोई चेंबर की जानकारी नहीं जोड़ी गई है। सीधे संपर्क करें।",
+    "primaryBadge": "मुख्य",
+    "scheduleLabel": "⏰ समय-सारिणी:",
+    "status": {
+      "openNow": "🟢 आज खुला है — {time} तक",
+      "opensLater": "🟡 आज {time} पर खुलेगा",
+      "closedNextDay": "🔴 आज बंद — {day} को खुलेगा",
+      "closed": "🔴 आज बंद"
+    },
+    "visitFee": "💰 विज़िट फीस: {fee}",
+    "callShort": "कॉल",
+    "directions": "दिशा-निर्देश"
+  },
+  "hospitalsTab": {
+    "noHospitalLink": "यह डॉक्टर किसी अस्पताल से जुड़े नहीं हैं। निजी चेंबर में मरीज़ देखते हैं।",
+    "seeChambers": "चेंबर देखें →",
+    "visitsHospitals": "यह डॉक्टर जिन अस्पतालों में जाते हैं:",
+    "seeDetails": "विवरण देखें →"
+  },
+  "info": {
+    "about": "📝 परिचय",
+    "showLess": "कम देखें ▲",
+    "showMore": "और पढ़ें ▾",
+    "education": "🎓 शिक्षा",
+    "expertiseAreas": "🏆 विशेषज्ञता के क्षेत्र",
+    "treatsConditions": "💊 इलाज की जाने वाली समस्याएं",
+    "languages": "🗣️ भाषाएं"
+  },
+  "tabs": {
+    "info": "जानकारी",
+    "chambers": "चेंबर",
+    "reviews": "समीक्षाएं",
+    "hospitals": "अस्पताल"
+  },
+  "shareAriaLabel": "शेयर करें",
+  "seeReviewsCount": "({count} समीक्षाएं देखें)",
+  "popularBadge": "🔥 लोकप्रिय",
+  "visitFeeLabel": "💰 विज़िट फीस",
+  "appointmentShort": "अपॉइंटमेंट"
 }

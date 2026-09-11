@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 
@@ -19,14 +20,15 @@ export function HospitalsTab({
   onGoToChambers: () => void;
 }) {
   const localize = useLocalizedField();
+  const t = useT('doctor.hospitalsTab');
   if (links.length === 0) {
     return (
       <div className="px-6 py-10 text-center">
         <p className="text-[14px] text-neutral-600">
-          এই ডাক্তার কোনো হাসপাতালের সাথে যুক্ত নেই। ব্যক্তিগত চেম্বারে চিকিৎসা দেন।
+          {t('noHospitalLink')}
         </p>
         <button onClick={onGoToChambers} className="mt-3 text-[13px] font-semibold text-brand-600">
-          চেম্বার দেখুন →
+          {t('seeChambers')}
         </button>
       </div>
     );
@@ -35,7 +37,7 @@ export function HospitalsTab({
   return (
     <div className="px-4 py-4">
       <p className="mb-3 text-[14px] font-semibold text-neutral-800">
-        এই ডাক্তার যেসব হাসপাতালে ভিজিট করেন:
+        {t('visitsHospitals')}
       </p>
       {links.map((link) =>
         link.hospitals ? (
@@ -64,7 +66,7 @@ export function HospitalsTab({
                 {localize(link.hospitals.name_translations)}
               </p>
               {link.role && <p className="text-[12px] text-brand-600">{link.role}</p>}
-              <p className="mt-1 text-[12px] text-brand-600">বিস্তারিত দেখুন →</p>
+              <p className="mt-1 text-[12px] text-brand-600">{t('seeDetails')}</p>
             </div>
           </Link>
         ) : null

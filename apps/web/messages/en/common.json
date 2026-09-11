@@ -17,5 +17,15 @@
   "goBack": "Go back",
   "yourName": "Your name *",
   "optional": "optional",
-  "or": "or"
+  "or": "or",
+  "day": {
+    "sat": "Sat",
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri"
+  },
+  "closedSuffix": "closed"
 }

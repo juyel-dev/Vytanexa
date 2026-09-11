@@ -9,7 +9,10 @@
     "icu": "🩺 ICU",
     "ambulance": "🚑 Ambulance",
     "emergency_24h": "🚨 24/7 Emergency",
-    "blood_bank": "🩸 Blood Bank"
+    "blood_bank": "🩸 Blood Bank",
+    "pharmacy": "💊 Pharmacy",
+    "parking": "🅿️ Parking",
+    "lab": "🧪 Lab"
   },
   "emergencyDeptBadge": "🚨 Emergency Dept.",
   "matchedTest": "✅ This test is available: {label}",
@@ -34,5 +37,16 @@
   },
   "doctorsTab": {
     "empty": "No doctor information added yet."
+  },
+  "info": {
+    "about": "📝 About",
+    "showLess": "Show less ▲",
+    "showMore": "Read more ▾",
+    "facilities": "🏥 Facilities",
+    "openingHours": "🕐 Opening hours",
+    "open24h": "Open 24 hours",
+    "noScheduleYet": "Schedule not added yet",
+    "address": "📍 Address",
+    "seeDirections": "See directions"
   }
 }

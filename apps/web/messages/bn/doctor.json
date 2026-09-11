@@ -23,5 +23,45 @@
     "callDirect": "📞 সরাসরি কল করুন",
     "whatsapp": "💬 WhatsApp করুন",
     "disclaimer": "এটি সরাসরি অ্যাপয়েন্টমেন্ট বুকিং নয়। চেম্বার থেকে যোগাযোগ করা হবে।"
-  }
+  },
+  "chambers": {
+    "empty": "এখনো কোনো চেম্বারের তথ্য যোগ হয়নি। সরাসরি যোগাযোগ করুন।",
+    "primaryBadge": "প্রধান",
+    "scheduleLabel": "⏰ সময়সূচি:",
+    "status": {
+      "openNow": "🟢 আজ খোলা — {time} পর্যন্ত",
+      "opensLater": "🟡 আজ খোলা — {time}-এ শুরু",
+      "closedNextDay": "🔴 আজ বন্ধ — {day} খোলা থাকবে",
+      "closed": "🔴 আজ বন্ধ"
+    },
+    "visitFee": "💰 ভিজিট ফি: {fee}",
+    "callShort": "কল",
+    "directions": "দিকনির্দেশনা"
+  },
+  "hospitalsTab": {
+    "noHospitalLink": "এই ডাক্তার কোনো হাসপাতালের সাথে যুক্ত নেই। ব্যক্তিগত চেম্বারে চিকিৎসা দেন।",
+    "seeChambers": "চেম্বার দেখুন →",
+    "visitsHospitals": "এই ডাক্তার যেসব হাসপাতালে ভিজিট করেন:",
+    "seeDetails": "বিস্তারিত দেখুন →"
+  },
+  "info": {
+    "about": "📝 সম্পর্কে",
+    "showLess": "কম দেখুন ▲",
+    "showMore": "আরো পড়ুন ▾",
+    "education": "🎓 শিক্ষাগত যোগ্যতা",
+    "expertiseAreas": "🏆 বিশেষজ্ঞতার ক্ষেত্র",
+    "treatsConditions": "💊 যেসব রোগের চিকিৎসা দেন",
+    "languages": "🗣️ ভাষা"
+  },
+  "tabs": {
+    "info": "তথ্য",
+    "chambers": "চেম্বার",
+    "reviews": "রিভিউ",
+    "hospitals": "হাসপাতাল"
+  },
+  "shareAriaLabel": "শেয়ার করুন",
+  "seeReviewsCount": "({count} রিভিউ দেখুন)",
+  "popularBadge": "🔥 জনপ্রিয়",
+  "visitFeeLabel": "💰 ভিজিট ফি",
+  "appointmentShort": "অ্যাপয়েন্টমেন্ট"
 }

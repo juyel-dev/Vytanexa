@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Share2, MoreVertical, Star, Calendar } from 'lucide-react';
-import { useLocalizedField, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
+import { useLocalizedField, useFormatter, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 import { InfoTab } from './InfoTab';
 import { ChambersTab } from './ChambersTab';
@@ -23,12 +24,7 @@ type Review = {
   created_at: string;
 };
 
-const TABS = [
-  ['info', 'তথ্য'],
-  ['chambers', 'চেম্বার'],
-  ['reviews', 'রিভিউ'],
-  ['hospitals', 'হাসপাতাল'],
-] as const;
+const TAB_KEYS = ['info', 'chambers', 'reviews', 'hospitals'] as const;
 
 /**
  * Doctor Profile — VYTANEXA-BLUEPRINT.md § S07, the "most critical
@@ -45,7 +41,12 @@ export function DoctorProfileClient({
   pageUrl: string;
 }) {
   const localize = useLocalizedField();
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number][0]>('info');
+  const t = useT('doctor');
+  const tc = useT('common');
+  const tShared = useT('shared');
+  const format = useFormatter();
+  const tabLabels = t.raw('tabs' as Parameters<typeof t.raw>[0]) as Record<string, string>;
+  const [activeTab, setActiveTab] = useState<(typeof TAB_KEYS)[number]>('info');
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -61,10 +62,10 @@ export function DoctorProfileClient({
     doctor.consultation_fee_min != null
       ? doctor.consultation_fee_max &&
         doctor.consultation_fee_max !== doctor.consultation_fee_min
-        ? `₹${doctor.consultation_fee_min}-${doctor.consultation_fee_max}`
-        : `₹${doctor.consultation_fee_min}`
+        ? format.currencyRange(doctor.consultation_fee_min, doctor.consultation_fee_max)
+        : format.currency(doctor.consultation_fee_min)
       : primaryChamber?.consultation_fee
-        ? `₹${primaryChamber.consultation_fee}`
+        ? format.currency(primaryChamber.consultation_fee)
         : null;
 
   return (
@@ -75,7 +76,7 @@ export function DoctorProfileClient({
       <div className="sticky top-0 z-topbar flex h-topbar items-center justify-between bg-gradient-to-b from-black/40 to-transparent px-2">
         <Link
           href="/doctors"
-          aria-label="পেছনে যান"
+          aria-label={tc('goBack')}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -83,14 +84,14 @@ export function DoctorProfileClient({
         <div className="flex gap-2">
           <button
             onClick={() => setShareOpen(true)}
-            aria-label="শেয়ার করুন"
+            aria-label={t('shareAriaLabel')}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
           >
             <Share2 className="h-4 w-4" />
           </button>
           <button
             onClick={() => setMoreOpen(true)}
-            aria-label="আরো অপশন"
+            aria-label={tShared('moreOptions.title')}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white"
           >
             <MoreVertical className="h-4 w-4" />
@@ -132,7 +133,7 @@ export function DoctorProfileClient({
               onClick={() => setActiveTab('reviews')}
               className="text-[13px] text-white/80 underline"
             >
-              ({doctor.rating_count} রিভিউ দেখুন)
+              {t('seeReviewsCount', { count: doctor.rating_count })}
             </button>
           </div>
         )}
@@ -145,11 +146,11 @@ export function DoctorProfileClient({
           )}
           {doctor.rating_count >= 10 && (
             <span className="rounded-full bg-accent-400 px-2.5 py-1 text-[11px] font-bold text-brand-700">
-              🔥 জনপ্রিয়
+              {t('popularBadge')}
             </span>
           )}
           <span className="rounded-full border border-white/30 bg-white/15 px-2.5 py-1 text-[11px] text-white">
-            {doctor.experience_years}+ বছর অভিজ্ঞতা
+            {t('experience', { years: doctor.experience_years })}
           </span>
         </div>
       </div>
@@ -171,7 +172,7 @@ export function DoctorProfileClient({
 
       {/* Sticky tab bar */}
       <div className="sticky top-topbar z-sticky flex border-b border-neutral-200 bg-white">
-        {TABS.map(([key, label]) => (
+        {TAB_KEYS.map((key) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
@@ -181,7 +182,7 @@ export function DoctorProfileClient({
                 : 'border-transparent text-neutral-500'
             }`}
           >
-            {label}
+            {tabLabels[key]}
             {key === 'reviews' && doctor.rating_count > 0 && ` (${doctor.rating_count})`}
           </button>
         ))}
@@ -210,14 +211,14 @@ export function DoctorProfileClient({
       {/* Sticky bottom action bar */}
       <div className="fixed bottom-0 left-1/2 z-navbar flex h-[72px] w-full max-w-[480px] -translate-x-1/2 items-center justify-between border-t border-neutral-200 bg-white px-4 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <div>
-          <p className="text-[12px] text-neutral-500">💰 ভিজিট ফি</p>
+          <p className="text-[12px] text-neutral-500">{t('visitFeeLabel')}</p>
           <p className="text-[18px] font-bold text-neutral-900">{feeText ?? '—'}</p>
         </div>
         <button
           onClick={() => setAppointmentOpen(true)}
           className="flex h-12 items-center gap-2 rounded-md bg-brand-600 px-6 text-[15px] font-semibold text-white"
         >
-          <Calendar className="h-4 w-4" /> অ্যাপয়েন্টমেন্ট
+          <Calendar className="h-4 w-4" /> {t('appointmentShort')}
         </button>
       </div>
 

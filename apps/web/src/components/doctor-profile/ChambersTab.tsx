@@ -1,6 +1,8 @@
 'use client';
 
 import { Phone, MessageCircle, MapPin as MapPinIcon } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
+import { useFormatter } from '@/lib/i18n-client';
 import type { DoctorDetail } from '@/lib/queries/doctor-detail';
 import {
   groupSchedule,
@@ -17,11 +19,17 @@ type Chamber = DoctorDetail['chambers'][number];
  * lib/chamber-schedule.ts.
  */
 export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
+  const t = useT('doctor.chambers');
+  const tc = useT('common');
+  const format = useFormatter();
+  const dayLabels = tc.raw('day' as Parameters<typeof tc.raw>[0]) as Record<string, string>;
+  const closedSuffix = tc('closedSuffix');
+
   if (chambers.length === 0) {
     return (
       <div className="px-6 py-10 text-center">
         <p className="text-[14px] text-neutral-500">
-          এখনো কোনো চেম্বারের তথ্য যোগ হয়নি। সরাসরি যোগাযোগ করুন।
+          {t('empty')}
         </p>
       </div>
     );
@@ -36,9 +44,9 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
     <div className="px-4 py-3">
       {sorted.map((chamber) => {
         const schedule = (chamber.schedule as unknown as ScheduleEntry[]) ?? [];
-        const grouped = groupSchedule(schedule);
-        const closedLabel = getClosedDaysLabel(schedule);
-        const status = getChamberStatus(schedule);
+        const grouped = groupSchedule(schedule, dayLabels);
+        const closedLabel = getClosedDaysLabel(schedule, dayLabels, closedSuffix);
+        const status = getChamberStatus(schedule, undefined, dayLabels);
 
         return (
           <div
@@ -51,7 +59,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
               </h3>
               {chamber.is_primary && (
                 <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-600">
-                  প্রধান
+                  {t('primaryBadge')}
                 </span>
               )}
             </div>
@@ -63,7 +71,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
 
             {grouped.length > 0 && (
               <div className="mt-3">
-                <p className="text-[13px] font-semibold text-neutral-800">⏰ সময়সূচি:</p>
+                <p className="text-[13px] font-semibold text-neutral-800">{t('scheduleLabel')}</p>
                 {grouped.map((g) => (
                   <p key={g.days.join()} className="mt-0.5 text-[13px] text-neutral-700">
                     {g.daysLabel}: {g.open} – {g.close}
@@ -80,12 +88,12 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
                         : 'bg-neutral-100 text-neutral-500'
                   }`}
                 >
-                  {status.status === 'open_now' && `🟢 আজ খোলা — ${status.closesAt} পর্যন্ত`}
-                  {status.status === 'opens_later' && `🟡 আজ খোলা — ${status.opensAt}-এ শুরু`}
+                  {status.status === 'open_now' && t('status.openNow', { time: status.closesAt })}
+                  {status.status === 'opens_later' && t('status.opensLater', { time: status.opensAt })}
                   {status.status === 'closed' &&
                     (status.nextOpenDay
-                      ? `🔴 আজ বন্ধ — ${status.nextOpenDay} খোলা থাকবে`
-                      : '🔴 আজ বন্ধ')}
+                      ? t('status.closedNextDay', { day: status.nextOpenDay })
+                      : t('status.closed'))}
                 </span>
               </div>
             )}
@@ -93,7 +101,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
             <div className="mt-3 flex items-center justify-between text-[13px]">
               {chamber.consultation_fee != null && (
                 <span className="font-semibold text-neutral-900">
-                  💰 ভিজিট ফি: ₹{chamber.consultation_fee}
+                  {t('visitFee', { fee: format.currency(chamber.consultation_fee) })}
                 </span>
               )}
               <span className="text-neutral-600">📞 {chamber.phone}</span>
@@ -104,7 +112,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
                 href={`tel:${chamber.phone}`}
                 className="flex h-9 items-center justify-center gap-1 rounded-md bg-brand-600 text-[12px] font-semibold text-white"
               >
-                <Phone className="h-3.5 w-3.5" /> কল
+                <Phone className="h-3.5 w-3.5" /> {t('callShort')}
               </a>
               {chamber.whatsapp_number ? (
                 <a
@@ -125,7 +133,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
                   rel="noopener noreferrer"
                   className="flex h-9 items-center justify-center rounded-md border border-neutral-200 text-[12px] font-semibold text-neutral-700"
                 >
-                  দিকনির্দেশনা
+                  {t('directions')}
                 </a>
               ) : (
                 <span />

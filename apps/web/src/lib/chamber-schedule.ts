@@ -3,12 +3,18 @@
  * Grouping Algorithm (Reference)". Pure functions, no I/O — easy to
  * reason about and reuse (also needed by S06's "আজ উপলব্ধ" availability
  * chip once that's wired to real chamber data).
+ *
+ * Day labels and the "closed" suffix are injected by the caller
+ * (resolved from `common.day`/`common.closedSuffix` via `useT()`) rather
+ * than hardcoded here, so this stays a pure, environment-agnostic module
+ * — it has no way to call a hook itself. Defaults to Bengali labels so
+ * any caller that hasn't been updated yet keeps working unchanged.
  */
 
 export type ScheduleEntry = { day: string; open: string; close: string };
 
 const DAY_ORDER = ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'];
-const DAY_LABELS_BN: Record<string, string> = {
+const DEFAULT_DAY_LABELS: Record<string, string> = {
   sat: 'শনি',
   sun: 'রবি',
   mon: 'সোম',
@@ -17,11 +23,15 @@ const DAY_LABELS_BN: Record<string, string> = {
   thu: 'বৃহঃ',
   fri: 'শুক্র',
 };
+const DEFAULT_CLOSED_SUFFIX = 'বন্ধ';
 
 export type GroupedSchedule = { days: string[]; daysLabel: string; open: string; close: string };
 
 /** Groups consecutive/matching days with identical open+close times. */
-export function groupSchedule(schedule: ScheduleEntry[]): GroupedSchedule[] {
+export function groupSchedule(
+  schedule: ScheduleEntry[],
+  dayLabels: Record<string, string> = DEFAULT_DAY_LABELS
+): GroupedSchedule[] {
   const byTime = new Map<string, string[]>();
   for (const day of DAY_ORDER) {
     const entry = schedule.find((s) => s.day === day);
@@ -36,18 +46,22 @@ export function groupSchedule(schedule: ScheduleEntry[]): GroupedSchedule[] {
     const [open, close] = key.split('-') as [string, string];
     return {
       days,
-      daysLabel: days.map((d) => DAY_LABELS_BN[d]).join(', '),
+      daysLabel: days.map((d) => dayLabels[d]).join(', '),
       open,
       close,
     };
   });
 }
 
-export function getClosedDaysLabel(schedule: ScheduleEntry[]): string | null {
+export function getClosedDaysLabel(
+  schedule: ScheduleEntry[],
+  dayLabels: Record<string, string> = DEFAULT_DAY_LABELS,
+  closedSuffix: string = DEFAULT_CLOSED_SUFFIX
+): string | null {
   const openDays = new Set(schedule.map((s) => s.day));
   const closedDays = DAY_ORDER.filter((d) => !openDays.has(d));
   if (closedDays.length === 0) return null;
-  return closedDays.map((d) => DAY_LABELS_BN[d]).join(', ') + ' বন্ধ';
+  return closedDays.map((d) => dayLabels[d]).join(', ') + ' ' + closedSuffix;
 }
 
 export type ChamberStatus =
@@ -60,7 +74,8 @@ const JS_DAY_TO_KEY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 /** Live open/closed status computed against the current time. */
 export function getChamberStatus(
   schedule: ScheduleEntry[],
-  now: Date = new Date()
+  now: Date = new Date(),
+  dayLabels: Record<string, string> = DEFAULT_DAY_LABELS
 ): ChamberStatus {
   const todayKey = JS_DAY_TO_KEY[now.getDay()]!;
   const todayEntry = schedule.find((s) => s.day === todayKey);
@@ -70,7 +85,7 @@ export function getChamberStatus(
     for (let i = 1; i <= 7; i++) {
       const key = JS_DAY_TO_KEY[(now.getDay() + i) % 7]!;
       if (schedule.some((s) => s.day === key)) {
-        return { status: 'closed', nextOpenDay: DAY_LABELS_BN[key]! };
+        return { status: 'closed', nextOpenDay: dayLabels[key]! };
       }
     }
     return { status: 'closed', nextOpenDay: null };
@@ -83,7 +98,7 @@ export function getChamberStatus(
     for (let i = 1; i <= 7; i++) {
       const key = JS_DAY_TO_KEY[(now.getDay() + i) % 7]!;
       if (schedule.some((s) => s.day === key)) {
-        return { status: 'closed', nextOpenDay: DAY_LABELS_BN[key]! };
+        return { status: 'closed', nextOpenDay: dayLabels[key]! };
       }
     }
     return { status: 'closed', nextOpenDay: null };

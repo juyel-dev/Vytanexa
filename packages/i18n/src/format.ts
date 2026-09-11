@@ -11,6 +11,9 @@ import type { LocaleConfig } from './types';
 export interface Formatter {
   number(value: number, options?: Intl.NumberFormatOptions): string;
   currency(value: number, options?: Intl.NumberFormatOptions): string;
+  /** Locale-correct range formatting (e.g. "₹500–800", not "₹500-₹800")
+   *  via `Intl.NumberFormat.formatRange`. */
+  currencyRange(min: number, max: number, options?: Intl.NumberFormatOptions): string;
   dateTime(value: Date | number, options?: Intl.DateTimeFormatOptions): string;
   /** Cascades second → minute → hour → day → month → year, same bucket
    *  boundaries the original `formatRelativeTimeBn` used. */
@@ -30,6 +33,14 @@ export function createFormatter<L extends string>(locale: L, config: LocaleConfi
         maximumFractionDigits: 0,
         ...options,
       }).format(value),
+
+    currencyRange: (min, max, options) =>
+      new Intl.NumberFormat(intlLocale, {
+        style: 'currency',
+        currency: config.currency,
+        maximumFractionDigits: 0,
+        ...options,
+      }).formatRange(min, max),
 
     dateTime: (value, options) => new Intl.DateTimeFormat(intlLocale, options).format(value),
 

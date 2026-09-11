@@ -9,7 +9,10 @@
     "icu": "🩺 ICU",
     "ambulance": "🚑 অ্যাম্বুলেন্স",
     "emergency_24h": "🚨 ২৪/৭ জরুরি",
-    "blood_bank": "🩸 ব্লাড ব্যাংক"
+    "blood_bank": "🩸 ব্লাড ব্যাংক",
+    "pharmacy": "💊 ফার্মেসি",
+    "parking": "🅿️ পার্কিং",
+    "lab": "🧪 ল্যাব"
   },
   "emergencyDeptBadge": "🚨 জরুরি বিভাগ",
   "matchedTest": "✅ এই টেস্ট পাওয়া যায়: {label}",
@@ -34,5 +37,16 @@
   },
   "doctorsTab": {
     "empty": "এখনো কোনো ডাক্তারের তথ্য যোগ হয়নি।"
+  },
+  "info": {
+    "about": "📝 সম্পর্কে",
+    "showLess": "কম দেখুন ▲",
+    "showMore": "আরো পড়ুন ▾",
+    "facilities": "🏥 সুযোগ-সুবিধা",
+    "openingHours": "🕐 খোলার সময়",
+    "open24h": "২৪ ঘণ্টা খোলা",
+    "noScheduleYet": "সময়সূচি এখনো যোগ করা হয়নি",
+    "address": "📍 ঠিকানা",
+    "seeDirections": "দিকনির্দেশনা দেখুন"
   }
 }

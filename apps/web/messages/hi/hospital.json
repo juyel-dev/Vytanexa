@@ -9,7 +9,10 @@
     "icu": "🩺 ICU",
     "ambulance": "🚑 एम्बुलेंस",
     "emergency_24h": "🚨 24/7 आपातकाल",
-    "blood_bank": "🩸 ब्लड बैंक"
+    "blood_bank": "🩸 ब्लड बैंक",
+    "pharmacy": "💊 फार्मेसी",
+    "parking": "🅿️ पार्किंग",
+    "lab": "🧪 लैब"
   },
   "emergencyDeptBadge": "🚨 आपातकालीन विभाग",
   "matchedTest": "✅ यह टेस्ट उपलब्ध है: {label}",
@@ -34,5 +37,16 @@
   },
   "doctorsTab": {
     "empty": "अभी तक कोई डॉक्टर की जानकारी नहीं जोड़ी गई है।"
+  },
+  "info": {
+    "about": "📝 परिचय",
+    "showLess": "कम देखें ▲",
+    "showMore": "और पढ़ें ▾",
+    "facilities": "🏥 सुविधाएं",
+    "openingHours": "🕐 खुलने का समय",
+    "open24h": "24 घंटे खुला",
+    "noScheduleYet": "अभी तक समय-सारिणी नहीं जोड़ी गई",
+    "address": "📍 पता",
+    "seeDirections": "दिशा-निर्देश देखें"
   }
 }

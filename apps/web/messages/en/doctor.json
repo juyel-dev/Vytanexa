@@ -23,5 +23,45 @@
     "callDirect": "📞 Call directly",
     "whatsapp": "💬 WhatsApp",
     "disclaimer": "This is not a direct appointment booking. The chamber will contact you."
-  }
+  },
+  "chambers": {
+    "empty": "No chamber information added yet. Please contact directly.",
+    "primaryBadge": "Primary",
+    "scheduleLabel": "⏰ Schedule:",
+    "status": {
+      "openNow": "🟢 Open today — until {time}",
+      "opensLater": "🟡 Opens today at {time}",
+      "closedNextDay": "🔴 Closed today — opens {day}",
+      "closed": "🔴 Closed today"
+    },
+    "visitFee": "💰 Visit fee: {fee}",
+    "callShort": "Call",
+    "directions": "Directions"
+  },
+  "hospitalsTab": {
+    "noHospitalLink": "This doctor is not affiliated with any hospital. Sees patients at a private chamber.",
+    "seeChambers": "See chambers →",
+    "visitsHospitals": "Hospitals this doctor visits:",
+    "seeDetails": "See details →"
+  },
+  "info": {
+    "about": "📝 About",
+    "showLess": "Show less ▲",
+    "showMore": "Read more ▾",
+    "education": "🎓 Education",
+    "expertiseAreas": "🏆 Areas of Expertise",
+    "treatsConditions": "💊 Conditions Treated",
+    "languages": "🗣️ Languages"
+  },
+  "tabs": {
+    "info": "Info",
+    "chambers": "Chambers",
+    "reviews": "Reviews",
+    "hospitals": "Hospitals"
+  },
+  "shareAriaLabel": "Share",
+  "seeReviewsCount": "(See {count} reviews)",
+  "popularBadge": "🔥 Popular",
+  "visitFeeLabel": "💰 Visit fee",
+  "appointmentShort": "Appointment"
 }
