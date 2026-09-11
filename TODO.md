@@ -1770,16 +1770,20 @@ but they no longer describe the current system.
 
 **Current, authoritative source**: `I18N-ARCHITECTURE.md` (decisions +
 rationale) and `I18N-IMPLEMENTATION-SPEC.md` (concrete API + phased
-migration checklist, actively maintained/checked off as work lands).
-Phase 1 (foundation: `@vytanexa/i18n` facade package, the actual
-locale-threading bug fix, namespace message files, type safety,
-completeness-check tooling) and Phase 2 (migrated all 40 DB-content call
-sites; found and fixed a Rules-of-Hooks bug and a `server-only`
-module-taint bug in Phase 1's own output along the way — see
-I18N-IMPLEMENTATION-SPEC.md § 12 for both; folded the duplicate
-language-label definitions) are done — see that doc's § 12 for status and
-`git log` for the corresponding commits. Phases 3–5 (incremental
-hardcoded-string migration, formatter consolidation, optional URL-locale
+migration checklist, actively maintained/checked off as work lands, and
+written to be resumable across many short sessions — read its § 12
+before starting new i18n work, don't rely on chat history).
+Phase 1 (foundation) and Phase 2 (all 40 DB-content call sites migrated;
+found and fixed a Rules-of-Hooks bug and a `server-only` module-taint bug
+in Phase 1's own output along the way — see I18N-IMPLEMENTATION-SPEC.md
+§ 12 for both) are done. **Phase 3 (incremental hardcoded-string
+migration) is IN PROGRESS**: `components/shared/*`, `components/layout/*`,
+and `doctor-profile/*` are done; remaining directories are listed, in
+priority order, in I18N-IMPLEMENTATION-SPEC.md § 12's Phase 3 section,
+along with the exact re-usable inventory command and per-file checklist
+to resume with. `git log` for the corresponding commits — several have
+detailed notes on real bugs found mid-migration, worth reading before
+assuming a "done" directory needs no further checking. Phases 4–5
 routing) are open, tracked there, not duplicated here.
 
 ## WORKING RULES (reaffirmed)

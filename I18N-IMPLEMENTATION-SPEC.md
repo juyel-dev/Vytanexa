@@ -595,20 +595,73 @@ purpose-written script (not manual inspection) that parses every
 dependency; re-run as a final sweep across both apps with zero remaining
 hits.
 
-**Phase 3 — incremental hardcoded-string migration (ongoing, not one PR):**
+**Phase 3 — incremental hardcoded-string migration (ongoing, not one PR).
+Status: IN PROGRESS — see the live checklist below before starting new
+work, not just this prose.**
 
 Highest-reuse-first order (biggest blast radius per hour of work):
-1. `components/shared/*` (Article/Doctor/Hospital cards — used on nearly every
-   list page).
-
-2. `components/layout/*` (nav, top bar, FABs, sheets — visible on every page).
-3. Feature verticals one at a time (`doctors/`, `hospitals/`, `blood-services/`,
-   `symptoms/`, `qa/`, `polls/`, `articles/`, `account/`, `settings/`,
-   `emergency/`, `lab-tests/`), each adding its own namespace file as it's done.
+1. `components/shared/*` — ✅ **DONE** (all 8 files: ArticleCard, DoctorCard,
+   HospitalCard, FavoriteToggle, MoreOptionsSheet, ShareSheet, ReviewsTab,
+   DataReportSheet). Also fixed a real bug found along the way: 4 of these
+   had no `'use client'` of their own but were transitively client-bundled
+   — see this doc's commit history (`git log --oneline --grep=i18n`) for
+   the exact reasoning, not repeated here.
+2. `components/layout/*` — ✅ **DONE** (BottomNav, TopBar, LocationChip,
+   LocationPickerSheet, Footer, EmergencyFAB).
+3. Feature verticals, one at a time, each adding its own namespace file:
+   - `doctor-profile/*` — ✅ **DONE** (AppointmentSheet, ChambersTab,
+     HospitalsTab, InfoTab, DoctorProfileClient). `hospital-profile/InfoTab.tsx`
+     done alongside it (shares `lib/chamber-schedule.ts`).
+   - Remaining, in descending hardcoded-char-count order as of the last
+     audit (re-run the inventory command below before resuming — this list
+     goes stale as work lands):
+     `onboarding/`, `blood-services/`, `qa/`, `account/`, `symptoms/`,
+     `settings/`, `emergency/`, `lab-tests/`, `polls/`, `articles/`,
+     remaining `hospital-profile/*`, remaining `home/*`, `custom-page/*`.
 4. `(seo)/*` programmatic pages + `lib/seo-helpers.ts` templates — lowest
    priority (currently Bengali-only by deliberate business design, not broken;
    migrate only once English/Hindi SEO becomes an actual goal — see
    ARCHITECTURE § 6).
+
+**To resume this work in a new session** (deliberately written for that —
+long-running work across many short sessions is expected, not an edge
+case): re-run the inventory command to get current, not stale, numbers —
+
+```
+cd apps/web && python3 -c "
+import re, glob
+pattern = re.compile('[\u0980-\u09FF]')
+dirs = {}
+for f in glob.glob('src/components/**/*.tsx', recursive=True) + glob.glob('src/app/**/*.tsx', recursive=True):
+    txt = open(f, encoding='utf-8').read()
+    n = len(pattern.findall(txt))
+    if n == 0: continue
+    parts = f.split('/')
+    key = parts[2] if parts[1] == 'components' else 'app/' + '/'.join(parts[2:4])
+    dirs[key] = dirs.get(key, 0) + n
+for k, v in sorted(dirs.items(), key=lambda x: -x[1]):
+    print(f'{v:6d}  {k}')
+"
+```
+
+then pick the top of that list, check it's not already `.tsx`-comment-only
+(`grep -n` the specific file — several "done" directories still show a
+nonzero count from JSDoc comments quoting spec text, which is correct to
+leave alone, not a sign the directory needs revisiting), and follow the
+established per-file pattern: (1) check `head -3 file | grep "'use client'"`
+and if absent, check whether any `'use client'` file imports it directly —
+this is the bug class found in batch 1, don't skip this check; (2) extract
+strings into a namespace file (reuse `common.json`/existing sibling
+namespace keys before adding new ones — several near-duplicates were found
+and consolidated in batches 5–6, check first); (3) add real bn/en/hi
+translations, not placeholders; (4) wire `useT`/`getT`, `useLocalizedField`/
+`getLocalizedField`, `useFormatter`/`getFormatter` as appropriate; (5) run
+`npm run typecheck` (must stay clean); (6) grep the file for remaining
+Bengali unicode range to confirm zero runtime hits remain; (7) commit with
+a message that states what was found, not just what was done — several
+real bugs in this migration were only caught by writing the honest
+commit message and re-checking a claim before making it.
+
 Track progress as a literal checklist (file count converted / 105 web + 78
 admin, per the original audit) — visible, incremental, never a "finish i18n"
 mega-task.
@@ -623,6 +676,7 @@ mega-task.
 
 **Phase 5 — optional, business-decision-gated (not scheduled):**
 - [ ] Evaluate URL-prefixed locale routing if/when English or Hindi organic
+
       search becomes a real acquisition channel (ARCHITECTURE § 6). Only the
       locale-resolution source inside the facade changes; `t()`/
       `getLocalizedField()` call sites are unaffected.
