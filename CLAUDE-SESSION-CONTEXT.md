@@ -85,6 +85,19 @@ reminded.
    before signing off, so the *next* read of this file — whenever and
    wherever it happens — is accurate. Treat this file as something that
    goes stale the moment it's not updated, not a one-time artifact.
+9. **Nested `useT()` calls can silently lose type-checking as the message
+   tree grows** — next-intl's `NamespaceKeys` type has a real union-size
+   ceiling; `useT('namespace.subsection')` can fail to type-check once
+   there are enough namespace files, even though the exact same pattern
+   worked earlier with a smaller tree. Top-level single-segment calls
+   (`useT('doctor')`) are unaffected. If `tsc` reports a `NamespaceKeys`
+   union-truncation error (read the message — it lists "... N more ..."
+   and is not a "key doesn't exist" complaint) for a nested namespace
+   call, apply `useT('a.b' as Parameters<typeof useT>[0])` — don't
+   restructure the namespace file to avoid nesting, that loses the
+   organizational benefit for no real gain (`i18n:check` still catches
+   missing/mismatched keys regardless). Full account in
+   `I18N-IMPLEMENTATION-SPEC.md` § 6.
 
 ---
 
@@ -127,73 +140,56 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `fe8d790`** (last commit in this session):
+**As of commit `15ac9bc`** (last commit in this session). Progress:
+88/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+start of Phase 3 was 105/126).
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
   `getLocalizedField` locale-threading bug fix, namespace message file
   split, type-safe keys, `scripts/i18n-check.mjs`. Commit `046c9f7`.
 - **Phase 2 — DB-content call-site migration**: all 40 `getLocalizedField`
-  call sites (17 Server-Component sites needed zero changes; 27
-  Client-Component sites migrated); duplicate language-label
-  consolidation; admin `SubscriptionsManager.tsx` fix. Two real bugs found
-  and fixed in Phase 1's own output: a Rules-of-Hooks violation in the
-  client hook design, and a `server-only` module-level taint bug. Commit
-  `604d160`.
-- **Phase 3, so far** (`components/shared/*`, `components/layout/*`,
-  `doctor-profile/*` fully migrated — real bn/en/hi text, not
-  placeholders, in every case):
-  - Batch 1 (`f5187d8`): shared cards (ArticleCard, DoctorCard,
-    HospitalCard, ServicesTab) — found & fixed a transitive
-    client-bundling bug affecting all four.
-  - Batch 2 (`a7dcf06`): ReviewsTab, DataReportSheet — finishes
-    `components/shared/*`.
-  - Batch 3 (`5a33770`): BottomNav, TopBar, LocationChip,
-    LocationPickerSheet, Footer.
-  - Batch 4 (`86fc7a6`): EmergencyFAB — finishes `components/layout/*`.
-  - Batch 5 (`cda0672`): AppointmentSheet — consolidated a duplicate
-    `yourName` key into `common.json`.
-  - Batch 6 (`7774672`): ChambersTab, HospitalsTab, InfoTab,
-    DoctorProfileClient, plus `hospital-profile/InfoTab.tsx` (shares
-    `lib/chamber-schedule.ts`, refactored to accept injected day
-    labels instead of hardcoding them) — finishes `doctor-profile/*`.
-    Also added `Formatter.currencyRange()` (wraps
-    `Intl.NumberFormat.formatRange`) — fixes a duplicated-currency-symbol
-    formatting bug found while migrating the fee display, not just a
-    translation.
-  - `fe8d790`: this file + `I18N-IMPLEMENTATION-SPEC.md` § 12 updated for
-    cross-session resumability.
+  call sites; duplicate language-label consolidation; admin
+  `SubscriptionsManager.tsx` fix. Commit `604d160`.
+- **Phase 3, so far** — fully done, verified, real bn/en/hi text (not
+  placeholders) in every case: `components/shared/*`, `components/layout/*`,
+  `components/doctor-profile/*` (+ `hospital-profile/InfoTab.tsx`,
+  migrated alongside it), `components/onboarding/*`. Commits `f5187d8`
+  through `15ac9bc` — see `git log --oneline 046c9f7~1..HEAD` for the
+  full list; each message documents what was migrated *and* what bug or
+  design issue was found along the way, several are worth reading in full
+  (`git show <hash>`) before resuming, not just skimming the one-liners.
 
 ### Active
-Nothing mid-edit — every session so far has ended at a clean, committed,
-typechecked, pushed state. If a future session ends mid-file-edit
-because a usage limit hit unexpectedly, note that explicitly here
-(which file, what state) before the session ends, if there's any warning
-at all.
+Nothing mid-edit. Session ended at a clean, committed, typechecked,
+pushed state (same as every prior session in this effort).
 
 ### Blocked
-Nothing currently blocked. Two standing limitations, not blockers:
-- `next build` cannot be verified in this sandbox (see skill point 1) —
-  recommend the person run it in a real environment before deploying,
-  especially after any batch that touches a component's `'use client'`
-  status.
-- No ESLint config exists in the repo at all (pre-existing, unrelated to
-  this work) — the `no-restricted-imports` guard against importing
-  `next-intl` outside the facade (`I18N-IMPLEMENTATION-SPEC.md` § 8b) is
-  recommended but not built; would need sign-off since it's infra beyond
-  pure i18n scope.
+Same two standing, non-blocking limitations as before (see prior
+snapshot in git history for this file if needed) — `next build` can't be
+verified in this sandbox; no ESLint config exists in the repo.
+
+**New this session**: a real TypeScript limitation was hit and is now
+documented in `I18N-IMPLEMENTATION-SPEC.md` § 6 — next-intl's
+`NamespaceKeys` type silently truncates its union once the message tree
+gets large enough, breaking type-checking for *newly added* nested
+(`'namespace.subsection'`) `useT()` calls specifically (top-level
+single-segment namespaces are unaffected). Not a blocker — there's a
+documented, contained-cast fix — but **read that section before writing
+the next nested `useT()` call**, since the failure mode looks like a
+typo'd key at first glance and it isn't one.
 
 ### Next Move
-Continue Phase 3, next directory by hardcoded-char-count (re-run the
-inventory command in `I18N-IMPLEMENTATION-SPEC.md` § 12 to get current
-numbers — as of the last audit before this file was written, remaining
-priority order was: `onboarding/`, `blood-services/`, `qa/`, `account/`,
-`symptoms/`, `settings/`, `emergency/`, `lab-tests/`, `polls/`,
-`articles/`, remaining `hospital-profile/*`, remaining `home/*`,
-`custom-page/*`). Follow the 7-step per-file checklist in
-`I18N-IMPLEMENTATION-SPEC.md` § 12's Phase 3 section. No reason to change
-approach — the batch-by-batch, verify-then-commit-then-push rhythm has
-worked cleanly for 6 batches running.
+Continue Phase 3. Re-run the inventory command in
+`I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking the
+next directory — as of this session's end, in descending priority order:
+`blood-services/` (~608 chars at last count), `qa/`, `account/`, `home/`
+(the remaining, non-homepage-section parts), `app/(seo)/[state]/` and
+sibling SEO route files, `emergency/`, `settings/`, `symptoms/`,
+`lab-tests/`, `hospital-profile/` (remaining files beyond `InfoTab.tsx`),
+`polls/`, `articles/`, `custom-page/*`. Same 7-step per-file checklist,
+same batch-verify-commit-push rhythm — it's worked cleanly for 7 batches
+running, no reason to change it.
 
 ## Relevant Files
 
