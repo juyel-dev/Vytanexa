@@ -1,30 +1,13 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 import { useOnboardingStore } from '@/stores/onboarding-store';
 
-const SLIDES = [
-  {
-    emoji: '👨‍⚕️',
-    bg: 'bg-brand-50',
-    titleBn: 'সঠিক ডাক্তার খুঁজুন',
-    titleEn: 'Find the Right Doctor',
-    subtitle: 'বিশেষজ্ঞতা, এলাকা বা উপসর্গ দিয়ে আপনার কাছের সেরা ডাক্তার খুঁজুন।',
-  },
-  {
-    emoji: '🏥',
-    bg: 'bg-life-50',
-    titleBn: 'হাসপাতাল ও টেস্ট সহজে',
-    titleEn: 'Hospitals & Diagnostics',
-    subtitle: 'আইসিইউ, অ্যাম্বুলেন্স, ল্যাব টেস্ট সহ সব ধরনের স্বাস্থ্যসেবা এক জায়গায়।',
-  },
-  {
-    emoji: '🚑',
-    bg: 'bg-emergency-50',
-    titleBn: 'জরুরি মুহূর্তে পাশে আছি',
-    titleEn: 'Always Here in Emergencies',
-    subtitle: 'অ্যাম্বুলেন্স, ব্লাড ব্যাংক ও জরুরি হেল্পলাইন — এক ট্যাপেই সংযোগ।',
-  },
+const SLIDE_META = [
+  { emoji: '👨‍⚕️', bg: 'bg-brand-50' },
+  { emoji: '🏥', bg: 'bg-life-50' },
+  { emoji: '🚑', bg: 'bg-emergency-50' },
 ];
 
 /**
@@ -36,6 +19,9 @@ const SLIDES = [
  */
 export function SlidesStep() {
   const setStep = useOnboardingStore((s) => s.setStep);
+  const t = useT('onboarding');
+  const slideText = t.raw('slides' as Parameters<typeof t.raw>[0]) as { title: string; desc: string }[];
+  const SLIDES = SLIDE_META.map((meta, i) => ({ ...meta, ...slideText[i]! }));
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +42,7 @@ export function SlidesStep() {
     <div className="flex min-h-dvh flex-col">
       <div className="flex justify-end px-6 pt-4">
         <button onClick={() => setStep('location')} className="text-[14px] text-neutral-500">
-          এড়িয়ে যান
+          {t('skip')}
         </button>
       </div>
 
@@ -65,9 +51,9 @@ export function SlidesStep() {
         onScroll={handleScroll}
         className="flex flex-1 snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
       >
-        {SLIDES.map((slide) => (
+        {SLIDES.map((slide, i) => (
           <div
-            key={slide.titleEn}
+            key={i}
             className="flex w-full shrink-0 snap-start flex-col items-center justify-center px-8"
           >
             <div
@@ -76,10 +62,10 @@ export function SlidesStep() {
               {slide.emoji}
             </div>
             <h2 className="mt-8 text-center text-[22px] font-bold text-neutral-900">
-              {slide.titleBn}
+              {slide.title}
             </h2>
             <p className="mt-2 text-center text-[15px] leading-relaxed text-neutral-600">
-              {slide.subtitle}
+              {slide.desc}
             </p>
           </div>
         ))}
@@ -103,7 +89,7 @@ export function SlidesStep() {
             isLast ? 'bg-life-600 text-white' : 'border border-brand-600 text-brand-600'
           }`}
         >
-          {isLast ? 'শুরু করুন ✓' : 'পরবর্তী →'}
+          {isLast ? t('getStarted') : t('next')}
         </button>
       </div>
     </div>

@@ -4,16 +4,54 @@
   "language_hint": "You can change it later",
   "slides": [
     {
-      "title": "Find the right doctor",
-      "desc": "Verified profiles & reviews to choose the specialist"
+      "title": "Find the Right Doctor",
+      "desc": "Search by specialty, area, or symptom to find the best doctor near you."
     },
     {
-      "title": "Hospitals & tests made easy",
-      "desc": "Nearby hospitals, diagnostics and lab tests in one place"
+      "title": "Hospitals & Diagnostics",
+      "desc": "ICU, ambulance, lab tests and every kind of healthcare in one place."
     },
     {
-      "title": "Emergency by your side",
-      "desc": "Ambulance, blood banks, emergency hospitals — in 2 taps"
+      "title": "Always Here in Emergencies",
+      "desc": "Ambulance, blood bank, and emergency helplines — connected in one tap."
     }
-  ]
+  ],
+  "skip": "Skip",
+  "next": "Next →",
+  "getStarted": "Get Started ✓",
+  "signin": {
+    "benefits": [
+      {
+        "emoji": "❤️",
+        "text": "Save doctors and hospitals"
+      },
+      {
+        "emoji": "📅",
+        "text": "Track your appointments"
+      },
+      {
+        "emoji": "🔔",
+        "text": "Personal health updates"
+      }
+    ],
+    "welcome": "Welcome! 👋",
+    "subtitle": "Sign in for more features",
+    "phoneLabel": "📱 Sign in with mobile number",
+    "phonePlaceholder": "Enter mobile number",
+    "otpSendFailed": "Failed to send OTP. Please try again.",
+    "sending": "Sending...",
+    "sendOtp": "Send OTP →",
+    "signInWithGoogle": "Sign in with Google",
+    "notNow": "I don't want to sign in right now",
+    "laterHint": "Later: Account → Sign in"
+  },
+  "locationStep": {
+    "stepCounter": "{current}/{total}",
+    "title": "Set your location",
+    "subtitle": "Help us show you the nearest doctors and hospitals.",
+    "selectStateDistrict": "Select state & district",
+    "choose": "Choose",
+    "confirm": "Confirm →",
+    "skipForNow": "Skip — I'll do this later"
+  }
 }

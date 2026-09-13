@@ -305,6 +305,38 @@ becomes a compile-time TypeScript error, in both the facade and (incidentally)
 if anyone still reached next-intl directly. Because `bn` is authored first and is
 the completeness source of truth, adding a key always starts in `bn/*.json`.
 
+**Real limitation found during Phase 3, not anticipated in this section's
+original draft**: next-intl's `NamespaceKeys` type does exhaustive
+recursive enumeration of every dotted nested path across the whole
+message tree to build the type `useT`/`getT`'s namespace argument
+accepts. As the tree grew past roughly a dozen namespace files (each
+with several nesting levels), TypeScript started silently truncating
+that union for *newly added* deep paths — `useT('onboarding.signin')`
+failed to type-check even though the identical pattern
+(`useT('doctor.appointment')`, `useT('shared.dataReport')`) worked
+cleanly earlier in the same effort with a smaller tree. The error message
+itself is the tell: `NamespaceKeys<IntlMessages, "..." | ... 215 more
+... | "...">` — TypeScript has a real, hit-in-practice ceiling on how
+large a template-literal union it will fully expand.
+
+**Fix used, and the standing rule going forward**: the same contained,
+documented cast already established for genuinely dynamic keys
+(`nav-config.ts` in admin, `hospital.type` lookups) —
+`useT('onboarding.signin' as Parameters<typeof useT>[0])`. **Top-level,
+single-segment namespaces (`useT('doctor')`, `useT('common')`) have not
+shown this problem** — only multi-segment dotted paths
+(`'namespace.subsection'`) hit it, and only once the tree is already
+fairly large. Practical guidance for future work: try the plain string
+first; if `tsc` reports a `NamespaceKeys` union-truncation error (not a
+"key doesn't exist" error — read the message before reaching for the
+cast), apply this exact cast rather than restructuring the namespace
+file to avoid nesting. Restructuring to avoid nesting would lose the
+organizational benefit nesting provides (§ 7) for a problem the cast
+solves with zero cost to the actual safety net that matters most — the
+`i18n:check` completeness script still catches missing/mismatched keys
+across locales regardless of whether a given call site's namespace
+argument was type-checked.
+
 ## 7. Namespace / file layout (seeded from the real, current 43 keys — not invented)
 
 Today: one flat file per locale, 43 keys total, covering only nav + common +
