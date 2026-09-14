@@ -140,9 +140,12 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `58d9cd5`** (last commit in this session). Progress:
-86/126 web `.tsx` files still have hardcoded Bengali (baseline at the
-start of Phase 3 was 105/126).
+**As of commit `21c5d13`** (last commit in this session). Progress:
+85/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+start of Phase 3 was 105/126). Note: this count includes files whose
+only remaining Bengali is inside JSDoc comments quoting spec text
+(e.g. `components/qa/*` this session) — see "Blocked" below, that's
+expected and correct, not a miss.
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
@@ -155,12 +158,12 @@ start of Phase 3 was 105/126).
   placeholders) in every case: `components/shared/*`, `components/layout/*`,
   `components/doctor-profile/*` (+ `hospital-profile/InfoTab.tsx`,
   migrated alongside it), `components/onboarding/*`,
-  `components/blood-services/*` (new `blood` namespace). Commits
-  `f5187d8` through `58d9cd5` — see `git log --oneline 046c9f7~1..HEAD`
-  for the full list; each message documents what was migrated *and* what
-  bug or design issue was found along the way, several are worth reading
-  in full (`git show <hash>`) before resuming, not just skimming the
-  one-liners.
+  `components/blood-services/*` (new `blood` namespace),
+  `components/qa/*` (new `qa` namespace). Commits `f5187d8` through
+  `21c5d13` — see `git log --oneline 046c9f7~1..HEAD` for the full list;
+  each message documents what was migrated *and* what bug or design
+  issue was found along the way, several are worth reading in full
+  (`git show <hash>`) before resuming, not just skimming the one-liners.
 
 ### Active
 Nothing mid-edit. Session ended at a clean, committed, typechecked,
@@ -171,32 +174,50 @@ Same two standing, non-blocking limitations as before (see prior
 snapshot in git history for this file if needed) — `next build` can't be
 verified in this sandbox; no ESLint config exists in the repo.
 
-The `I18N-IMPLEMENTATION-SPEC.md` § 6 `NamespaceKeys` union-truncation
-note (documented last session) was actively re-checked this session —
-`useT('blood.registration')` is a newly added nested-namespace call and
-`tsc` stayed clean with no cast needed. Still worth reading § 6 before
-writing the *next* nested call, since the tree only grows from here and
-the failure mode looks like a typo'd key, not a size limit.
+`useT()` nested-namespace calls checked against the § 6 `NamespaceKeys`
+union-truncation note across two sessions running now
+(`blood.registration` last session, `qa.ask` this session) — `tsc`
+stayed clean both times, no cast needed either time. Still worth
+reading § 6 before the *next* one, but this pattern is looking solid
+in practice, not just in theory.
 
-**New this session**: found and fixed another instance of the
-India-vs-Bangladesh locale-tag bug (`toLocaleDateString('bn-BD')` in
-`BloodServicesClient.tsx`, corrected to go through the facade's
-`format.dateTime()`) — same bug class documented in
-`bugs-and-learnings`, just a different call site than the one fixed
-earlier. Worth a quick grep (`grep -rn "bn-BD" apps/web/src`) next
-session to rule out any other stray occurrences before assuming this
-class of bug is now fully closed out.
+Confirmed via grep this session (`grep -rn "bn-BD" apps/web/src`) that
+within `apps/web`, no further stray `toLocaleDateString('bn-BD')`
+occurrences remain — the only two hits left there are legitimate
+(`useVoiceSearch.ts`'s speech-recognition locale fallback list, unrelated
+to number/date formatting, and `i18n-shared.ts`'s comment documenting the
+original fix). That bug class is closed out **for apps/web**.
+
+**Not closed out, and out of scope for this Phase 3 effort so flagging
+rather than fixing**: the same `grep -rn "bn-BD"` against `apps/admin/src`
+turns up **23 occurrences** across ~15 files (`ReviewsQueue.tsx`,
+`ReportsQueue.tsx`, `QuestionsQueue.tsx`, `AdminsManager.tsx`,
+`ArticlesTable.tsx`, `PagesList.tsx`, `AuditLogViewer.tsx`,
+`QaManager.tsx`, `NotificationsManager.tsx`, `LeadsManager.tsx`,
+`PollsList.tsx`, `RecentActivity.tsx`, `SubscriptionsManager.tsx`,
+`BloodManager.tsx`, `AnalyticsDashboard.tsx`) — all `toLocaleDateString`/
+`toLocaleString`/`toLocaleString` (numbers) calls hardcoded to `'bn-BD'`.
+Admin is bn-only (single-locale, no next-intl facade wired up per this
+project's i18n architecture docs), so this isn't a translation gap the
+way it is in `apps/web` — it's the same underlying locale-tag mistake
+(Bangladesh vs India Bengali number/date conventions), just never
+routed through a shared formatter to begin with. Worth its own pass —
+likely a small shared `formatBn()` helper in `apps/admin/src/lib/`
+mirroring what `apps/web`'s facade already does — but that's a distinct
+piece of work from "migrate hardcoded Bengali .tsx strings" and
+shouldn't be folded into a Phase 3 batch without discussing scope first.
 
 ### Next Move
 Continue Phase 3. Re-run the inventory command in
 `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking the
 next directory — as of this session's end, in descending priority order:
-`qa/` (574 chars), `account/` (535), `home/` (504, the remaining,
-non-homepage-section parts), `app/(seo)/[state]/` (499) and sibling SEO
-route files, `emergency/` (398), `more/` (343), `settings/`, `symptoms/`,
-`lab-tests/`, `hospital-profile/` (remaining files beyond `InfoTab.tsx`),
-`polls/`, `articles/`, `custom-page/*`. Same 7-step per-file checklist,
-same batch-verify-commit-push rhythm — it's worked cleanly for 8 batches
+`account/` (535 chars), `home/` (504, the remaining, non-homepage-section
+parts), `app/(seo)/[state]/` (499) and sibling SEO route files,
+`emergency/` (398), `more/` (343), `app/(main)/community/` (338),
+`app/(main)/search/` (326), `settings/`, `symptoms/`, `lab-tests/`,
+`hospital-profile/` (remaining files beyond `InfoTab.tsx`), `polls/`,
+`articles/`, `custom-page/*`. Same 7-step per-file checklist, same
+batch-verify-commit-push rhythm — it's worked cleanly for 9 batches
 running, no reason to change it.
 
 ## Relevant Files
