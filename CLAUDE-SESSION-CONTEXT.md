@@ -140,8 +140,8 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `15ac9bc`** (last commit in this session). Progress:
-88/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `58d9cd5`** (last commit in this session). Progress:
+86/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126).
 
 ### Completed
@@ -154,11 +154,13 @@ start of Phase 3 was 105/126).
 - **Phase 3, so far** — fully done, verified, real bn/en/hi text (not
   placeholders) in every case: `components/shared/*`, `components/layout/*`,
   `components/doctor-profile/*` (+ `hospital-profile/InfoTab.tsx`,
-  migrated alongside it), `components/onboarding/*`. Commits `f5187d8`
-  through `15ac9bc` — see `git log --oneline 046c9f7~1..HEAD` for the
-  full list; each message documents what was migrated *and* what bug or
-  design issue was found along the way, several are worth reading in full
-  (`git show <hash>`) before resuming, not just skimming the one-liners.
+  migrated alongside it), `components/onboarding/*`,
+  `components/blood-services/*` (new `blood` namespace). Commits
+  `f5187d8` through `58d9cd5` — see `git log --oneline 046c9f7~1..HEAD`
+  for the full list; each message documents what was migrated *and* what
+  bug or design issue was found along the way, several are worth reading
+  in full (`git show <hash>`) before resuming, not just skimming the
+  one-liners.
 
 ### Active
 Nothing mid-edit. Session ended at a clean, committed, typechecked,
@@ -169,26 +171,32 @@ Same two standing, non-blocking limitations as before (see prior
 snapshot in git history for this file if needed) — `next build` can't be
 verified in this sandbox; no ESLint config exists in the repo.
 
-**New this session**: a real TypeScript limitation was hit and is now
-documented in `I18N-IMPLEMENTATION-SPEC.md` § 6 — next-intl's
-`NamespaceKeys` type silently truncates its union once the message tree
-gets large enough, breaking type-checking for *newly added* nested
-(`'namespace.subsection'`) `useT()` calls specifically (top-level
-single-segment namespaces are unaffected). Not a blocker — there's a
-documented, contained-cast fix — but **read that section before writing
-the next nested `useT()` call**, since the failure mode looks like a
-typo'd key at first glance and it isn't one.
+The `I18N-IMPLEMENTATION-SPEC.md` § 6 `NamespaceKeys` union-truncation
+note (documented last session) was actively re-checked this session —
+`useT('blood.registration')` is a newly added nested-namespace call and
+`tsc` stayed clean with no cast needed. Still worth reading § 6 before
+writing the *next* nested call, since the tree only grows from here and
+the failure mode looks like a typo'd key, not a size limit.
+
+**New this session**: found and fixed another instance of the
+India-vs-Bangladesh locale-tag bug (`toLocaleDateString('bn-BD')` in
+`BloodServicesClient.tsx`, corrected to go through the facade's
+`format.dateTime()`) — same bug class documented in
+`bugs-and-learnings`, just a different call site than the one fixed
+earlier. Worth a quick grep (`grep -rn "bn-BD" apps/web/src`) next
+session to rule out any other stray occurrences before assuming this
+class of bug is now fully closed out.
 
 ### Next Move
 Continue Phase 3. Re-run the inventory command in
 `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking the
 next directory — as of this session's end, in descending priority order:
-`blood-services/` (~608 chars at last count), `qa/`, `account/`, `home/`
-(the remaining, non-homepage-section parts), `app/(seo)/[state]/` and
-sibling SEO route files, `emergency/`, `settings/`, `symptoms/`,
+`qa/` (574 chars), `account/` (535), `home/` (504, the remaining,
+non-homepage-section parts), `app/(seo)/[state]/` (499) and sibling SEO
+route files, `emergency/` (398), `more/` (343), `settings/`, `symptoms/`,
 `lab-tests/`, `hospital-profile/` (remaining files beyond `InfoTab.tsx`),
 `polls/`, `articles/`, `custom-page/*`. Same 7-step per-file checklist,
-same batch-verify-commit-push rhythm — it's worked cleanly for 7 batches
+same batch-verify-commit-push rhythm — it's worked cleanly for 8 batches
 running, no reason to change it.
 
 ## Relevant Files
