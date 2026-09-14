@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import type { SeoLocation, SeoCategory } from '@/lib/queries/seo';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
-export function NearbyDistricts({
+export async function NearbyDistricts({
   stateSlug,
   districts,
 }: {
@@ -10,9 +11,10 @@ export function NearbyDistricts({
   districts: SeoLocation[];
 }) {
   if (districts.length === 0) return null;
+  const t = await getT('seo');
   return (
     <section className="mx-4 mt-6">
-      <h2 className="text-[14px] font-bold text-neutral-800">আশেপাশের এলাকা</h2>
+      <h2 className="text-[14px] font-bold text-neutral-800">{t('nearbyDistricts')}</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         {districts.map((d) => (
           <Link
@@ -28,7 +30,7 @@ export function NearbyDistricts({
   );
 }
 
-export function OtherSpecialties({
+export async function OtherSpecialties({
   stateSlug,
   districtSlug,
   categories,
@@ -38,9 +40,10 @@ export function OtherSpecialties({
   categories: SeoCategory[];
 }) {
   if (categories.length === 0) return null;
+  const t = await getT('seo');
   return (
     <section className="mx-4 mt-6">
-      <h2 className="text-[14px] font-bold text-neutral-800">অন্যান্য বিভাগ</h2>
+      <h2 className="text-[14px] font-bold text-neutral-800">{t('otherSpecialties')}</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         {categories.map((c) => (
           <Link
@@ -56,23 +59,24 @@ export function OtherSpecialties({
   );
 }
 
-export function StateDistrictList({
+export async function StateDistrictList({
   stateSlug,
   districts,
 }: {
   stateSlug: string;
   districts: SeoLocation[];
 }) {
+  const t = await getT('seo');
   if (districts.length === 0) {
     return (
       <p className="mx-4 mt-4 text-[13px] text-neutral-500">
-        এই রাজ্যে এখনো কোনো জেলা যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে যোগ করা হলে এখানে দেখা যাবে।
+        {t('noDistrictsYet')}
       </p>
     );
   }
   return (
     <section className="mx-4 mt-4">
-      <h2 className="text-[14px] font-bold text-neutral-800">জেলা অনুযায়ী খুঁজুন</h2>
+      <h2 className="text-[14px] font-bold text-neutral-800">{t('browseByDistrict')}</h2>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {districts.map((d) => (
           <Link
@@ -88,7 +92,7 @@ export function StateDistrictList({
   );
 }
 
-export function StateSpecialtyGrid({
+export async function StateSpecialtyGrid({
   categories,
 }: {
   categories: SeoCategory[];
@@ -97,9 +101,10 @@ export function StateSpecialtyGrid({
   // the specialist search filtered nationally (district-specialty pages
   // themselves are per-district; this is a shortcut overview).
   if (categories.length === 0) return null;
+  const t = await getT('seo');
   return (
     <section className="mx-4 mt-6">
-      <h2 className="text-[14px] font-bold text-neutral-800">বিশেষজ্ঞ অনুযায়ী খুঁজুন</h2>
+      <h2 className="text-[14px] font-bold text-neutral-800">{t('browseBySpecialty')}</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         {categories.map((c) => (
           <Link

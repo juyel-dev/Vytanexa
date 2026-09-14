@@ -29,6 +29,7 @@ import {
   buildFaqJsonLd,
 } from '@/lib/seo-helpers';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
 export const revalidate = 21600;
 export const dynamicParams = true;
@@ -108,12 +109,15 @@ export async function generateMetadata({
   params: { state: string; district: string; specialty: string };
 }): Promise<Metadata> {
   const data = await loadSeoData(params.state, params.district, params.specialty);
-  if (!data) return { title: 'পাওয়া যায়নি | Vytanexa' };
+  if (!data) {
+    const t = await getT('seo.notFound');
+    return { title: t('districtSpecialty') };
+  }
 
   const stateName = seoDisplayName(data.state.name_translations);
   const districtName = seoDisplayName(data.district.name_translations);
   const specialtyName = getLocalizedField(data.category.name_translations);
-  const seo = buildDistrictSpecialtySeo({
+  const seo = await buildDistrictSpecialtySeo({
     state: stateName,
     district: districtName,
     specialty: specialtyName,
@@ -156,12 +160,14 @@ export default async function DistrictSpecialtyLandingPage({
   const districtName = seoDisplayName(district.name_translations);
   const specialtyName = getLocalizedField(category.name_translations);
   const vars = { state: stateName, district: districtName, specialty: specialtyName, doctor_count: doctorCount };
-  const seo = buildDistrictSpecialtySeo(vars);
+  const seo = await buildDistrictSpecialtySeo(vars);
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vytanexa.app';
-  const faqs = buildFaqItems(vars);
+  const faqs = await buildFaqItems(vars);
+  const tNav = await getT('nav');
+  const tSeo = await getT('seo');
 
   const breadcrumbLd = buildBreadcrumbJsonLd(appUrl, [
-    { name: 'হোম', url: '/' },
+    { name: tNav('home'), url: '/' },
     { name: stateName, url: `/${params.state}` },
     { name: districtName, url: `/${params.state}/${params.district}` },
     { name: specialtyName },
@@ -182,7 +188,7 @@ export default async function DistrictSpecialtyLandingPage({
 
       <SeoBreadcrumbs
         crumbs={[
-          { label: 'হোম', href: '/' },
+          { label: tNav('home'), href: '/' },
           { label: stateName, href: `/${params.state}` },
           { label: districtName, href: `/${params.state}/${params.district}` },
           { label: specialtyName },
@@ -193,7 +199,7 @@ export default async function DistrictSpecialtyLandingPage({
         <h1 className="text-[22px] font-bold leading-7 text-neutral-900">{seo.h1}</h1>
         <p className="mt-2 text-[14px] leading-6 text-neutral-600">{seo.intro}</p>
         <p className="mt-2 text-[13px] font-medium text-brand-700">
-          {districtName} জেলায় {doctorCount} জন {specialtyName} বিশেষজ্ঞ
+          {tSeo('districtSpecialty.doctorCountLine', { district: districtName, count: doctorCount, specialty: specialtyName })}
         </p>
       </div>
 
@@ -201,9 +207,7 @@ export default async function DistrictSpecialtyLandingPage({
       <div className="mt-4">
         {doctors.length === 0 ? (
           <p className="mx-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[13px] leading-6 text-neutral-700">
-            এই মুহূর্তে এই এলাকায় কোনো {specialtyName} বিশেষজ্ঞের প্রোফাইল প্রকাশিত নেই। নিচের তালিকায়
-            অন্য এলাকার ভেরিফাইড ডাক্তাররা দেখানো হতে পারে — জেলা-স্তরের ফিল্টারিং চেম্বার ডেটা সক্রিয় হলে
-            আরও নির্ভুল হবে।
+            {tSeo('districtSpecialty.noDoctorsYet', { specialty: specialtyName })}
           </p>
         ) : (
           <>
@@ -223,7 +227,7 @@ export default async function DistrictSpecialtyLandingPage({
                 href={`/doctors?specialty=${category.slug}`}
                 className="rounded-full border border-brand-200 bg-brand-50 px-5 py-2.5 text-[14px] font-semibold text-brand-700"
               >
-                আরও {specialtyName} ডাক্তার দেখুন →
+                {tSeo('districtSpecialty.seeMoreDoctors', { specialty: specialtyName })}
               </Link>
             </div>
           </>

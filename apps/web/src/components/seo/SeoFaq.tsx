@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 
 export type FaqItem = { question: string; answer: string };
 
 export function SeoFaq({ faqs }: { faqs: FaqItem[] }) {
+  const t = useT('seo.faq');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   if (faqs.length === 0) return null;
 
   return (
     <section className="mx-4 mt-6 rounded-xl border border-neutral-200 bg-white p-4">
-      <h2 className="text-[15px] font-bold text-neutral-900">প্রায়শই জিজ্ঞাসিত প্রশ্ন</h2>
+      <h2 className="text-[15px] font-bold text-neutral-900">{t('heading')}</h2>
       <div className="mt-3 divide-y divide-neutral-100">
         {faqs.map((f, i) => {
           const open = openIndex === i;

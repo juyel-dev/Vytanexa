@@ -1,0 +1,49 @@
+{
+  "notFound": {
+    "state": "State not found | Vytanexa",
+    "district": "District not found | Vytanexa",
+    "districtSpecialty": "Not found | Vytanexa"
+  },
+  "state": {
+    "h1": "Healthcare in {state}",
+    "title": "Doctors, hospitals & emergency care in {state} | Vytanexa",
+    "description": "Find the best doctors and hospitals in {state}, by district. Verified profiles and direct contact — Vytanexa.",
+    "intro": "Find the best doctors and hospitals in every district of {state}. Pick a district and filter by specialty.",
+    "trustBandTitle": "How Vytanexa helps",
+    "trustPoint1": "Verified doctor profiles and reviews",
+    "trustPoint2": "Chamber schedules and direct contact",
+    "trustPoint3": "Hospitals, lab tests and emergency services in one place"
+  },
+  "district": {
+    "h1": "Doctors & healthcare in {district}",
+    "title": "Best doctors & hospitals in {district} | Vytanexa",
+    "description": "Find the best doctors, hospitals, diagnostics and emergency services in {district} district — Vytanexa, your health, your connection.",
+    "intro": "The best healthcare in {district} district, all in one place — find specialist doctors, hospitals and emergency services.",
+    "noCategoriesYet": "No specialties have been added yet.",
+    "seeFullListBlurb": "See the full doctor list to filter and sort by rating and fee."
+  },
+  "districtSpecialty": {
+    "h1": "{specialty} specialists in {district}",
+    "title": "{specialty} specialists in {district} | Vytanexa",
+    "description": "Find {doctor_count} experienced {specialty} specialists in {district} district. Verified profiles, reviews, and direct contact — Vytanexa.",
+    "intro": "Find {doctor_count} experienced {specialty} specialists in {district} district. Verified profiles, reviews, and direct contact.",
+    "doctorCountLine": "{count} {specialty} specialists in {district} district",
+    "noDoctorsYet": "No {specialty} specialist profiles are published in this area right now. The list below may show verified doctors from other areas — this will get more precise once district-level chamber filtering is active.",
+    "seeMoreDoctors": "See more {specialty} doctors →"
+  },
+  "faq": {
+    "heading": "Frequently asked questions",
+    "visitFeeQuestion": "What does a {specialty} doctor's visit cost in {district}?",
+    "visitFeeAnswer": "Visit fees vary by doctor — typically ₹200–₹1500. Each profile shows the fee clearly.",
+    "appointmentQuestion": "How do I book an appointment with a {specialty} doctor in {district}?",
+    "appointmentAnswer": "Tap \"Request appointment\" on the profile and send your name and phone number, or call/WhatsApp directly.",
+    "countQuestion": "How many {specialty} doctors are there in {district}?",
+    "countAnswer": "Vytanexa currently lists {count} {specialty} specialists in {district}."
+  },
+  "seeAllDoctors": "See all doctors →",
+  "nearbyDistricts": "Nearby areas",
+  "otherSpecialties": "Other specialties",
+  "browseByDistrict": "Browse by district",
+  "browseBySpecialty": "Browse by specialty",
+  "noDistrictsYet": "No districts have been added for this state yet. They'll appear here once added from the Admin Panel."
+}

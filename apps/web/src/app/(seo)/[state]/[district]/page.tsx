@@ -17,6 +17,7 @@ import {
 } from '@/lib/queries/seo';
 import { buildDistrictSeo, buildSeoUrls, buildBreadcrumbJsonLd } from '@/lib/seo-helpers';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
 export const revalidate = 21600;
 export const dynamicParams = true;
@@ -65,10 +66,13 @@ export async function generateMetadata({
   params: { state: string; district: string };
 }): Promise<Metadata> {
   const data = await loadDistrict(params.state, params.district);
-  if (!data) return { title: 'জেলা পাওয়া যায়নি | Vytanexa' };
+  if (!data) {
+    const t = await getT('seo.notFound');
+    return { title: t('district') };
+  }
 
   const districtName = seoDisplayName(data.district.name_translations);
-  const seo = buildDistrictSeo({
+  const seo = await buildDistrictSeo({
     state: seoDisplayName(data.state.name_translations),
     district: districtName,
     specialty: '',
@@ -104,16 +108,18 @@ export default async function DistrictHubPage({
   const { state, district, siblings, categories } = data;
   const stateName = seoDisplayName(state.name_translations);
   const districtName = seoDisplayName(district.name_translations);
-  const seo = buildDistrictSeo({
+  const seo = await buildDistrictSeo({
     state: stateName,
     district: districtName,
     specialty: '',
     doctor_count: 0,
   });
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vytanexa.app';
+  const tNav = await getT('nav');
+  const tSeo = await getT('seo');
 
   const breadcrumbLd = buildBreadcrumbJsonLd(appUrl, [
-    { name: 'হোম', url: '/' },
+    { name: tNav('home'), url: '/' },
     { name: stateName, url: `/${params.state}` },
     { name: districtName },
   ]);
@@ -127,7 +133,7 @@ export default async function DistrictHubPage({
 
       <SeoBreadcrumbs
         crumbs={[
-          { label: 'হোম', href: '/' },
+          { label: tNav('home'), href: '/' },
           { label: stateName, href: `/${params.state}` },
           { label: districtName },
         ]}
@@ -141,7 +147,7 @@ export default async function DistrictHubPage({
       {/* Specialty grid — main internal linking: each tile → district+specialty long-tail page */}
       {categories.length > 0 ? (
         <section className="mx-4 mt-6">
-          <h2 className="text-[14px] font-bold text-neutral-800">বিশেষজ্ঞ অনুযায়ী খুঁজুন</h2>
+          <h2 className="text-[14px] font-bold text-neutral-800">{tSeo('browseBySpecialty')}</h2>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {categories.map((c) => (
               <Link
@@ -157,20 +163,20 @@ export default async function DistrictHubPage({
           </div>
         </section>
       ) : (
-        <p className="mx-4 mt-6 text-[13px] text-neutral-500">এখনো কোনো বিশেষজ্ঞ বিভাগ যোগ করা হয়নি।</p>
+        <p className="mx-4 mt-6 text-[13px] text-neutral-500">{tSeo('district.noCategoriesYet')}</p>
       )}
 
       <NearbyDistricts stateSlug={params.state} districts={siblings} />
 
       <section className="mx-4 mt-8 rounded-xl bg-brand-50 p-4">
         <p className="text-[13px] leading-6 text-neutral-700">
-          আরও ফিল্টার, রেটিং ও ফি অনুযায়ী সাজাতে মূল ডাক্তার তালিকা দেখুন।
+          {tSeo('district.seeFullListBlurb')}
         </p>
         <Link
           href="/doctors"
           className="mt-3 inline-block rounded-full bg-brand-600 px-5 py-2.5 text-[14px] font-semibold text-white"
         >
-          সব ডাক্তার দেখুন →
+          {tSeo('seeAllDoctors')}
         </Link>
       </section>
 

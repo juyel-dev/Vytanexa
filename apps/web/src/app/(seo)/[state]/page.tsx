@@ -13,6 +13,7 @@ import {
   seoDisplayName,
 } from '@/lib/queries/seo';
 import { buildStateSeo, buildSeoUrls, buildBreadcrumbJsonLd } from '@/lib/seo-helpers';
+import { getT } from '@vytanexa/i18n/server';
 
 export const revalidate = 21600; // 6hr — VYTANEXA-BLUEPRINT.md § S21 "ISR revalidate 6hr"
 export const dynamicParams = true;
@@ -45,10 +46,13 @@ export async function generateMetadata({
   params: { state: string };
 }): Promise<Metadata> {
   const data = await loadState(params.state);
-  if (!data) return { title: 'রাজ্য পাওয়া যায়নি | Vytanexa' };
+  if (!data) {
+    const t = await getT('seo.notFound');
+    return { title: t('state') };
+  }
 
   const stateName = seoDisplayName(data.state.name_translations);
-  const seo = buildStateSeo({ state: stateName, district: '', specialty: '', doctor_count: 0 });
+  const seo = await buildStateSeo({ state: stateName, district: '', specialty: '', doctor_count: 0 });
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vytanexa.app';
   const { canonical, alternates } = buildSeoUrls(appUrl, { state: params.state });
 
@@ -74,11 +78,13 @@ export default async function StateHubPage({ params }: { params: { state: string
 
   const { state, districts, categories } = data;
   const stateName = seoDisplayName(state.name_translations);
-  const seo = buildStateSeo({ state: stateName, district: '', specialty: '', doctor_count: 0 });
+  const seo = await buildStateSeo({ state: stateName, district: '', specialty: '', doctor_count: 0 });
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://vytanexa.app';
+  const tNav = await getT('nav');
+  const tSeo = await getT('seo');
 
   const breadcrumbLd = buildBreadcrumbJsonLd(appUrl, [
-    { name: 'হোম', url: '/' },
+    { name: tNav('home'), url: '/' },
     { name: stateName },
   ]);
 
@@ -91,7 +97,7 @@ export default async function StateHubPage({ params }: { params: { state: string
 
       <SeoBreadcrumbs
         crumbs={[
-          { label: 'হোম', href: '/' },
+          { label: tNav('home'), href: '/' },
           { label: stateName },
         ]}
       />
@@ -107,17 +113,17 @@ export default async function StateHubPage({ params }: { params: { state: string
 
       {/* Trust band — content-rich shell, not a thin doorway page */}
       <section className="mx-4 mt-8 rounded-xl bg-brand-50 p-4">
-        <h2 className="text-[14px] font-bold text-brand-800">Vytanexa কীভাবে সাহায্য করে</h2>
+        <h2 className="text-[14px] font-bold text-brand-800">{tSeo('state.trustBandTitle')}</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] leading-6 text-neutral-700">
-          <li>ভেরিফাইড ডাক্তার প্রোফাইল ও রিভিউ</li>
-          <li>চেম্বার সময়সূচি ও সরাসরি যোগাযোগ</li>
-          <li>হাসপাতাল, ল্যাব টেস্ট ও জরুরি সেবা এক জায়গায়</li>
+          <li>{tSeo('state.trustPoint1')}</li>
+          <li>{tSeo('state.trustPoint2')}</li>
+          <li>{tSeo('state.trustPoint3')}</li>
         </ul>
         <Link
           href="/doctors"
           className="mt-4 inline-block rounded-full bg-brand-600 px-5 py-2.5 text-[14px] font-semibold text-white"
         >
-          সব ডাক্তার দেখুন →
+          {tSeo('seeAllDoctors')}
         </Link>
       </section>
 
