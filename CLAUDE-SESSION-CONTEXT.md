@@ -140,12 +140,12 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `21c5d13`** (last commit in this session). Progress:
-85/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `1530477`** (last commit in this session). Progress:
+84/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text
-(e.g. `components/qa/*` this session) — see "Blocked" below, that's
-expected and correct, not a miss.
+(e.g. `components/qa/*`, `components/account/*` this session) — see
+"Blocked" below, that's expected and correct, not a miss.
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
@@ -159,10 +159,11 @@ expected and correct, not a miss.
   `components/doctor-profile/*` (+ `hospital-profile/InfoTab.tsx`,
   migrated alongside it), `components/onboarding/*`,
   `components/blood-services/*` (new `blood` namespace),
-  `components/qa/*` (new `qa` namespace). Commits `f5187d8` through
-  `21c5d13` — see `git log --oneline 046c9f7~1..HEAD` for the full list;
-  each message documents what was migrated *and* what bug or design
-  issue was found along the way, several are worth reading in full
+  `components/qa/*` (new `qa` namespace),
+  `components/account/*` (new `account` namespace). Commits `f5187d8`
+  through `1530477` — see `git log --oneline 046c9f7~1..HEAD` for the
+  full list; each message documents what was migrated *and* what bug or
+  design issue was found along the way, several are worth reading in full
   (`git show <hash>`) before resuming, not just skimming the one-liners.
 
 ### Active
@@ -207,18 +208,28 @@ mirroring what `apps/web`'s facade already does — but that's a distinct
 piece of work from "migrate hardcoded Bengali .tsx strings" and
 shouldn't be folded into a Phase 3 batch without discussing scope first.
 
+**New this session**: first use of next-intl's `t.rich()` in this
+codebase (`AccountHomeClient.tsx`'s delete-confirmation body, to keep
+`<strong>` around an interpolated word) — worked cleanly, `tsc` fine,
+no new patterns needed. Also worth noting for whoever picks up
+`app/(main)/account/*` next: those are route *page* files, separate
+from the `components/account/*` migrated this session, and the
+inventory still shows `app/(main)/account` at 491 chars — don't assume
+"account" is done just because `components/account/*` is.
+
 ### Next Move
 Continue Phase 3. Re-run the inventory command in
 `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking the
 next directory — as of this session's end, in descending priority order:
-`account/` (535 chars), `home/` (504, the remaining, non-homepage-section
-parts), `app/(seo)/[state]/` (499) and sibling SEO route files,
-`emergency/` (398), `more/` (343), `app/(main)/community/` (338),
-`app/(main)/search/` (326), `settings/`, `symptoms/`, `lab-tests/`,
-`hospital-profile/` (remaining files beyond `InfoTab.tsx`), `polls/`,
-`articles/`, `custom-page/*`. Same 7-step per-file checklist, same
-batch-verify-commit-push rhythm — it's worked cleanly for 9 batches
-running, no reason to change it.
+`home/` (504 chars, the remaining, non-homepage-section parts),
+`app/(seo)/[state]/` (499) and sibling SEO route files,
+`app/(main)/account/` (491, route pages -- distinct from
+`components/account/*`), `emergency/` (398), `more/` (343),
+`app/(main)/community/` (338), `app/(main)/search/` (326), `settings/`
+(291), `symptoms/`, `lab-tests/`, `hospital-profile/` (remaining files
+beyond `InfoTab.tsx`), `polls/`, `articles/`, `custom-page/*`. Same
+7-step per-file checklist, same batch-verify-commit-push rhythm — it's
+worked cleanly for 10 batches running, no reason to change it.
 
 ## Relevant Files
 
