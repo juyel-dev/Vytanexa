@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Category / Specialty Grid — VYTANEXA-BLUEPRINT.md § S04 SEC-05
@@ -14,6 +15,8 @@ import { getLocalizedField } from '@/lib/i18n';
  */
 export async function CategoryGrid() {
   const supabase = createClient();
+  const t = await getT('home.categoryGrid');
+  const tCommon = await getT('common');
 
   const { data: categories, error } = await supabase
     .from('categories')
@@ -59,10 +62,10 @@ export async function CategoryGrid() {
     <section className="px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-bengali-display text-[17px] font-bold text-brand-600">
-          বিভাগ অনুযায়ী ডাক্তার খুঁজুন
+          {t('heading')}
         </h2>
         <Link href="/doctors" className="text-[13px] text-brand-600">
-          সব দেখুন →
+          {tCommon('seeAll')} →
         </Link>
       </div>
 
@@ -86,7 +89,7 @@ export async function CategoryGrid() {
                 {getLocalizedField(cat.name_translations)}
               </span>
               {doctorCount > 0 && (
-                <span className="text-[11px] text-neutral-500">{doctorCount} জন</span>
+                <span className="text-[11px] text-neutral-500">{t('doctorCount', { count: doctorCount })}</span>
               )}
             </Link>
           );

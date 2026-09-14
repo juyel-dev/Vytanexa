@@ -1,19 +1,21 @@
 import Link from 'next/link';
 import { Stethoscope, Building2, FlaskConical, Siren } from 'lucide-react';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Quick Actions Row — VYTANEXA-BLUEPRINT.md § S04 SEC-04
  * 4 static shortcuts, equal width. No DB dependency — these targets
  * are fixed routes, not data-driven.
  */
-const ACTIONS = [
-  { href: '/doctors', label: 'ডাক্তার\nখুঁজুন', icon: Stethoscope, bg: 'bg-brand-50', fg: 'text-brand-600' },
-  { href: '/hospitals', label: 'হাসপাতাল\nখুঁজুন', icon: Building2, bg: 'bg-life-50', fg: 'text-life-600' },
-  { href: '/health/lab-tests', label: 'ল্যাব\nটেস্ট', icon: FlaskConical, bg: 'bg-accent-50', fg: 'text-accent-500' },
-  { href: '/emergency', label: 'জরুরি\nযোগাযোগ', icon: Siren, bg: 'bg-emergency-50', fg: 'text-emergency-600' },
-];
+export async function QuickActionsRow() {
+  const t = await getT('home.quickActionsSection');
+  const ACTIONS = [
+    { href: '/doctors', label: t('findDoctors'), icon: Stethoscope, bg: 'bg-brand-50', fg: 'text-brand-600' },
+    { href: '/hospitals', label: t('findHospitals'), icon: Building2, bg: 'bg-life-50', fg: 'text-life-600' },
+    { href: '/health/lab-tests', label: t('labTests'), icon: FlaskConical, bg: 'bg-accent-50', fg: 'text-accent-500' },
+    { href: '/emergency', label: t('emergencyContact'), icon: Siren, bg: 'bg-emergency-50', fg: 'text-emergency-600' },
+  ];
 
-export function QuickActionsRow() {
   return (
     <section className="grid grid-cols-4 gap-3 px-4 py-3">
       {ACTIONS.map(({ href, label, icon: Icon, bg, fg }) => (

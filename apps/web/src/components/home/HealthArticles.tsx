@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Health Articles — VYTANEXA-BLUEPRINT.md § S04 SEC-10
@@ -10,6 +11,9 @@ import { getLocalizedField } from '@/lib/i18n';
  */
 export async function HealthArticles() {
   const supabase = createClient();
+  const t = await getT('home.healthArticlesSection');
+  const tCommon = await getT('common');
+  const tArticles = await getT('articles');
 
   const { data: articles, error } = await supabase
     .from('articles')
@@ -33,10 +37,10 @@ export async function HealthArticles() {
     <section className="py-3">
       <div className="mb-3 flex items-center justify-between px-4">
         <h2 className="font-bengali-display text-[17px] font-bold text-neutral-900">
-          স্বাস্থ্য টিপস ও তথ্য
+          {t('heading')}
         </h2>
         <Link href="/community/articles" className="text-[13px] text-brand-600">
-          সব দেখুন →
+          {tCommon('seeAll')} →
         </Link>
       </div>
 
@@ -89,7 +93,7 @@ export async function HealthArticles() {
                 </h4>
                 {a.read_time_minutes && (
                   <p className="mt-1 text-[11px] text-neutral-400">
-                    {a.read_time_minutes} মিনিট পড়া
+                    {tArticles('readTime', { minutes: a.read_time_minutes })}
                   </p>
                 )}
               </div>

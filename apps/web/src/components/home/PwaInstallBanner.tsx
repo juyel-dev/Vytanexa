@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 
 /**
  * PWA Install Banner — VYTANEXA-BLUEPRINT.md § S04 SEC-13
@@ -12,6 +13,8 @@ import { useEffect, useState } from 'react';
  * behavior rather than faking an install flow prematurely.
  */
 export function PwaInstallBanner() {
+  const t = useT('home.pwaInstall');
+  const tc = useT('common');
   const [visible, setVisible] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
 
@@ -59,27 +62,27 @@ export function PwaInstallBanner() {
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white">
             V
           </div>
-          <p className="text-[14px] font-semibold text-neutral-900">Vytanexa ইনস্টল করুন</p>
+          <p className="text-[14px] font-semibold text-neutral-900">{t('title')}</p>
         </div>
-        <button onClick={handleDismiss} aria-label="বন্ধ করুন" className="text-neutral-400">
+        <button onClick={handleDismiss} aria-label={tc('close')} className="text-neutral-400">
           ✕
         </button>
       </div>
       <p className="mt-1 text-[13px] text-neutral-500">
-        হোম স্ক্রিনে যুক্ত করুন — অ্যাপের মতো অভিজ্ঞতা নিন
+        {t('subtitle')}
       </p>
       <div className="mt-3 flex gap-2">
         <button
           onClick={handleInstall}
           className="flex-1 rounded-md bg-brand-600 py-2 text-[13px] font-semibold text-white"
         >
-          এখনই ইনস্টল করুন
+          {t('installNow')}
         </button>
         <button
           onClick={handleDismiss}
           className="flex-1 rounded-md border border-neutral-200 py-2 text-[13px] font-semibold text-neutral-700"
         >
-          পরে করব
+          {t('later')}
         </button>
       </div>
     </section>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AlertTriangle, Info, X } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 
 export type BannerItem = {
   id: string;
@@ -28,6 +29,7 @@ function getDismissed(): Set<string> {
  * wrapper: data still comes from the server component.
  */
 export function AnnouncementBannerClient({ banners }: { banners: BannerItem[] }) {
+  const tc = useT('common');
   const [dismissed, setDismissed] = useState<Set<string>>(() => getDismissed());
 
   const visible = banners.filter((b) => !dismissed.has(b.id));
@@ -71,7 +73,7 @@ export function AnnouncementBannerClient({ banners }: { banners: BannerItem[] })
                 e.stopPropagation();
                 dismiss(banner.id);
               }}
-              aria-label="বন্ধ করুন"
+              aria-label={tc('close')}
               className="shrink-0 rounded p-1 text-neutral-400 hover:text-neutral-700"
             >
               <X className="h-4 w-4" />

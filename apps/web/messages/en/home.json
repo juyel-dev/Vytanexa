@@ -1,7 +1,54 @@
 {
-  "quickActions": "Quick services",
-  "popularDoctors": "Popular doctors",
-  "trendingHospitals": "Trending hospitals",
-  "symptomQuickAccess": "Find doctor by symptom",
-  "articles": "Health magazine"
+  "sectionLabels": {
+    "quickActions": "Quick services",
+    "popularDoctors": "Popular doctors",
+    "trendingHospitals": "Trending hospitals",
+    "symptomQuickAccess": "Find doctor by symptom",
+    "articles": "Health magazine"
+  },
+  "pwaInstall": {
+    "title": "Install Vytanexa",
+    "subtitle": "Add to home screen — get an app-like experience",
+    "installNow": "Install now",
+    "later": "Maybe later"
+  },
+  "trendingHospitalsSection": {
+    "heading": "Hospitals & diagnostics near you",
+    "emergencyBadge": "Emergency"
+  },
+  "bloodCta": {
+    "heading": "Need blood?",
+    "subtitle": "Find blood banks near you",
+    "cta": "See blood services →"
+  },
+  "communityQa": {
+    "heading": "🙋 Community Q&A",
+    "askYourQuestion": "+ Ask your question"
+  },
+  "popularDoctorsSection": {
+    "heading": "Popular specialist doctors",
+    "subtitle": "Top-rated doctors"
+  },
+  "quickActionsSection": {
+    "findDoctors": "Find\ndoctors",
+    "findHospitals": "Find\nhospitals",
+    "labTests": "Lab\ntests",
+    "emergencyContact": "Emergency\ncontacts"
+  },
+  "categoryGrid": {
+    "heading": "Find doctors by specialty",
+    "doctorCount": "{count} doctors"
+  },
+  "healthArticlesSection": {
+    "heading": "Health tips & info"
+  },
+  "symptomQuickAccessSection": {
+    "heading": "Find a doctor by symptom"
+  },
+  "quickStats": {
+    "districts": "Districts"
+  },
+  "nativeAd": {
+    "label": "Advertisement"
+  }
 }

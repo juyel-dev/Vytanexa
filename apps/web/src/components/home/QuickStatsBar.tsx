@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Quick Stats Bar — VYTANEXA-BLUEPRINT.md § S04 SEC-03
@@ -14,6 +15,8 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function QuickStatsBar() {
   const supabase = createClient();
+  const t = await getT('home.quickStats');
+  const tNav = await getT('nav');
 
   const [{ count: doctorCount }, { count: hospitalCount }, { count: districtCount }] =
     await Promise.all([
@@ -33,9 +36,9 @@ export async function QuickStatsBar() {
     ]);
 
   const stats = [
-    { icon: '👨‍⚕️', label: 'ডাক্তার', value: doctorCount ?? 0 },
-    { icon: '🏥', label: 'হাসপাতাল', value: hospitalCount ?? 0 },
-    { icon: '📍', label: 'জেলা', value: districtCount ?? 0 },
+    { icon: '👨‍⚕️', label: tNav('doctors'), value: doctorCount ?? 0 },
+    { icon: '🏥', label: tNav('hospitals'), value: hospitalCount ?? 0 },
+    { icon: '📍', label: t('districts'), value: districtCount ?? 0 },
   ];
 
   // All-zero is a legitimate, common early-launch state (empty DB) —

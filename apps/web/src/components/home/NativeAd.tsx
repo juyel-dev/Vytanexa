@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Native Ad — VYTANEXA-BLUEPRINT.md § S04 SEC-07
@@ -9,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function NativeAd() {
   const supabase = createClient();
+  const t = await getT('home.nativeAd');
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: ads, error } = await supabase
@@ -29,7 +31,7 @@ export async function NativeAd() {
 
   return (
     <section className="px-4 py-2">
-      <p className="mb-1 text-right text-[11px] text-neutral-400">বিজ্ঞাপন</p>
+      <p className="mb-1 text-right text-[11px] text-neutral-400">{t('label')}</p>
       <a
         href={ad.target_url}
         target="_blank"

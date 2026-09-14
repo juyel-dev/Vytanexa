@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Community Q&A Teaser — VYTANEXA-BLUEPRINT.md § S04 SEC-11
@@ -13,6 +14,9 @@ import { isFeatureEnabled } from '@/lib/feature-flags';
  */
 export async function CommunityQATeaser() {
   const supabase = createClient();
+  const t = await getT('home.communityQa');
+  const tCommon = await getT('common');
+  const tQa = await getT('qa');
 
   if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
     return null;
@@ -34,10 +38,10 @@ export async function CommunityQATeaser() {
     <section className="px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-bengali-display text-[17px] font-bold text-neutral-900">
-          🙋 সম্প্রদায়ের প্রশ্নোত্তর
+          {t('heading')}
         </h2>
         <Link href="/community/qa" className="text-[13px] text-brand-600">
-          সব দেখুন →
+          {tCommon('seeAll')} →
         </Link>
       </div>
 
@@ -50,7 +54,7 @@ export async function CommunityQATeaser() {
             {question.title}
           </p>
           <p className="mt-1 text-[12px] text-neutral-500">
-            ⬆ {question.upvote_count} জন একমত · 💬 {question.answer_count} উত্তর
+            ⬆ {tQa('agreeCount', { count: question.upvote_count })} · 💬 {tQa('answersCount', { count: question.answer_count })}
           </p>
         </Link>
       )}
@@ -59,7 +63,7 @@ export async function CommunityQATeaser() {
         href="/community/qa"
         className="block rounded-md border border-life-600 py-2.5 text-center text-[13px] font-semibold text-life-600"
       >
-        + আপনার প্রশ্ন করুন
+        {t('askYourQuestion')}
       </Link>
     </section>
   );

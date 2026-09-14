@@ -1,7 +1,54 @@
 {
-  "quickActions": "त्वरित सेवाएँ",
-  "popularDoctors": "लोकप्रिय डॉक्टर",
-  "trendingHospitals": "लोकप्रिय अस्पताल",
-  "symptomQuickAccess": "लक्षण देखकर डॉक्टर खोजें",
-  "articles": "स्वास्थ्य पत्रिका"
+  "sectionLabels": {
+    "quickActions": "त्वरित सेवाएँ",
+    "popularDoctors": "लोकप्रिय डॉक्टर",
+    "trendingHospitals": "लोकप्रिय अस्पताल",
+    "symptomQuickAccess": "लक्षण देखकर डॉक्टर खोजें",
+    "articles": "स्वास्थ्य पत्रिका"
+  },
+  "pwaInstall": {
+    "title": "Vytanexa इंस्टॉल करें",
+    "subtitle": "होम स्क्रीन पर जोड़ें — ऐप जैसा अनुभव पाएं",
+    "installNow": "अभी इंस्टॉल करें",
+    "later": "बाद में"
+  },
+  "trendingHospitalsSection": {
+    "heading": "आपके पास के अस्पताल और डायग्नोस्टिक",
+    "emergencyBadge": "आपातकालीन"
+  },
+  "bloodCta": {
+    "heading": "रक्त की आवश्यकता है?",
+    "subtitle": "अपने पास का ब्लड बैंक खोजें",
+    "cta": "ब्लड सेवाएं देखें →"
+  },
+  "communityQa": {
+    "heading": "🙋 सामुदायिक प्रश्नोत्तर",
+    "askYourQuestion": "+ अपना प्रश्न पूछें"
+  },
+  "popularDoctorsSection": {
+    "heading": "लोकप्रिय विशेषज्ञ डॉक्टर",
+    "subtitle": "सर्वोच्च रेटिंग वाले डॉक्टर"
+  },
+  "quickActionsSection": {
+    "findDoctors": "डॉक्टर\nखोजें",
+    "findHospitals": "अस्पताल\nखोजें",
+    "labTests": "लैब\nटेस्ट",
+    "emergencyContact": "आपातकालीन\nसंपर्क"
+  },
+  "categoryGrid": {
+    "heading": "विशेषज्ञता अनुसार डॉक्टर खोजें",
+    "doctorCount": "{count} डॉक्टर"
+  },
+  "healthArticlesSection": {
+    "heading": "स्वास्थ्य टिप्स और जानकारी"
+  },
+  "symptomQuickAccessSection": {
+    "heading": "लक्षण देखकर डॉक्टर खोजें"
+  },
+  "quickStats": {
+    "districts": "जिले"
+  },
+  "nativeAd": {
+    "label": "विज्ञापन"
+  }
 }

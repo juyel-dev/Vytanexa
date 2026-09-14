@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Symptom Quick Access — VYTANEXA-BLUEPRINT.md § S04 SEC-09
@@ -11,6 +12,8 @@ import { getLocalizedField } from '@/lib/i18n';
  */
 export async function SymptomQuickAccess() {
   const supabase = createClient();
+  const t = await getT('home.symptomQuickAccessSection');
+  const tCommon = await getT('common');
 
   const { data: symptoms, error } = await supabase
     .from('symptoms')
@@ -33,10 +36,10 @@ export async function SymptomQuickAccess() {
     <section className="py-3">
       <div className="mb-3 flex items-center justify-between px-4">
         <h2 className="font-bengali-display text-[17px] font-bold text-neutral-900">
-          উপসর্গ দেখে ডাক্তার খুঁজুন
+          {t('heading')}
         </h2>
         <Link href="/symptoms" className="text-[13px] text-brand-600">
-          সব দেখুন →
+          {tCommon('seeAll')} →
         </Link>
       </div>
 

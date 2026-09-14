@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { DoctorCard } from '@/components/shared/DoctorCard';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Popular Doctors — VYTANEXA-BLUEPRINT.md § S04 SEC-06
@@ -10,6 +11,8 @@ import { DoctorCard } from '@/components/shared/DoctorCard';
  */
 export async function PopularDoctors() {
   const supabase = createClient();
+  const t = await getT('home.popularDoctorsSection');
+  const tCommon = await getT('common');
 
   const { data: doctors, error } = await supabase
     .from('doctors')
@@ -37,12 +40,12 @@ export async function PopularDoctors() {
       <div className="mb-3 flex items-center justify-between px-4">
         <div>
           <h2 className="font-bengali-display text-[17px] font-bold text-neutral-900">
-            জনপ্রিয় বিশেষজ্ঞ ডাক্তার
+            {t('heading')}
           </h2>
-          <p className="text-[12px] text-neutral-500">সেরা রেটিং প্রাপ্ত ডাক্তার</p>
+          <p className="text-[12px] text-neutral-500">{t('subtitle')}</p>
         </div>
         <Link href="/doctors" className="text-[13px] text-brand-600">
-          সব দেখুন →
+          {tCommon('seeAll')} →
         </Link>
       </div>
 

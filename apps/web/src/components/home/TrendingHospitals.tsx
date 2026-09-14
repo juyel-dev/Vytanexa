@@ -2,19 +2,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import { getLocalizedField } from '@/lib/i18n';
-
-const TYPE_LABELS: Record<string, string> = {
-  hospital: 'হাসপাতাল',
-  clinic: 'ক্লিনিক',
-  diagnostic: 'ডায়াগনস্টিক',
-  nursing_home: 'নার্সিং হোম',
-};
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Trending Hospitals — VYTANEXA-BLUEPRINT.md § S04 SEC-08
  */
 export async function TrendingHospitals() {
   const supabase = createClient();
+  const t = await getT('home.trendingHospitalsSection');
+  const tCommon = await getT('common');
+  const tHospital = await getT('hospital');
 
   const { data: hospitals, error } = await supabase
     .from('hospitals')
@@ -38,10 +35,10 @@ export async function TrendingHospitals() {
     <section className="py-3">
       <div className="mb-3 flex items-center justify-between px-4">
         <h2 className="font-bengali-display text-[17px] font-bold text-neutral-900">
-          কাছের হাসপাতাল ও ডায়াগনস্টিক
+          {t('heading')}
         </h2>
         <Link href="/hospitals" className="text-[13px] text-brand-600">
-          সব দেখুন →
+          {tCommon('seeAll')} →
         </Link>
       </div>
 
@@ -70,11 +67,13 @@ export async function TrendingHospitals() {
                   {name}
                 </h3>
                 <span className="mt-1 inline-block rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-600">
-                  {TYPE_LABELS[h.type] ?? h.type}
+                  {tHospital.has(`type.${h.type}` as Parameters<typeof tHospital>[0])
+                    ? tHospital(`type.${h.type}` as Parameters<typeof tHospital>[0])
+                    : h.type}
                 </span>
                 {h.has_emergency_dept && (
                   <span className="ml-1 inline-block rounded-full bg-emergency-50 px-2 py-0.5 text-[10px] text-emergency-600">
-                    🚨 জরুরি
+                    🚨 {t('emergencyBadge')}
                   </span>
                 )}
               </div>

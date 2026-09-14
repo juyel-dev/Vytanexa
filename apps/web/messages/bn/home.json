@@ -1,7 +1,54 @@
 {
-  "quickActions": "দ্রুত সেবা",
-  "popularDoctors": "জনপ্রিয় ডাক্তার",
-  "trendingHospitals": "জনপ্রিয় হাসপাতাল",
-  "symptomQuickAccess": "উপসর্গ দেখে ডাক্তার খুঁজুন",
-  "articles": "স্বাস্থ্য ম্যাগাজিন"
+  "sectionLabels": {
+    "quickActions": "দ্রুত সেবা",
+    "popularDoctors": "জনপ্রিয় ডাক্তার",
+    "trendingHospitals": "জনপ্রিয় হাসপাতাল",
+    "symptomQuickAccess": "উপসর্গ দেখে ডাক্তার খুঁজুন",
+    "articles": "স্বাস্থ্য ম্যাগাজিন"
+  },
+  "pwaInstall": {
+    "title": "Vytanexa ইনস্টল করুন",
+    "subtitle": "হোম স্ক্রিনে যুক্ত করুন — অ্যাপের মতো অভিজ্ঞতা নিন",
+    "installNow": "এখনই ইনস্টল করুন",
+    "later": "পরে করব"
+  },
+  "trendingHospitalsSection": {
+    "heading": "কাছের হাসপাতাল ও ডায়াগনস্টিক",
+    "emergencyBadge": "জরুরি"
+  },
+  "bloodCta": {
+    "heading": "রক্তের প্রয়োজন?",
+    "subtitle": "আপনার কাছের ব্লাড ব্যাংক খুঁজুন",
+    "cta": "ব্লাড সার্ভিস দেখুন →"
+  },
+  "communityQa": {
+    "heading": "🙋 সম্প্রদায়ের প্রশ্নোত্তর",
+    "askYourQuestion": "+ আপনার প্রশ্ন করুন"
+  },
+  "popularDoctorsSection": {
+    "heading": "জনপ্রিয় বিশেষজ্ঞ ডাক্তার",
+    "subtitle": "সেরা রেটিং প্রাপ্ত ডাক্তার"
+  },
+  "quickActionsSection": {
+    "findDoctors": "ডাক্তার\nখুঁজুন",
+    "findHospitals": "হাসপাতাল\nখুঁজুন",
+    "labTests": "ল্যাব\nটেস্ট",
+    "emergencyContact": "জরুরি\nযোগাযোগ"
+  },
+  "categoryGrid": {
+    "heading": "বিভাগ অনুযায়ী ডাক্তার খুঁজুন",
+    "doctorCount": "{count} জন"
+  },
+  "healthArticlesSection": {
+    "heading": "স্বাস্থ্য টিপস ও তথ্য"
+  },
+  "symptomQuickAccessSection": {
+    "heading": "উপসর্গ দেখে ডাক্তার খুঁজুন"
+  },
+  "quickStats": {
+    "districts": "জেলা"
+  },
+  "nativeAd": {
+    "label": "বিজ্ঞাপন"
+  }
 }

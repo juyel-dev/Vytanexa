@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getT } from '@vytanexa/i18n/server';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
@@ -8,14 +9,15 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
  * toggle for this section lives in homepage_settings, not a data
  * dependency of the component itself).
  */
-export function BloodServicesCTA() {
+export async function BloodServicesCTA() {
+  const t = await getT('home.bloodCta');
   return (
     <section className="mx-4 my-3 rounded-xl border border-emergency-100 border-l-4 border-l-emergency-600 bg-emergency-50 p-4">
       <span className="text-2xl">🩸</span>
       <h2 className="font-bengali-display mt-1 text-[17px] font-bold text-emergency-700">
-        রক্তের প্রয়োজন?
+        {t('heading')}
       </h2>
-      <p className="text-[13px] text-neutral-600">আপনার কাছের ব্লাড ব্যাংক খুঁজুন</p>
+      <p className="text-[13px] text-neutral-600">{t('subtitle')}</p>
 
       <div className="my-3 flex flex-wrap gap-1.5">
         {/* BLOOD-SERVICE-PLAN.md Phase C.5 — these were plain <span>s,
@@ -36,7 +38,7 @@ export function BloodServicesCTA() {
         href="/health/blood-services"
         className="block rounded-md bg-emergency-600 py-3 text-center text-[15px] font-semibold text-white"
       >
-        ব্লাড সার্ভিস দেখুন →
+        {t('cta')}
       </Link>
     </section>
   );
