@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Phone, MessageCircle, Copy, Check, Lock } from 'lucide-react';
-import { useLocalizedField } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
+import { useLocalizedField, useFormatter } from '@/lib/i18n-client';
 import { DonorRegistrationSheet } from './DonorRegistrationSheet';
 import { LocationChip } from '@/components/layout/LocationChip';
 import { useLocationStore } from '@/stores/location-store';
@@ -17,10 +18,10 @@ const STOCK_ICON: Record<string, string> = {
   low: '⚠️',
   unavailable: '❌',
 };
-const STOCK_LEGEND: [string, string][] = [
-  ['✅', 'উপলব্ধ'],
-  ['⚠️', 'কম আছে'],
-  ['❌', 'নেই'],
+const STOCK_LEGEND_KEYS: [string, 'available' | 'low' | 'unavailable'][] = [
+  ['✅', 'available'],
+  ['⚠️', 'low'],
+  ['❌', 'unavailable'],
 ];
 // BLOOD-SERVICE-PLAN.md Phase A.3 — presence of a stock row is NOT the
 // same as it actually being available; a bank with only an
@@ -63,7 +64,11 @@ export function BloodServicesClient({
   initialGroup?: string | null;
   isLoggedIn: boolean;
 }) {
+  const t = useT('blood');
+  const tc = useT('common');
+  const tShared = useT('shared');
   const localize = useLocalizedField();
+  const format = useFormatter();
   const router = useRouter();
   const { districtId } = useLocationStore();
   const [bloodBanks, setBloodBanks] = useState(initialBloodBanks);
@@ -156,7 +161,7 @@ export function BloodServicesClient({
     setRevealing(null);
     if (!res || !res.ok) {
       const json = res ? await res.json().catch(() => null) : null;
-      setContactError(json?.error ?? 'যোগাযোগের তথ্য পাওয়া যায়নি');
+      setContactError(json?.error ?? t('contactError'));
       return;
     }
     const json = await res.json().catch(() => null);
@@ -182,7 +187,7 @@ export function BloodServicesClient({
       <LocationChip />
       <div className="px-4 py-4">
         <h2 className="mb-2.5 text-[14px] font-semibold text-neutral-700">
-          আপনার রক্তের গ্রুপ বেছে নিন
+          {t('selectGroup')}
         </h2>
         <div className="flex flex-wrap gap-2">
           {BLOOD_GROUPS.map((bg) => (
@@ -206,7 +211,7 @@ export function BloodServicesClient({
                 : 'border-neutral-200 text-neutral-700'
             }`}
           >
-            সবগুলো
+            {t('allGroups')}
           </button>
         </div>
       </div>
@@ -216,22 +221,22 @@ export function BloodServicesClient({
           onClick={handleRegisterClick}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-life-600 text-[14px] font-semibold text-white"
         >
-          🩸 + রক্তদাতা হিসেবে নাম লেখান
+          🩸 {t('registerAsDonor')}
         </button>
       </div>
 
       <section className="px-4 py-4">
         <h2 className="mb-3 text-[15px] font-bold text-neutral-800">
-          ব্লাড ব্যাংক ({visibleBanks.length}টি)
+          {t('bloodBanksHeading', { count: visibleBanks.length })}
         </h2>
         {visibleBanks.length === 0 ? (
-          <p className="text-[13px] text-neutral-400">এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই।</p>
+          <p className="text-[13px] text-neutral-400">{t('noBloodBanks')}</p>
         ) : (
           <>
             <div className="mb-3 flex gap-3 text-[12px] text-neutral-500">
-              {STOCK_LEGEND.map(([icon, label]) => (
-                <span key={label}>
-                  {icon} {label}
+              {STOCK_LEGEND_KEYS.map(([icon, key]) => (
+                <span key={key}>
+                  {icon} {t(`stock.${key}`)}
                 </span>
               ))}
             </div>
@@ -247,13 +252,13 @@ export function BloodServicesClient({
                   </h3>
                   <p className="mt-0.5 text-[13px] text-neutral-500">
                     📍 {bank.address_line}
-                    {hours?.is_24x7 && '  ·  🕐 ২৪ ঘণ্টা খোলা'}
+                    {hours?.is_24x7 && `  ·  🕐 ${t('open24x7')}`}
                   </p>
 
                   {bank.stock.length > 0 && (
                     <div className="mt-2">
                       <p className="mb-1 text-[12px] text-neutral-500">
-                        স্টক (যদি রিপোর্ট করা থাকে):
+                        {t('stock.label')}
                       </p>
                       <div className="flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
                         {bank.stock.map((s) => (
@@ -271,7 +276,7 @@ export function BloodServicesClient({
                       href={`tel:${bank.phone}`}
                       className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-emergency-600 text-[13px] font-semibold text-white"
                     >
-                      <Phone className="h-4 w-4" /> এখনই কল করুন
+                      <Phone className="h-4 w-4" /> {t('callNow')}
                     </a>
                     {bank.whatsapp_number && (
                       <a
@@ -293,25 +298,25 @@ export function BloodServicesClient({
       </section>
 
       <section className="border-t border-neutral-100 px-4 py-4">
-        <h2 className="mb-3 text-[15px] font-bold text-neutral-800">রক্তদাতা তালিকা</h2>
+        <h2 className="mb-3 text-[15px] font-bold text-neutral-800">{t('donorListHeading')}</h2>
         {!isLoggedIn ? (
           <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-neutral-200 py-6 text-center">
             <Lock className="h-5 w-5 text-neutral-400" />
             <p className="text-[13px] text-neutral-500">
-              দাতাদের নিরাপত্তার জন্য তালিকা ও যোগাযোগের তথ্য শুধু সাইন-ইন করা ব্যবহারকারীরা দেখতে পারেন।
+              {t('donorsPrivacyNotice')}
             </p>
             <button
               onClick={goToSignIn}
               className="mt-1 h-10 rounded-md bg-brand-600 px-5 text-[13px] font-semibold text-white"
             >
-              সাইন ইন করুন
+              {tc('signIn')}
             </button>
           </div>
         ) : filteredDonors.length === 0 ? (
           <p className="text-[13px] text-neutral-400">
             {selectedGroup
-              ? `${selectedGroup} গ্রুপের কোনো নিবন্ধিত রক্তদাতা এখনো নেই।`
-              : 'এখনো কোনো নিবন্ধিত রক্তদাতা নেই। প্রথম হোন!'}
+              ? t('noDonorsForGroup', { group: selectedGroup })
+              : t('noDonorsYet')}
           </p>
         ) : (
           filteredDonors.map((donor) => {
@@ -327,7 +332,7 @@ export function BloodServicesClient({
                   {donor.blood_group}
                   {districtNameById.get(donor.location_id) && ` · ${districtNameById.get(donor.location_id)}`}
                   {donor.last_donated_at &&
-                    ` · শেষ দান ${new Date(donor.last_donated_at).toLocaleDateString('bn-BD')}`}
+                    ` · ${t('lastDonated', { date: format.dateTime(new Date(donor.last_donated_at), { day: 'numeric', month: 'short', year: 'numeric' }) })}`}
                 </p>
               </div>
               {revealedPhone ? (
@@ -337,7 +342,7 @@ export function BloodServicesClient({
                 >
                   {copiedId === donor.id ? (
                     <>
-                      <Check className="h-3.5 w-3.5" /> কপি হয়েছে
+                      <Check className="h-3.5 w-3.5" /> {tShared('shareSheet.copied')}
                     </>
                   ) : (
                     <>
@@ -351,7 +356,7 @@ export function BloodServicesClient({
                   disabled={revealing === donor.id}
                   className="flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-brand-600 px-3 text-[12px] font-semibold text-white disabled:opacity-60"
                 >
-                  <Phone className="h-3.5 w-3.5" /> {revealing === donor.id ? '...' : 'যোগাযোগ করুন'}
+                  <Phone className="h-3.5 w-3.5" /> {revealing === donor.id ? '...' : t('contactButton')}
                 </button>
               )}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { normalizeIndianPhone } from '@/lib/validations/blood-donors';
@@ -36,6 +37,8 @@ export function DonorRegistrationSheet({
   onSuccess?: () => void;
   districts: District[];
 }) {
+  const t = useT('blood.registration');
+  const tc = useT('common');
   const localize = useLocalizedField();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -73,7 +76,7 @@ export function DonorRegistrationSheet({
     setSubmitting(false);
     if (!res || !res.ok) {
       const json = res ? await res.json().catch(() => null) : null;
-      setError(json?.error ?? 'নিবন্ধন করতে সমস্যা হয়েছে');
+      setError(json?.error ?? t('submitFailed'));
       return;
     }
     setSuccess(true);
@@ -91,14 +94,14 @@ export function DonorRegistrationSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="রক্তদাতা হিসেবে নাম লেখান">
+    <BottomSheet open={open} onClose={onClose} title={t('sheetTitle')}>
       {success ? (
         <p className="py-8 text-center text-[15px] font-semibold text-life-600">
-          ✅ ধন্যবাদ! আপনি রক্তদাতা তালিকায় যুক্ত হয়েছেন
+          {t('successMessage')}
         </p>
       ) : (
         <>
-          <label className="mb-1 block text-[13px] font-medium text-neutral-700">নাম *</label>
+          <label className="mb-1 block text-[13px] font-medium text-neutral-700">{tc('yourName')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -106,18 +109,18 @@ export function DonorRegistrationSheet({
           />
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            মোবাইল নম্বর *
+            {t('phoneLabel')}
           </label>
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             type="tel"
-            placeholder="XXXXXXXXXX"
+            placeholder={t('phonePlaceholder')}
             className="mb-3 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           />
 
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            রক্তের গ্রুপ *
+            {t('bloodGroupLabel')}
           </label>
           <div className="mb-3 grid grid-cols-4 gap-2">
             {BLOOD_GROUPS.map((bg) => (
@@ -135,13 +138,13 @@ export function DonorRegistrationSheet({
             ))}
           </div>
 
-          <label className="mb-1 block text-[13px] font-medium text-neutral-700">জেলা *</label>
+          <label className="mb-1 block text-[13px] font-medium text-neutral-700">{t('districtLabel')}</label>
           <select
             value={districtId}
             onChange={(e) => setDistrictId(e.target.value)}
             className="mb-4 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           >
-            <option value="">নির্বাচন করুন</option>
+            <option value="">{tc('select')}</option>
             {districts.map((d) => (
               <option key={d.id} value={d.id}>
                 {localize(d.name_translations)}
@@ -156,7 +159,7 @@ export function DonorRegistrationSheet({
               onChange={(e) => setEligible(e.target.checked)}
               className="mt-0.5"
             />
-            <span>শেষ রক্তদান ৩ মাসের বেশি আগে হয়েছে (WHO নির্দেশিকা অনুযায়ী)</span>
+            <span>{t('eligibilityLabel')}</span>
           </label>
 
           <label className="mb-4 flex items-start gap-2 text-[13px] text-neutral-700">
@@ -166,7 +169,7 @@ export function DonorRegistrationSheet({
               onChange={(e) => setConsent(e.target.checked)}
               className="mt-0.5"
             />
-            <span>আমি জরুরি প্রয়োজনে যোগাযোগ পেতে সম্মত</span>
+            <span>{t('consentLabel')}</span>
           </label>
 
           {error && <p className="mb-2 text-[12px] text-emergency-600">{error}</p>}
@@ -176,7 +179,7 @@ export function DonorRegistrationSheet({
             disabled={!canSubmit || submitting}
             className="h-12 w-full rounded-md bg-emergency-600 text-[15px] font-semibold text-white disabled:opacity-40"
           >
-            {submitting ? 'নিবন্ধন হচ্ছে...' : 'নিবন্ধন করুন'}
+            {submitting ? t('submitting') : t('submit')}
           </button>
         </>
       )}

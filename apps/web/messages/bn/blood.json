@@ -1,0 +1,35 @@
+{
+  "selectGroup": "আপনার রক্তের গ্রুপ বেছে নিন",
+  "allGroups": "সবগুলো",
+  "registerAsDonor": "রক্তদাতা হিসেবে নাম লেখান",
+  "bloodBanksHeading": "ব্লাড ব্যাংক ({count}টি)",
+  "noBloodBanks": "এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই।",
+  "stock": {
+    "available": "উপলব্ধ",
+    "low": "কম আছে",
+    "unavailable": "নেই",
+    "label": "স্টক (যদি রিপোর্ট করা থাকে):"
+  },
+  "open24x7": "২৪ ঘণ্টা খোলা",
+  "callNow": "এখনই কল করুন",
+  "donorListHeading": "রক্তদাতা তালিকা",
+  "donorsPrivacyNotice": "দাতাদের নিরাপত্তার জন্য তালিকা ও যোগাযোগের তথ্য শুধু সাইন-ইন করা ব্যবহারকারীরা দেখতে পারেন।",
+  "noDonorsForGroup": "{group} গ্রুপের কোনো নিবন্ধিত রক্তদাতা এখনো নেই।",
+  "noDonorsYet": "এখনো কোনো নিবন্ধিত রক্তদাতা নেই। প্রথম হোন!",
+  "lastDonated": "শেষ দান {date}",
+  "contactButton": "যোগাযোগ করুন",
+  "contactError": "যোগাযোগের তথ্য পাওয়া যায়নি",
+  "registration": {
+    "sheetTitle": "রক্তদাতা হিসেবে নাম লেখান",
+    "successMessage": "✅ ধন্যবাদ! আপনি রক্তদাতা তালিকায় যুক্ত হয়েছেন",
+    "phoneLabel": "মোবাইল নম্বর *",
+    "phonePlaceholder": "XXXXXXXXXX",
+    "bloodGroupLabel": "রক্তের গ্রুপ *",
+    "districtLabel": "জেলা *",
+    "eligibilityLabel": "শেষ রক্তদান ৩ মাসের বেশি আগে হয়েছে (WHO নির্দেশিকা অনুযায়ী)",
+    "consentLabel": "আমি জরুরি প্রয়োজনে যোগাযোগ পেতে সম্মত",
+    "submitFailed": "নিবন্ধন করতে সমস্যা হয়েছে",
+    "submitting": "নিবন্ধন হচ্ছে...",
+    "submit": "নিবন্ধন করুন"
+  }
+}

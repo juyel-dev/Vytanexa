@@ -1,0 +1,35 @@
+{
+  "selectGroup": "Select your blood group",
+  "allGroups": "All",
+  "registerAsDonor": "Register as a blood donor",
+  "bloodBanksHeading": "Blood banks ({count})",
+  "noBloodBanks": "No blood banks listed right now.",
+  "stock": {
+    "available": "Available",
+    "low": "Low",
+    "unavailable": "Unavailable",
+    "label": "Stock (if reported):"
+  },
+  "open24x7": "Open 24 hours",
+  "callNow": "Call now",
+  "donorListHeading": "Donor list",
+  "donorsPrivacyNotice": "For donors' safety, the list and contact details are visible only to signed-in users.",
+  "noDonorsForGroup": "No registered donors for group {group} yet.",
+  "noDonorsYet": "No registered donors yet. Be the first!",
+  "lastDonated": "Last donated {date}",
+  "contactButton": "Contact",
+  "contactError": "Could not fetch contact details",
+  "registration": {
+    "sheetTitle": "Register as a blood donor",
+    "successMessage": "✅ Thank you! You've been added to the donor list",
+    "phoneLabel": "Mobile number *",
+    "phonePlaceholder": "XXXXXXXXXX",
+    "bloodGroupLabel": "Blood group *",
+    "districtLabel": "District *",
+    "eligibilityLabel": "Last donation was more than 3 months ago (per WHO guidelines)",
+    "consentLabel": "I agree to be contacted in case of emergency",
+    "submitFailed": "Could not complete registration",
+    "submitting": "Registering...",
+    "submit": "Register"
+  }
+}

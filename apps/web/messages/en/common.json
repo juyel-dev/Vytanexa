@@ -18,6 +18,8 @@
   "yourName": "Your name *",
   "optional": "optional",
   "or": "or",
+  "select": "Select",
+  "signIn": "Sign in",
   "day": {
     "sat": "Sat",
     "sun": "Sun",

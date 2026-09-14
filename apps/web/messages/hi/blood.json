@@ -1,0 +1,35 @@
+{
+  "selectGroup": "अपना रक्त समूह चुनें",
+  "allGroups": "सभी",
+  "registerAsDonor": "रक्तदाता के रूप में पंजीकरण करें",
+  "bloodBanksHeading": "ब्लड बैंक ({count})",
+  "noBloodBanks": "अभी कोई ब्लड बैंक सूचीबद्ध नहीं है।",
+  "stock": {
+    "available": "उपलब्ध",
+    "low": "कम है",
+    "unavailable": "नहीं है",
+    "label": "स्टॉक (यदि रिपोर्ट किया गया हो):"
+  },
+  "open24x7": "24 घंटे खुला",
+  "callNow": "अभी कॉल करें",
+  "donorListHeading": "रक्तदाता सूची",
+  "donorsPrivacyNotice": "दाताओं की सुरक्षा के लिए, सूची और संपर्क विवरण केवल साइन-इन किए गए उपयोगकर्ता ही देख सकते हैं।",
+  "noDonorsForGroup": "{group} समूह के लिए अभी तक कोई पंजीकृत रक्तदाता नहीं है।",
+  "noDonorsYet": "अभी तक कोई पंजीकृत रक्तदाता नहीं है। सबसे पहले बनें!",
+  "lastDonated": "अंतिम दान {date}",
+  "contactButton": "संपर्क करें",
+  "contactError": "संपर्क जानकारी नहीं मिल सकी",
+  "registration": {
+    "sheetTitle": "रक्तदाता के रूप में पंजीकरण करें",
+    "successMessage": "✅ धन्यवाद! आप रक्तदाता सूची में जुड़ गए हैं",
+    "phoneLabel": "मोबाइल नंबर *",
+    "phonePlaceholder": "XXXXXXXXXX",
+    "bloodGroupLabel": "रक्त समूह *",
+    "districtLabel": "जिला *",
+    "eligibilityLabel": "अंतिम रक्तदान 3 महीने से अधिक पहले हुआ था (WHO दिशानिर्देश के अनुसार)",
+    "consentLabel": "मैं आपातकालीन स्थिति में संपर्क किए जाने के लिए सहमत हूं",
+    "submitFailed": "पंजीकरण नहीं हो सका",
+    "submitting": "पंजीकरण हो रहा है...",
+    "submit": "पंजीकरण करें"
+  }
+}
