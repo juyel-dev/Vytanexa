@@ -1,0 +1,31 @@
+{
+  "defaultUserName": "User",
+  "editProfile": "Edit",
+  "rows": {
+    "favorites": "Favorites",
+    "appointmentHistory": "Appointment request history",
+    "myQa": "My questions & answers",
+    "myReviews": "My reviews"
+  },
+  "deleteAccount": "Delete account",
+  "deleteAccountFailed": "Could not delete the account",
+  "deleteConfirmTitle": "Delete account?",
+  "deleteConfirmWord": "DELETE",
+  "deleteConfirmBody": "This cannot be undone. Type <b>{word}</b> below to confirm.",
+  "deleteConfirmButton": "Delete",
+  "profile": {
+    "phoneLabel": "Mobile number",
+    "phoneReadonlyNotice": "Changing your number needs OTP verification (coming soon)",
+    "emailLabel": "Email (optional)",
+    "locationLabel": "Default location",
+    "updateFailed": "Could not update",
+    "saved": "✅ Saved",
+    "saving": "Saving..."
+  },
+  "favorites": {
+    "emptyTitle": "You haven't added any favorites yet",
+    "findDoctors": "Find doctors →",
+    "noDoctors": "No doctors in your favorites",
+    "noHospitals": "No hospitals in your favorites"
+  }
+}

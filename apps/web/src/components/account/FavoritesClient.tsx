@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useT } from '@vytanexa/i18n/client';
 import { DoctorCard, type DoctorCardData } from '@/components/shared/DoctorCard';
 import { HospitalCard, type HospitalCardData } from '@/components/shared/HospitalCard';
 
@@ -20,6 +21,8 @@ export function FavoritesClient({
   doctors: DoctorCardData[];
   hospitals: HospitalCardData[];
 }) {
+  const t = useT('account.favorites');
+  const tNav = useT('nav');
   const [tab, setTab] = useState<'doctors' | 'hospitals'>(
     doctors.length === 0 && hospitals.length > 0 ? 'hospitals' : 'doctors'
   );
@@ -28,10 +31,10 @@ export function FavoritesClient({
     return (
       <div className="px-6 py-16 text-center">
         <p className="mb-3 text-[15px] font-semibold text-neutral-700">
-          এখনো কোনো পছন্দ যোগ করেননি
+          {t('emptyTitle')}
         </p>
         <Link href="/doctors" className="text-[14px] font-semibold text-brand-600">
-          ডাক্তার খুঁজুন →
+          {t('findDoctors')}
         </Link>
       </div>
     );
@@ -46,7 +49,7 @@ export function FavoritesClient({
             tab === 'doctors' ? 'bg-brand-600 text-white' : 'border border-neutral-200 text-neutral-700'
           }`}
         >
-          ডাক্তার ({doctors.length})
+          {tNav('doctors')} ({doctors.length})
         </button>
         <button
           onClick={() => setTab('hospitals')}
@@ -56,21 +59,21 @@ export function FavoritesClient({
               : 'border border-neutral-200 text-neutral-700'
           }`}
         >
-          হাসপাতাল ({hospitals.length})
+          {tNav('hospitals')} ({hospitals.length})
         </button>
       </div>
 
       {tab === 'doctors' ? (
         doctors.length === 0 ? (
           <p className="px-6 py-10 text-center text-[13px] text-neutral-400">
-            পছন্দের তালিকায় কোনো ডাক্তার নেই
+            {t('noDoctors')}
           </p>
         ) : (
           doctors.map((d) => <DoctorCard key={d.id} doctor={d} />)
         )
       ) : hospitals.length === 0 ? (
         <p className="px-6 py-10 text-center text-[13px] text-neutral-400">
-          পছন্দের তালিকায় কোনো হাসপাতাল নেই
+          {t('noHospitals')}
         </p>
       ) : (
         hospitals.map((h) => <HospitalCard key={h.id} hospital={h} />)

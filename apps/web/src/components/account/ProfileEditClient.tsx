@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
 
@@ -30,6 +31,8 @@ export function ProfileEditClient({
   initialLocationId: string | null;
   districts: District[];
 }) {
+  const t = useT('account.profile');
+  const tc = useT('common');
   const localize = useLocalizedField();
   const router = useRouter();
   const [name, setName] = useState(initialName ?? '');
@@ -54,7 +57,7 @@ export function ProfileEditClient({
     setSaving(false);
     if (!res.ok) {
       const json = await res.json();
-      setError(json.error ?? 'আপডেট করতে সমস্যা হয়েছে');
+      setError(json.error ?? t('updateFailed'));
       return;
     }
     setSaved(true);
@@ -64,24 +67,24 @@ export function ProfileEditClient({
 
   return (
     <div className="px-4 py-4">
-      <label className="mb-1 block text-[13px] font-medium text-neutral-700">নাম *</label>
+      <label className="mb-1 block text-[13px] font-medium text-neutral-700">{tc('yourName')}</label>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="mb-4 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
       />
 
-      <label className="mb-1 block text-[13px] font-medium text-neutral-700">মোবাইল নম্বর</label>
+      <label className="mb-1 block text-[13px] font-medium text-neutral-700">{t('phoneLabel')}</label>
       <input
         value={phone ?? ''}
         disabled
         className="mb-1 h-11 w-full rounded-md border border-neutral-100 bg-neutral-50 px-3 text-[14px] text-neutral-500"
       />
       <p className="mb-4 text-[11px] text-neutral-400">
-        নম্বর পরিবর্তন করতে OTP যাচাইকরণ প্রয়োজন (শীঘ্রই আসছে)
+        {t('phoneReadonlyNotice')}
       </p>
 
-      <label className="mb-1 block text-[13px] font-medium text-neutral-700">ইমেইল (ঐচ্ছিক)</label>
+      <label className="mb-1 block text-[13px] font-medium text-neutral-700">{t('emailLabel')}</label>
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -90,14 +93,14 @@ export function ProfileEditClient({
       />
 
       <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-        ডিফল্ট অবস্থান
+        {t('locationLabel')}
       </label>
       <select
         value={locationId}
         onChange={(e) => setLocationId(e.target.value)}
         className="mb-4 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
       >
-        <option value="">নির্বাচন করুন</option>
+        <option value="">{tc('select')}</option>
         {districts.map((d) => (
           <option key={d.id} value={d.id}>
             {localize(d.name_translations)}
@@ -106,14 +109,14 @@ export function ProfileEditClient({
       </select>
 
       {error && <p className="mb-2 text-[12px] text-emergency-600">{error}</p>}
-      {saved && <p className="mb-2 text-[13px] font-medium text-life-600">✅ সংরক্ষণ করা হয়েছে</p>}
+      {saved && <p className="mb-2 text-[13px] font-medium text-life-600">{t('saved')}</p>}
 
       <button
         onClick={handleSave}
         disabled={saving || name.trim().length < 2}
         className="h-12 w-full rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
       >
-        {saving ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
+        {saving ? t('saving') : tc('save')}
       </button>
     </div>
   );

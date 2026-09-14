@@ -1,0 +1,31 @@
+{
+  "defaultUserName": "ব্যবহারকারী",
+  "editProfile": "সম্পাদনা করুন",
+  "rows": {
+    "favorites": "পছন্দের তালিকা",
+    "appointmentHistory": "অ্যাপয়েন্টমেন্ট অনুরোধ হিস্টরি",
+    "myQa": "আমার প্রশ্ন ও উত্তর",
+    "myReviews": "আমার রিভিউ"
+  },
+  "deleteAccount": "অ্যাকাউন্ট মুছে ফেলুন",
+  "deleteAccountFailed": "অ্যাকাউন্ট মুছতে সমস্যা হয়েছে",
+  "deleteConfirmTitle": "অ্যাকাউন্ট মুছে ফেলুন?",
+  "deleteConfirmWord": "মুছুন",
+  "deleteConfirmBody": "এই কাজটি ফেরানো যাবে না। নিশ্চিত করতে নিচে <b>{word}</b> লিখুন।",
+  "deleteConfirmButton": "মুছে ফেলুন",
+  "profile": {
+    "phoneLabel": "মোবাইল নম্বর",
+    "phoneReadonlyNotice": "নম্বর পরিবর্তন করতে OTP যাচাইকরণ প্রয়োজন (শীঘ্রই আসছে)",
+    "emailLabel": "ইমেইল (ঐচ্ছিক)",
+    "locationLabel": "ডিফল্ট অবস্থান",
+    "updateFailed": "আপডেট করতে সমস্যা হয়েছে",
+    "saved": "✅ সংরক্ষণ করা হয়েছে",
+    "saving": "সংরক্ষণ হচ্ছে..."
+  },
+  "favorites": {
+    "emptyTitle": "এখনো কোনো পছন্দ যোগ করেননি",
+    "findDoctors": "ডাক্তার খুঁজুন →",
+    "noDoctors": "পছন্দের তালিকায় কোনো ডাক্তার নেই",
+    "noHospitals": "পছন্দের তালিকায় কোনো হাসপাতাল নেই"
+  }
+}

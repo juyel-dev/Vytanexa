@@ -1,0 +1,31 @@
+{
+  "defaultUserName": "उपयोगकर्ता",
+  "editProfile": "संपादित करें",
+  "rows": {
+    "favorites": "पसंदीदा सूची",
+    "appointmentHistory": "अपॉइंटमेंट अनुरोध इतिहास",
+    "myQa": "मेरे प्रश्न और उत्तर",
+    "myReviews": "मेरी समीक्षाएं"
+  },
+  "deleteAccount": "अकाउंट हटाएं",
+  "deleteAccountFailed": "अकाउंट हटाया नहीं जा सका",
+  "deleteConfirmTitle": "अकाउंट हटाएं?",
+  "deleteConfirmWord": "हटाएं",
+  "deleteConfirmBody": "यह वापस नहीं हो सकता। पुष्टि के लिए नीचे <b>{word}</b> लिखें।",
+  "deleteConfirmButton": "हटाएं",
+  "profile": {
+    "phoneLabel": "मोबाइल नंबर",
+    "phoneReadonlyNotice": "नंबर बदलने के लिए OTP सत्यापन आवश्यक है (जल्द आ रहा है)",
+    "emailLabel": "ईमेल (वैकल्पिक)",
+    "locationLabel": "डिफ़ॉल्ट स्थान",
+    "updateFailed": "अपडेट नहीं हो सका",
+    "saved": "✅ सहेजा गया",
+    "saving": "सहेजा जा रहा है..."
+  },
+  "favorites": {
+    "emptyTitle": "अभी तक आपने कोई पसंदीदा नहीं जोड़ा है",
+    "findDoctors": "डॉक्टर खोजें →",
+    "noDoctors": "आपकी पसंदीदा सूची में कोई डॉक्टर नहीं है",
+    "noHospitals": "आपकी पसंदीदा सूची में कोई अस्पताल नहीं है"
+  }
+}
