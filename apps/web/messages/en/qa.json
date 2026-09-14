@@ -1,0 +1,34 @@
+{
+  "heading": "Q&A",
+  "askQuestion": "Ask a question",
+  "filter": {
+    "all": "All",
+    "answered": "Answered",
+    "unanswered": "Unanswered"
+  },
+  "noQuestionsYet": "No questions yet. Ask the first one!",
+  "answersCount": "{count} answers",
+  "verifiedDoctorAnswered": "✅ A verified doctor answered",
+  "noMoreQuestions": "No more questions",
+  "anonymousUser": "A user",
+  "agreeCount": "{count} agree",
+  "noAnswersYet": "No answers yet. Be the first to answer!",
+  "answerPlaceholder": "Write an answer...",
+  "send": "Send",
+  "authorNameOptionalPlaceholder": "Your name (optional)",
+  "answerSubmitFailed": "Could not submit the answer",
+  "answerPublishedAfterApproval": "✅ Thank you! It will be published after approval",
+  "ask": {
+    "sheetTitle": "Ask a question",
+    "successMessage": "✅ Thank you! Your question will be published after approval",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Write your question briefly",
+    "bodyLabel": "Details",
+    "categoryLabel": "Category *",
+    "anonymousLabel": "Keep my name hidden (ask anonymously)",
+    "submitFailed": "Could not submit the question",
+    "submitting": "Submitting...",
+    "submit": "Submit question",
+    "publishNotice": "The question will be published after approval."
+  }
+}

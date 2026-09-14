@@ -1,0 +1,34 @@
+{
+  "heading": "প্রশ্নোত্তর",
+  "askQuestion": "প্রশ্ন করুন",
+  "filter": {
+    "all": "সব",
+    "answered": "উত্তর দেওয়া হয়েছে",
+    "unanswered": "অনুত্তরিত"
+  },
+  "noQuestionsYet": "এখনো কোনো প্রশ্ন নেই। প্রথম প্রশ্নটি করুন!",
+  "answersCount": "{count} উত্তর",
+  "verifiedDoctorAnswered": "✅ ভেরিফাইড ডাক্তার উত্তর দিয়েছেন",
+  "noMoreQuestions": "আর কোনো প্রশ্ন নেই",
+  "anonymousUser": "একজন ব্যবহারকারী",
+  "agreeCount": "{count} জন একমত",
+  "noAnswersYet": "এখনো কোনো উত্তর নেই। প্রথম উত্তর দিন!",
+  "answerPlaceholder": "উত্তর দিন...",
+  "send": "পাঠান",
+  "authorNameOptionalPlaceholder": "আপনার নাম (ঐচ্ছিক)",
+  "answerSubmitFailed": "উত্তর জমা দিতে সমস্যা হয়েছে",
+  "answerPublishedAfterApproval": "✅ ধন্যবাদ! অনুমোদনের পর প্রকাশিত হবে",
+  "ask": {
+    "sheetTitle": "প্রশ্ন করুন",
+    "successMessage": "✅ ধন্যবাদ! প্রশ্নটি অনুমোদনের পর প্রকাশিত হবে",
+    "titleLabel": "শিরোনাম *",
+    "titlePlaceholder": "আপনার প্রশ্ন সংক্ষেপে লিখুন",
+    "bodyLabel": "বিস্তারিত",
+    "categoryLabel": "বিভাগ *",
+    "anonymousLabel": "নাম গোপন রাখুন (বেনামে জিজ্ঞাসা করুন)",
+    "submitFailed": "প্রশ্ন জমা দিতে সমস্যা হয়েছে",
+    "submitting": "জমা হচ্ছে...",
+    "submit": "প্রশ্ন জমা দিন",
+    "publishNotice": "প্রশ্নটি অনুমোদনের পর প্রকাশিত হবে।"
+  }
+}

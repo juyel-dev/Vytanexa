@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useT } from '@vytanexa/i18n/client';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
@@ -25,6 +26,8 @@ export function AskQuestionSheet({
   onClose: () => void;
   categories: Category[];
 }) {
+  const t = useT('qa.ask');
+  const tc = useT('common');
   const localize = useLocalizedField();
   const router = useRouter();
   const [title, setTitle] = useState('');
@@ -55,7 +58,7 @@ export function AskQuestionSheet({
     setSubmitting(false);
     if (!res.ok) {
       const json = await res.json();
-      setError(json.error ?? 'প্রশ্ন জমা দিতে সমস্যা হয়েছে');
+      setError(json.error ?? t('submitFailed'));
       return;
     }
     setSuccess(true);
@@ -72,24 +75,24 @@ export function AskQuestionSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="প্রশ্ন করুন">
+    <BottomSheet open={open} onClose={onClose} title={t('sheetTitle')}>
       {success ? (
         <p className="py-8 text-center text-[15px] font-semibold text-life-600">
-          ✅ ধন্যবাদ! প্রশ্নটি অনুমোদনের পর প্রকাশিত হবে
+          {t('successMessage')}
         </p>
       ) : (
         <>
           <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-            শিরোনাম *
+            {t('titleLabel')}
           </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন"
+            placeholder={t('titlePlaceholder')}
             className="mb-3 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           />
 
-          <label className="mb-1 block text-[13px] font-medium text-neutral-700">বিস্তারিত</label>
+          <label className="mb-1 block text-[13px] font-medium text-neutral-700">{t('bodyLabel')}</label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -97,13 +100,13 @@ export function AskQuestionSheet({
             className="mb-3 w-full rounded-md border border-neutral-200 px-3 py-2 text-[14px]"
           />
 
-          <label className="mb-1 block text-[13px] font-medium text-neutral-700">বিভাগ *</label>
+          <label className="mb-1 block text-[13px] font-medium text-neutral-700">{t('categoryLabel')}</label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
             className="mb-3 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           >
-            <option value="">নির্বাচন করুন</option>
+            <option value="">{tc('select')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {localize(c.name_translations)}
@@ -117,13 +120,13 @@ export function AskQuestionSheet({
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
             />
-            <span>নাম গোপন রাখুন (বেনামে জিজ্ঞাসা করুন)</span>
+            <span>{t('anonymousLabel')}</span>
           </label>
 
           {!isAnonymous && (
             <>
               <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-                আপনার নাম *
+                {tc('yourName')}
               </label>
               <input
                 value={authorName}
@@ -140,10 +143,10 @@ export function AskQuestionSheet({
             disabled={!canSubmit || submitting}
             className="h-12 w-full rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
           >
-            {submitting ? 'জমা হচ্ছে...' : 'প্রশ্ন জমা দিন'}
+            {submitting ? t('submitting') : t('submit')}
           </button>
           <p className="mt-2 text-center text-[11px] text-neutral-400">
-            প্রশ্নটি অনুমোদনের পর প্রকাশিত হবে।
+            {t('publishNotice')}
           </p>
         </>
       )}

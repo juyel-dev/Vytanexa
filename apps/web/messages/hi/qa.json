@@ -1,0 +1,34 @@
+{
+  "heading": "प्रश्नोत्तर",
+  "askQuestion": "प्रश्न पूछें",
+  "filter": {
+    "all": "सभी",
+    "answered": "उत्तर मिल चुका है",
+    "unanswered": "अनुत्तरित"
+  },
+  "noQuestionsYet": "अभी तक कोई प्रश्न नहीं है। पहला प्रश्न पूछें!",
+  "answersCount": "{count} उत्तर",
+  "verifiedDoctorAnswered": "✅ सत्यापित डॉक्टर ने उत्तर दिया है",
+  "noMoreQuestions": "और कोई प्रश्न नहीं",
+  "anonymousUser": "एक उपयोगकर्ता",
+  "agreeCount": "{count} लोग सहमत हैं",
+  "noAnswersYet": "अभी तक कोई उत्तर नहीं है। पहला उत्तर दें!",
+  "answerPlaceholder": "उत्तर दें...",
+  "send": "भेजें",
+  "authorNameOptionalPlaceholder": "आपका नाम (वैकल्पिक)",
+  "answerSubmitFailed": "उत्तर जमा नहीं हो सका",
+  "answerPublishedAfterApproval": "✅ धन्यवाद! अनुमोदन के बाद प्रकाशित होगा",
+  "ask": {
+    "sheetTitle": "प्रश्न पूछें",
+    "successMessage": "✅ धन्यवाद! आपका प्रश्न अनुमोदन के बाद प्रकाशित होगा",
+    "titleLabel": "शीर्षक *",
+    "titlePlaceholder": "अपना प्रश्न संक्षेप में लिखें",
+    "bodyLabel": "विवरण",
+    "categoryLabel": "श्रेणी *",
+    "anonymousLabel": "मेरा नाम गुप्त रखें (गुमनाम रूप से पूछें)",
+    "submitFailed": "प्रश्न जमा नहीं हो सका",
+    "submitting": "जमा हो रहा है...",
+    "submit": "प्रश्न जमा करें",
+    "publishNotice": "प्रश्न अनुमोदन के बाद प्रकाशित होगा।"
+  }
+}

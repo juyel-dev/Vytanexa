@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronUp } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField, formatRelativeTimeBn } from '@/lib/i18n-client';
 import { getDeviceId } from '@/lib/device-id';
 import type { QuestionDetail } from '@/lib/queries/qa-detail';
@@ -44,6 +45,8 @@ export function QuestionDetailClient({
   doctorAnswers: Answer[];
   communityAnswers: Answer[];
 }) {
+  const t = useT('qa');
+  const tc = useT('common');
   const localize = useLocalizedField();
   const [upvoted, setUpvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(question.upvote_count);
@@ -107,7 +110,7 @@ export function QuestionDetailClient({
     setSubmitting(false);
     if (!res.ok) {
       const json = await res.json();
-      setError(json.error ?? 'উত্তর জমা দিতে সমস্যা হয়েছে');
+      setError(json.error ?? t('answerSubmitFailed'));
       return;
     }
     fetch('/api/analytics', {
@@ -124,8 +127,8 @@ export function QuestionDetailClient({
   };
 
   const displayName = question.is_anonymous
-    ? 'একজন ব্যবহারকারী'
-    : (question.author_name ?? 'একজন ব্যবহারকারী');
+    ? t('anonymousUser')
+    : (question.author_name ?? t('anonymousUser'));
 
   return (
     <div className="pb-28">
@@ -133,7 +136,7 @@ export function QuestionDetailClient({
         <Link
           href="/community/qa"
           className="flex h-11 w-11 items-center justify-center text-neutral-700"
-          aria-label="পেছনে যান"
+          aria-label={tc('goBack')}
         >
           <ChevronLeft className="h-6 w-6" />
         </Link>
@@ -157,14 +160,14 @@ export function QuestionDetailClient({
               : 'border-neutral-200 text-neutral-700'
           }`}
         >
-          <ChevronUp className="h-4 w-4" /> {upvoteCount} জন একমত
+          <ChevronUp className="h-4 w-4" /> {t('agreeCount', { count: upvoteCount })}
         </button>
       </div>
 
       <div className="border-t border-neutral-100 px-4 py-4">
         {doctorAnswers.length === 0 && communityAnswers.length === 0 ? (
           <p className="py-6 text-center text-[13px] text-neutral-400">
-            এখনো কোনো উত্তর নেই। প্রথম উত্তর দিন!
+            {t('noAnswersYet')}
           </p>
         ) : (
           <>
@@ -205,7 +208,7 @@ export function QuestionDetailClient({
             {communityAnswers.map((a) => (
               <div key={a.id} className="mb-2.5 rounded-lg bg-neutral-50 p-3.5">
                 <p className="text-[13px] font-semibold text-neutral-800">
-                  {a.author_name ?? 'একজন ব্যবহারকারী'}
+                  {a.author_name ?? t('anonymousUser')}
                 </p>
                 <p className="mt-1 text-[14px] leading-relaxed text-neutral-700">{a.body}</p>
                 <p className="mt-1 text-[11px] text-neutral-400">
@@ -220,7 +223,7 @@ export function QuestionDetailClient({
       <div className="fixed bottom-0 left-0 right-0 z-navbar border-t border-neutral-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         {success ? (
           <p className="text-center text-[13px] font-semibold text-life-600">
-            ✅ ধন্যবাদ! অনুমোদনের পর প্রকাশিত হবে
+            {t('answerPublishedAfterApproval')}
           </p>
         ) : (
           <>
@@ -228,7 +231,7 @@ export function QuestionDetailClient({
               <input
                 value={answerBody}
                 onChange={(e) => setAnswerBody(e.target.value)}
-                placeholder="উত্তর দিন..."
+                placeholder={t('answerPlaceholder')}
                 className="h-11 flex-1 rounded-full border border-neutral-200 px-4 text-[14px]"
               />
               <button
@@ -236,14 +239,14 @@ export function QuestionDetailClient({
                 disabled={submitting || answerBody.trim().length < 5}
                 className="rounded-full bg-brand-600 px-4 text-[13px] font-semibold text-white disabled:opacity-40"
               >
-                {submitting ? '...' : 'পাঠান'}
+                {submitting ? '...' : t('send')}
               </button>
             </div>
             {answerBody.length > 0 && (
               <input
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="আপনার নাম (ঐচ্ছিক)"
+                placeholder={t('authorNameOptionalPlaceholder')}
                 className="mt-2 h-9 w-full rounded-md border border-neutral-200 px-3 text-[13px]"
               />
             )}

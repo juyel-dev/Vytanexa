@@ -23,6 +23,7 @@ import type reviews from '../../messages/bn/reviews.json';
 import type location from '../../messages/bn/location.json';
 import type emergency from '../../messages/bn/emergency.json';
 import type blood from '../../messages/bn/blood.json';
+import type qa from '../../messages/bn/qa.json';
 
 type Messages = {
   common: typeof common;
@@ -39,6 +40,7 @@ type Messages = {
   location: typeof location;
   emergency: typeof emergency;
   blood: typeof blood;
+  qa: typeof qa;
 };
 
 declare global {
