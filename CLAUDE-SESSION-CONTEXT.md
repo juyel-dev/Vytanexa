@@ -140,13 +140,15 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `9669643`** (last commit in this session). Progress:
-72/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `53af381`** (last commit in this session). Progress:
+67/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text
 (e.g. `components/qa/*`, `components/account/*` from earlier this
 session) — see "Blocked" below, that's expected and correct, not a
-miss.
+miss. **This count also no longer reflects the true size of the
+remaining work** — see "New this session" below re: `.ts`/`.tsx`
+scope.
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
@@ -162,13 +164,14 @@ miss.
   `components/blood-services/*` (new `blood` namespace),
   `components/qa/*` (new `qa` namespace),
   `components/account/*` (new `account` namespace),
-  `components/home/*` — all 12 files, new structured `home` namespace
-  replacing a smaller orphaned one that predated this batch. Commits
-  `f5187d8` through `9669643` — see `git log --oneline 046c9f7~1..HEAD`
-  for the full list; each message documents what was migrated *and* what
-  bug or design issue was found along the way, several are worth reading
-  in full (`git show <hash>`) before resuming, not just skimming the
-  one-liners.
+  `components/home/*` — all 12 files, new structured `home` namespace,
+  `app/(seo)/[state]/*` (all 3 route pages) + `components/seo/*` +
+  **`lib/seo-helpers.ts`** (new `seo` namespace — see below, this one
+  matters more than its file count suggests). Commits `f5187d8` through
+  `53af381` — see `git log --oneline 046c9f7~1..HEAD` for the full list;
+  each message documents what was migrated *and* what bug or design
+  issue was found along the way, several are worth reading in full
+  (`git show <hash>`) before resuming, not just skimming the one-liners.
 
 ### Active
 Nothing mid-edit. Session ended at a clean, committed, typechecked,
@@ -212,32 +215,59 @@ mirroring what `apps/web`'s facade already does — but that's a distinct
 piece of work from "migrate hardcoded Bengali .tsx strings" and
 shouldn't be folded into a Phase 3 batch without discussing scope first.
 
-**New this session**: a `home` namespace existed already, orphaned (5
-flat keys, unused anywhere), when this batch started — found via grep
-before assuming a clean slate. Worth remembering as a general habit
-going forward: `ls messages/bn/` before creating a namespace file isn't
-enough on its own, since an existing file with the right name but the
-wrong shape needs `str_replace`/rebuild, not a blind
-`create_file`/overwrite. Also: migrating a Server Component sometimes
-means making a previously-sync function `async` (three files this
-batch — `QuickActionsRow`, `BloodServicesCTA`, `NativeAd`) purely to
-`await getT(...)`; check any registry/type that lists the component
-(here, `homepage-sections.ts`'s `SECTION_COMPONENTS`) still accepts
-the new signature before assuming it's a safe, local-only change.
+**New this session, important for whoever picks this up next**: this
+whole Phase 3 effort's inventory command (`I18N-IMPLEMENTATION-SPEC.md`
+§ 12) only globs `.tsx` files. `seo-helpers.ts` this session proved
+that's a real blind spot — it held ~860 bytes of hardcoded Bengali (the
+entire SEO title/h1/description/FAQ template system) and was invisible
+to every inventory run so far because it's a `.ts` file. Re-running the
+same scan against `src/**/*.ts` (excluding `.d.ts`) at the end of this
+session turns up **33 more files, none touched yet**, mostly two
+categories: API route handlers under `app/api/**/route.ts` (error
+messages returned in JSON responses — `blood-donors/route.ts` alone has
+188 chars) and `lib/validations/*.ts` (Zod schema `.min()`/`.max()`/
+`.refine()` error messages — `validations/reviews.ts`,
+`validations/blood-donors.ts`, `validations/questions.ts` are the
+biggest). **Have not started this yet** — it's a different shape of
+work than the component batches so far (these are server-side error
+strings, not rendered UI text, so the migration pattern needs figuring
+out fresh: does `getT()` work correctly called from inside a route
+handler outside any component tree? do validation `.refine()` callbacks
+run in a context where `await getT()` is even available, given Zod
+schemas are typically built at module load time, not per-request?)
+before committing to a batch rhythm for it. Flagging for a scoping
+conversation rather than just diving in, same as the `apps/admin`
+`bn-BD` finding.
 
 ### Next Move
-Continue Phase 3. Re-run the inventory command in
-`I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking the
-next directory — as of this session's end, in descending priority order:
-`app/(seo)/[state]/` (499 chars) and sibling SEO route files,
-`app/(main)/account/` (491, route pages -- distinct from
-`components/account/*`, already done), `emergency/` (398), `more/`
-(343), `app/(main)/community/` (338), `app/(main)/search/` (326),
-`settings/` (291), `doctors/` (284), `app/(auth)/auth/` (254),
-`symptoms/` (241), `hospital-profile/` (remaining files beyond
-`InfoTab.tsx`), `lab-tests/`, `polls/`, `articles/`, `custom-page/*`.
-Same 7-step per-file checklist, same batch-verify-commit-push rhythm —
-it's worked cleanly for 11 batches running, no reason to change it.
+Two clearly separate strands now, worth discussing with the user before
+picking one:
+
+1. **Continue the original strand** — remaining `.tsx` component/page
+   directories, same 7-step checklist, same rhythm that's worked for 12
+   batches running. Re-run the inventory command in
+   `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers; as of this
+   session's end, in descending priority order: `app/(main)/account/`
+   (491 chars, route pages — distinct from `components/account/*`,
+   already done), `emergency/` (398), `more/` (343),
+   `app/(main)/community/` (338), `app/(main)/search/` (326),
+   `settings/` (291), `doctors/` (284), `app/(auth)/auth/` (254),
+   `symptoms/` (241), `app/(main)/health/` (195), `hospital-profile/`
+   (remaining files beyond `InfoTab.tsx`), `lab-tests/`, `polls/`,
+   `articles/`, `custom-page/*`.
+
+2. **New strand, needs scoping first** — the 33 `.ts` files above
+   (API routes + Zod validations). Before batching these, figure out:
+   the right pattern for getting a translator into a route handler
+   (`getT()` should work fine there, it's still server-side Next.js, but
+   confirm) and into Zod `.refine()`/`.superRefine()` callbacks
+   specifically (may need the schema itself to become a function that
+   takes `t` and returns a `ZodSchema`, built fresh per-request, rather
+   than the current module-level constant — a real shape change to how
+   these files are structured, not just a string swap). Worth raising
+   with the user which strand to prioritize, since strand 2 changes the
+   validation architecture and shouldn't be rushed into 33 files without
+   settling the pattern on one first.
 
 ## Relevant Files
 
