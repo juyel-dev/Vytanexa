@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notificationPrefsUpdateSchema } from '@/lib/validations/account';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * PATCH /api/account/notification-prefs — VYTANEXA-BLUEPRINT.md § S18
@@ -12,19 +13,21 @@ import { notificationPrefsUpdateSchema } from '@/lib/validations/account';
  * client could bypass.
  */
 export async function PATCH(request: NextRequest) {
+  const t = await getT('validation');
+  const tCommon = await getT('common');
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'সাইন ইন করুন' }, { status: 401 });
+    return NextResponse.json({ error: tCommon('signIn') }, { status: 401 });
   }
 
   const body = await request.json();
   const parsed = notificationPrefsUpdateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'অবৈধ ডেটা' }, { status: 400 });
+    return NextResponse.json({ error: t('generic.invalidData') }, { status: 400 });
   }
   const { general, articles } = parsed.data;
 
@@ -49,7 +52,7 @@ export async function PATCH(request: NextRequest) {
 
   if (error) {
     console.error('notification prefs update failed:', error.message);
-    return NextResponse.json({ error: 'আপডেট করতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('account.updateFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, notification_prefs: updated });

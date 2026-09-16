@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * GET /api/blood-donors/[id]/contact — VYTANEXA-BLUEPRINT.md § S11:
@@ -22,6 +23,7 @@ import { getClientIp } from '@/lib/get-client-ip';
  * try every donor id in sequence.
  */
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  const t = await getT('validation');
   const supabase = createClient();
   const ip = getClientIp(request);
 
@@ -33,12 +35,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-    return NextResponse.json({ error: 'এখন যোগাযোগের তথ্য দেখানো যাচ্ছে না, একটু পরে চেষ্টা করুন' }, {
+    return NextResponse.json({ error: t('bloodDonors.contactRetryLater') }, {
       status: 503,
     });
   }
   if (!allowed) {
-    return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, {
+    return NextResponse.json({ error: t('generic.rateLimited') }, {
       status: 429,
     });
   }
@@ -49,10 +51,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
   if (error) {
     console.error('get_donor_phone RPC failed:', error.message);
-    return NextResponse.json({ error: 'যোগাযোগের তথ্য পাওয়া যায়নি' }, { status: 500 });
+    return NextResponse.json({ error: t('bloodDonors.contactNotFound') }, { status: 500 });
   }
   if (!phone) {
-    return NextResponse.json({ error: 'এই দাতা এখন যোগাযোগের জন্য উপলব্ধ নয়' }, { status: 404 });
+    return NextResponse.json({ error: t('bloodDonors.donorUnavailable') }, { status: 404 });
   }
 
   // BLOOD-SERVICE-PLAN.md Phase A.9 — desktop has no tel: handler, so a

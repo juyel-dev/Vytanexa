@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { getT } from '@vytanexa/i18n/server';
+
+type Translator = Awaited<ReturnType<typeof getT<'validation'>>>;
 
 /**
  * PATCH /api/account/profile — TODO.md Phase 8.6. Was hand-rolled
@@ -10,21 +13,23 @@ import { z } from 'zod';
  * `LANGUAGES` list (bn/en/hi) — the only three the rest of the app
  * ever writes.
  */
-export const profileUpdateSchema = z.object({
-  name: z.string().trim().min(2, 'নাম কমপক্ষে ২ অক্ষরের হতে হবে').max(100).optional(),
-  email: z
-    .string()
-    .trim()
-    .email('ইমেইল সঠিক নয়')
-    .max(255)
-    .nullable()
-    .optional()
-    .or(z.literal('')),
-  preferred_language: z.enum(['bn', 'en', 'hi']).optional(),
-  default_location_id: z.string().uuid('অবৈধ লোকেশন').nullable().optional(),
-});
+export function profileUpdateSchema(t: Translator) {
+  return z.object({
+    name: z.string().trim().min(2, t('name.min')).max(100).optional(),
+    email: z
+      .string()
+      .trim()
+      .email(t('account.emailInvalid'))
+      .max(255)
+      .nullable()
+      .optional()
+      .or(z.literal('')),
+    preferred_language: z.enum(['bn', 'en', 'hi']).optional(),
+    default_location_id: z.string().uuid(t('account.locationInvalid')).nullable().optional(),
+  });
+}
 
-export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+export type ProfileUpdateInput = z.infer<ReturnType<typeof profileUpdateSchema>>;
 
 /**
  * PATCH /api/account/notification-prefs — TODO.md Phase 9.3. Was the

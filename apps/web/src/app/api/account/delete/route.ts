@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/account/delete — VYTANEXA-BLUEPRINT.md § S17 "Account
@@ -23,13 +24,14 @@ import { createClient } from '@/lib/supabase/server';
  * with the anonymized one.
  */
 export async function POST() {
+  const t = await getT('validation');
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'সাইন ইন করা নেই' }, { status: 401 });
+    return NextResponse.json({ error: t('generic.notSignedIn') }, { status: 401 });
   }
 
   const { error } = await supabase
@@ -44,7 +46,7 @@ export async function POST() {
 
   if (error) {
     console.error('account delete (anonymize) failed:', error.message);
-    return NextResponse.json({ error: 'অ্যাকাউন্ট মুছতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('account.deleteFailed') }, { status: 500 });
   }
 
   await supabase.auth.signOut();

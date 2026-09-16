@@ -1,9 +1,14 @@
 import { z } from 'zod';
+import { getT } from '@vytanexa/i18n/server';
 
-export const answerSchema = z.object({
-  question_id: z.string().uuid('অসঠিক প্রশ্ন আইডি'),
-  body: z.string().trim().min(5, 'উত্তর কমপক্ষে ৫ অক্ষরের হতে হবে').max(2000, 'উত্তর ২০০০ অক্ষরের বেশি হতে পারবে না'),
-  author_name: z.string().trim().max(80).nullable().optional(),
-});
+type Translator = Awaited<ReturnType<typeof getT<'validation'>>>;
 
-export type AnswerInput = z.infer<typeof answerSchema>;
+export function answerSchema(t: Translator) {
+  return z.object({
+    question_id: z.string().uuid(t('answers.invalidQuestionId')),
+    body: z.string().trim().min(5, t('answers.bodyMin')).max(2000, t('answers.bodyMax')),
+    author_name: z.string().trim().max(80).nullable().optional(),
+  });
+}
+
+export type AnswerInput = z.infer<ReturnType<typeof answerSchema>>;

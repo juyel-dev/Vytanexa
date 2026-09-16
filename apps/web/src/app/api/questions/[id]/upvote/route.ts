@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { z } from 'zod';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/questions/[id]/upvote — VYTANEXA-BLUEPRINT.md § S14
@@ -16,9 +17,10 @@ import { z } from 'zod';
  * in sync either way, so this route never writes that counter itself.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const parsed = z.object({ voterKey: z.string().trim().min(1, 'তথ্য অসম্পূর্ণ') }).safeParse(await request.json());
+  const t = await getT('validation');
+  const parsed = z.object({ voterKey: z.string().trim().min(1, t('generic.incompleteData')) }).safeParse(await request.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { voterKey } = parsed.data;
 
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
-    return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, { status: 429 });
+    return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
   }
 
   const { data: existing } = await supabase
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { error } = await supabase.from('question_upvotes').delete().eq('id', existing.id);
     if (error) {
       console.error('upvote delete failed:', error.message);
-      return NextResponse.json({ error: 'সমস্যা হয়েছে' }, { status: 500 });
+      return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
     }
     return NextResponse.json({ upvoted: false });
   }
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     .insert({ question_id: params.id, voter_key: voterKey });
   if (error) {
     console.error('upvote insert failed:', error.message);
-    return NextResponse.json({ error: 'সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
   }
   return NextResponse.json({ upvoted: true });
 }

@@ -1,0 +1,83 @@
+{
+  "generic": {
+    "validationFailed": "Validation failed",
+    "somethingWrong": "Something went wrong",
+    "incompleteData": "Incomplete data",
+    "invalidData": "Invalid data",
+    "rateLimited": "Too many attempts, please try again later",
+    "tooManyItems": "Too many items",
+    "requestBodyRequired": "Request body is required",
+    "notSignedIn": "Not signed in"
+  },
+  "name": { "min": "Name must be at least 2 characters", "max": "Name is too long" },
+  "phone": { "invalid": "Enter a valid mobile number" },
+  "reviews": {
+    "ratingInt": "Rating must be a whole number",
+    "ratingRange": "Rating must be between 1-5",
+    "textLength": "Review must be 20-500 characters",
+    "alreadyReviewedHospital": "You've already reviewed this hospital. Please try again after 24 hours.",
+    "alreadyReviewedDoctor": "You've already reviewed this doctor. Please try again after 24 hours.",
+    "submitFailed": "Could not submit"
+  },
+  "bloodDonors": {
+    "phoneInvalid": "Enter a valid 10-digit mobile number",
+    "groupInvalid": "Invalid blood group",
+    "locationRequired": "Please select a location",
+    "consentRequired": "Consent to be contacted in an emergency is required",
+    "mustSignIn": "Sign in to become a donor",
+    "registerRetryLater": "Registration isn't available right now, please try again shortly",
+    "alreadyRegistered90d": "This number has already registered within the last 90 days",
+    "alreadyHasListing": "You already have a donor listing",
+    "registerFailed": "Could not complete registration",
+    "contactRetryLater": "Contact details aren't available right now, please try again shortly",
+    "contactNotFound": "Could not find contact details",
+    "donorUnavailable": "This donor isn't available to contact right now"
+  },
+  "questions": {
+    "titleMin": "Title must be at least 10 characters",
+    "titleMax": "Title cannot exceed 200 characters",
+    "bodyMax": "Details cannot exceed 2000 characters",
+    "categoryRequired": "Please select a category",
+    "featureDisabled": "This feature isn't available right now",
+    "dailyLimitReached": "You've reached today's question limit. Please try again tomorrow.",
+    "submitFailed": "Could not submit the question"
+  },
+  "answers": {
+    "invalidQuestionId": "Invalid question ID",
+    "bodyMin": "Answer must be at least 5 characters",
+    "bodyMax": "Answer cannot exceed 2000 characters",
+    "dailyLimitReached": "You've reached today's answer limit. Please try again tomorrow.",
+    "submitFailed": "Could not submit the answer"
+  },
+  "leads": {
+    "invalidDoctorId": "Invalid doctor ID",
+    "messageMax": "Message cannot exceed 200 characters",
+    "alreadySent": "You've already sent a request. Please try again later.",
+    "sendFailed": "Could not send"
+  },
+  "dataReports": {
+    "invalidId": "Invalid ID",
+    "reasonRequired": "Please select a reason",
+    "detailMax": "Details cannot exceed 1000 characters",
+    "dailyLimitReached": "You've reached today's report limit.",
+    "submitFailed": "Could not submit the report"
+  },
+  "pageSubmissions": {
+    "invalidPageId": "Invalid page ID",
+    "submitFailed": "Could not submit"
+  },
+  "polls": {
+    "invalidOption": "Invalid option",
+    "featureDisabled": "This feature is currently disabled",
+    "expired": "This poll has expired",
+    "alreadyVoted": "You've already voted",
+    "voteFailed": "Could not submit your vote"
+  },
+  "account": {
+    "emailInvalid": "Email is invalid",
+    "locationInvalid": "Invalid location",
+    "deleteFailed": "Could not delete the account",
+    "updateFailed": "Could not update",
+    "exportRequestFailed": "Could not send the request"
+  }
+}

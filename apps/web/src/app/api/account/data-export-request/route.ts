@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/account/data-export-request — VYTANEXA-BLUEPRINT.md § S18
@@ -19,13 +20,15 @@ import { createClient } from '@/lib/supabase/server';
  * work, not a fix to this route.
  */
 export async function POST() {
+  const tCommon = await getT('common');
+  const t = await getT('validation');
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'সাইন ইন করুন' }, { status: 401 });
+    return NextResponse.json({ error: tCommon('signIn') }, { status: 401 });
   }
 
   const { error } = await supabase.from('analytics_events').insert({
@@ -36,7 +39,7 @@ export async function POST() {
 
   if (error) {
     console.error('data export request logging failed:', error.message);
-    return NextResponse.json({ error: 'অনুরোধ পাঠাতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('account.exportRequestFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

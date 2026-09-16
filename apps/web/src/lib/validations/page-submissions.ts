@@ -1,10 +1,15 @@
 import { z } from 'zod';
+import { getT } from '@vytanexa/i18n/server';
 
-export const pageSubmissionSchema = z.object({
-  page_id: z.string().uuid('অসঠিক পেজ আইডি'),
-  block_index: z.number().int().min(0),
-  submission_data: z.record(z.unknown()),
-  submitter_phone: z.string().trim().regex(/^[6-9]\d{9}$/, 'সঠিক মোবাইল নম্বর দিন').nullable().optional(),
-});
+type Translator = Awaited<ReturnType<typeof getT<'validation'>>>;
 
-export type PageSubmissionInput = z.infer<typeof pageSubmissionSchema>;
+export function pageSubmissionSchema(t: Translator) {
+  return z.object({
+    page_id: z.string().uuid(t('pageSubmissions.invalidPageId')),
+    block_index: z.number().int().min(0),
+    submission_data: z.record(z.unknown()),
+    submitter_phone: z.string().trim().regex(/^[6-9]\d{9}$/, t('phone.invalid')).nullable().optional(),
+  });
+}
+
+export type PageSubmissionInput = z.infer<ReturnType<typeof pageSubmissionSchema>>;

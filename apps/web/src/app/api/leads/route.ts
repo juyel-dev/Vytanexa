@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { leadSchema } from '@/lib/validations/leads';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/leads — VYTANEXA-BLUEPRINT.md § S07 "Appointment Lead
@@ -11,10 +12,11 @@ import { leadSchema } from '@/lib/validations/leads';
  * Route Handler server-side validation" architecture summary.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const body = await request.json();
-  const parsed = leadSchema.safeParse(body);
+  const parsed = leadSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { doctor_id, chamber_id, patient_name, patient_phone, preferred_time, message } = parsed.data;
 
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
     return NextResponse.json(
-      { error: 'আপনি ইতিমধ্যে অনুরোধ পাঠিয়েছেন। পরে আবার চেষ্টা করুন।' },
+      { error: t('leads.alreadySent') },
       { status: 429 }
     );
   }
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('lead insert failed:', error.message);
-    return NextResponse.json({ error: 'পাঠাতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('leads.sendFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

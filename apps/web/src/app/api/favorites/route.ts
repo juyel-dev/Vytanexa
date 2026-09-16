@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Favorites — VYTANEXA-BLUEPRINT.md § S17 "Heart-icon toggle available
@@ -13,9 +14,11 @@ import { createClient } from '@/lib/supabase/server';
  * defense-in-depth backstop if a guest's request reaches it anyway.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
+  const tCommon = await getT('common');
   const { entityType, entityId } = await request.json();
   if (!entityType || !entityId) {
-    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+    return NextResponse.json({ error: t('generic.incompleteData') }, { status: 400 });
   }
 
   const supabase = createClient();
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: 'সাইন ইন করুন', requiresSignIn: true }, { status: 401 });
+    return NextResponse.json({ error: tCommon('signIn'), requiresSignIn: true }, { status: 401 });
   }
 
   const { data: existing } = await supabase
@@ -37,14 +40,14 @@ export async function POST(request: NextRequest) {
 
   if (existing) {
     const { error } = await supabase.from('user_favorites').delete().eq('id', existing.id);
-    if (error) return NextResponse.json({ error: 'সমস্যা হয়েছে' }, { status: 500 });
+    if (error) return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
     return NextResponse.json({ favorited: false });
   }
 
   const { error } = await supabase
     .from('user_favorites')
     .insert({ user_id: user.id, entity_type: entityType, entity_id: entityId });
-  if (error) return NextResponse.json({ error: 'সমস্যা হয়েছে' }, { status: 500 });
+  if (error) return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
   return NextResponse.json({ favorited: true });
 }
 

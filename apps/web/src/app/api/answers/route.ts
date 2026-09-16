@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { answerSchema } from '@/lib/validations/answers';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/answers — VYTANEXA-BLUEPRINT.md § S14 "উত্তর দিন input at
@@ -20,15 +21,16 @@ import { answerSchema } from '@/lib/validations/answers';
  * decision for Admin Panel" note), never from this public route.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const body = await request.json();
   // Normalize client field `body` → schema field `body`, plus validate
-  const parsed = answerSchema.safeParse({
+  const parsed = answerSchema(t).safeParse({
     question_id: body.question_id,
     body: body.body,
     author_name: body.author_name,
   });
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { question_id, body: answerBody, author_name } = parsed.data;
 
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
     return NextResponse.json(
-      { error: 'আজকের জন্য উত্তর দেওয়ার সীমা শেষ হয়েছে। কাল আবার চেষ্টা করুন।' },
+      { error: t('answers.dailyLimitReached') },
       { status: 429 }
     );
   }
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('answer insert failed:', error.message);
-    return NextResponse.json({ error: 'উত্তর জমা দিতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('answers.submitFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

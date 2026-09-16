@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { pollVoteSchema } from '@/lib/validations/polls';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/polls/[id]/vote — VYTANEXA-BLUEPRINT.md § S15. "One vote
@@ -19,21 +20,22 @@ import { isFeatureEnabled } from '@/lib/feature-flags';
  * are designed around one-shot votes.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const t = await getT('validation');
   const supabase = createClient();
 
   if (!(await isFeatureEnabled(supabase, 'polls'))) {
-    return NextResponse.json({ error: 'এই ফিচার এখন বন্ধ আছে' }, { status: 404 });
+    return NextResponse.json({ error: t('polls.featureDisabled') }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'অনুরোধের বডি প্রয়োজন' }, { status: 400 });
+    return NextResponse.json({ error: t('generic.requestBodyRequired') }, { status: 400 });
   }
-  const parsed = pollVoteSchema.safeParse(body);
+  const parsed = pollVoteSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { optionId, voterKey } = parsed.data;
 
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
-    return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, { status: 429 });
+    return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
   }
 
   const { data: poll } = await supabase
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     .single();
 
   if (poll?.expires_at && new Date(poll.expires_at) < new Date()) {
-    return NextResponse.json({ error: 'এই জরিপের মেয়াদ শেষ হয়ে গেছে' }, { status: 400 });
+    return NextResponse.json({ error: t('polls.expired') }, { status: 400 });
   }
 
   const { error } = await supabase
@@ -67,10 +69,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   if (error) {
     if (error.code === '23505') {
-      return NextResponse.json({ error: 'আপনি ইতিমধ্যে ভোট দিয়েছেন' }, { status: 409 });
+      return NextResponse.json({ error: t('polls.alreadyVoted') }, { status: 409 });
     }
     console.error('poll vote insert failed:', error.message);
-    return NextResponse.json({ error: 'ভোট দিতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('polls.voteFailed') }, { status: 500 });
   }
 
   const { data: updatedOptions } = await supabase

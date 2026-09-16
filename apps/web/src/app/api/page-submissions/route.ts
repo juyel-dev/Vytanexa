@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import type { Json } from '@vytanexa/database';
 import { pageSubmissionSchema } from '@/lib/validations/page-submissions';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/page-submissions — VYTANEXA-BLUEPRINT.md § S19
@@ -14,10 +15,11 @@ import { pageSubmissionSchema } from '@/lib/validations/page-submissions';
  * reads back.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const body = await request.json();
-  const parsed = pageSubmissionSchema.safeParse(body);
+  const parsed = pageSubmissionSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { page_id, block_index, submission_data, submitter_phone } = parsed.data;
 
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
-    return NextResponse.json({ error: 'অনেকবার চেষ্টা করা হয়েছে, পরে আবার চেষ্টা করুন' }, {
+    return NextResponse.json({ error: t('generic.rateLimited') }, {
       status: 429,
     });
   }
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('page_submissions insert failed:', error.message);
-    return NextResponse.json({ error: 'জমা দিতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('pageSubmissions.submitFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

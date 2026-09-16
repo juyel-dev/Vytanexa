@@ -4,6 +4,7 @@ import { getClientIp } from '@/lib/get-client-ip';
 import { queryQuestionList, type QAListParams } from '@/lib/queries/qa-list';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { questionSchema } from '@/lib/validations/questions';
+import { getT } from '@vytanexa/i18n/server';
 
 /** GET /api/questions — infinite scroll continuation, mirrors /api/hospitals (S08). */
 export async function GET(request: NextRequest) {
@@ -41,16 +42,17 @@ export async function GET(request: NextRequest) {
  * still needs to see who actually submitted it).
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const supabase = createClient();
 
   if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
-    return NextResponse.json({ error: 'এই ফিচারটি এখন উপলব্ধ নয়' }, { status: 404 });
+    return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
   }
 
   const body = await request.json();
-  const parsed = questionSchema.safeParse(body);
+  const parsed = questionSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { title, body: questionBody, category_id, is_anonymous, author_name, author_phone } =
     parsed.data;
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
     return NextResponse.json(
-      { error: 'আজকের জন্য প্রশ্ন করার সীমা শেষ হয়েছে। কাল আবার চেষ্টা করুন।' },
+      { error: t('questions.dailyLimitReached') },
       { status: 429 }
     );
   }
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('question insert failed:', error.message);
-    return NextResponse.json({ error: 'প্রশ্ন জমা দিতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('questions.submitFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

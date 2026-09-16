@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { dataReportSchema } from '@/lib/validations/data-reports';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/data-reports — VYTANEXA-BLUEPRINT.md § S15 "Reports
@@ -15,10 +16,11 @@ import { dataReportSchema } from '@/lib/validations/data-reports';
  * would still need real admin attention to dismiss.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const body = await request.json();
-  const parsed = dataReportSchema.safeParse(body);
+  const parsed = dataReportSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { entity_type, entity_id, reason, detail } = parsed.data;
 
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
     return NextResponse.json(
-      { error: 'আজকের জন্য রিপোর্ট করার সীমা শেষ হয়েছে।' },
+      { error: t('dataReports.dailyLimitReached') },
       { status: 429 }
     );
   }
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('data_reports insert failed:', error.message);
-    return NextResponse.json({ error: 'রিপোর্ট জমা দিতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('dataReports.submitFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

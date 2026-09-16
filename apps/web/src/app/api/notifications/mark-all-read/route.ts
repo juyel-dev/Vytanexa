@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /** POST /api/notifications/mark-all-read — "সব পড়া হয়েছে" bulk action, signed-in users only. */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const supabase = createClient();
   const {
     data: { user },
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
   // already rejects anything that isn't a real notification, so junk
   // ids were never actually insertable; this only caps request size.
   if (notificationIds.length > 50) {
-    return NextResponse.json({ error: 'অনেক বেশি আইটেম' }, { status: 400 });
+    return NextResponse.json({ error: t('generic.tooManyItems') }, { status: 400 });
   }
 
   const rows = notificationIds.map((id: string) => ({ notification_id: id, user_id: user.id }));
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('mark-all-read failed:', error.message);
-    return NextResponse.json({ error: 'সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

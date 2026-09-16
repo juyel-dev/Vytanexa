@@ -1,18 +1,27 @@
 import { z } from 'zod';
+import { getT } from '@vytanexa/i18n/server';
 
-export const reviewSchema = z.object({
-  // Backward compat: `doctor_id` without `entity_type` still accepted
-  doctor_id: z.string().uuid().optional(),
-  entity_type: z.enum(['doctor', 'hospital']).optional(),
-  entity_id: z.string().uuid().optional(),
-  reviewer_name: z.string().trim().min(2, 'নাম কমপক্ষে ২ অক্ষরের হতে হবে').max(80, 'নাম খুব বড়'),
-  rating: z.number().int('রেটিং পূর্ণ সংখ্যা হতে হবে').min(1, 'রেটিং ১-৫ এর মধ্যে').max(5, 'রেটিং ১-৫ এর মধ্যে'),
-  review_text: z
-    .string()
-    .trim()
-    .min(20, 'রিভিউ ২০-৫০০ অক্ষরের মধ্যে হতে হবে')
-    .max(500, 'রিভিউ ২০-৫০০ অক্ষরের মধ্যে হতে হবে'),
-  honeypot: z.string().optional(),
-});
+type Translator = Awaited<ReturnType<typeof getT<'validation'>>>;
 
-export type ReviewInput = z.infer<typeof reviewSchema>;
+export function reviewSchema(t: Translator) {
+  return z.object({
+    // Backward compat: `doctor_id` without `entity_type` still accepted
+    doctor_id: z.string().uuid().optional(),
+    entity_type: z.enum(['doctor', 'hospital']).optional(),
+    entity_id: z.string().uuid().optional(),
+    reviewer_name: z
+      .string()
+      .trim()
+      .min(2, t('name.min'))
+      .max(80, t('name.max')),
+    rating: z
+      .number()
+      .int(t('reviews.ratingInt'))
+      .min(1, t('reviews.ratingRange'))
+      .max(5, t('reviews.ratingRange')),
+    review_text: z.string().trim().min(20, t('reviews.textLength')).max(500, t('reviews.textLength')),
+    honeypot: z.string().optional(),
+  });
+}
+
+export type ReviewInput = z.infer<ReturnType<typeof reviewSchema>>;

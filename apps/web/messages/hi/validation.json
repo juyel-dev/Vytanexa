@@ -1,0 +1,83 @@
+{
+  "generic": {
+    "validationFailed": "सत्यापन विफल हुआ",
+    "somethingWrong": "कुछ गड़बड़ हो गई",
+    "incompleteData": "अधूरी जानकारी",
+    "invalidData": "अमान्य डेटा",
+    "rateLimited": "बहुत बार कोशिश की गई, कृपया बाद में फिर कोशिश करें",
+    "tooManyItems": "बहुत अधिक आइटम",
+    "requestBodyRequired": "अनुरोध का डेटा आवश्यक है",
+    "notSignedIn": "साइन इन नहीं है"
+  },
+  "name": { "min": "नाम कम से कम 2 अक्षर का होना चाहिए", "max": "नाम बहुत बड़ा है" },
+  "phone": { "invalid": "सही मोबाइल नंबर दर्ज करें" },
+  "reviews": {
+    "ratingInt": "रेटिंग पूर्ण संख्या होनी चाहिए",
+    "ratingRange": "रेटिंग 1-5 के बीच होनी चाहिए",
+    "textLength": "समीक्षा 20-500 अक्षरों के बीच होनी चाहिए",
+    "alreadyReviewedHospital": "आप पहले ही इस अस्पताल की समीक्षा कर चुके हैं। 24 घंटे बाद फिर कोशिश करें।",
+    "alreadyReviewedDoctor": "आप पहले ही इस डॉक्टर की समीक्षा कर चुके हैं। 24 घंटे बाद फिर कोशिश करें।",
+    "submitFailed": "सबमिट नहीं हो सका"
+  },
+  "bloodDonors": {
+    "phoneInvalid": "सही 10 अंकों का मोबाइल नंबर दर्ज करें",
+    "groupInvalid": "रक्त समूह सही नहीं है",
+    "locationRequired": "कृपया स्थान चुनें",
+    "consentRequired": "आपातकालीन स्थिति में संपर्क किए जाने की सहमति आवश्यक है",
+    "mustSignIn": "दाता बनने के लिए साइन इन करें",
+    "registerRetryLater": "अभी पंजीकरण संभव नहीं है, कृपया थोड़ी देर बाद कोशिश करें",
+    "alreadyRegistered90d": "इस नंबर से पिछले 90 दिनों में पहले ही पंजीकरण हो चुका है",
+    "alreadyHasListing": "आपकी पहले से ही एक दाता सूची है",
+    "registerFailed": "पंजीकरण पूरा नहीं हो सका",
+    "contactRetryLater": "अभी संपर्क जानकारी उपलब्ध नहीं है, कृपया थोड़ी देर बाद कोशिश करें",
+    "contactNotFound": "संपर्क जानकारी नहीं मिली",
+    "donorUnavailable": "यह दाता अभी संपर्क के लिए उपलब्ध नहीं है"
+  },
+  "questions": {
+    "titleMin": "शीर्षक कम से कम 10 अक्षर का होना चाहिए",
+    "titleMax": "शीर्षक 200 अक्षरों से अधिक नहीं हो सकता",
+    "bodyMax": "विवरण 2000 अक्षरों से अधिक नहीं हो सकता",
+    "categoryRequired": "कृपया श्रेणी चुनें",
+    "featureDisabled": "यह सुविधा अभी उपलब्ध नहीं है",
+    "dailyLimitReached": "आज के लिए प्रश्न की सीमा समाप्त हो गई है। कल फिर कोशिश करें।",
+    "submitFailed": "प्रश्न जमा नहीं हो सका"
+  },
+  "answers": {
+    "invalidQuestionId": "अमान्य प्रश्न आईडी",
+    "bodyMin": "उत्तर कम से कम 5 अक्षर का होना चाहिए",
+    "bodyMax": "उत्तर 2000 अक्षरों से अधिक नहीं हो सकता",
+    "dailyLimitReached": "आज के लिए उत्तर देने की सीमा समाप्त हो गई है। कल फिर कोशिश करें।",
+    "submitFailed": "उत्तर जमा नहीं हो सका"
+  },
+  "leads": {
+    "invalidDoctorId": "अमान्य डॉक्टर आईडी",
+    "messageMax": "संदेश 200 अक्षरों से अधिक नहीं हो सकता",
+    "alreadySent": "आप पहले ही अनुरोध भेज चुके हैं। बाद में फिर कोशिश करें।",
+    "sendFailed": "भेजा नहीं जा सका"
+  },
+  "dataReports": {
+    "invalidId": "अमान्य आईडी",
+    "reasonRequired": "कृपया कारण चुनें",
+    "detailMax": "विवरण 1000 अक्षरों से अधिक नहीं हो सकता",
+    "dailyLimitReached": "आज के लिए रिपोर्ट की सीमा समाप्त हो गई है।",
+    "submitFailed": "रिपोर्ट जमा नहीं हो सकी"
+  },
+  "pageSubmissions": {
+    "invalidPageId": "अमान्य पेज आईडी",
+    "submitFailed": "जमा नहीं हो सका"
+  },
+  "polls": {
+    "invalidOption": "अमान्य विकल्प",
+    "featureDisabled": "यह सुविधा अभी बंद है",
+    "expired": "इस सर्वेक्षण की अवधि समाप्त हो गई है",
+    "alreadyVoted": "आप पहले ही वोट दे चुके हैं",
+    "voteFailed": "वोट नहीं हो सका"
+  },
+  "account": {
+    "emailInvalid": "ईमेल सही नहीं है",
+    "locationInvalid": "अमान्य स्थान",
+    "deleteFailed": "अकाउंट हटाया नहीं जा सका",
+    "updateFailed": "अपडेट नहीं हो सका",
+    "exportRequestFailed": "अनुरोध नहीं भेजा जा सका"
+  }
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/notifications/mark-read — signed-in users only (guests
@@ -10,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
  * duplicate-key error surfaced to the client.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const supabase = createClient();
   const {
     data: { user },
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   const { notificationId } = await request.json();
   if (!notificationId) {
-    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+    return NextResponse.json({ error: t('generic.incompleteData') }, { status: 400 });
   }
 
   const { error } = await supabase
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('mark-read failed:', error.message);
-    return NextResponse.json({ error: 'সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { bloodDonorSchema } from '@/lib/validations/blood-donors';
+import { bloodDonorSchema } from '@/lib/validations/blood-donors-schema';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/blood-donors — VYTANEXA-BLUEPRINT.md § S11 "Donor
@@ -32,19 +33,20 @@ import { bloodDonorSchema } from '@/lib/validations/blood-donors';
  * persisted. Documented here rather than silently dropped.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const supabase = createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: 'দাতা হতে হলে সাইন ইন করুন' }, { status: 401 });
+    return NextResponse.json({ error: t('bloodDonors.mustSignIn') }, { status: 401 });
   }
 
   const body = await request.json();
-  const parsed = bloodDonorSchema.safeParse(body);
+  const parsed = bloodDonorSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { name, phone, blood_group, location_id, consent_contact } = parsed.data;
 
@@ -56,11 +58,11 @@ export async function POST(request: NextRequest) {
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-    return NextResponse.json({ error: 'এখন নিবন্ধন করা যাচ্ছে না, একটু পরে চেষ্টা করুন' }, { status: 503 });
+    return NextResponse.json({ error: t('bloodDonors.registerRetryLater') }, { status: 503 });
   }
   if (!allowed) {
     return NextResponse.json(
-      { error: 'এই নম্বর দিয়ে ৯০ দিনের মধ্যে ইতিমধ্যে নিবন্ধন করা হয়েছে' },
+      { error: t('bloodDonors.alreadyRegistered90d') },
       { status: 429 }
     );
   }
@@ -78,12 +80,12 @@ export async function POST(request: NextRequest) {
     if (error.code === '23505') {
       // uq_blood_donors_one_per_user — this account already has a listing.
       return NextResponse.json(
-        { error: 'আপনার একটি দাতা তালিকা ইতিমধ্যে আছে' },
+        { error: t('bloodDonors.alreadyHasListing') },
         { status: 409 }
       );
     }
     console.error('donor registration insert failed:', error.message);
-    return NextResponse.json({ error: 'নিবন্ধন করতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('bloodDonors.registerFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

@@ -1,8 +1,13 @@
 import { z } from 'zod';
+import { getT } from '@vytanexa/i18n/server';
 
-export const pollVoteSchema = z.object({
-  optionId: z.string().uuid('অসঠিক বিকল্প'),
-  voterKey: z.string().trim().min(1, 'তথ্য অসম্পূর্ণ'),
-});
+type Translator = Awaited<ReturnType<typeof getT<'validation'>>>;
 
-export type PollVoteInput = z.infer<typeof pollVoteSchema>;
+export function pollVoteSchema(t: Translator) {
+  return z.object({
+    optionId: z.string().uuid(t('polls.invalidOption')),
+    voterKey: z.string().trim().min(1, t('generic.incompleteData')),
+  });
+}
+
+export type PollVoteInput = z.infer<ReturnType<typeof pollVoteSchema>>;

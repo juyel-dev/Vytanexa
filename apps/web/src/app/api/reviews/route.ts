@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { reviewSchema } from '@/lib/validations/reviews';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/reviews — VYTANEXA-BLUEPRINT.md § S07 "Review Submission
@@ -21,6 +22,7 @@ import { reviewSchema } from '@/lib/validations/reviews';
  * exactly as before — only additive.
  */
 export async function POST(request: NextRequest) {
+  const t = await getT('validation');
   const body = await request.json();
 
   // Honeypot checked before Zod so bots get a silent 204 without a
@@ -29,9 +31,9 @@ export async function POST(request: NextRequest) {
     return new NextResponse(null, { status: 204 });
   }
 
-  const parsed = reviewSchema.safeParse(body);
+  const parsed = reviewSchema(t).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Validation failed' }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { doctor_id, entity_type, entity_id, reviewer_name, rating, review_text } = parsed.data;
 
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
   // Resolved after Zod so we can give a precise 400 for the
   // entity-resolution edge case (neither new nor legacy fields supplied).
   if (!resolvedType || !['doctor', 'hospital'].includes(resolvedType) || !resolvedId) {
-    return NextResponse.json({ error: 'তথ্য অসম্পূর্ণ' }, { status: 400 });
+    return NextResponse.json({ error: t('generic.incompleteData') }, { status: 400 });
   }
 
   const supabase = createClient();
@@ -57,9 +59,7 @@ export async function POST(request: NextRequest) {
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
     const alreadyMsg =
-      resolvedType === 'hospital'
-        ? 'আপনি ইতিমধ্যে এই হাসপাতালকে রিভিউ দিয়েছেন। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।'
-        : 'আপনি ইতিমধ্যে এই ডাক্তারকে রিভিউ দিয়েছেন। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।';
+      resolvedType === 'hospital' ? t('reviews.alreadyReviewedHospital') : t('reviews.alreadyReviewedDoctor');
     return NextResponse.json({ error: alreadyMsg }, { status: 429 });
   }
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('review insert failed:', error.message);
-    return NextResponse.json({ error: 'সাবমিট করতে সমস্যা হয়েছে' }, { status: 500 });
+    return NextResponse.json({ error: t('reviews.submitFailed') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });
