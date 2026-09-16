@@ -1,4 +1,6 @@
 {
+  "pageTitle": "मेरा अकाउंट",
+  "editProfileTitle": "प्रोफाइल संपादित करें",
   "defaultUserName": "उपयोगकर्ता",
   "editProfile": "संपादित करें",
   "rows": {
@@ -27,5 +29,30 @@
     "findDoctors": "डॉक्टर खोजें →",
     "noDoctors": "आपकी पसंदीदा सूची में कोई डॉक्टर नहीं है",
     "noHospitals": "आपकी पसंदीदा सूची में कोई अस्पताल नहीं है"
+  },
+  "status": {
+    "lead": {
+      "new": "लंबित",
+      "contacted": "संपर्क किया गया",
+      "completed": "पूर्ण",
+      "cancelled": "रद्द",
+      "spam": "रद्द"
+    },
+    "moderation": {
+      "pending": "🟡 अनुमोदन की प्रतीक्षा में",
+      "approved": "✅ प्रकाशित",
+      "rejected": "❌ अस्वीकृत"
+    }
+  },
+  "history": {
+    "noHistoryYet": "अभी तक कोई अपॉइंटमेंट अनुरोध नहीं है",
+    "requestedAgo": "{time} अनुरोध किया गया"
+  },
+  "myReviews": {
+    "noReviewsYet": "आपने अभी तक कोई समीक्षा नहीं लिखी है",
+    "entityNotFound": "जानकारी नहीं मिली"
+  },
+  "myQa": {
+    "noQuestionsYet": "आपने अभी तक कोई प्रश्न नहीं पूछा है"
   }
 }

@@ -5,10 +5,12 @@ import { AccountHomeClient } from '@/components/account/AccountHomeClient';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
 import { getFavorites, getLeadsHistory, getMyQuestions, getMyReviews } from '@/lib/queries/account';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'আমার অ্যাকাউন্ট | Vytanexa',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('account');
+  return { title: `${t('pageTitle')} | Vytanexa` };
+}
 
 /**
  * Account Home — VYTANEXA-BLUEPRINT.md § S17, "Auth-Guarded". Every
@@ -26,6 +28,7 @@ export default async function AccountPage() {
     redirect('/auth/login?returnUrl=/account');
   }
 
+  const t = await getT('account');
   const userId = currentUser.authUser.id;
   const [{ doctors, hospitals }, history, questions, reviews] = await Promise.all([
     getFavorites(supabase, userId),
@@ -36,7 +39,7 @@ export default async function AccountPage() {
 
   return (
     <>
-      <TopBarSection title="আমার অ্যাকাউন্ট" backHref="/more" />
+      <TopBarSection title={t('pageTitle')} backHref="/more" />
       <AccountHomeClient
         name={currentUser.profile.name}
         phone={currentUser.profile.phone}

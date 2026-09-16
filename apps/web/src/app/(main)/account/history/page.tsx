@@ -6,15 +6,19 @@ import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
 import { getLeadsHistory } from '@/lib/queries/account';
 import { getLocalizedField, formatRelativeTimeBn } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = { title: 'অ্যাপয়েন্টমেন্ট হিস্টরি | Vytanexa' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('account');
+  return { title: `${t('rows.appointmentHistory')} | Vytanexa` };
+}
 
-const STATUS_LABELS: Record<string, { label: string; dot: string }> = {
-  new: { label: 'অপেক্ষমাণ', dot: '🟡' },
-  contacted: { label: 'যোগাযোগ করা হয়েছে', dot: '🟢' },
-  completed: { label: 'সম্পন্ন', dot: '✅' },
-  cancelled: { label: 'বাতিল', dot: '⚪' },
-  spam: { label: 'বাতিল', dot: '⚪' },
+const STATUS_DOTS: Record<string, string> = {
+  new: '🟡',
+  contacted: '🟢',
+  completed: '✅',
+  cancelled: '⚪',
+  spam: '⚪',
 };
 
 /**
@@ -28,19 +32,23 @@ export default async function HistoryPage() {
   const currentUser = await getCurrentUser(supabase);
   if (!currentUser) redirect('/auth/login?returnUrl=/account/history');
 
+  const t = await getT('account');
   const history = await getLeadsHistory(supabase, currentUser.authUser.id);
 
   return (
     <>
-      <TopBarSection title="অ্যাপয়েন্টমেন্ট হিস্টরি" backHref="/account" />
+      <TopBarSection title={t('rows.appointmentHistory')} backHref="/account" />
       <div className="px-4 py-4">
         {history.length === 0 ? (
           <p className="py-10 text-center text-[13px] text-neutral-400">
-            এখনো কোনো অ্যাপয়েন্টমেন্ট অনুরোধ নেই
+            {t('history.noHistoryYet')}
           </p>
         ) : (
           history.map((lead) => {
-            const status = STATUS_LABELS[lead.status] ?? STATUS_LABELS.new!;
+            const statusKey = lead.status as keyof typeof STATUS_DOTS;
+            const dot = STATUS_DOTS[lead.status] ?? STATUS_DOTS.new;
+            const statusPath = `status.lead.${statusKey}` as Parameters<typeof t>[0];
+            const label = t.has(statusPath) ? t(statusPath) : lead.status;
             const doctorName = lead.doctors
               ? getLocalizedField(lead.doctors.name_translations)
               : null;
@@ -67,10 +75,10 @@ export default async function HistoryPage() {
                   </Link>
                 )}
                 <p className="mt-1 text-[12px] text-neutral-500">
-                  📅 {formatRelativeTimeBn(lead.created_at)} অনুরোধ করা হয়েছে
+                  📅 {t('history.requestedAgo', { time: formatRelativeTimeBn(lead.created_at) })}
                 </p>
                 <p className="mt-1.5 text-[13px] font-medium">
-                  {status.dot} {status.label}
+                  {dot} {label}
                 </p>
               </div>
             );

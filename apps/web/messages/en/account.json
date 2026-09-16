@@ -1,4 +1,6 @@
 {
+  "pageTitle": "My account",
+  "editProfileTitle": "Edit profile",
   "defaultUserName": "User",
   "editProfile": "Edit",
   "rows": {
@@ -27,5 +29,30 @@
     "findDoctors": "Find doctors →",
     "noDoctors": "No doctors in your favorites",
     "noHospitals": "No hospitals in your favorites"
+  },
+  "status": {
+    "lead": {
+      "new": "Pending",
+      "contacted": "Contacted",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "spam": "Cancelled"
+    },
+    "moderation": {
+      "pending": "🟡 Awaiting approval",
+      "approved": "✅ Published",
+      "rejected": "❌ Rejected"
+    }
+  },
+  "history": {
+    "noHistoryYet": "No appointment requests yet",
+    "requestedAgo": "Requested {time}"
+  },
+  "myReviews": {
+    "noReviewsYet": "You haven't written any reviews yet",
+    "entityNotFound": "Could not find details"
+  },
+  "myQa": {
+    "noQuestionsYet": "You haven't asked any questions yet"
   }
 }

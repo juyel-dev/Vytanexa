@@ -5,8 +5,12 @@ import { FavoritesClient } from '@/components/account/FavoritesClient';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
 import { getFavorites } from '@/lib/queries/account';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = { title: 'পছন্দের তালিকা | Vytanexa' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('account');
+  return { title: `${t('rows.favorites')} | Vytanexa` };
+}
 
 /**
  * Favorites page — simplification note: unfavoriting a card here
@@ -24,11 +28,12 @@ export default async function FavoritesPage() {
   const currentUser = await getCurrentUser(supabase);
   if (!currentUser) redirect('/auth/login?returnUrl=/account/favorites');
 
+  const t = await getT('account');
   const { doctors, hospitals } = await getFavorites(supabase, currentUser.authUser.id);
 
   return (
     <>
-      <TopBarSection title="পছন্দের তালিকা" backHref="/account" />
+      <TopBarSection title={t('rows.favorites')} backHref="/account" />
       <FavoritesClient doctors={doctors} hospitals={hospitals} />
     </>
   );

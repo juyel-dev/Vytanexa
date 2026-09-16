@@ -1,4 +1,6 @@
 {
+  "pageTitle": "আমার অ্যাকাউন্ট",
+  "editProfileTitle": "প্রোফাইল সম্পাদনা",
   "defaultUserName": "ব্যবহারকারী",
   "editProfile": "সম্পাদনা করুন",
   "rows": {
@@ -27,5 +29,30 @@
     "findDoctors": "ডাক্তার খুঁজুন →",
     "noDoctors": "পছন্দের তালিকায় কোনো ডাক্তার নেই",
     "noHospitals": "পছন্দের তালিকায় কোনো হাসপাতাল নেই"
+  },
+  "status": {
+    "lead": {
+      "new": "অপেক্ষমাণ",
+      "contacted": "যোগাযোগ করা হয়েছে",
+      "completed": "সম্পন্ন",
+      "cancelled": "বাতিল",
+      "spam": "বাতিল"
+    },
+    "moderation": {
+      "pending": "🟡 অনুমোদনের অপেক্ষায়",
+      "approved": "✅ প্রকাশিত",
+      "rejected": "❌ প্রত্যাখ্যাত"
+    }
+  },
+  "history": {
+    "noHistoryYet": "এখনো কোনো অ্যাপয়েন্টমেন্ট অনুরোধ নেই",
+    "requestedAgo": "{time} অনুরোধ করা হয়েছে"
+  },
+  "myReviews": {
+    "noReviewsYet": "আপনি এখনো কোনো রিভিউ দেননি",
+    "entityNotFound": "তথ্য পাওয়া যায়নি"
+  },
+  "myQa": {
+    "noQuestionsYet": "আপনি এখনো কোনো প্রশ্ন করেননি"
   }
 }
