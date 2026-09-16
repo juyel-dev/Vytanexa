@@ -140,15 +140,20 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `53af381`** (last commit in this session). Progress:
+**As of commit `45d0c4e`** (last commit in this session). Progress:
 67/126 web `.tsx` files still have hardcoded Bengali (baseline at the
-start of Phase 3 was 105/126). Note: this count includes files whose
-only remaining Bengali is inside JSDoc comments quoting spec text
-(e.g. `components/qa/*`, `components/account/*` from earlier this
-session) — see "Blocked" below, that's expected and correct, not a
-miss. **This count also no longer reflects the true size of the
-remaining work** — see "New this session" below re: `.ts`/`.tsx`
-scope.
+start of Phase 3 was 105/126) — **unchanged from batch 12**, since
+batch 13 and the manifest.ts fix were entirely `.ts` files (API routes,
+Zod validations, the PWA manifest), not `.tsx`. Note: this count
+includes files whose only remaining Bengali is inside JSDoc comments
+quoting spec text — see "Blocked" below, that's expected and correct,
+not a miss.
+
+**The `.ts` strand flagged at the end of the previous session is now
+fully closed.** A full `src/**/*.ts` sweep (not just the original
+33-file list) confirms zero files with hardcoded-Bengali runtime
+strings remaining — everything left is JSDoc/comments quoting spec
+text. Don't re-run that sweep expecting to find more; it's done.
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
@@ -157,8 +162,9 @@ scope.
 - **Phase 2 — DB-content call-site migration**: all 40 `getLocalizedField`
   call sites; duplicate language-label consolidation; admin
   `SubscriptionsManager.tsx` fix. Commit `604d160`.
-- **Phase 3, so far** — fully done, verified, real bn/en/hi text (not
-  placeholders) in every case: `components/shared/*`, `components/layout/*`,
+- **Phase 3, `.tsx` component/page strand, so far** — fully done,
+  verified, real bn/en/hi text (not placeholders) in every case:
+  `components/shared/*`, `components/layout/*`,
   `components/doctor-profile/*` (+ `hospital-profile/InfoTab.tsx`,
   migrated alongside it), `components/onboarding/*`,
   `components/blood-services/*` (new `blood` namespace),
@@ -166,12 +172,20 @@ scope.
   `components/account/*` (new `account` namespace),
   `components/home/*` — all 12 files, new structured `home` namespace,
   `app/(seo)/[state]/*` (all 3 route pages) + `components/seo/*` +
-  **`lib/seo-helpers.ts`** (new `seo` namespace — see below, this one
-  matters more than its file count suggests). Commits `f5187d8` through
-  `53af381` — see `git log --oneline 046c9f7~1..HEAD` for the full list;
-  each message documents what was migrated *and* what bug or design
-  issue was found along the way, several are worth reading in full
-  (`git show <hash>`) before resuming, not just skimming the one-liners.
+  **`lib/seo-helpers.ts`** (new `seo` namespace).
+- **Phase 3, `.ts` strand — NEW this session, now fully closed**: all
+  9 `lib/validations/*.ts` Zod schemas converted from module-level
+  constants to locale-aware factory functions, all 17
+  `app/api/**/route.ts` handlers that use them updated to match, plus
+  `app/manifest.ts`. New `validation` namespace (bn/en/hi). See
+  "New this session" below for the two architectural questions this
+  required settling (both verified empirically, not assumed) and the
+  client-bundle-safety issue found and fixed in `blood-donors.ts`.
+  Commits `f5187d8` through `45d0c4e` — see
+  `git log --oneline 046c9f7~1..HEAD` for the full list; each message
+  documents what was migrated *and* what bug or design issue was found
+  along the way, several are worth reading in full (`git show <hash>`)
+  before resuming, not just skimming the one-liners.
 
 ### Active
 Nothing mid-edit. Session ended at a clean, committed, typechecked,
@@ -215,59 +229,79 @@ mirroring what `apps/web`'s facade already does — but that's a distinct
 piece of work from "migrate hardcoded Bengali .tsx strings" and
 shouldn't be folded into a Phase 3 batch without discussing scope first.
 
-**New this session, important for whoever picks this up next**: this
-whole Phase 3 effort's inventory command (`I18N-IMPLEMENTATION-SPEC.md`
-§ 12) only globs `.tsx` files. `seo-helpers.ts` this session proved
-that's a real blind spot — it held ~860 bytes of hardcoded Bengali (the
-entire SEO title/h1/description/FAQ template system) and was invisible
-to every inventory run so far because it's a `.ts` file. Re-running the
-same scan against `src/**/*.ts` (excluding `.d.ts`) at the end of this
-session turns up **33 more files, none touched yet**, mostly two
-categories: API route handlers under `app/api/**/route.ts` (error
-messages returned in JSON responses — `blood-donors/route.ts` alone has
-188 chars) and `lib/validations/*.ts` (Zod schema `.min()`/`.max()`/
-`.refine()` error messages — `validations/reviews.ts`,
-`validations/blood-donors.ts`, `validations/questions.ts` are the
-biggest). **Have not started this yet** — it's a different shape of
-work than the component batches so far (these are server-side error
-strings, not rendered UI text, so the migration pattern needs figuring
-out fresh: does `getT()` work correctly called from inside a route
-handler outside any component tree? do validation `.refine()` callbacks
-run in a context where `await getT()` is even available, given Zod
-schemas are typically built at module load time, not per-request?)
-before committing to a batch rhythm for it. Flagging for a scoping
-conversation rather than just diving in, same as the `apps/admin`
-`bn-BD` finding.
+**New this session, worth carrying forward**:
+
+1. **`getT()` works in Route Handlers** — empirically confirmed by
+   running the actual dev server and hitting a throwaway test route,
+   not assumed from reading next-intl's source (which, being built on
+   `React.cache()`, looked like it might be React-render-scoped only).
+   It isn't; it works identically to Server Components, respects the
+   locale cookie the same way. Safe to reuse this pattern anywhere
+   server-side in this app without re-verifying.
+
+2. **Not every Zod schema can be converted to a factory function
+   in-place** — `blood-donors.ts` had to be split into two files
+   (`blood-donors.ts` keeps the client-safe `normalizeIndianPhone`,
+   new `blood-donors-schema.ts` holds the now-async `bloodDonorSchema`)
+   because `DonorRegistrationSheet.tsx` (`'use client'`) imports
+   `normalizeIndianPhone` directly, and `@vytanexa/i18n/server` is
+   hard-tagged `server-only` — importing `getT` into the same file
+   would have broken that client bundle. **Before converting any
+   validation/lib file to use server-only i18n, grep every export name
+   against every `'use client'` file first** — this file was the only
+   one of the 9 validation files where it mattered, but it's worth
+   checking every time, not just when a docstring happens to mention
+   client sharing (the one that gave it away here was pure luck of
+   reading order, not a systematic check).
+
+3. **Consolidated `validation` namespace, not per-feature** — unlike
+   every other namespace this effort has built (one per UI directory),
+   validation/API error strings got their own shared bucket
+   (`validation.json`) rather than being folded into `reviews.json`/
+   `qa.json`/etc. Reasoning: these are short, technical,
+   heavily-cross-referenced strings (`name.min`/`name.max`/
+   `phone.invalid`/`generic.*` are each reused across 3-5 unrelated
+   domains) — scattering them through feature namespaces would have
+   meant either duplicating them per-feature or awkward cross-namespace
+   `useT()` calls from unrelated schema files. If a tenth
+   validation/API file turns up needing this later, add it into
+   `validation.json`, not a new namespace.
+
+4. **`chamber-schedule.ts` looked like a bug and wasn't** — its
+   Bengali day-label defaults are a deliberate, already-correctly-used
+   fallback (both real call sites already pass translated labels via
+   `tc.raw('day')`, from an earlier session's batch). Worth remembering
+   generally: a hardcoded-Bengali *default parameter value* in a pure
+   function is not automatically the same finding as a hardcoded string
+   actually rendered — check the call sites before assuming it's a gap.
 
 ### Next Move
-Two clearly separate strands now, worth discussing with the user before
-picking one:
+Two strands, one now fully closed:
 
-1. **Continue the original strand** — remaining `.tsx` component/page
-   directories, same 7-step checklist, same rhythm that's worked for 12
-   batches running. Re-run the inventory command in
-   `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers; as of this
-   session's end, in descending priority order: `app/(main)/account/`
-   (491 chars, route pages — distinct from `components/account/*`,
-   already done), `emergency/` (398), `more/` (343),
-   `app/(main)/community/` (338), `app/(main)/search/` (326),
-   `settings/` (291), `doctors/` (284), `app/(auth)/auth/` (254),
-   `symptoms/` (241), `app/(main)/health/` (195), `hospital-profile/`
-   (remaining files beyond `InfoTab.tsx`), `lab-tests/`, `polls/`,
-   `articles/`, `custom-page/*`.
+- **`.ts` strand (API routes, Zod validations, `manifest.ts`) — DONE.**
+  Verified via a full `src/**/*.ts` sweep, not just the original
+  33-file list. No further action needed here barring new files being
+  added to the codebase later.
+- **`.tsx` component/page strand — continue as before.** Re-run the
+  inventory command in `I18N-IMPLEMENTATION-SPEC.md` § 12 for current
+  numbers before picking the next directory — as of this session's
+  end, in descending priority order: `app/(main)/account/` (491
+  chars, route pages — distinct from `components/account/*`, already
+  done), `emergency/` (398), `more/` (343), `app/(main)/community/`
+  (338), `app/(main)/search/` (326), `settings/` (291), `doctors/`
+  (284), `app/(auth)/auth/` (254), `symptoms/` (241),
+  `app/(main)/health/` (195), `hospital-profile/` (remaining files
+  beyond `InfoTab.tsx`), `lab-tests/`, `polls/`, `articles/`,
+  `custom-page/*`. Same 7-step per-file checklist, same
+  batch-verify-commit-push rhythm.
 
-2. **New strand, needs scoping first** — the 33 `.ts` files above
-   (API routes + Zod validations). Before batching these, figure out:
-   the right pattern for getting a translator into a route handler
-   (`getT()` should work fine there, it's still server-side Next.js, but
-   confirm) and into Zod `.refine()`/`.superRefine()` callbacks
-   specifically (may need the schema itself to become a function that
-   takes `t` and returns a `ZodSchema`, built fresh per-request, rather
-   than the current module-level constant — a real shape change to how
-   these files are structured, not just a string swap). Worth raising
-   with the user which strand to prioritize, since strand 2 changes the
-   validation architecture and shouldn't be rushed into 33 files without
-   settling the pattern on one first.
+**One habit worth adding going forward, given what batch 12-13 found**:
+before starting a new `.tsx` batch, it may be worth a quick
+`grep -rn '[bengali-range]' src/lib/**/*.ts src/app/api/**/*.ts`
+sanity check first, now that this effort knows `.ts` files can carry
+real runtime strings the `.tsx`-only inventory doesn't see. This
+session's sweep found and closed everything as of `45d0c4e`, but new
+`.ts` files could be added between sessions.
 
 ## Relevant Files
 
