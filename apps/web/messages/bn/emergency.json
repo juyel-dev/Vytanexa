@@ -1,4 +1,6 @@
 {
+  "pageTitle": "জরুরি সেবা",
+  "pageDescription": "জাতীয় জরুরি নম্বর, নিকটবর্তী হাসপাতাল, ব্লাড ব্যাংক ও অ্যাম্বুলেন্স সেবা — এক জায়গায়।",
   "fab": {
     "ariaLabel": "জরুরি সেবা",
     "ambulance": "অ্যাম্বুলেন্স",
@@ -10,5 +12,24 @@
   "seeAllServices": "সব জরুরি সেবা দেখুন →",
   "seeBloodBankList": "ব্লাড ব্যাংক ও রক্তদাতা তালিকা দেখুন →",
   "noEmergencyHospitalsYet": "এই মুহূর্তে জরুরি বিভাগসহ হাসপাতাল যোগ করা হয়নি",
-  "noBloodBanksYet": "এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই"
+  "noBloodBanksYet": "এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই",
+  "nationalNumbers": {
+    "heading": "🚨 জাতীয় জরুরি নম্বর",
+    "ambulance": "অ্যাম্বুলেন্স",
+    "police": "পুলিশ",
+    "fire": "ফায়ার সার্ভিস",
+    "womenHelpline": "নারী হেল্পলাইন",
+    "childHelpline": "শিশু হেল্পলাইন",
+    "mentalHealth": "মানসিক স্বাস্থ্য (Kiran)",
+    "cyberCrime": "সাইবার ক্রাইম"
+  },
+  "dataSections": {
+    "hospitalsHeading": "জরুরি বিভাগ (কাছের হাসপাতাল)",
+    "noHospitalsYetInDistrict": "{district}-এ জরুরি বিভাগসহ হাসপাতাল এখনো যোগ করা হয়নি।",
+    "bloodBanksHeading": "ব্লাড ব্যাংক",
+    "seeAllBloodServices": "সব ব্লাড সার্ভিস দেখুন →",
+    "ambulanceHeading": "অ্যাম্বুলেন্স সার্ভিস",
+    "noAmbulanceYet": "এই মুহূর্তে কোনো অ্যাম্বুলেন্স সার্ভিস যোগ করা হয়নি।",
+    "noAmbulanceYetInDistrict": "{district}-এ কোনো অ্যাম্বুলেন্স সার্ভিস এখনো যোগ করা হয়নি।"
+  }
 }

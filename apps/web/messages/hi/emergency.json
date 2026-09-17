@@ -1,4 +1,6 @@
 {
+  "pageTitle": "आपातकालीन सेवाएं",
+  "pageDescription": "राष्ट्रीय आपातकालीन नंबर, नज़दीकी अस्पताल, ब्लड बैंक और एम्बुलेंस सेवा — एक ही जगह।",
   "fab": {
     "ariaLabel": "आपातकालीन सेवाएं",
     "ambulance": "एम्बुलेंस",
@@ -10,5 +12,24 @@
   "seeAllServices": "सभी आपातकालीन सेवाएं देखें →",
   "seeBloodBankList": "ब्लड बैंक और डोनर सूची देखें →",
   "noEmergencyHospitalsYet": "अभी तक आपातकालीन विभाग वाला कोई अस्पताल नहीं जोड़ा गया",
-  "noBloodBanksYet": "अभी कोई ब्लड बैंक सूचीबद्ध नहीं है"
+  "noBloodBanksYet": "अभी कोई ब्लड बैंक सूचीबद्ध नहीं है",
+  "nationalNumbers": {
+    "heading": "🚨 राष्ट्रीय आपातकालीन नंबर",
+    "ambulance": "एम्बुलेंस",
+    "police": "पुलिस",
+    "fire": "फायर सर्विस",
+    "womenHelpline": "महिला हेल्पलाइन",
+    "childHelpline": "चाइल्ड हेल्पलाइन",
+    "mentalHealth": "मानसिक स्वास्थ्य (Kiran)",
+    "cyberCrime": "साइबर क्राइम"
+  },
+  "dataSections": {
+    "hospitalsHeading": "आपातकालीन विभाग (नज़दीकी अस्पताल)",
+    "noHospitalsYetInDistrict": "{district} में आपातकालीन विभाग वाला अस्पताल अभी तक नहीं जोड़ा गया है।",
+    "bloodBanksHeading": "ब्लड बैंक",
+    "seeAllBloodServices": "सभी ब्लड सेवाएं देखें →",
+    "ambulanceHeading": "एम्बुलेंस सेवाएं",
+    "noAmbulanceYet": "अभी कोई एम्बुलेंस सेवा सूचीबद्ध नहीं है।",
+    "noAmbulanceYetInDistrict": "{district} में अभी तक कोई एम्बुलेंस सेवा नहीं जोड़ी गई है।"
+  }
 }

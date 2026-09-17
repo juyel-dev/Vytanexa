@@ -6,6 +6,7 @@ import { Phone, Ambulance, Droplet, Building2 } from 'lucide-react';
 import { useLocationStore } from '@/stores/location-store';
 import { LocationChip } from '@/components/layout/LocationChip';
 import { useLocalizedField } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { Json } from '@vytanexa/database';
 
 type EmergencyHospital = {
@@ -67,6 +68,8 @@ function trackCall(numberType: string, label: string) {
 export function EmergencyDataSections() {
   const { districtId, districtName } = useLocationStore();
   const localize = useLocalizedField();
+  const t = useT('emergency');
+  const tc = useT('common');
   const [hospitals, setHospitals] = useState<EmergencyHospital[]>([]);
   const [bloodBanks, setBloodBanks] = useState<BloodBankRow[]>([]);
   const [ambulances, setAmbulances] = useState<AmbulanceProvider[]>([]);
@@ -103,15 +106,15 @@ export function EmergencyDataSections() {
 
       <section className="px-4 py-4">
         <h2 className="mb-3 flex items-center gap-1.5 text-[15px] font-bold text-neutral-800">
-          <Building2 className="h-4 w-4" /> জরুরি বিভাগ (কাছের হাসপাতাল)
+          <Building2 className="h-4 w-4" /> {t('dataSections.hospitalsHeading')}
         </h2>
         {loading ? (
-          <p className="text-[13px] text-neutral-400">লোড হচ্ছে...</p>
+          <p className="text-[13px] text-neutral-400">{tc('loading')}</p>
         ) : hospitals.length === 0 ? (
           <p className="text-[13px] text-neutral-400">
             {districtName
-              ? `${districtName}-এ জরুরি বিভাগসহ হাসপাতাল এখনো যোগ করা হয়নি।`
-              : 'এই মুহূর্তে জরুরি বিভাগসহ হাসপাতাল যোগ করা হয়নি।'}
+              ? t('dataSections.noHospitalsYetInDistrict', { district: districtName })
+              : t('noEmergencyHospitalsYet')}
           </p>
         ) : (
           hospitals.map((h) => (
@@ -142,12 +145,12 @@ export function EmergencyDataSections() {
 
       <section className="border-t border-neutral-100 px-4 py-4">
         <h2 className="mb-3 flex items-center gap-1.5 text-[15px] font-bold text-neutral-800">
-          <Droplet className="h-4 w-4" /> ব্লাড ব্যাংক
+          <Droplet className="h-4 w-4" /> {t('dataSections.bloodBanksHeading')}
         </h2>
         {loading ? (
-          <p className="text-[13px] text-neutral-400">লোড হচ্ছে...</p>
+          <p className="text-[13px] text-neutral-400">{tc('loading')}</p>
         ) : bloodBanks.length === 0 ? (
-          <p className="text-[13px] text-neutral-400">এই মুহূর্তে কোনো ব্লাড ব্যাংক তালিকাভুক্ত নেই।</p>
+          <p className="text-[13px] text-neutral-400">{t('noBloodBanksYet')}</p>
         ) : (
           bloodBanks.slice(0, 3).map((b) => (
             <div
@@ -171,21 +174,21 @@ export function EmergencyDataSections() {
           href="/health/blood-services"
           className="mt-1 block text-center text-[13px] font-semibold text-brand-600"
         >
-          সব ব্লাড সার্ভিস দেখুন →
+          {t('dataSections.seeAllBloodServices')}
         </Link>
       </section>
 
       <section className="border-t border-neutral-100 px-4 py-4">
         <h2 className="mb-3 flex items-center gap-1.5 text-[15px] font-bold text-neutral-800">
-          <Ambulance className="h-4 w-4" /> অ্যাম্বুলেন্স সার্ভিস
+          <Ambulance className="h-4 w-4" /> {t('dataSections.ambulanceHeading')}
         </h2>
         {loading ? (
-          <p className="text-[13px] text-neutral-400">লোড হচ্ছে...</p>
+          <p className="text-[13px] text-neutral-400">{tc('loading')}</p>
         ) : ambulances.length === 0 ? (
           <p className="text-[13px] text-neutral-400">
             {districtName
-              ? `${districtName}-এ কোনো অ্যাম্বুলেন্স সার্ভিস এখনো যোগ করা হয়নি।`
-              : 'এই মুহূর্তে কোনো অ্যাম্বুলেন্স সার্ভিস যোগ করা হয়নি।'}
+              ? t('dataSections.noAmbulanceYetInDistrict', { district: districtName })
+              : t('dataSections.noAmbulanceYet')}
           </p>
         ) : (
           ambulances.map((a) => (

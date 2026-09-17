@@ -1,4 +1,6 @@
 {
+  "pageTitle": "Emergency Services",
+  "pageDescription": "National emergency numbers, nearby hospitals, blood banks and ambulance services — all in one place.",
   "fab": {
     "ariaLabel": "Emergency services",
     "ambulance": "Ambulance",
@@ -10,5 +12,24 @@
   "seeAllServices": "See all emergency services →",
   "seeBloodBankList": "See blood bank & donor list →",
   "noEmergencyHospitalsYet": "No hospitals with an emergency department added yet",
-  "noBloodBanksYet": "No blood banks listed at the moment"
+  "noBloodBanksYet": "No blood banks listed at the moment",
+  "nationalNumbers": {
+    "heading": "🚨 National Emergency Numbers",
+    "ambulance": "Ambulance",
+    "police": "Police",
+    "fire": "Fire Service",
+    "womenHelpline": "Women's Helpline",
+    "childHelpline": "Child Helpline",
+    "mentalHealth": "Mental Health (Kiran)",
+    "cyberCrime": "Cyber Crime"
+  },
+  "dataSections": {
+    "hospitalsHeading": "Emergency Department (nearby hospitals)",
+    "noHospitalsYetInDistrict": "No hospitals with an emergency department added in {district} yet.",
+    "bloodBanksHeading": "Blood Banks",
+    "seeAllBloodServices": "See all blood services →",
+    "ambulanceHeading": "Ambulance Services",
+    "noAmbulanceYet": "No ambulance services listed at the moment.",
+    "noAmbulanceYetInDistrict": "No ambulance services added in {district} yet."
+  }
 }

@@ -3,11 +3,15 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { NationalNumbersSection } from '@/components/emergency/NationalNumbersSection';
 import { EmergencyPageViewTracker } from '@/components/emergency/EmergencyPageViewTracker';
 import { EmergencyDataSections } from '@/components/emergency/EmergencyDataSections';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'জরুরি সেবা | Vytanexa',
-  description: 'জাতীয় জরুরি নম্বর, নিকটবর্তী হাসপাতাল, ব্লাড ব্যাংক ও অ্যাম্বুলেন্স সেবা — এক জায়গায়।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('emergency');
+  return {
+    title: `${t('pageTitle')} | Vytanexa`,
+    description: t('pageDescription'),
+  };
+}
 
 /**
  * Emergency Page — VYTANEXA-BLUEPRINT.md § S12. "This is the one page
@@ -22,10 +26,11 @@ export const metadata: Metadata = {
  * than the browser Supabase client — see that route's comment for
  * why (bundle-size measurement, not a style preference).
  */
-export default function EmergencyPage() {
+export default async function EmergencyPage() {
+  const t = await getT('emergency');
   return (
     <div className="pb-6">
-      <TopBarSection title="জরুরি সেবা" />
+      <TopBarSection title={t('pageTitle')} />
       <EmergencyPageViewTracker />
       <NationalNumbersSection />
       <EmergencyDataSections />

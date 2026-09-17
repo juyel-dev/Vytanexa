@@ -166,7 +166,7 @@ export function EmergencyFAB() {
             className="mb-2 flex items-center justify-between rounded-lg bg-emergency-50 p-3"
           >
             <span className="text-[14px] font-semibold text-emergency-700">
-              📞 {n.number} — {n.label}
+              📞 {n.number} — {t(`nationalNumbers.${n.labelKey}` as Parameters<typeof t>[0])}
             </span>
             <Phone className="h-5 w-5 text-emergency-600" />
           </a>
