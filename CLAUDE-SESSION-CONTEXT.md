@@ -140,15 +140,15 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `a3e628d`** (last commit in this session). Progress:
-64/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `352ac29`** (last commit in this session). Progress:
+61/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text —
 see "Blocked" below, that's expected and correct, not a miss.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
-closed as of last session — don't re-scan for it, see the previous
-session's entry below for what was done.
+closed — don't re-scan for it, see the batch-13/14-era entries below
+for what was done.
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
@@ -168,16 +168,16 @@ session's entry below for what was done.
   `components/home/*` — all 12 files, new structured `home` namespace,
   `app/(seo)/[state]/*` (all 3 route pages) + `components/seo/*` +
   **`lib/seo-helpers.ts`** (new `seo` namespace),
-  **`app/(main)/account/*`** — all 6 route pages (distinct from
-  `components/account/*`; heavy reuse of that batch's namespace keys,
-  plus `account.status.{moderation,lead}` for two shared status-label
-  maps found duplicated across 3 files).
+  **`app/(main)/account/*`** — all 6 route pages,
+  **`emergency/*`** — `components/emergency/*` (2 files) +
+  `app/(main)/emergency/page.tsx`, extending the existing `emergency`
+  namespace rather than creating a new one.
 - **Phase 3, `.ts` strand — closed two sessions ago**: all 9
   `lib/validations/*.ts` Zod schemas converted to locale-aware factory
   functions, all 17 `app/api/**/route.ts` handlers updated, plus
   `app/manifest.ts`. New `validation` namespace (bn/en/hi). A full
   `src/**/*.ts` sweep confirmed nothing left — don't re-scan for this.
-  Commits `f5187d8` through `a3e628d` — see
+  Commits `f5187d8` through `352ac29` — see
   `git log --oneline 046c9f7~1..HEAD` for the full list; each message
   documents what was migrated *and* what bug or design issue was found
   along the way, several are worth reading in full (`git show <hash>`)
@@ -225,37 +225,33 @@ mirroring what `apps/web`'s facade already does — but that's a distinct
 piece of work from "migrate hardcoded Bengali .tsx strings" and
 shouldn't be folded into a Phase 3 batch without discussing scope first.
 
-**New this session**: `app/(main)/account/*` confirmed the pattern
-this effort has been assuming implicitly — a `components/<dir>/*`
-batch and an `app/(main)/<same-dir>/*` batch are genuinely separate
-work, not overlapping, since route-page files (`page.tsx`) carry their
-own titles/metadata/status-label duplication independent of whatever
-client components they render. Worth checking, when picking the next
-`.tsx` directory, whether it has a components-side counterpart already
-done (e.g. `components/home/*` is done, but nothing suggests a parallel
-`app/(main)/home` tree exists to check) — most of the remaining
-directories below are route-only or component-only, but it's a cheap
-check.
-
-Also: `generateMetadata()` (async, replacing a static `export const
-metadata` object) is now the established pattern for any page whose
-`<title>` needs to be locale-aware — used across 5 of this session's 6
-files without issue.
+**New this session**: found and fixed a bug spanning two "done"
+directories — `NationalNumbersSection.tsx`'s exported `NATIONAL_NUMBERS`
+constant carried a hardcoded Bengali `label` field, and
+`components/layout/EmergencyFAB.tsx` (migrated many batches ago) imports
+that same constant and rendered `n.label` directly. Not a gap in the
+earlier batch — that file's own strings were fine — just a dependency
+on a not-yet-migrated file. Changed the shared constant to a
+`labelKey` and had both consumers resolve it through their own
+`useT('emergency')`. **Worth remembering going forward**: before
+changing the shape of any shared exported constant/type while
+migrating one file, grep every other importer of it first — the bug
+can live in a file this effort already marked "done."
 
 ### Next Move
 Continue the `.tsx` strand. Re-run the inventory command in
 `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking
 the next directory — as of this session's end, in descending priority
-order: `emergency/` (398 chars), `more/` (343), `app/(main)/community/`
-(338), `app/(main)/search/` (326), `settings/` (291), `doctors/` (284),
+order: `more/` (343 chars), `app/(main)/community/` (338),
+`app/(main)/search/` (326), `settings/` (291), `doctors/` (284),
 `app/(auth)/auth/` (254), `symptoms/` (241), `app/(main)/health/` (195
-— note this includes `health/blood-services/page.tsx`, the route
-wrapper around `components/blood-services/*` which was done several
-sessions ago; same components-vs-route-page split as this session's
-account work), `hospital-profile/` (167, remaining files beyond
-`InfoTab.tsx`), `lab-tests/`, `polls/`, `articles/`, `custom-page/*`.
-Same 7-step per-file checklist, same batch-verify-commit-push rhythm —
-14 batches running clean, no reason to change it.
+— includes `health/blood-services/page.tsx`, the route wrapper around
+`components/blood-services/*`, done several sessions ago; same
+components-vs-route-page split as the account and emergency work),
+`hospital-profile/` (167, remaining files beyond `InfoTab.tsx`),
+`lab-tests/` (163), `polls/`, `articles/`, `custom-page/*`. Same
+7-step per-file checklist, same batch-verify-commit-push rhythm — 15
+batches running clean, no reason to change it.
 
 ## Relevant Files
 
