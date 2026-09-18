@@ -5,10 +5,12 @@ import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
 import { getMenuCustomPages, hasUnreadNotifications } from '@/lib/queries/more-page';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'আরো | Vytanexa',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('nav');
+  return { title: `${t('more')} | Vytanexa` };
+}
 
 /**
  * More Page — VYTANEXA-BLUEPRINT.md § S16 (`/more`). Server Component
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
  */
 export default async function MorePage() {
   const supabase = createClient();
+  const t = await getT('nav');
 
   const [currentUser, customPages, showQA, showPolls] = await Promise.all([
     getCurrentUser(supabase),
@@ -30,7 +33,7 @@ export default async function MorePage() {
 
   return (
     <>
-      <TopBarSection title="আরো" backHref="/" />
+      <TopBarSection title={t('more')} backHref="/" />
       <MorePageClient
         currentUser={
           currentUser

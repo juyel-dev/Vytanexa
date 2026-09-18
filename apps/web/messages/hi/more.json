@@ -1,0 +1,21 @@
+{
+  "profile": "प्रोफाइल",
+  "symptoms": "लक्षण देखें",
+  "labTests": "लैब टेस्ट",
+  "polls": "सर्वेक्षण",
+  "support": "सहायता",
+  "terms": "नियम एवं शर्तें",
+  "privacyPolicy": "गोपनीयता नीति",
+  "signOut": "साइन आउट",
+  "signIn": "साइन इन",
+  "welcome": "स्वागत है, {name}!",
+  "guestMode": "अतिथि के रूप में उपयोग कर रहे हैं",
+  "signOutConfirm": "क्या आप साइन आउट करना चाहते हैं?",
+  "appVersion": "Vytanexa v{version}",
+  "sections": {
+    "healthTools": "स्वास्थ्य टूल्स",
+    "community": "समुदाय",
+    "info": "जानकारी",
+    "support": "सहायता"
+  }
+}

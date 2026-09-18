@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocationStore } from '@/stores/location-store';
 import { LANGUAGE_NAMES } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import {
   Heart,
   User,
@@ -63,6 +64,13 @@ export function MorePageClient({
   hasUnreadNotifications: boolean;
 }) {
   const router = useRouter();
+  const t = useT('more');
+  const tc = useT('common');
+  const tAccount = useT('account');
+  const tSettings = useT('settings');
+  const tEmergency = useT('emergency');
+  const tHome = useT('home');
+  const tQa = useT('qa');
   // TODO.md Phase 9.2: the "ভাষা"/"অবস্থান" rows below used to show a
   // hardcoded "বাংলা" and no value at all, respectively — regardless
   // of what the user had actually set. `language` comes from the
@@ -96,7 +104,7 @@ export function MorePageClient({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold text-neutral-900">
-              স্বাগতম, {currentUser.name ?? 'ব্যবহারকারী'}!
+              {t('welcome', { name: currentUser.name ?? tAccount('defaultUserName') })}
             </p>
             {currentUser.phone && (
               <p className="text-[13px] text-neutral-500">{currentUser.phone}</p>
@@ -106,39 +114,39 @@ export function MorePageClient({
         </Link>
       ) : (
         <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-4">
-          <p className="text-[15px] font-semibold text-neutral-700">অতিথি হিসেবে ব্যবহার করছেন</p>
+          <p className="text-[15px] font-semibold text-neutral-700">{t('guestMode')}</p>
           <Link
             href="/auth/login"
             className="rounded-full bg-brand-50 px-4 py-2 text-[13px] font-semibold text-brand-700"
           >
-            সাইন ইন
+            {t('signIn')}
           </Link>
         </div>
       )}
 
       {currentUser && (
-        <MenuSection title="আমার অ্যাকাউন্ট">
-          <MenuRow href="/account/favorites" icon={Heart} label="পছন্দের তালিকা" />
-          <MenuRow href="/account" icon={User} label="প্রোফাইল" />
-          <MenuRow href="/account/history" icon={ClipboardList} label="অ্যাপয়েন্টমেন্ট হিস্টরি" />
+        <MenuSection title={tAccount('pageTitle')}>
+          <MenuRow href="/account/favorites" icon={Heart} label={tAccount('rows.favorites')} />
+          <MenuRow href="/account" icon={User} label={t('profile')} />
+          <MenuRow href="/account/history" icon={ClipboardList} label={tAccount('rows.appointmentHistory')} />
         </MenuSection>
       )}
 
-      <MenuSection title="স্বাস্থ্য টুলস">
-        <MenuRow href="/symptoms" icon={Stethoscope} label="উপসর্গ দেখুন" />
-        <MenuRow href="/health/lab-tests" icon={FlaskConical} label="ল্যাব টেস্ট" />
-        <MenuRow href="/health/blood-services" icon={Droplet} label="ব্লাড সার্ভিস" />
-        <MenuRow href="/emergency" icon={Siren} label="জরুরি সেবা" />
+      <MenuSection title={t('sections.healthTools')}>
+        <MenuRow href="/symptoms" icon={Stethoscope} label={t('symptoms')} />
+        <MenuRow href="/health/lab-tests" icon={FlaskConical} label={t('labTests')} />
+        <MenuRow href="/health/blood-services" icon={Droplet} label={tEmergency('fab.bloodService')} />
+        <MenuRow href="/emergency" icon={Siren} label={tEmergency('pageTitle')} />
       </MenuSection>
 
-      <MenuSection title="কমিউনিটি">
-        <MenuRow href="/community/articles" icon={Newspaper} label="স্বাস্থ্য ম্যাগাজিন" />
-        {showQA && <MenuRow href="/community/qa" icon={HelpCircle} label="প্রশ্নোত্তর" />}
-        {showPolls && <MenuRow href="/community/polls" icon={BarChart3} label="জরিপ" />}
+      <MenuSection title={t('sections.community')}>
+        <MenuRow href="/community/articles" icon={Newspaper} label={tHome('sectionLabels.articles')} />
+        {showQA && <MenuRow href="/community/qa" icon={HelpCircle} label={tQa('heading')} />}
+        {showPolls && <MenuRow href="/community/polls" icon={BarChart3} label={t('polls')} />}
       </MenuSection>
 
       {customPages.length > 0 && (
-        <MenuSection title="তথ্য">
+        <MenuSection title={t('sections.info')}>
           {customPages.map((page) => {
             const Icon = CUSTOM_PAGE_ICONS[page.menu_icon as MenuIconKey] ?? Globe;
             return (
@@ -148,22 +156,22 @@ export function MorePageClient({
         </MenuSection>
       )}
 
-      <MenuSection title="সেটিংস">
-        <MenuRow href="/settings" icon={Globe} label="ভাষা" value={LANGUAGE_NAMES[language] ?? language} />
-        <MenuRow href="/settings" icon={MapPin} label="অবস্থান" value={districtName ?? 'নির্বাচন করুন'} />
+      <MenuSection title={tSettings('title')}>
+        <MenuRow href="/settings" icon={Globe} label={tSettings('language')} value={LANGUAGE_NAMES[language] ?? language} />
+        <MenuRow href="/settings" icon={MapPin} label={tSettings('location')} value={districtName ?? tc('select')} />
         <MenuRow
           href="/notifications"
           icon={Bell}
-          label="নোটিফিকেশন"
+          label={tc('notifications')}
           showDot={hasUnreadNotifications}
         />
-        <MenuRow href="/settings" icon={Lock} label="প্রাইভেসি" />
+        <MenuRow href="/settings" icon={Lock} label={tSettings('privacy')} />
       </MenuSection>
 
-      <MenuSection title="সহায়তা">
-        <MenuRow href="/page/support" icon={MessageCircle} label="সাপোর্ট" />
-        <MenuRow href="/page/terms" icon={ScrollText} label="শর্তাবলী" />
-        <MenuRow href="/page/privacy" icon={ShieldCheck} label="গোপনীয়তা নীতি" />
+      <MenuSection title={t('sections.support')}>
+        <MenuRow href="/page/support" icon={MessageCircle} label={t('support')} />
+        <MenuRow href="/page/terms" icon={ScrollText} label={t('terms')} />
+        <MenuRow href="/page/privacy" icon={ShieldCheck} label={t('privacyPolicy')} />
       </MenuSection>
 
       {currentUser && (
@@ -172,32 +180,32 @@ export function MorePageClient({
             onClick={() => setConfirmSignOut(true)}
             className="h-11 w-full rounded-md border border-emergency-200 text-[14px] font-semibold text-emergency-600"
           >
-            সাইন আউট
+            {t('signOut')}
           </button>
         </div>
       )}
 
-      <p className="py-4 text-center text-[12px] text-neutral-400">Vytanexa v{APP_VERSION}</p>
+      <p className="py-4 text-center text-[12px] text-neutral-400">{t('appVersion', { version: APP_VERSION })}</p>
 
       {confirmSignOut && (
         <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/40 px-6">
           <div className="w-full max-w-sm rounded-xl bg-white p-5">
             <p className="mb-4 text-center text-[15px] font-semibold text-neutral-900">
-              আপনি কি সাইন আউট করতে চান?
+              {t('signOutConfirm')}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmSignOut(false)}
                 className="h-11 flex-1 rounded-md border border-neutral-200 text-[14px] font-semibold text-neutral-700"
               >
-                বাতিল
+                {tc('cancel')}
               </button>
               <button
                 onClick={handleSignOut}
                 disabled={signingOut}
                 className="h-11 flex-1 rounded-md bg-emergency-600 text-[14px] font-semibold text-white disabled:opacity-60"
               >
-                {signingOut ? '...' : 'সাইন আউট'}
+                {signingOut ? '...' : t('signOut')}
               </button>
             </div>
           </div>

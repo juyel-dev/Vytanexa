@@ -27,6 +27,7 @@ import type qa from '../../messages/bn/qa.json';
 import type account from '../../messages/bn/account.json';
 import type seo from '../../messages/bn/seo.json';
 import type validation from '../../messages/bn/validation.json';
+import type more from '../../messages/bn/more.json';
 
 type Messages = {
   common: typeof common;
@@ -47,6 +48,7 @@ type Messages = {
   account: typeof account;
   seo: typeof seo;
   validation: typeof validation;
+  more: typeof more;
 };
 
 declare global {

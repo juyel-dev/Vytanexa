@@ -1,0 +1,21 @@
+{
+  "profile": "Profile",
+  "symptoms": "Check symptoms",
+  "labTests": "Lab tests",
+  "polls": "Polls",
+  "support": "Support",
+  "terms": "Terms",
+  "privacyPolicy": "Privacy Policy",
+  "signOut": "Sign out",
+  "signIn": "Sign in",
+  "welcome": "Welcome, {name}!",
+  "guestMode": "Browsing as a guest",
+  "signOutConfirm": "Do you want to sign out?",
+  "appVersion": "Vytanexa v{version}",
+  "sections": {
+    "healthTools": "Health Tools",
+    "community": "Community",
+    "info": "Info",
+    "support": "Support"
+  }
+}

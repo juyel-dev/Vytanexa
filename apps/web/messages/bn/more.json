@@ -1,0 +1,21 @@
+{
+  "profile": "প্রোফাইল",
+  "symptoms": "উপসর্গ দেখুন",
+  "labTests": "ল্যাব টেস্ট",
+  "polls": "জরিপ",
+  "support": "সাপোর্ট",
+  "terms": "শর্তাবলী",
+  "privacyPolicy": "গোপনীয়তা নীতি",
+  "signOut": "সাইন আউট",
+  "signIn": "সাইন ইন",
+  "welcome": "স্বাগতম, {name}!",
+  "guestMode": "অতিথি হিসেবে ব্যবহার করছেন",
+  "signOutConfirm": "আপনি কি সাইন আউট করতে চান?",
+  "appVersion": "Vytanexa v{version}",
+  "sections": {
+    "healthTools": "স্বাস্থ্য টুলস",
+    "community": "কমিউনিটি",
+    "info": "তথ্য",
+    "support": "সহায়তা"
+  }
+}
