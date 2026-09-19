@@ -152,40 +152,36 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `1cb3df3`** (last commit in this session). Progress:
-50/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `8b9f65e`** (last commit in this session). Progress:
+49/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text, or
 intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
 "Blocked" below, that's expected and correct, not a miss.
 
-**Batch 20 — `doctors/` full directory, done this session**:
+**Batch 21 — `app/(auth)/auth/{login,verify}/page.tsx`, done this
+session**: new `auth` namespace (bn/en/hi, 8 keys). Heavy reuse of
+`onboarding.signin.*` (phonePlaceholder, otpSendFailed, sending,
+sendOtp, signInWithGoogle — standalone login shares exact copy with
+onboarding's `SigninStep`) and `common.{goBack,signIn,or}` instead of
+duplicating. `login/page.tsx` was one of the original 6 Phase-1
+useTranslations files (per §12) but had drifted back to hardcoded
+Bengali since — now back on the facade.
+
+**Batch 20 — `doctors/` full directory, done a prior session**:
 `components/doctors/DoctorListClient.tsx` + `FilterSheet.tsx` +
 `app/(main)/doctors/page.tsx` + `app/(main)/doctors/[slug]/page.tsx`.
-Extended `doctor.json` with 15 new keys (sort options, filter sheet
-labels, results/no-results states, notFoundTitle,
-metaDescriptionTemplate with `{name}/{specialty}/{degree}` ICU
-params). Reused `doctor.findTitle` and `common.loading`. SORT_OPTIONS
-moved from an untranslatable module-level const to computed-inside-
-component from `t('sort.*')` — reusable pattern for any array of
-translated option pairs.
+Extended `doctor.json` with 15 new keys. Reused `doctor.findTitle`
+and `common.loading`. SORT_OPTIONS moved from an untranslatable
+module-level const to computed-inside-component from `t('sort.*')`.
 
-**Batch 19 — `settings/SettingsClient.tsx` + `app/(main)/settings/
-page.tsx`, done a prior session**: extended `settings.json` with 11
-new keys; reused 8 pre-existing ones (this is what finally puts
-`more/` batch 16's settings.json content to real use, per §13's
-note); route page converted static→`generateMetadata()`.
-
-**Batch 18 — `app/(main)/search/page.tsx`, done a prior session**:
-new `search` namespace (bn/en/hi, 22 keys). Reused `common.goBack`.
-`BENGALI_ALIASES` module-level const left untouched on purpose.
-
-**Batch 17 — `app/(main)/community/*`, done a prior session**: new
-`polls` namespace; extended `articles.json`/`qa.json`; added generic
-`common.notFoundTitle`. Note: `getT` is imported directly from
-`@vytanexa/i18n/server`, NOT re-exported via `apps/web/src/lib/i18n.ts`
-— double-check this import source each time, it's an easy one-line
-typecheck error to hit.
+**Batch 19 — `settings/`, batch 18 — `app/(main)/search/page.tsx`,
+batch 17 — `app/(main)/community/*`**: done in prior sessions, see
+git log (`git show <hash>`) for full detail — summarized here only
+where a pattern is still relevant: `getT` is imported directly from
+`@vytanexa/i18n/server`, NOT re-exported via `apps/web/src/lib/
+i18n.ts` — double-check this import source each time, it's an easy
+one-line typecheck error to hit.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
