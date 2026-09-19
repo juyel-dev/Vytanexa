@@ -29,6 +29,7 @@ import type seo from '../../messages/bn/seo.json';
 import type validation from '../../messages/bn/validation.json';
 import type more from '../../messages/bn/more.json';
 import type polls from '../../messages/bn/polls.json';
+import type search from '../../messages/bn/search.json';
 
 type Messages = {
   common: typeof common;
@@ -51,6 +52,7 @@ type Messages = {
   validation: typeof validation;
   more: typeof more;
   polls: typeof polls;
+  search: typeof search;
 };
 
 declare global {

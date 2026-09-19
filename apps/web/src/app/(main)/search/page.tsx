@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Search as SearchIcon, X, Mic } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import {
   getRecentSearches,
   saveRecentSearch,
@@ -29,6 +30,8 @@ export default function SearchPage() {
 
   const [query, setQuery] = useState('');
   const localize = useLocalizedField();
+  const t = useT('search');
+  const tCommon = useT('common');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [dropdown, setDropdown] = useState<SearchApiResponse | null>(null);
   const [results, setResults] = useState<SearchApiResponse | null>(null);
@@ -123,7 +126,7 @@ export default function SearchPage() {
       <div className="sticky top-0 z-topbar flex h-topbar items-center gap-2 border-b border-neutral-100 bg-white px-2">
         <button
           onClick={() => router.back()}
-          aria-label="পেছনে যান"
+          aria-label={tCommon('goBack')}
           className="flex h-11 w-11 shrink-0 items-center justify-center text-neutral-700"
         >
           <ChevronLeft className="h-6 w-6" />
@@ -135,16 +138,16 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitSearch(query)}
-            placeholder="ডাক্তার, হাসপাতাল, উপসর্গ খুঁজুন..."
+            placeholder={t('placeholder')}
             className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-neutral-400"
           />
           {query && (
-            <button onClick={clearSearch} aria-label="মুছুন">
+            <button onClick={clearSearch} aria-label={t('clearInputLabel')}>
               <X className="h-4 w-4 text-neutral-400" />
             </button>
           )}
           {voiceSearchEnabled && (
-            <button onClick={() => setVoiceOpen(true)} aria-label="ভয়েস সার্চ">
+            <button onClick={() => setVoiceOpen(true)} aria-label={t('voiceSearchLabel')}>
               <Mic className="h-4 w-4 text-brand-600" />
             </button>
           )}
@@ -157,7 +160,7 @@ export default function SearchPage() {
           {recent.length > 0 && (
             <section className="mb-5">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-[14px] font-semibold text-neutral-800">📌 সাম্প্রতিক খোঁজ</h2>
+                <h2 className="text-[14px] font-semibold text-neutral-800">{t('recentHeading')}</h2>
                 <button
                   onClick={() => {
                     clearRecentSearches();
@@ -165,7 +168,7 @@ export default function SearchPage() {
                   }}
                   className="text-[12px] text-neutral-400"
                 >
-                  সাফ করুন
+                  {t('clearAll')}
                 </button>
               </div>
               {recent.map((r) => (
@@ -185,7 +188,7 @@ export default function SearchPage() {
                       removeRecentSearch(r.query);
                       setRecent(getRecentSearches());
                     }}
-                    aria-label="সরান"
+                    aria-label={t('removeLabel')}
                   >
                     <X className="h-4 w-4 text-neutral-300" />
                   </button>
@@ -196,7 +199,7 @@ export default function SearchPage() {
 
           {trending && trending.trending.length > 0 && (
             <section className="mb-5">
-              <h2 className="mb-2 text-[14px] font-semibold text-neutral-800">🔥 এখন জনপ্রিয়</h2>
+              <h2 className="mb-2 text-[14px] font-semibold text-neutral-800">{t('trendingHeading')}</h2>
               <div className="flex flex-wrap gap-2">
                 {trending.trending.map((t) => (
                   <button
@@ -213,7 +216,7 @@ export default function SearchPage() {
 
           {trending && trending.categories.length > 0 && (
             <section>
-              <h2 className="mb-2 text-[14px] font-semibold text-neutral-800">বিভাগ অনুযায়ী খুঁজুন</h2>
+              <h2 className="mb-2 text-[14px] font-semibold text-neutral-800">{t('byCategoryHeading')}</h2>
               <div className="grid grid-cols-3 gap-2">
                 {trending.categories.map((c) => (
                   <Link
@@ -239,12 +242,12 @@ export default function SearchPage() {
           />
           <div className="relative z-dropdown max-h-[70vh] overflow-y-auto rounded-b-xl bg-white shadow-lg">
             {loading && (
-              <p className="py-6 text-center text-[13px] text-neutral-400">খোঁজা হচ্ছে...</p>
+              <p className="py-6 text-center text-[13px] text-neutral-400">{t('searching')}</p>
             )}
             {!loading && dropdown && (
               <>
                 <DropdownSection
-                  label="ডাক্তার"
+                  label={t('sectionDoctors')}
                   items={dropdown.doctors.map((d) => ({
                     id: d.id,
                     label: localize(d.name_translations),
@@ -253,7 +256,7 @@ export default function SearchPage() {
                   }))}
                 />
                 <DropdownSection
-                  label="হাসপাতাল"
+                  label={t('sectionHospitals')}
                   items={dropdown.hospitals.map((h) => ({
                     id: h.id,
                     label: localize(h.name_translations),
@@ -262,16 +265,16 @@ export default function SearchPage() {
                   }))}
                 />
                 <DropdownSection
-                  label="বিভাগ"
+                  label={t('sectionCategories')}
                   items={dropdown.categories.map((c) => ({
                     id: c.id,
                     label: localize(c.name_translations),
-                    sub: 'সব ডাক্তার দেখুন',
+                    sub: t('seeAllInCategory'),
                     href: `/doctors?specialty=${c.slug}`,
                   }))}
                 />
                 <DropdownSection
-                  label="উপসর্গ"
+                  label={t('sectionSymptoms')}
                   items={dropdown.symptoms.map((s) => ({
                     id: s.id,
                     label: localize(s.title_translations),
@@ -283,7 +286,7 @@ export default function SearchPage() {
                   onClick={() => submitSearch(query)}
                   className="flex w-full items-center gap-2 bg-brand-50 px-4 py-3 text-[14px] font-semibold text-brand-600"
                 >
-                  <SearchIcon className="h-4 w-4" /> &ldquo;{query}&rdquo; এর সব ফলাফল →
+                  <SearchIcon className="h-4 w-4" /> {t('seeAllResultsFor', { query })}
                 </button>
               </>
             )}
@@ -297,10 +300,10 @@ export default function SearchPage() {
           <div className="sticky top-topbar z-sticky flex gap-1 overflow-x-auto border-b border-neutral-100 bg-white px-4 [scrollbar-width:none]">
             {(
               [
-                ['all', `সব (${totalResultCount})`],
-                ['doctors', `ডাক্তার (${results?.doctors.length ?? 0})`],
-                ['hospitals', `হাসপাতাল (${results?.hospitals.length ?? 0})`],
-                ['symptoms', `উপসর্গ (${results?.symptoms.length ?? 0})`],
+                ['all', t('tabAll', { count: totalResultCount })],
+                ['doctors', t('tabDoctors', { count: results?.doctors.length ?? 0 })],
+                ['hospitals', t('tabHospitals', { count: results?.hospitals.length ?? 0 })],
+                ['symptoms', t('tabSymptoms', { count: results?.symptoms.length ?? 0 })],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -318,16 +321,16 @@ export default function SearchPage() {
           </div>
 
           {loading && (
-            <p className="py-8 text-center text-[13px] text-neutral-400">খোঁজা হচ্ছে...</p>
+            <p className="py-8 text-center text-[13px] text-neutral-400">{t('searching')}</p>
           )}
 
           {!loading && results && totalResultCount === 0 && (
             <div className="px-6 py-10 text-center">
               <p className="text-[15px] font-semibold text-neutral-700">
-                &ldquo;{submittedQuery}&rdquo; এর কোনো ফলাফল পাওয়া যায়নি
+                {t('noResultsTitle', { query: submittedQuery })}
               </p>
               <p className="mt-2 text-[13px] text-neutral-500">
-                বাংলায় বা ইংরেজিতে লিখে দেখুন, অথবা শুধু বিশেষজ্ঞতা লিখুন
+                {t('noResultsHint')}
               </p>
               <a
                 href="https://wa.me/"
@@ -335,7 +338,7 @@ export default function SearchPage() {
                 rel="noopener noreferrer"
                 className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"
               >
-                💬 WhatsApp-এ জানান →
+                {t('whatsappCta')}
               </a>
             </div>
           )}

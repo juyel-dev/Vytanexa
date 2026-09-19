@@ -152,11 +152,27 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `03892c7`** (last commit in this session). Progress:
-60/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `ec37135`** (last commit in this session). Progress:
+55/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text —
 see "Blocked" below, that's expected and correct, not a miss.
+
+**Batch 17 — `app/(main)/community/*` (articles list+detail, qa
+list+detail, polls list) — all 5 route `page.tsx` files, done this
+session**: new `polls` namespace (bn/en/hi); extended `articles.json`
+(title, metaDescription, notFoundTitle, readOnSuffix) and `qa.json`
+(metaDescription, notFoundTitle, metaTitleSuffix — reused existing
+`qa.heading` for the list title instead of duplicating); added a
+generic `common.notFoundTitle` for the qa/[id] feature-flag-disabled
+case (distinct from qa's own "question not found"). All 5 converted
+from static `export const metadata` to `generateMetadata()` (§13 —
+static metadata can't call `getT()`). Note: `getT` is imported
+directly from `@vytanexa/i18n/server`, NOT re-exported via
+`apps/web/src/lib/i18n.ts` (that file only re-exports
+`getLocalizedField`/`getLocalizedArray`/`getFormatter`/
+`getResolvedLocale`) — double-check this import source each time, it's
+an easy one-line typecheck error to hit.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
