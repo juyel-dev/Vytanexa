@@ -152,15 +152,18 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `0596303`** (last commit in this session). Progress:
-55/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `0796958`** (last commit in this session). Progress:
+53/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text, or
-(new example) intentional non-UI data like `search/page.tsx`'s
-`BENGALI_ALIASES` synonym map — see "Blocked" below, that's expected
-and correct, not a miss. `search/page.tsx` itself is otherwise fully
-migrated (see batch 18 below); its Bengali-Unicode grep hit is that
-alias map only, not a gap.
+intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
+"Blocked" below, that's expected and correct, not a miss.
+
+**Batch 19 — `settings/SettingsClient.tsx` + `app/(main)/settings/
+page.tsx`, done this session**: extended `settings.json` with 11 new
+keys; reused 8 pre-existing ones (this is what finally puts `more/`
+batch 16's settings.json content to real use, per §13's note);
+route page converted static→`generateMetadata()`.
 
 **Batch 18 — `app/(main)/search/page.tsx`, done this session**: new
 `search` namespace (bn/en/hi, 22 keys) — placeholder, aria labels,
@@ -171,15 +174,10 @@ module-level const left untouched on purpose — Bengali synonym-query
 matching data, not UI copy.
 
 **Batch 17 — `app/(main)/community/*` (articles list+detail, qa
-list+detail, polls list) — all 5 route `page.tsx` files, done last
-session**: new `polls` namespace (bn/en/hi); extended `articles.json`
-(title, metaDescription, notFoundTitle, readOnSuffix) and `qa.json`
-(metaDescription, notFoundTitle, metaTitleSuffix — reused existing
-`qa.heading` for the list title instead of duplicating); added a
-generic `common.notFoundTitle` for the qa/[id] feature-flag-disabled
-case (distinct from qa's own "question not found"). All 5 converted
-from static `export const metadata` to `generateMetadata()` (§13 —
-static metadata can't call `getT()`). Note: `getT` is imported
+list+detail, polls list) — all 5 route `page.tsx` files, done a
+prior session**: new `polls` namespace (bn/en/hi); extended
+`articles.json` and `qa.json`; added generic `common.notFoundTitle`.
+All 5 converted static→`generateMetadata()`. Note: `getT` is imported
 directly from `@vytanexa/i18n/server`, NOT re-exported via
 `apps/web/src/lib/i18n.ts` (that file only re-exports
 `getLocalizedField`/`getLocalizedArray`/`getFormatter`/
