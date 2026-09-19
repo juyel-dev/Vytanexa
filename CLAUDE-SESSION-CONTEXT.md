@@ -152,14 +152,26 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `ec37135`** (last commit in this session). Progress:
+**As of commit `0596303`** (last commit in this session). Progress:
 55/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
-only remaining Bengali is inside JSDoc comments quoting spec text —
-see "Blocked" below, that's expected and correct, not a miss.
+only remaining Bengali is inside JSDoc comments quoting spec text, or
+(new example) intentional non-UI data like `search/page.tsx`'s
+`BENGALI_ALIASES` synonym map — see "Blocked" below, that's expected
+and correct, not a miss. `search/page.tsx` itself is otherwise fully
+migrated (see batch 18 below); its Bengali-Unicode grep hit is that
+alias map only, not a gap.
+
+**Batch 18 — `app/(main)/search/page.tsx`, done this session**: new
+`search` namespace (bn/en/hi, 22 keys) — placeholder, aria labels,
+section headings, tab labels with interpolated `{query}`/`{count}`
+ICU params, empty/no-results states, WhatsApp CTA. Reused
+`common.goBack` for the back-button aria-label. `BENGALI_ALIASES`
+module-level const left untouched on purpose — Bengali synonym-query
+matching data, not UI copy.
 
 **Batch 17 — `app/(main)/community/*` (articles list+detail, qa
-list+detail, polls list) — all 5 route `page.tsx` files, done this
+list+detail, polls list) — all 5 route `page.tsx` files, done last
 session**: new `polls` namespace (bn/en/hi); extended `articles.json`
 (title, metaDescription, notFoundTitle, readOnSuffix) and `qa.json`
 (metaDescription, notFoundTitle, metaTitleSuffix — reused existing

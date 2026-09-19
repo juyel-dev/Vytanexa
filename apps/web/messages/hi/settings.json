@@ -6,5 +6,16 @@
   "privacy": "प्राइवेसी",
   "about": "ऐप के बारे में",
   "version": "वर्ज़न",
-  "clearCache": "कैश साफ़ करें"
+  "clearCache": "कैश साफ़ करें",
+  "notifGeneral": "सामान्य घोषणाएं",
+  "notifEmergency": "आपातकालीन अलर्ट",
+  "notifArticles": "स्वास्थ्य टिप्स और आर्टिकल",
+  "signInForNotifications": "नोटिफिकेशन पाने के लिए साइन इन करें →",
+  "viewTerms": "शर्तें देखें",
+  "viewPrivacyPolicy": "गोपनीयता नीति देखें",
+  "exportRequestSent": "✅ अनुरोध भेजा गया",
+  "downloadMyData": "मेरा डेटा डाउनलोड करें",
+  "cacheCleared": "✅ कैश साफ़ हो गया",
+  "clearCacheHint": "अगर ऐप सही से काम नहीं कर रहा है",
+  "locked": "(लॉक)"
 }

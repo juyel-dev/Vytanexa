@@ -6,5 +6,16 @@
   "privacy": "প্রাইভেসি",
   "about": "অ্যাপ সম্পর্কে",
   "version": "ভার্সন",
-  "clearCache": "ক্যাশ পরিষ্কার করুন"
+  "clearCache": "ক্যাশ পরিষ্কার করুন",
+  "notifGeneral": "সাধারণ ঘোষণা",
+  "notifEmergency": "জরুরি সতর্কতা",
+  "notifArticles": "স্বাস্থ্য টিপস ও আর্টিকেল",
+  "signInForNotifications": "নোটিফিকেশন পেতে সাইন ইন করুন →",
+  "viewTerms": "শর্তাবলী দেখুন",
+  "viewPrivacyPolicy": "গোপনীয়তা নীতি দেখুন",
+  "exportRequestSent": "✅ অনুরোধ পাঠানো হয়েছে",
+  "downloadMyData": "আমার ডেটা ডাউনলোড করুন",
+  "cacheCleared": "✅ ক্যাশ পরিষ্কার করা হয়েছে",
+  "clearCacheHint": "যদি অ্যাপ ঠিকমতো কাজ না করে",
+  "locked": "(লক)"
 }

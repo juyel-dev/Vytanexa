@@ -6,5 +6,16 @@
   "privacy": "Privacy",
   "about": "About app",
   "version": "Version",
-  "clearCache": "Clear cache"
+  "clearCache": "Clear cache",
+  "notifGeneral": "General announcements",
+  "notifEmergency": "Emergency alerts",
+  "notifArticles": "Health tips & articles",
+  "signInForNotifications": "Sign in to get notifications →",
+  "viewTerms": "View terms",
+  "viewPrivacyPolicy": "View privacy policy",
+  "exportRequestSent": "✅ Request sent",
+  "downloadMyData": "Download my data",
+  "cacheCleared": "✅ Cache cleared",
+  "clearCacheHint": "If the app isn't working properly",
+  "locked": "(Locked)"
 }

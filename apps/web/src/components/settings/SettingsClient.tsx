@@ -7,6 +7,7 @@ import { ChevronRight, Trash2 } from 'lucide-react';
 import { LanguageSheet } from './LanguageSheet';
 import { useLocationStore } from '@/stores/location-store';
 import { LANGUAGE_NAMES } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 
 // Same code-splitting rationale as LocationChip.tsx: LocationPickerSheet
 // pulls in the browser Supabase client for its district/state queries,
@@ -38,6 +39,8 @@ export function SettingsClient({
   initialPrefs: NotificationPrefs;
 }) {
   const { districtName } = useLocationStore();
+  const t = useT('settings');
+  const tCommon = useT('common');
   const [languageOpen, setLanguageOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [language, setLanguage] = useState(initialLanguage);
@@ -89,30 +92,30 @@ export function SettingsClient({
       <div className="border-b border-neutral-100 px-4 py-2">
         <SettingsRow
           icon="🌐"
-          label="ভাষা"
+          label={t('language')}
           value={LANGUAGE_NAMES[language] ?? language}
           onClick={() => setLanguageOpen(true)}
         />
         <SettingsRow
           icon="📍"
-          label="ডিফল্ট অবস্থান"
-          value={districtName ?? 'নির্বাচন করুন'}
+          label={t('location')}
+          value={districtName ?? tCommon('select')}
           onClick={() => setLocationOpen(true)}
         />
       </div>
 
       <div className="border-b border-neutral-100 px-4 py-3">
-        <h2 className="mb-2 text-[13px] font-semibold text-neutral-600">🔔 নোটিফিকেশন</h2>
+        <h2 className="mb-2 text-[13px] font-semibold text-neutral-600">🔔 {t('notifications')}</h2>
         {isSignedIn ? (
           <>
             <ToggleRow
-              label="সাধারণ ঘোষণা"
+              label={t('notifGeneral')}
               checked={prefs.general}
               onChange={() => handleToggle('general')}
             />
-            <ToggleRow label="জরুরি সতর্কতা" checked={true} locked />
+            <ToggleRow label={t('notifEmergency')} checked={true} locked />
             <ToggleRow
-              label="স্বাস্থ্য টিপস ও আর্টিকেল"
+              label={t('notifArticles')}
               checked={prefs.articles}
               onChange={() => handleToggle('articles')}
             />
@@ -122,15 +125,15 @@ export function SettingsClient({
             href="/auth/login"
             className="block rounded-md bg-brand-50 px-3 py-2.5 text-[13px] font-semibold text-brand-700"
           >
-            নোটিফিকেশন পেতে সাইন ইন করুন →
+            {t('signInForNotifications')}
           </Link>
         )}
       </div>
 
       <div className="border-b border-neutral-100 px-4 py-3">
-        <h2 className="mb-1 text-[13px] font-semibold text-neutral-600">🔒 প্রাইভেসি</h2>
-        <SettingsRow icon="📜" label="শর্তাবলী দেখুন" href="/page/terms" />
-        <SettingsRow icon="🔐" label="গোপনীয়তা নীতি দেখুন" href="/page/privacy" />
+        <h2 className="mb-1 text-[13px] font-semibold text-neutral-600">🔒 {t('privacy')}</h2>
+        <SettingsRow icon="📜" label={t('viewTerms')} href="/page/terms" />
+        <SettingsRow icon="🔐" label={t('viewPrivacyPolicy')} href="/page/privacy" />
         {isSignedIn && (
           <button
             onClick={handleDataExport}
@@ -138,7 +141,7 @@ export function SettingsClient({
             className="flex h-[46px] w-full items-center justify-between text-left"
           >
             <span className="text-[14px] text-neutral-800">
-              {exportSent ? '✅ অনুরোধ পাঠানো হয়েছে' : 'আমার ডেটা ডাউনলোড করুন'}
+              {exportSent ? t('exportRequestSent') : t('downloadMyData')}
             </span>
             {!exportSent && <ChevronRight className="h-4 w-4 text-neutral-300" />}
           </button>
@@ -146,9 +149,9 @@ export function SettingsClient({
       </div>
 
       <div className="px-4 py-3">
-        <h2 className="mb-1 text-[13px] font-semibold text-neutral-600">ℹ️ অ্যাপ সম্পর্কে</h2>
+        <h2 className="mb-1 text-[13px] font-semibold text-neutral-600">ℹ️ {t('about')}</h2>
         <div className="flex h-[46px] items-center justify-between">
-          <span className="text-[14px] text-neutral-800">ভার্সন</span>
+          <span className="text-[14px] text-neutral-800">{t('version')}</span>
           <span className="text-[13px] text-neutral-500">1.0.0</span>
         </div>
         <button
@@ -158,11 +161,11 @@ export function SettingsClient({
         >
           <span className="flex items-center gap-1.5 text-[14px] text-neutral-800">
             <Trash2 className="h-4 w-4 text-neutral-400" />
-            {cacheCleared ? '✅ ক্যাশ পরিষ্কার করা হয়েছে' : 'ক্যাশ পরিষ্কার করুন'}
+            {cacheCleared ? t('cacheCleared') : t('clearCache')}
           </span>
           {!cacheCleared && <ChevronRight className="h-4 w-4 text-neutral-300" />}
         </button>
-        <p className="mt-1 text-[11px] text-neutral-400">যদি অ্যাপ ঠিকমতো কাজ না করে</p>
+        <p className="mt-1 text-[11px] text-neutral-400">{t('clearCacheHint')}</p>
       </div>
 
       <LanguageSheet
@@ -226,10 +229,11 @@ function ToggleRow({
   onChange?: () => void;
   locked?: boolean;
 }) {
+  const t = useT('settings');
   return (
     <div className="flex h-[42px] items-center justify-between">
       <span className="text-[14px] text-neutral-800">
-        {label} {locked && <span className="text-[11px] text-neutral-400">(লক)</span>}
+        {label} {locked && <span className="text-[11px] text-neutral-400">{t('locked')}</span>}
       </span>
       <button
         onClick={locked ? undefined : onChange}
