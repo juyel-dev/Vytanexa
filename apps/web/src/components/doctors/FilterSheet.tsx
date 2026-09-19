@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useLocalizedField, SPOKEN_LANGUAGE_LABELS } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { Json } from '@vytanexa/database';
 
 type Category = { id: string; slug: string; name_translations: Json };
@@ -32,6 +33,7 @@ export function FilterSheet({
   const pathname = usePathname();
 
   const localize = useLocalizedField();
+  const t = useT('doctor');
   const [specialties, setSpecialties] = useState<string[]>(
     currentParams.get('specialty')?.split(',').filter(Boolean) ?? []
   );
@@ -67,9 +69,9 @@ export function FilterSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="ফিল্টার">
+    <BottomSheet open={open} onClose={onClose} title={t('filterLabel')}>
       <div className="mb-4">
-        <p className="mb-2 text-[13px] font-semibold text-neutral-700">বিশেষজ্ঞতা</p>
+        <p className="mb-2 text-[13px] font-semibold text-neutral-700">{t('specialtyLabel')}</p>
         <div className="flex flex-wrap gap-2">
           {categories.map((c) => {
             const active = specialties.includes(c.slug);
@@ -91,7 +93,7 @@ export function FilterSheet({
 
       <div className="mb-4">
         <p className="mb-2 text-[13px] font-semibold text-neutral-700">
-          সর্বোচ্চ ভিজিট ফি: ₹{feeMax}
+          {t('maxFeeLabel', { feeMax })}
         </p>
         <input
           type="range"
@@ -105,12 +107,12 @@ export function FilterSheet({
       </div>
 
       <div className="mb-4">
-        <p className="mb-2 text-[13px] font-semibold text-neutral-700">রেটিং</p>
+        <p className="mb-2 text-[13px] font-semibold text-neutral-700">{t('ratingLabel')}</p>
         <div className="flex gap-2">
           {[
-            ['4.5', '৪.৫+ অসাধারণ'],
-            ['4.0', '৪.০+ ভালো'],
-            ['any', 'যেকোনো'],
+            ['4.5', t('rating.excellent')],
+            ['4.0', t('rating.good')],
+            ['any', t('rating.any')],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -128,7 +130,7 @@ export function FilterSheet({
       </div>
 
       <div className="mb-4">
-        <p className="mb-2 text-[13px] font-semibold text-neutral-700">ভাষা</p>
+        <p className="mb-2 text-[13px] font-semibold text-neutral-700">{t('languageLabel')}</p>
         <div className="flex gap-2">
           {LANGUAGES.map((l) => {
             const active = languages.includes(l.code);
@@ -153,13 +155,13 @@ export function FilterSheet({
           onClick={resetFilters}
           className="h-11 flex-1 rounded-md border border-neutral-200 text-[13px] font-medium text-neutral-600"
         >
-          রিসেট
+          {t('reset')}
         </button>
         <button
           onClick={applyFilters}
           className="h-11 flex-[2] rounded-md bg-brand-600 text-[14px] font-semibold text-white"
         >
-          ফলাফল দেখুন
+          {t('seeResults')}
         </button>
       </div>
     </BottomSheet>

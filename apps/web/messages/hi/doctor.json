@@ -63,5 +63,31 @@
   "seeReviewsCount": "({count} समीक्षाएं देखें)",
   "popularBadge": "🔥 लोकप्रिय",
   "visitFeeLabel": "💰 विज़िट फीस",
-  "appointmentShort": "अपॉइंटमेंट"
+  "appointmentShort": "अपॉइंटमेंट",
+  "sort": {
+    "rating": "टॉप रेटेड",
+    "reviews": "सबसे ज़्यादा रिव्यू",
+    "feeAsc": "कम विज़िट फीस",
+    "experience": "ज़्यादा अनुभव"
+  },
+  "filterAll": "सभी",
+  "filterLabel": "फ़िल्टर",
+  "resultsCount": "{count} डॉक्टर मिले",
+  "sortByPrefix": "क्रम: ",
+  "noResultsTitle": "अभी कोई डॉक्टर नहीं मिला",
+  "noResultsHint": "फ़िल्टर बदलकर फिर कोशिश करें, या इस क्षेत्र में अभी तक कोई डॉक्टर जोड़ा नहीं गया है",
+  "noMoreDoctors": "और कोई डॉक्टर नहीं",
+  "specialtyLabel": "स्पेशलिटी",
+  "maxFeeLabel": "अधिकतम विज़िट फीस: ₹{feeMax}",
+  "ratingLabel": "रेटिंग",
+  "rating": {
+    "excellent": "4.5+ उत्कृष्ट",
+    "good": "4.0+ अच्छा",
+    "any": "कोई भी"
+  },
+  "languageLabel": "भाषा",
+  "reset": "रीसेट",
+  "seeResults": "परिणाम देखें",
+  "notFoundTitle": "डॉक्टर नहीं मिला | Vytanexa",
+  "metaDescriptionTemplate": "{name}, एक {specialty} विशेषज्ञ। {degree}। Vytanexa पर विवरण देखें और संपर्क करें।"
 }

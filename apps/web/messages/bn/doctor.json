@@ -63,5 +63,31 @@
   "seeReviewsCount": "({count} রিভিউ দেখুন)",
   "popularBadge": "🔥 জনপ্রিয়",
   "visitFeeLabel": "💰 ভিজিট ফি",
-  "appointmentShort": "অ্যাপয়েন্টমেন্ট"
+  "appointmentShort": "অ্যাপয়েন্টমেন্ট",
+  "sort": {
+    "rating": "সেরা রেটিং",
+    "reviews": "সবচেয়ে বেশি রিভিউ",
+    "feeAsc": "কম ভিজিট ফি",
+    "experience": "বেশি অভিজ্ঞতা"
+  },
+  "filterAll": "সব",
+  "filterLabel": "ফিল্টার",
+  "resultsCount": "{count} জন ডাক্তার পাওয়া গেছে",
+  "sortByPrefix": "সাজান: ",
+  "noResultsTitle": "এই মুহূর্তে কোনো ডাক্তার পাওয়া যায়নি",
+  "noResultsHint": "ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন, অথবা এই এলাকায় এখনো কোনো ডাক্তার যোগ করা হয়নি",
+  "noMoreDoctors": "আর কোনো ডাক্তার নেই",
+  "specialtyLabel": "বিশেষজ্ঞতা",
+  "maxFeeLabel": "সর্বোচ্চ ভিজিট ফি: ₹{feeMax}",
+  "ratingLabel": "রেটিং",
+  "rating": {
+    "excellent": "৪.৫+ অসাধারণ",
+    "good": "৪.০+ ভালো",
+    "any": "যেকোনো"
+  },
+  "languageLabel": "ভাষা",
+  "reset": "রিসেট",
+  "seeResults": "ফলাফল দেখুন",
+  "notFoundTitle": "ডাক্তার পাওয়া যায়নি | Vytanexa",
+  "metaDescriptionTemplate": "{name}, একজন {specialty} বিশেষজ্ঞ। {degree}। Vytanexa-এ বিস্তারিত দেখুন ও যোগাযোগ করুন।"
 }

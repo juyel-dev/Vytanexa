@@ -3,6 +3,7 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { DoctorListClient } from '@/components/doctors/DoctorListClient';
 import { createClient } from '@/lib/supabase/server';
 import { queryDoctorList } from '@/lib/queries/doctor-list';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Doctor List Page — VYTANEXA-BLUEPRINT.md § S06. SSR renders page 0
@@ -18,7 +19,7 @@ export default async function DoctorsPage({
 }) {
   const supabase = createClient();
 
-  const [{ data: doctors, count }, { data: categories }] = await Promise.all([
+  const [{ data: doctors, count }, { data: categories }, t] = await Promise.all([
     queryDoctorList(supabase, {
       specialty: searchParams.specialty,
       feeMin: searchParams.feeMin ? Number(searchParams.feeMin) : undefined,
@@ -33,11 +34,12 @@ export default async function DoctorsPage({
       .select('id, slug, name_translations')
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
+    getT('doctor'),
   ]);
 
   return (
     <>
-      <TopBarSection title="ডাক্তার খুঁজুন" />
+      <TopBarSection title={t('findTitle')} />
       <Suspense fallback={null}>
         <DoctorListClient
           initialDoctors={doctors}

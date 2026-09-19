@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getDoctorBySlug } from '@/lib/queries/doctor-detail';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 import { DoctorProfileClient } from '@/components/doctor-profile/DoctorProfileClient';
 
 // ISR: revalidate hourly per S02 § 3.2 ("revalidate: 1 hour for
@@ -22,15 +23,19 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const doctor = await loadDoctor(params.slug);
-  if (!doctor) return { title: 'ডাক্তার পাওয়া যায়নি | Vytanexa' };
+  const [doctor, t] = await Promise.all([loadDoctor(params.slug), getT('doctor')]);
+  if (!doctor) return { title: t('notFoundTitle') };
 
   const name = getLocalizedField(doctor.name_translations);
   const specialty = doctor.categories
     ? getLocalizedField(doctor.categories.name_translations)
     : '';
   const title = `${name} — ${specialty} | Vytanexa`;
-  const description = `${name}, একজন ${specialty} বিশেষজ্ঞ। ${doctor.degree.join(', ')}। Vytanexa-এ বিস্তারিত দেখুন ও যোগাযোগ করুন।`;
+  const description = t('metaDescriptionTemplate', {
+    name,
+    specialty,
+    degree: doctor.degree.join(', '),
+  });
 
   return {
     title,

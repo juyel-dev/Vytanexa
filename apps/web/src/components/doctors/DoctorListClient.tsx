@@ -6,17 +6,11 @@ import { SlidersHorizontal } from 'lucide-react';
 import { DoctorCard, type DoctorCardData } from '@/components/shared/DoctorCard';
 import { FilterSheet } from '@/components/doctors/FilterSheet';
 import { useLocalizedField } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { Json } from '@vytanexa/database';
 
 type Category = { id: string; slug: string; name_translations: Json };
 type DoctorRow = DoctorCardData & { categories: { name_translations: Json; slug: string } | null };
-
-const SORT_OPTIONS: [string, string][] = [
-  ['rating', 'সেরা রেটিং'],
-  ['reviews', 'সবচেয়ে বেশি রিভিউ'],
-  ['fee_asc', 'কম ভিজিট ফি'],
-  ['experience', 'বেশি অভিজ্ঞতা'],
-];
 
 /**
  * Doctor List Client — VYTANEXA-BLUEPRINT.md § S06. Hydrates on top of
@@ -38,6 +32,14 @@ export function DoctorListClient({
   const searchParams = useSearchParams();
 
   const localize = useLocalizedField();
+  const t = useT('doctor');
+  const tCommon = useT('common');
+  const SORT_OPTIONS: [string, string][] = [
+    ['rating', t('sort.rating')],
+    ['reviews', t('sort.reviews')],
+    ['fee_asc', t('sort.feeAsc')],
+    ['experience', t('sort.experience')],
+  ];
   const [doctors, setDoctors] = useState(initialDoctors);
   const [count, setCount] = useState(initialCount);
   const [page, setPage] = useState(0);
@@ -114,7 +116,7 @@ export function DoctorListClient({
             !activeSpecialty ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
           }`}
         >
-          সব
+          {t('filterAll')}
         </button>
         {categories.map((c) => (
           <button
@@ -133,15 +135,15 @@ export function DoctorListClient({
           onClick={() => setFilterOpen(true)}
           className="ml-1 flex shrink-0 items-center gap-1 rounded-full border border-neutral-200 px-3 py-1.5 text-[13px] text-neutral-700"
         >
-          <SlidersHorizontal className="h-3.5 w-3.5" /> ফিল্টার
+          <SlidersHorizontal className="h-3.5 w-3.5" /> {t('filterLabel')}
         </button>
       </div>
 
       {/* Result count + sort */}
       <div className="relative flex items-center justify-between px-4 py-2.5 text-[13px]">
-        <span className="text-neutral-600">{count} জন ডাক্তার পাওয়া গেছে</span>
+        <span className="text-neutral-600">{t('resultsCount', { count })}</span>
         <button onClick={() => setSortOpen((v) => !v)} className="font-semibold text-brand-600">
-          সাজান: {SORT_OPTIONS.find(([v]) => v === activeSort)?.[1]} ▾
+          {t('sortByPrefix')}{SORT_OPTIONS.find(([v]) => v === activeSort)?.[1]} ▾
         </button>
         {sortOpen && (
           <div className="absolute right-4 top-9 z-dropdown w-56 rounded-md bg-white py-1 shadow-lg">
@@ -165,10 +167,10 @@ export function DoctorListClient({
       {doctors.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
-            এই মুহূর্তে কোনো ডাক্তার পাওয়া যায়নি
+            {t('noResultsTitle')}
           </p>
           <p className="mt-2 text-[13px] text-neutral-500">
-            ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন, অথবা এই এলাকায় এখনো কোনো ডাক্তার যোগ করা হয়নি
+            {t('noResultsHint')}
           </p>
         </div>
       ) : (
@@ -178,11 +180,11 @@ export function DoctorListClient({
           ))}
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? 'লোড হচ্ছে...' : ''}
+              {loadingMore ? tCommon('loading') : ''}
             </div>
           )}
           {!hasMore && (
-            <p className="py-6 text-center text-[13px] text-neutral-400">আর কোনো ডাক্তার নেই</p>
+            <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreDoctors')}</p>
           )}
         </>
       )}

@@ -63,5 +63,31 @@
   "seeReviewsCount": "(See {count} reviews)",
   "popularBadge": "🔥 Popular",
   "visitFeeLabel": "💰 Visit fee",
-  "appointmentShort": "Appointment"
+  "appointmentShort": "Appointment",
+  "sort": {
+    "rating": "Top rated",
+    "reviews": "Most reviewed",
+    "feeAsc": "Lowest fee",
+    "experience": "Most experienced"
+  },
+  "filterAll": "All",
+  "filterLabel": "Filter",
+  "resultsCount": "{count} doctors found",
+  "sortByPrefix": "Sort: ",
+  "noResultsTitle": "No doctors found right now",
+  "noResultsHint": "Try changing the filters, or no doctors have been added in this area yet",
+  "noMoreDoctors": "No more doctors",
+  "specialtyLabel": "Specialty",
+  "maxFeeLabel": "Max visit fee: ₹{feeMax}",
+  "ratingLabel": "Rating",
+  "rating": {
+    "excellent": "4.5+ Excellent",
+    "good": "4.0+ Good",
+    "any": "Any"
+  },
+  "languageLabel": "Language",
+  "reset": "Reset",
+  "seeResults": "See results",
+  "notFoundTitle": "Doctor not found | Vytanexa",
+  "metaDescriptionTemplate": "{name}, a {specialty} specialist. {degree}. See details and contact on Vytanexa."
 }
