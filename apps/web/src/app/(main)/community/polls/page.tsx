@@ -5,11 +5,15 @@ import { PollsClient } from '@/components/polls/PollsClient';
 import { createClient } from '@/lib/supabase/server';
 import { getActivePolls } from '@/lib/queries/polls';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'স্বাস্থ্য জরিপ | Vytanexa',
-  description: 'স্বাস্থ্য বিষয়ক জরিপে অংশ নিন এবং কমিউনিটির মতামত দেখুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('polls');
+  return {
+    title: `${t('title')} | Vytanexa`,
+    description: t('metaDescription'),
+  };
+}
 
 /**
  * Polls List Page — gated behind `app_settings.features.polls`, same
@@ -24,11 +28,11 @@ export default async function PollsPage() {
     notFound();
   }
 
-  const polls = await getActivePolls(supabase);
+  const [polls, t] = await Promise.all([getActivePolls(supabase), getT('polls')]);
 
   return (
     <>
-      <TopBarSection title="স্বাস্থ্য জরিপ" />
+      <TopBarSection title={t('title')} />
       <PollsClient polls={polls} />
     </>
   );

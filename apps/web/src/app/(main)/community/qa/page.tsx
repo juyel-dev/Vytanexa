@@ -5,11 +5,15 @@ import { isFeatureEnabled } from '@/lib/feature-flags';
 import { queryQuestionList, getDoctorAnsweredQuestionIds } from '@/lib/queries/qa-list';
 import { getQACategories } from '@/lib/queries/qa-detail';
 import { QAListClient } from '@/components/qa/QAListClient';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'প্রশ্নোত্তর | Vytanexa',
-  description: 'স্বাস্থ্য বিষয়ক প্রশ্ন করুন, ডাক্তার ও কমিউনিটি থেকে উত্তর পান।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('qa');
+  return {
+    title: `${t('heading')} | Vytanexa`,
+    description: t('metaDescription'),
+  };
+}
 
 /**
  * Q&A List Page — VYTANEXA-BLUEPRINT.md § S14 "Feature Flag Gate":

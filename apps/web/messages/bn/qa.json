@@ -30,5 +30,8 @@
     "submitting": "জমা হচ্ছে...",
     "submit": "প্রশ্ন জমা দিন",
     "publishNotice": "প্রশ্নটি অনুমোদনের পর প্রকাশিত হবে।"
-  }
+  },
+  "metaDescription": "স্বাস্থ্য বিষয়ক প্রশ্ন করুন, ডাক্তার ও কমিউনিটি থেকে উত্তর পান।",
+  "notFoundTitle": "প্রশ্ন পাওয়া যায়নি | Vytanexa",
+  "metaTitleSuffix": " | Vytanexa প্রশ্নোত্তর"
 }

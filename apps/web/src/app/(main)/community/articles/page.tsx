@@ -3,11 +3,15 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { ArticleListClient } from '@/components/articles/ArticleListClient';
 import { createClient } from '@/lib/supabase/server';
 import { queryArticleList, getArticleCategories } from '@/lib/queries/article-list';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'স্বাস্থ্য ম্যাগাজিন | Vytanexa',
-  description: 'স্বাস্থ্য বিষয়ক নিবন্ধ, টিপস ও পরামর্শ পড়ুন — ডায়াবেটিস, পুষ্টি, শিশু স্বাস্থ্য ও আরো অনেক বিষয়ে।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('articles');
+  return {
+    title: `${t('title')} | Vytanexa`,
+    description: t('metaDescription'),
+  };
+}
 
 /**
  * Article List Page — VYTANEXA-BLUEPRINT.md § S13. SSR first page +
@@ -19,14 +23,15 @@ export default async function ArticlesPage({
   searchParams: { [key: string]: string | undefined };
 }) {
   const supabase = createClient();
-  const [{ data: articles, count }, categories] = await Promise.all([
+  const [{ data: articles, count }, categories, t] = await Promise.all([
     queryArticleList(supabase, { category: searchParams.category, page: 0 }),
     getArticleCategories(supabase),
+    getT('articles'),
   ]);
 
   return (
     <>
-      <TopBarSection title="স্বাস্থ্য ম্যাগাজিন" />
+      <TopBarSection title={t('title')} />
       <ArticleListClient
         initialArticles={articles}
         initialCount={count}

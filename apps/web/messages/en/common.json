@@ -29,5 +29,6 @@
     "thu": "Thu",
     "fri": "Fri"
   },
-  "closedSuffix": "closed"
+  "closedSuffix": "closed",
+  "notFoundTitle": "Not found | Vytanexa"
 }

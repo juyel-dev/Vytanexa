@@ -30,5 +30,8 @@
     "submitting": "Submitting...",
     "submit": "Submit question",
     "publishNotice": "The question will be published after approval."
-  }
+  },
+  "metaDescription": "Ask health questions and get answers from doctors and the community.",
+  "notFoundTitle": "Question not found | Vytanexa",
+  "metaTitleSuffix": " | Vytanexa Q&A"
 }

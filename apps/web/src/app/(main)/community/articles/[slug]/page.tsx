@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getArticleBySlug, getRelatedArticles } from '@/lib/queries/article-detail';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 import { ArticleDetailClient } from '@/components/articles/ArticleDetailClient';
 
 // ISR revalidate 1hr per S13 spec ("SSG+ISR(1hr)"). Same
@@ -20,12 +21,11 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const article = await loadArticle(params.slug);
-  if (!article) return { title: 'নিবন্ধ পাওয়া যায়নি | Vytanexa' };
+  const [article, t] = await Promise.all([loadArticle(params.slug), getT('articles')]);
+  if (!article) return { title: t('notFoundTitle') };
 
   const title = article.meta_title || getLocalizedField(article.title_translations);
-  const description =
-    article.meta_description || `${title} — Vytanexa স্বাস্থ্য ম্যাগাজিনে পড়ুন।`;
+  const description = article.meta_description || `${title}${t('readOnSuffix')}`;
 
   return {
     title: `${title} | Vytanexa`,

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getQuestionById, getAnswers } from '@/lib/queries/qa-detail';
 import { QuestionDetailClient } from '@/components/qa/QuestionDetailClient';
+import { getT } from '@vytanexa/i18n/server';
 
 export async function generateMetadata({
   params,
@@ -11,13 +12,18 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   const supabase = createClient();
-  if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
-    return { title: 'পাওয়া যায়নি | Vytanexa' };
+  const [featureEnabled, tCommon, tQa] = await Promise.all([
+    isFeatureEnabled(supabase, 'community_qa'),
+    getT('common'),
+    getT('qa'),
+  ]);
+  if (!featureEnabled) {
+    return { title: tCommon('notFoundTitle') };
   }
   const question = await getQuestionById(supabase, params.id);
-  if (!question) return { title: 'প্রশ্ন পাওয়া যায়নি | Vytanexa' };
+  if (!question) return { title: tQa('notFoundTitle') };
   return {
-    title: `${question.title} | Vytanexa প্রশ্নোত্তর`,
+    title: `${question.title}${tQa('metaTitleSuffix')}`,
     description: question.body ?? question.title,
   };
 }

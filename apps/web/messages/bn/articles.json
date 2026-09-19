@@ -1,3 +1,7 @@
 {
-  "readTime": "{minutes, plural, other {# মিনিট পড়া}}"
+  "readTime": "{minutes, plural, other {# মিনিট পড়া}}",
+  "title": "স্বাস্থ্য ম্যাগাজিন",
+  "metaDescription": "স্বাস্থ্য বিষয়ক নিবন্ধ, টিপস ও পরামর্শ পড়ুন — ডায়াবেটিস, পুষ্টি, শিশু স্বাস্থ্য ও আরো অনেক বিষয়ে।",
+  "notFoundTitle": "নিবন্ধ পাওয়া যায়নি | Vytanexa",
+  "readOnSuffix": " — Vytanexa স্বাস্থ্য ম্যাগাজিনে পড়ুন।"
 }
