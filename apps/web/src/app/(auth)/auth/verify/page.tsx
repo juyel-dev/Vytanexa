@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useT } from '@vytanexa/i18n/client';
 
 const RESEND_SECONDS = 30;
 
@@ -31,6 +32,8 @@ function VerifyPageContent() {
   const [verifying, setVerifying] = useState(false);
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const t = useT('auth');
+  const tCommon = useT('common');
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -50,7 +53,7 @@ function VerifyPageContent() {
     setVerifying(false);
 
     if (verifyError) {
-      setError('কোড সঠিক নয়। আবার চেষ্টা করুন।');
+      setError(t('invalidCode'));
       setDigits(Array(6).fill(''));
       inputRefs.current[0]?.focus();
       return;
@@ -93,13 +96,13 @@ function VerifyPageContent() {
 
   return (
     <div className="flex min-h-dvh flex-col px-6 pt-6">
-      <button onClick={() => router.back()} aria-label="পেছনে যান">
+      <button onClick={() => router.back()} aria-label={tCommon('goBack')}>
         <ChevronLeft className="h-6 w-6 text-neutral-700" />
       </button>
 
-      <h1 className="mt-6 text-[20px] font-bold text-neutral-900">OTP যাচাই করুন</h1>
+      <h1 className="mt-6 text-[20px] font-bold text-neutral-900">{t('verifyTitle')}</h1>
       <p className="mt-2 text-[14px] text-neutral-600">
-        {phone} নম্বরে ৬ সংখ্যার কোড পাঠানো হয়েছে
+        {t('verifySubtitle', { phone })}
       </p>
 
       <div className="mt-6 flex justify-center gap-2" onPaste={handlePaste}>
@@ -126,17 +129,17 @@ function VerifyPageContent() {
 
       {error && <p className="mt-3 text-center text-[13px] text-emergency-600">{error}</p>}
       {verifying && (
-        <p className="mt-3 text-center text-[13px] text-neutral-400">যাচাই করা হচ্ছে...</p>
+        <p className="mt-3 text-center text-[13px] text-neutral-400">{t('verifying')}</p>
       )}
 
       <div className="mt-6 text-center">
         {resendIn > 0 ? (
           <p className="text-[13px] text-neutral-400">
-            কোড আসেনি? পুনরায় পাঠান ({resendIn}s)
+            {t('resendCountdown', { seconds: resendIn })}
           </p>
         ) : (
           <button onClick={handleResend} className="text-[13px] text-brand-600">
-            পুনরায় পাঠান
+            {t('resend')}
           </button>
         )}
       </div>
@@ -145,7 +148,7 @@ function VerifyPageContent() {
         onClick={() => router.back()}
         className="mt-2 text-center text-[13px] text-neutral-400"
       >
-        ভুল নম্বর? নম্বর পরিবর্তন করুন
+        {t('wrongNumber')}
       </button>
     </div>
   );

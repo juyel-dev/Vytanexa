@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useT } from '@vytanexa/i18n/client';
 
 export default function LoginPage() {
   return (
@@ -30,6 +31,9 @@ function LoginPageContent() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useT('auth');
+  const tOnboarding = useT('onboarding');
+  const tCommon = useT('common');
 
   const isValidPhone = /^[6-9]\d{9}$/.test(phone);
 
@@ -42,7 +46,7 @@ function LoginPageContent() {
     const { error: otpError } = await supabase.auth.signInWithOtp({ phone: fullPhone });
     setLoading(false);
     if (otpError) {
-      setError('OTP পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      setError(tOnboarding('signin.otpSendFailed'));
       return;
     }
     router.push(
@@ -60,19 +64,19 @@ function LoginPageContent() {
 
   return (
     <div className="flex min-h-dvh flex-col px-6 pt-6">
-      <button onClick={() => router.back()} aria-label="পেছনে যান">
+      <button onClick={() => router.back()} aria-label={tCommon('goBack')}>
         <ChevronLeft className="h-6 w-6 text-neutral-700" />
       </button>
 
-      <h1 className="mt-6 text-[20px] font-bold text-neutral-900">সাইন ইন করুন</h1>
+      <h1 className="mt-6 text-[20px] font-bold text-neutral-900">{tCommon('signIn')}</h1>
 
-      <p className="mt-6 text-[13px] font-medium text-neutral-700">📱 মোবাইল নম্বর</p>
+      <p className="mt-6 text-[13px] font-medium text-neutral-700">{t('phoneLabelShort')}</p>
       <div className="mt-2 flex h-12 items-center rounded-md border border-neutral-200 px-3">
         <span className="mr-2 text-[14px] text-neutral-500">🇮🇳 +91</span>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-          placeholder="মোবাইল নম্বর লিখুন"
+          placeholder={tOnboarding('signin.phonePlaceholder')}
           inputMode="numeric"
           className="flex-1 text-[14px] outline-none placeholder:text-neutral-400"
         />
@@ -84,12 +88,12 @@ function LoginPageContent() {
         disabled={!isValidPhone || loading}
         className="mt-3 h-12 rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
       >
-        {loading ? 'পাঠানো হচ্ছে...' : 'OTP পাঠান →'}
+        {loading ? tOnboarding('signin.sending') : tOnboarding('signin.sendOtp')}
       </button>
 
       <div className="my-4 flex items-center gap-3">
         <span className="h-px flex-1 bg-neutral-200" />
-        <span className="text-[12px] text-neutral-400">অথবা</span>
+        <span className="text-[12px] text-neutral-400">{tCommon('or')}</span>
         <span className="h-px flex-1 bg-neutral-200" />
       </div>
 
@@ -97,7 +101,7 @@ function LoginPageContent() {
         onClick={handleGoogleSignin}
         className="h-12 rounded-md border border-neutral-200 text-[14px] font-medium text-neutral-700"
       >
-        Google দিয়ে সাইন ইন
+        {tOnboarding('signin.signInWithGoogle')}
       </button>
     </div>
   );
