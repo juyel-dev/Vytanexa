@@ -712,3 +712,125 @@ mega-task.
       search becomes a real acquisition channel (ARCHITECTURE § 6). Only the
       locale-resolution source inside the facade changes; `t()`/
       `getLocalizedField()` call sites are unaffected.
+
+## 13. Patterns and gotchas learned during Phase 3 (accumulating — add to
+this section, don't replace it, as new batches surface new cases; this is
+the durable reference, `CLAUDE-SESSION-CONTEXT.md`'s "New this session"
+notes are the transient per-session log that feeds into it)
+
+**Server Components vs Route Handlers vs static metadata — three different
+places `getT()`/`getFormatter()` get called from, each with its own
+wiring:**
+- Server Component page/layout: `const t = await getT('ns')` directly in
+  the async component body. No surprises.
+- Route Handler (`app/api/**/route.ts`): confirmed empirically (ran the
+  actual dev server, hit a throwaway test route, checked the locale cookie
+  was respected) that `getT()` works identically here even though
+  next-intl's server APIs are built on `React.cache()` and Route Handlers
+  aren't React-rendered. Don't re-verify this each time; it's settled.
+- Static `export const metadata = {...}` objects can't call `getT()` at
+  all (not a function, no request context). Convert to
+  `export async function generateMetadata(): Promise<Metadata>` — this is
+  now the standard pattern for any page whose `<title>`/`description`
+  needs to be locale-aware, used across a dozen-plus files with no issue.
+  Note this makes the route dynamic (opts out of static generation) —
+  accepted trade-off for user-facing pages; weigh it explicitly for
+  anything meant to stay static (e.g. `manifest.ts`, batch 13 — accepted
+  there too, since a PWA manifest is fetched once per device at install
+  time, not per page load).
+
+**Zod validation schemas that need translated messages:** convert from a
+module-level `export const fooSchema = z.object(...)` to a factory
+`export function fooSchema(t: Translator) { return z.object(...) }`,
+called fresh per-request right after `const t = await getT('validation')`
+in the route handler. `type Translator = Awaited<ReturnType<typeof
+getT<'validation'>>>` — the *unparameterized* `ReturnType<typeof getT>`
+resolves to something unusable (an overload artifact); the namespace type
+param is required. **Before converting any file in `lib/validations/` or
+similar, grep every export name against every `'use client'` file first**
+— `@vytanexa/i18n/server` is hard-tagged `server-only`, and if a client
+component imports anything else from that same file (even a pure,
+i18n-unrelated helper), adding the `getT` import breaks that client
+bundle the moment it's parsed. `blood-donors.ts` hit exactly this
+(`DonorRegistrationSheet.tsx` imports `normalizeIndianPhone` from it) —
+fixed by splitting into `blood-donors.ts` (client-safe) and
+`blood-donors-schema.ts` (new, server-only). This is a per-file check,
+not a one-time audit — the answer can differ file to file.
+
+**Dynamic/enum-driven translation keys:** `t(\`namespace.${variable}\`
+as Parameters<typeof t>[0])` is the established, working cast pattern
+for keys built from a runtime string (day names, status labels, hospital
+types, filter values) — confirmed compiling cleanly across a dozen+ call
+sites. But **when the runtime value isn't a closed, DB-enforced enum**,
+next-intl's `t()` throws on a missing key rather than returning
+`undefined` — `?? fallback` does NOT catch this. Guard with
+`t.has(path) ? t(path) : fallback` instead (used for `hospital_type`,
+`moderation_status`, `lead_status` — always check the Postgres migration
+for an actual `CREATE TYPE ... AS ENUM` before deciding whether the guard
+is strictly necessary or just cheap insurance; add it either way once
+there's already a fallback value in reach).
+
+**Rich/embedded-markup translations:** `t.rich('key', { word: x, b:
+(chunks) => <strong>{chunks}</strong> })` with a `<b>{word}</b>` tag in
+the message JSON is how to keep inline formatting (bold, etc.) around an
+interpolated value without losing it to plain-string ICU interpolation.
+First used in the account-deletion confirm dialog (batch 10); reuse
+freely, no special setup needed beyond writing the tag into the message
+string.
+
+**Consolidation discipline, restated with what's actually held up in
+practice:** grep every candidate string against the full `messages/bn/`
+tree before writing a new key, not just the namespace file already open
+— real cross-namespace reuse has come from `nav.*`, `common.*`,
+`shared.*`, `emergency.*`, `qa.*`, `account.*`, `home.*`, `settings.*`,
+`hospital.type.*`, and `articles.readTime`, often from directories
+migrated many sessions earlier. Two refinements worth keeping in mind:
+(1) reuse only when the *meaning* matches, not just similar-looking
+Bengali — passed on reusing `shared.dataReport.submit` for a
+question-submit button once because the actual English/Hindi copy
+differs in specificity ("Submit" vs "Submit question"); (2) a **shared
+exported constant** (not just a message key) can also be the site of a
+cross-directory bug — `NationalNumbersSection.tsx`'s `NATIONAL_NUMBERS`
+carried a hardcoded label consumed by `EmergencyFAB.tsx` in a completely
+different, already-"done" directory (batch 15). Before changing the
+shape of any shared exported constant while migrating the file that
+declares it, grep every other importer of that constant too, not just
+the message strings in the file being touched.
+
+**New namespace vs extend an existing one vs a shared cross-cutting
+bucket** — three real decisions made, all still standing:
+- Most batches: new namespace per top-level UI directory
+  (`blood.json`, `qa.json`, `account.json`, `home.json`, `seo.json`).
+- Some batches found an existing namespace for the same directory and
+  extended it instead of creating a second one — check
+  `messages/bn/<name>.json` for a same-named file before assuming a
+  clean slate; `emergency.json` and `settings.json` both already
+  existed with partial content when their batches started (`more/`,
+  batch 16, actually consumed most of `settings.json`'s content for the
+  first time — that file existed for two sessions with almost no real
+  caller until then).
+- One batch (API routes + Zod validations, batch 13) got a single
+  shared `validation.json` deliberately *not* split per-feature —
+  right call when strings are short, technical, and heavily
+  cross-referenced across unrelated domains (`name.min`/`phone.invalid`/
+  `generic.*` are each reused 3-5+ times); wrong call for normal
+  feature UI copy, which stays domain-scoped as usual.
+
+**Verification bar for anything server-side that isn't just UI copy**:
+`npm run typecheck` proves the code compiles, not that it behaves
+correctly. For the Zod-validation batch specifically, ran the actual dev
+server and POSTed real invalid request bodies with different `locale`
+cookies, checking the JSON error string came back in the right language
+each time — worth doing again for any future batch that touches request
+validation or other server logic beyond straightforward string
+substitution, not just for UI-string swaps where typecheck + a Unicode
+grep is sufficient (that's been the bar for every `.tsx` component batch
+and it's held up fine).
+
+**The `.tsx`-only inventory has known blind spots** — found the hard
+way, twice: `.ts` lib/API files (closed out as a strand, batch 13-13b)
+and a shared exported constant referenced from another directory
+(batch 15). When starting a *new* top-level directory, it's worth a
+quick manual check — does this directory's data get consumed by, or
+share constants with, some other already-migrated directory? — rather
+than trusting the inventory number alone to mean "fully covered."

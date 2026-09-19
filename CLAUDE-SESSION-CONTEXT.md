@@ -98,6 +98,18 @@ reminded.
    organizational benefit for no real gain (`i18n:check` still catches
    missing/mismatched keys regardless). Full account in
    `I18N-IMPLEMENTATION-SPEC.md` § 6.
+10. **`I18N-IMPLEMENTATION-SPEC.md` § 13 is the durable, accumulating
+    reference for every pattern and gotcha found across Phase 3** — how
+    `getT()` differs across Server Components / Route Handlers / static
+    `metadata` exports, the Zod schema-factory pattern and its
+    client-bundle-safety check, the `t.has()` guard for enum-driven
+    dynamic keys, `t.rich()` for embedded markup, when to extend vs.
+    create vs. consolidate a namespace, and the verification bar for
+    server-side logic beyond plain string swaps. Read it before starting
+    a batch; add to it (don't replace it) when something new turns up.
+    This "Work State" section below is the *transient* per-session
+    snapshot — § 13 is where a finding goes once it's a reusable pattern,
+    not just this session's news.
 
 ---
 
@@ -140,15 +152,28 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `352ac29`** (last commit in this session). Progress:
-61/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `03892c7`** (last commit in this session). Progress:
+60/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text —
 see "Blocked" below, that's expected and correct, not a miss.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
-closed — don't re-scan for it, see the batch-13/14-era entries below
-for what was done.
+closed — don't re-scan for it.
+
+**Read `I18N-IMPLEMENTATION-SPEC.md` § 13 before starting work.** It's
+a new, durable, accumulating reference section (added this session,
+not per-session state — don't confuse it with this file) holding every
+reusable pattern and gotcha found across all of Phase 3 so far: how
+`getT()`/`getFormatter()` differ across Server Components, Route
+Handlers, and static `metadata` exports; the Zod-schema-factory
+pattern and the client-bundle-safety check that has to happen before
+using it; the `t.has()` guard for enum-driven dynamic keys; `t.rich()`
+for embedded markup; and the two "blind spot" bugs (the whole `.ts`
+strand, and a shared-constant bug spanning two "done" directories)
+that argue for a quick manual check before trusting the inventory
+number alone. Read that section instead of re-deriving any of this
+from scratch or from old commit messages.
 
 ### Completed
 - **Phase 1 — foundation**: `packages/i18n` facade, the core
@@ -171,17 +196,23 @@ for what was done.
   **`app/(main)/account/*`** — all 6 route pages,
   **`emergency/*`** — `components/emergency/*` (2 files) +
   `app/(main)/emergency/page.tsx`, extending the existing `emergency`
-  namespace rather than creating a new one.
-- **Phase 3, `.ts` strand — closed two sessions ago**: all 9
+  namespace, **`more/*`** — `MorePageClient.tsx` + route page, heaviest
+  cross-reuse batch yet (new `more` namespace, but mostly small —
+  nearly every label already existed somewhere else).
+- **Phase 3, `.ts` strand — closed, don't re-scan**: all 9
   `lib/validations/*.ts` Zod schemas converted to locale-aware factory
   functions, all 17 `app/api/**/route.ts` handlers updated, plus
   `app/manifest.ts`. New `validation` namespace (bn/en/hi). A full
-  `src/**/*.ts` sweep confirmed nothing left — don't re-scan for this.
-  Commits `f5187d8` through `352ac29` — see
+  `src/**/*.ts` sweep confirmed nothing left.
+  Commits `f5187d8` through `03892c7` — see
   `git log --oneline 046c9f7~1..HEAD` for the full list; each message
   documents what was migrated *and* what bug or design issue was found
   along the way, several are worth reading in full (`git show <hash>`)
-  before resuming, not just skimming the one-liners.
+  before resuming, not just skimming the one-liners. **For the
+  reusable patterns themselves (not the file-by-file history), read
+  `I18N-IMPLEMENTATION-SPEC.md` § 13 instead of the commit log** — it's
+  the consolidated, durable version of what's scattered across these
+  commit messages.
 
 ### Active
 Nothing mid-edit. Session ended at a clean, committed, typechecked,
@@ -225,33 +256,59 @@ mirroring what `apps/web`'s facade already does — but that's a distinct
 piece of work from "migrate hardcoded Bengali .tsx strings" and
 shouldn't be folded into a Phase 3 batch without discussing scope first.
 
-**New this session**: found and fixed a bug spanning two "done"
-directories — `NationalNumbersSection.tsx`'s exported `NATIONAL_NUMBERS`
-constant carried a hardcoded Bengali `label` field, and
-`components/layout/EmergencyFAB.tsx` (migrated many batches ago) imports
-that same constant and rendered `n.label` directly. Not a gap in the
-earlier batch — that file's own strings were fine — just a dependency
-on a not-yet-migrated file. Changed the shared constant to a
-`labelKey` and had both consumers resolve it through their own
-`useT('emergency')`. **Worth remembering going forward**: before
-changing the shape of any shared exported constant/type while
-migrating one file, grep every other importer of it first — the bug
-can live in a file this effort already marked "done."
+**New this session**:
+
+1. Found and fixed a bug spanning two "done" directories —
+   `NationalNumbersSection.tsx`'s exported `NATIONAL_NUMBERS` constant
+   carried a hardcoded Bengali `label` field, and
+   `components/layout/EmergencyFAB.tsx` (migrated many batches ago)
+   imports that same constant and rendered `n.label` directly. Not a
+   gap in the earlier batch — that file's own strings were fine — just
+   a dependency on a not-yet-migrated file. Changed the shared constant
+   to a `labelKey` and had both consumers resolve it through their own
+   `useT('emergency')`.
+
+2. `more/` (batch 16) turned out to be the biggest cross-reuse win of
+   the whole effort — nearly every menu-row label already existed in
+   some other namespace (`emergency`, `home`, `qa`, `account`,
+   `common`, `settings`). Confirms the "grep the whole messages/
+   tree before adding a key" discipline pays off more as more batches
+   land, not less — later batches have more to reuse from, not more
+   new ground to cover.
+
+3. **Added a new, durable, accumulating reference section —
+   `I18N-IMPLEMENTATION-SPEC.md` § 13** — consolidating every reusable
+   pattern and gotcha found across all of Phase 3 (the three places
+   `getT()` gets called from and how they differ; the Zod
+   schema-factory + client-bundle-safety pattern; the `t.has()` guard;
+   `t.rich()`; when to extend vs. create vs. consolidate a namespace;
+   the verification bar for server-side logic vs. plain UI-string
+   swaps; the two "blind spot" bugs and what to check for next time).
+   This was requested explicitly this session, specifically so a fresh
+   conversation with no access to this conversation's history — only
+   the repo and memory — can pick up the methodology without
+   rediscovering any of it. **Read § 13 before starting the next
+   batch**, and add to it (don't replace it) when a new pattern or
+   gotcha turns up — it's meant to outlive any single session's Work
+   State snapshot in this file.
 
 ### Next Move
 Continue the `.tsx` strand. Re-run the inventory command in
 `I18N-IMPLEMENTATION-SPEC.md` § 12 for current numbers before picking
 the next directory — as of this session's end, in descending priority
-order: `more/` (343 chars), `app/(main)/community/` (338),
-`app/(main)/search/` (326), `settings/` (291), `doctors/` (284),
+order: `app/(main)/community/` (338 chars), `app/(main)/search/` (326),
+`settings/` (291 — see § 13's note on `more/` batch 16 already
+consuming most of `settings.json`'s existing keys, so check what's left
+unused before assuming a from-scratch namespace), `doctors/` (284),
 `app/(auth)/auth/` (254), `symptoms/` (241), `app/(main)/health/` (195
 — includes `health/blood-services/page.tsx`, the route wrapper around
 `components/blood-services/*`, done several sessions ago; same
 components-vs-route-page split as the account and emergency work),
 `hospital-profile/` (167, remaining files beyond `InfoTab.tsx`),
-`lab-tests/` (163), `polls/`, `articles/`, `custom-page/*`. Same
-7-step per-file checklist, same batch-verify-commit-push rhythm — 15
-batches running clean, no reason to change it.
+`lab-tests/` (163), `app/(main)/symptoms/` (159), `polls/`, `articles/`,
+`custom-page/*`. Same 7-step per-file checklist, same
+batch-verify-commit-push rhythm — 16 batches running clean, no reason
+to change it.
 
 ## Relevant Files
 
