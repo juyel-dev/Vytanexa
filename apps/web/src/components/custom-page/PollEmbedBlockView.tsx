@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { toBengaliDigits } from '@/lib/i18n';
 import { getPollById } from '@/lib/queries/polls';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 import type { PollBlock } from '@/lib/custom-page-blocks';
 
 /**
@@ -23,6 +24,7 @@ export async function PollEmbedBlockView({ block }: { block: PollBlock }) {
   const supabase = createClient();
   const poll = await getPollById(supabase, block.poll_id);
   if (!poll) return null;
+  const t = await getT('polls');
 
   const options = [...poll.poll_options].sort((a, b) => a.display_order - b.display_order);
 
@@ -42,7 +44,7 @@ export async function PollEmbedBlockView({ block }: { block: PollBlock }) {
           </div>
         );
       })}
-      <p className="mt-2 text-[12px] font-semibold text-brand-600">জরিপে অংশ নিন →</p>
+      <p className="mt-2 text-[12px] font-semibold text-brand-600">{t('joinCta')}</p>
     </Link>
   );
 }

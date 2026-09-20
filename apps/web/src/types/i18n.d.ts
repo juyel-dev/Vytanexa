@@ -33,6 +33,7 @@ import type search from '../../messages/bn/search.json';
 import type auth from '../../messages/bn/auth.json';
 import type symptoms from '../../messages/bn/symptoms.json';
 import type labTests from '../../messages/bn/labTests.json';
+import type customPage from '../../messages/bn/customPage.json';
 
 type Messages = {
   common: typeof common;
@@ -59,6 +60,7 @@ type Messages = {
   auth: typeof auth;
   symptoms: typeof symptoms;
   labTests: typeof labTests;
+  customPage: typeof customPage;
 };
 
 declare global {

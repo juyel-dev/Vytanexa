@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getQuestionById, getAnswers } from '@/lib/queries/qa-detail';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 import type { QAEmbedBlock } from '@/lib/custom-page-blocks';
 
 /**
@@ -20,6 +21,7 @@ export async function QAEmbedBlockView({ block }: { block: QAEmbedBlock }) {
 
   const { doctorAnswers, communityAnswers } = await getAnswers(supabase, question.id);
   const topAnswer = doctorAnswers[0] ?? communityAnswers[0];
+  const t = await getT('qa');
 
   return (
     <Link
@@ -34,7 +36,7 @@ export async function QAEmbedBlockView({ block }: { block: QAEmbedBlock }) {
         </p>
       )}
       <p className="mt-2 text-[12px] font-semibold text-brand-600">
-        {question.answer_count} টি উত্তর দেখুন →
+        {t('seeAnswersCount', { count: question.answer_count })}
       </p>
     </Link>
   );

@@ -33,5 +33,6 @@
   },
   "metaDescription": "स्वास्थ्य से जुड़े सवाल पूछें और डॉक्टरों व कम्युनिटी से जवाब पाएं।",
   "notFoundTitle": "प्रश्न नहीं मिला | Vytanexa",
-  "metaTitleSuffix": " | Vytanexa प्रश्नोत्तर"
+  "metaTitleSuffix": " | Vytanexa प्रश्नोत्तर",
+  "seeAnswersCount": "{count} जवाब देखें →"
 }

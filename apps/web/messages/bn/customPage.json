@@ -1,0 +1,8 @@
+{
+  "submitErrorFallback": "জমা দিতে সমস্যা হয়েছে",
+  "successMessage": "✅ ধন্যবাদ! আপনার তথ্য জমা হয়েছে",
+  "yesLabel": "হ্যাঁ",
+  "phoneLabelOptional": "মোবাইল নম্বর (ঐচ্ছিক)",
+  "submitting": "জমা হচ্ছে...",
+  "submit": "জমা দিন"
+}

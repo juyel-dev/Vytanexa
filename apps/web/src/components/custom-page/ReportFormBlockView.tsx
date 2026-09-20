@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 import type { ReportFormBlock } from '@/lib/custom-page-blocks';
 
 /**
@@ -27,6 +28,8 @@ export function ReportFormBlockView({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const t = useT('customPage');
+  const tCommon = useT('common');
 
   if (!block.fields || block.fields.length === 0) return null;
 
@@ -52,7 +55,7 @@ export function ReportFormBlockView({
     setSubmitting(false);
     if (!res.ok) {
       const json = await res.json();
-      setError(json.error ?? 'জমা দিতে সমস্যা হয়েছে');
+      setError(json.error ?? t('submitErrorFallback'));
       return;
     }
     setSuccess(true);
@@ -61,7 +64,7 @@ export function ReportFormBlockView({
   if (success) {
     return (
       <div className="mx-4 my-3 rounded-xl border border-life-200 bg-life-50 p-5 text-center">
-        <p className="text-[14px] font-semibold text-life-700">✅ ধন্যবাদ! আপনার তথ্য জমা হয়েছে</p>
+        <p className="text-[14px] font-semibold text-life-700">{t('successMessage')}</p>
       </div>
     );
   }
@@ -89,7 +92,7 @@ export function ReportFormBlockView({
               onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
               className="h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
             >
-              <option value="">নির্বাচন করুন</option>
+              <option value="">{tCommon('select')}</option>
               {(field.options ?? []).map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
@@ -104,14 +107,14 @@ export function ReportFormBlockView({
                 checked={(values[field.key] as boolean) ?? false}
                 onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.checked }))}
               />
-              হ্যাঁ
+              {t('yesLabel')}
             </label>
           )}
         </div>
       ))}
 
       <label className="mb-1 block text-[13px] font-medium text-neutral-700">
-        মোবাইল নম্বর (ঐচ্ছিক)
+        {t('phoneLabelOptional')}
       </label>
       <input
         value={phone}
@@ -127,7 +130,7 @@ export function ReportFormBlockView({
         disabled={!canSubmit || submitting}
         className="h-11 w-full rounded-md bg-brand-600 text-[14px] font-semibold text-white disabled:opacity-40"
       >
-        {submitting ? 'জমা হচ্ছে...' : 'জমা দিন'}
+        {submitting ? t('submitting') : t('submit')}
       </button>
     </div>
   );

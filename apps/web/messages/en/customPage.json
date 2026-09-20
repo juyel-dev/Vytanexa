@@ -1,0 +1,8 @@
+{
+  "submitErrorFallback": "Something went wrong submitting this",
+  "successMessage": "✅ Thank you! Your information has been submitted",
+  "yesLabel": "Yes",
+  "phoneLabelOptional": "Mobile number (optional)",
+  "submitting": "Submitting...",
+  "submit": "Submit"
+}

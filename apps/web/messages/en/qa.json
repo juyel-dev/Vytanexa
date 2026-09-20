@@ -33,5 +33,6 @@
   },
   "metaDescription": "Ask health questions and get answers from doctors and the community.",
   "notFoundTitle": "Question not found | Vytanexa",
-  "metaTitleSuffix": " | Vytanexa Q&A"
+  "metaTitleSuffix": " | Vytanexa Q&A",
+  "seeAnswersCount": "See {count} answers →"
 }

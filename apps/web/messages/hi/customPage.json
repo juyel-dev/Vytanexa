@@ -1,0 +1,8 @@
+{
+  "submitErrorFallback": "जमा करने में समस्या हुई",
+  "successMessage": "✅ धन्यवाद! आपकी जानकारी जमा हो गई है",
+  "yesLabel": "हां",
+  "phoneLabelOptional": "मोबाइल नंबर (वैकल्पिक)",
+  "submitting": "जमा हो रहा है...",
+  "submit": "जमा करें"
+}
