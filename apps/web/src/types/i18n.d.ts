@@ -34,6 +34,7 @@ import type auth from '../../messages/bn/auth.json';
 import type symptoms from '../../messages/bn/symptoms.json';
 import type labTests from '../../messages/bn/labTests.json';
 import type customPage from '../../messages/bn/customPage.json';
+import type notifications from '../../messages/bn/notifications.json';
 
 type Messages = {
   common: typeof common;
@@ -61,6 +62,7 @@ type Messages = {
   symptoms: typeof symptoms;
   labTests: typeof labTests;
   customPage: typeof customPage;
+  notifications: typeof notifications;
 };
 
 declare global {

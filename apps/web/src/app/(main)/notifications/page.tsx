@@ -4,13 +4,18 @@ import { NotificationsClient } from '@/components/notifications/NotificationsCli
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
 import { getNotifications, getReadNotificationIds } from '@/lib/queries/notifications';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = { title: 'নোটিফিকেশন | Vytanexa' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('common');
+  return { title: `${t('notifications')} | Vytanexa` };
+}
 
 /** Notifications — VYTANEXA-BLUEPRINT.md § S20 (`/notifications`). Works for guests and signed-in users both. */
 export default async function NotificationsPage() {
   const supabase = createClient();
   const currentUser = await getCurrentUser(supabase);
+  const t = await getT('common');
 
   const [notifications, readIds] = await Promise.all([
     getNotifications(supabase),
@@ -19,7 +24,7 @@ export default async function NotificationsPage() {
 
   return (
     <>
-      <TopBarSection title="নোটিফিকেশন" backHref="/more" />
+      <TopBarSection title={t('notifications')} backHref="/more" />
       <NotificationsClient
         notifications={notifications}
         initialReadIds={readIds}

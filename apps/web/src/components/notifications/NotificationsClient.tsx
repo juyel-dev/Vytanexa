@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Info, MessageCircle } from 'lucide-react';
 import { formatRelativeTimeBn } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 
 const STORAGE_KEY = 'vytanexa_read_notification_ids';
 
@@ -38,6 +39,7 @@ export function NotificationsClient({
   isSignedIn: boolean;
 }) {
   const router = useRouter();
+  const t = useT('notifications');
   const [readIds, setReadIds] = useState<Set<string>>(new Set(initialReadIds));
 
   useEffect(() => {
@@ -104,13 +106,13 @@ export function NotificationsClient({
             disabled={!hasUnread}
             className="text-[13px] font-semibold text-brand-600 disabled:text-neutral-300"
           >
-            সব পড়া হয়েছে
+            {t('markAllRead')}
           </button>
         </div>
       )}
 
       {notifications.length === 0 ? (
-        <p className="py-16 text-center text-[14px] text-neutral-400">কোনো নোটিফিকেশন নেই</p>
+        <p className="py-16 text-center text-[14px] text-neutral-400">{t('emptyState')}</p>
       ) : (
         <div className="divide-y divide-neutral-100">
           {notifications.map((n) => {
@@ -144,7 +146,7 @@ export function NotificationsClient({
               </button>
             );
           })}
-          <p className="py-6 text-center text-[13px] text-neutral-400">আর কোনো নোটিফিকেশন নেই</p>
+          <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreNotifications')}</p>
         </div>
       )}
     </div>

@@ -61,7 +61,7 @@ export function LanguageStep() {
         Continue / এগিয়ে যান
       </button>
       <p className="mt-3 text-center text-[12px] text-neutral-400">
-        ভাষা পরে পরিবর্তন করা যাবে
+        ভাষা পরে পরিবর্তন করা যাবে · You can change this later · आप इसे बाद में बदल सकते हैं
       </p>
     </div>
   );
