@@ -4,6 +4,7 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { BlockRenderer } from '@/components/custom-page/BlockRenderer';
 import { createClient } from '@/lib/supabase/server';
 import { getCustomPageBySlug } from '@/lib/queries/custom-page';
+import { getT } from '@vytanexa/i18n/server';
 import type { PageBlock } from '@/lib/custom-page-blocks';
 
 // SSR (not SSG) with short ISR revalidate per S19: "content changes
@@ -22,8 +23,8 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const page = await loadPage(params.slug);
-  if (!page) return { title: 'পাওয়া যায়নি | Vytanexa' };
+  const [page, t] = await Promise.all([loadPage(params.slug), getT('common')]);
+  if (!page) return { title: t('notFoundTitle') };
 
   const title = page.meta_title || page.title;
   const description = page.meta_description || undefined;
