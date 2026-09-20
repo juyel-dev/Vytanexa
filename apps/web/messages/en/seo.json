@@ -45,5 +45,6 @@
   "otherSpecialties": "Other specialties",
   "browseByDistrict": "Browse by district",
   "browseBySpecialty": "Browse by specialty",
-  "noDistrictsYet": "No districts have been added for this state yet. They'll appear here once added from the Admin Panel."
+  "noDistrictsYet": "No districts have been added for this state yet. They'll appear here once added from the Admin Panel.",
+  "defaultDescription": "Find nearby doctors, hospitals, lab tests, and emergency health services. Connect. Care. Live."
 }

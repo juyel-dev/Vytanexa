@@ -6,6 +6,7 @@ import './globals.css';
 import { cookies } from 'next/headers';
 import { isValidLocale, defaultLocale, localeConfig } from '@/i18n/config';
 import { createClient } from '@/lib/supabase/server';
+import { getT } from '@vytanexa/i18n/server';
 
 // Self-hosted via next/font (no external Google Fonts network request
 // at runtime — S22 performance budget). Exposed as CSS variables so
@@ -44,11 +45,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const supabase = createClient();
   const { data } = await supabase.from('app_settings').select('favicon_url').eq('id', 1).maybeSingle();
   const faviconUrl = (data as { favicon_url?: string | null } | null)?.favicon_url;
+  const [tCommon, tSeo] = await Promise.all([getT('common'), getT('seo')]);
 
   return {
-    title: 'Vytanexa — আপনার স্বাস্থ্য, আপনার সংযোগ',
-    description:
-      'Vytanexa — নিকটবর্তী ডাক্তার, হাসপাতাল, ল্যাব টেস্ট ও জরুরি স্বাস্থ্যসেবা খুঁজুন। Connect. Care. Live.',
+    title: `Vytanexa — ${tCommon('tagline')}`,
+    description: `Vytanexa — ${tSeo('defaultDescription')}`,
     ...(faviconUrl ? { icons: { icon: faviconUrl } } : {}),
   };
 }
