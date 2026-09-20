@@ -20,5 +20,12 @@
   "tabSymptoms": "लक्षण ({count})",
   "noResultsTitle": "“{query}” के लिए कोई परिणाम नहीं मिला",
   "noResultsHint": "बंगाली या अंग्रेज़ी में लिखकर देखें, या सिर्फ़ स्पेशलिटी लिखें",
-  "whatsappCta": "💬 हमें WhatsApp पर बताएं →"
+  "whatsappCta": "💬 हमें WhatsApp पर बताएं →",
+  "cancel": "रद्द करें",
+  "voiceUnsupported": "आपके ब्राउज़र में वॉइस सर्च समर्थित नहीं है",
+  "voiceError": "सुनाई नहीं दिया। फिर से कोशिश करें।",
+  "listening": "सुन रहे हैं...",
+  "promptToSpeak": "बोलिए...",
+  "voiceHintLine1": "बंगाली या अंग्रेज़ी में बोलें",
+  "voiceHintExample": "उदाहरण: \"हृदय रोग विशेषज्ञ\""
 }

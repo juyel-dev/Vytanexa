@@ -20,5 +20,12 @@
   "tabSymptoms": "উপসর্গ ({count})",
   "noResultsTitle": "“{query}” এর কোনো ফলাফল পাওয়া যায়নি",
   "noResultsHint": "বাংলায় বা ইংরেজিতে লিখে দেখুন, অথবা শুধু বিশেষজ্ঞতা লিখুন",
-  "whatsappCta": "💬 WhatsApp-এ জানান →"
+  "whatsappCta": "💬 WhatsApp-এ জানান →",
+  "cancel": "বাতিল",
+  "voiceUnsupported": "ভয়েস সার্চ আপনার ব্রাউজারে সমর্থিত নয়",
+  "voiceError": "শোনা যায়নি। আবার চেষ্টা করুন।",
+  "listening": "শুনছি...",
+  "promptToSpeak": "কথা বলুন...",
+  "voiceHintLine1": "বাংলায় বলুন বা English-এ",
+  "voiceHintExample": "উদাহরণ: “হৃদরোগ ডাক্তার”"
 }

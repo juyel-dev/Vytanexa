@@ -20,5 +20,12 @@
   "tabSymptoms": "Symptoms ({count})",
   "noResultsTitle": "No results found for “{query}”",
   "noResultsHint": "Try writing in Bengali or English, or just the specialty",
-  "whatsappCta": "💬 Let us know on WhatsApp →"
+  "whatsappCta": "💬 Let us know on WhatsApp →",
+  "cancel": "Cancel",
+  "voiceUnsupported": "Voice search isn't supported in your browser",
+  "voiceError": "Couldn't hear you. Please try again.",
+  "listening": "Listening...",
+  "promptToSpeak": "Speak now...",
+  "voiceHintLine1": "Speak in Bengali or English",
+  "voiceHintExample": "Example: \"cardiologist\""
 }
