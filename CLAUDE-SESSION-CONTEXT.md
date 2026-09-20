@@ -152,24 +152,23 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `e90636e`** (last commit in this session). Progress:
-37/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `c9dccbb`** (last commit in this session). Progress:
+36/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text, or
 intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
 "Blocked" below, that's expected and correct, not a miss.
 
-**Batch 26 — `components/articles/` (ArticleListClient,
-ArticleDetailClient), done this session**: extended `articles.json`
-(from batch 17) with 7 new keys. Reused `common.{goBack,loading}`.
-Detail page's ShareSheet subtitle now composes
-`` `Vytanexa ${t('title')}` `` reusing the same `articles.title` key
-instead of a separate hand-baked string.
+**Batch 27 — `components/search/VoiceSearchOverlay.tsx`, done this
+session**: extended `search.json` (from batch 18) with 7 new keys.
+Reused `search.searching` for the 'processing' state. Both the
+aria-label and visible cancel button share `search.cancel`.
 
-**Batch 25 — `app/offline/page.tsx`, batch 24 — `hospital-profile/`,
-batch 23 — `app/(main)/health/*`, batch 22 — `symptoms/`, batch
-21 — `app/(auth)/auth/*`, batch 20 — `doctors/`, batch 19 —
-`settings/`, batch 18 — `app/(main)/search/page.tsx`, batch 17 —
+**Batch 26 — `components/articles/`, batch 25 —
+`app/offline/page.tsx`, batch 24 — `hospital-profile/`, batch 23 —
+`app/(main)/health/*`, batch 22 — `symptoms/`, batch 21 —
+`app/(auth)/auth/*`, batch 20 — `doctors/`, batch 19 — `settings/`,
+batch 18 — `app/(main)/search/page.tsx`, batch 17 —
 `app/(main)/community/*`**: done in prior sessions, see git log
 (`git show <hash>`) for full detail. Durable gotchas still worth
 restating: `getT` is imported directly from `@vytanexa/i18n/server`,
