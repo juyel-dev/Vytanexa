@@ -152,31 +152,43 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `9351275`** (last commit in this session). Progress:
-30/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `5f93fcb`** (last commit in this session). Progress:
+27/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text, or
-intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
+intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`,
+`app/global-error.tsx`'s fully-hardcoded shell — see below) — see
 "Blocked" below, that's expected and correct, not a miss.
 
-**Batch 29 — `custom-page/` (PollEmbedBlockView, QAEmbedBlockView,
-ReportFormBlockView), done this session**: added `polls.joinCta`,
-`qa.seeAnswersCount` to existing namespaces; new `customPage`
-namespace (6 keys) for the dynamic admin-defined form's chrome.
-Reused `common.select`.
+**Batch 31 — `app/layout.tsx` root `generateMetadata()`, done this
+session**: reused `common.tagline`; added `seo.defaultDescription`.
+Fixes a real bug: the site-wide fallback `<title>`/description was
+always Bengali regardless of locale cookie, unlike every route's own
+metadata.
 
-**Batch 28 — `hospitals/`, batch 27 — `VoiceSearchOverlay`, batch
-26 — `components/articles/`, batch 25 — `app/offline/page.tsx`,
-batch 24 — `hospital-profile/`, batch 23 — `app/(main)/health/*`,
-batch 22 — `symptoms/`, batch 21 — `app/(auth)/auth/*`, batch
-20 — `doctors/`, batch 19 — `settings/`, batch 18 —
-`app/(main)/search/page.tsx`, batch 17 — `app/(main)/community/*`**:
-done in prior sessions, see git log (`git show <hash>`) for full
-detail. Durable gotchas still worth restating: `getT` is imported
-directly from `@vytanexa/i18n/server`, NOT re-exported via
-`apps/web/src/lib/i18n.ts`; avoid backtick-quoted code identifiers in
-shell-heredoc commit messages unless properly quoted — write the
-message to a file with create_file and pass `-F <path>` instead.
+**Batch 30 — `app/error.tsx`, `app/(main)/error.tsx`, `app/not-
+found.tsx`, done this session**: extended `common.json` with 5 new
+keys; reused `common.{error,retry}`. **Deliberately left
+`app/global-error.tsx` untouched** — it renders its own `<html><body>`
+shell because it's the boundary for errors in the root layout itself
+(where `I18nProvider` lives), so Next.js requires it fully self-
+contained with no dependency on the provider it might be recovering
+from. Its hardcoded Bengali is architectural, not a migration gap —
+same category as `BENGALI_ALIASES`.
+
+**Batch 29 — `custom-page/`, batch 28 — `hospitals/`, batch 27 —
+`VoiceSearchOverlay`, batch 26 — `components/articles/`, batch
+25 — `app/offline/page.tsx`, batch 24 — `hospital-profile/`, batch
+23 — `app/(main)/health/*`, batch 22 — `symptoms/`, batch 21 —
+`app/(auth)/auth/*`, batch 20 — `doctors/`, batch 19 — `settings/`,
+batch 18 — `app/(main)/search/page.tsx`, batch 17 —
+`app/(main)/community/*`**: done in prior sessions, see git log
+(`git show <hash>`) for full detail. Durable gotchas still worth
+restating: `getT` is imported directly from `@vytanexa/i18n/server`,
+NOT re-exported via `apps/web/src/lib/i18n.ts`; avoid backtick-quoted
+code identifiers in shell-heredoc commit messages unless properly
+quoted — write the message to a file with create_file and pass
+`-F <path>` instead.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
