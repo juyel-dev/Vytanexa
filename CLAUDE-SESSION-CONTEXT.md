@@ -152,21 +152,34 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `f3d054e`** (last commit in this session). Progress:
-45/126 web `.tsx` files still have hardcoded Bengali (baseline at the
-start of Phase 3 was 105/126). Note: this count includes files whose
-only remaining Bengali is inside JSDoc comments quoting spec text, or
-intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
-"Blocked" below, that's expected and correct, not a miss.
+**As of commit `3da21fb`** (last commit in this session — note this
+one was `--amend`ed once to fix a commit-message body mangled by a
+shell backtick-substitution bug when the message itself quoted code
+identifiers in backticks; the fix and force-push both happened, no
+repo-state issue, just flagging in case the git log looks unusual).
+Progress: 42/126 web `.tsx` files still have hardcoded Bengali
+(baseline at the start of Phase 3 was 105/126). Note: this count
+includes files whose only remaining Bengali is inside JSDoc comments
+quoting spec text, or intentional non-UI data (`search/page.tsx`'s
+`BENGALI_ALIASES`) — see "Blocked" below, that's expected and correct,
+not a miss.
 
-**Batch 22 — `symptoms/` full directory, done this session**:
-`components/symptoms/{SymptomsListClient,SymptomDetailClient}.tsx` +
-`app/(main)/symptoms/{page,[slug]/page}.tsx`. New `symptoms`
-namespace (19 keys). Reused `common.goBack`. `title` key deliberately
-duplicates `home.sectionLabels.symptomQuickAccess`'s text (same
-meaning, same precedent as batch 17's articles.title).
+**Gotcha for next session**: when writing a commit message via
+heredoc/shell that contains backtick-quoted code identifiers (e.g.
+"the `t` variable"), the shell will try to execute them as command
+substitution unless the heredoc delimiter is quoted (`<< 'EOF'`) AND
+the message avoids backticks entirely, or is passed via `-F -` with a
+quoted heredoc. Prefer writing the commit message to a temp file with
+create_file/str_replace first, or use plain quotes instead of
+backticks in commit-message code references, to avoid this.
 
-**Batch 21 — `app/(auth)/auth/{login,verify}`, batch 20 —
+**Batch 23 — `app/(main)/health/*`, done this session**:
+`blood-services/page.tsx` (extended existing `blood.json` with
+pageTitle+metaDescription) + `lab-tests/page.tsx` +
+`components/lab-tests/LabTestsClient.tsx` (new `labTests` namespace,
+8 keys; cross-reused `search.searching`/`search.whatsappCta`).
+
+**Batch 22 — `symptoms/`, batch 21 — `app/(auth)/auth/*`, batch 20 —
 `doctors/`, batch 19 — `settings/`, batch 18 —
 `app/(main)/search/page.tsx`, batch 17 — `app/(main)/community/*`**:
 done in prior sessions, see git log (`git show <hash>`) for full
