@@ -1,5 +1,10 @@
 {
   "title": "Health Polls",
   "metaDescription": "Take part in health-related polls and see what the community thinks.",
-  "joinCta": "Take the poll →"
+  "joinCta": "Take the poll →",
+  "noPollsNow": "No polls right now.",
+  "voteErrorFallback": "Something went wrong while voting",
+  "totalVotesLabel": "Total votes: {n}",
+  "pollEndedSuffix": "Poll ended",
+  "daysLeftSuffix": "{n} days left"
 }

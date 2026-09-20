@@ -1,5 +1,10 @@
 {
   "title": "স্বাস্থ্য জরিপ",
   "metaDescription": "স্বাস্থ্য বিষয়ক জরিপে অংশ নিন এবং কমিউনিটির মতামত দেখুন।",
-  "joinCta": "জরিপে অংশ নিন →"
+  "joinCta": "জরিপে অংশ নিন →",
+  "noPollsNow": "এই মুহূর্তে কোনো জরিপ নেই।",
+  "voteErrorFallback": "ভোট দিতে সমস্যা হয়েছে",
+  "totalVotesLabel": "মোট ভোট: {n}",
+  "pollEndedSuffix": "জরিপ শেষ হয়েছে",
+  "daysLeftSuffix": "{n} দিন বাকি"
 }

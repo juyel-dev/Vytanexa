@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getDeviceId } from '@/lib/device-id';
 import { toBengaliDigits } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { PollWithOptions } from '@/lib/queries/polls';
 
 /**
@@ -17,6 +18,7 @@ import type { PollWithOptions } from '@/lib/queries/polls';
  * (409), that also tells us to show results-only for that poll.
  */
 export function PollsClient({ polls }: { polls: PollWithOptions[] }) {
+  const t = useT('polls');
   useEffect(() => {
     fetch('/api/analytics', {
       method: 'POST',
@@ -27,7 +29,7 @@ export function PollsClient({ polls }: { polls: PollWithOptions[] }) {
   if (polls.length === 0) {
     return (
       <div className="px-6 py-12 text-center">
-        <p className="text-[15px] font-semibold text-neutral-700">এই মুহূর্তে কোনো জরিপ নেই।</p>
+        <p className="text-[15px] font-semibold text-neutral-700">{t('noPollsNow')}</p>
       </div>
     );
   }
@@ -42,6 +44,7 @@ export function PollsClient({ polls }: { polls: PollWithOptions[] }) {
 }
 
 function PollCard({ poll }: { poll: PollWithOptions }) {
+  const t = useT('polls');
   const votedKey = `vytanexa_voted_poll_${poll.id}`;
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -83,7 +86,7 @@ function PollCard({ poll }: { poll: PollWithOptions }) {
         setHasVoted(true);
         return;
       }
-      setError(json.error ?? 'ভোট দিতে সমস্যা হয়েছে');
+      setError(json.error ?? t('voteErrorFallback'));
       setSelectedOption(null);
       return;
     }
@@ -157,11 +160,11 @@ function PollCard({ poll }: { poll: PollWithOptions }) {
       {error && <p className="mt-2 text-[12px] text-emergency-600">{error}</p>}
 
       <p className="mt-3 text-[12px] text-neutral-500">
-        মোট ভোট: {toBengaliDigits(totalVotes)}
+        {t('totalVotesLabel', { n: toBengaliDigits(totalVotes) })}
         {isExpired
-          ? '  ·  জরিপ শেষ হয়েছে'
+          ? `  ·  ${t('pollEndedSuffix')}`
           : daysLeft !== null && daysLeft >= 0
-            ? `  ·  ${toBengaliDigits(daysLeft)} দিন বাকি`
+            ? `  ·  ${t('daysLeftSuffix', { n: toBengaliDigits(daysLeft) })}`
             : ''}
       </p>
     </div>
