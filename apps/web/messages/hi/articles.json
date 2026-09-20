@@ -3,5 +3,12 @@
   "title": "स्वास्थ्य पत्रिका",
   "metaDescription": "डायबिटीज़, पोषण, बाल स्वास्थ्य और अन्य विषयों पर स्वास्थ्य लेख, टिप्स और सलाह पढ़ें।",
   "notFoundTitle": "लेख नहीं मिला | Vytanexa",
-  "readOnSuffix": " — इसे Vytanexa स्वास्थ्य पत्रिका पर पढ़ें।"
+  "readOnSuffix": " — इसे Vytanexa स्वास्थ्य पत्रिका पर पढ़ें।",
+  "filterAll": "सभी",
+  "noArticlesFound": "अभी कोई लेख नहीं मिला",
+  "noMoreArticles": "और कोई लेख नहीं",
+  "shareAriaLabel": "शेयर करें",
+  "readTimeSuffix": "{n} मिनट पढ़ें",
+  "tagsHeading": "🏷️ टैग",
+  "relatedHeading": "संबंधित लेख"
 }

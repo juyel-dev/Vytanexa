@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2 } from 'lucide-react';
 import { useLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 import type { ArticleDetail } from '@/lib/queries/article-detail';
 import type { Json } from '@vytanexa/database';
@@ -36,6 +37,8 @@ export function ArticleDetailClient({
 }) {
   const [shareOpen, setShareOpen] = useState(false);
   const localize = useLocalizedField();
+  const t = useT('articles');
+  const tCommon = useT('common');
   const title = localize(article.title_translations);
   const authorName =
     article.author_name ??
@@ -93,14 +96,14 @@ export function ArticleDetailClient({
         <Link
           href="/community/articles"
           className="flex h-11 w-11 items-center justify-center text-neutral-700"
-          aria-label="পেছনে যান"
+          aria-label={tCommon('goBack')}
         >
           <ChevronLeft className="h-6 w-6" />
         </Link>
         <button
           onClick={() => setShareOpen(true)}
           className="flex h-11 w-11 items-center justify-center text-neutral-700"
-          aria-label="শেয়ার করুন"
+          aria-label={t('shareAriaLabel')}
         >
           <Share2 className="h-5 w-5" />
         </button>
@@ -131,7 +134,7 @@ export function ArticleDetailClient({
           {article.read_time_minutes && (
             <>
               {authorName && '  ·  '}
-              {toBengaliDigits(article.read_time_minutes)} মিনিট পড়া
+              {t('readTimeSuffix', { n: toBengaliDigits(article.read_time_minutes) })}
             </>
           )}
           {article.published_at && (
@@ -153,7 +156,7 @@ export function ArticleDetailClient({
 
       {article.tags.length > 0 && (
         <div className="border-t border-neutral-100 px-4 py-4">
-          <p className="mb-2 text-[13px] font-semibold text-neutral-700">🏷️ ট্যাগ</p>
+          <p className="mb-2 text-[13px] font-semibold text-neutral-700">{t('tagsHeading')}</p>
           <div className="flex flex-wrap gap-2">
             {article.tags.map((tag) => (
               <span
@@ -169,7 +172,7 @@ export function ArticleDetailClient({
 
       {related.length > 0 && (
         <div className="border-t border-neutral-100 px-4 py-4">
-          <p className="mb-3 text-[15px] font-bold text-neutral-800">সম্পর্কিত আর্টিকেল</p>
+          <p className="mb-3 text-[15px] font-bold text-neutral-800">{t('relatedHeading')}</p>
           <div className="grid grid-cols-2 gap-3">
             {related.map((r) => (
               <Link
@@ -202,7 +205,7 @@ export function ArticleDetailClient({
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         title={title}
-        subtitle="Vytanexa স্বাস্থ্য ম্যাগাজিন"
+        subtitle={`Vytanexa ${t('title')}`}
         url={pageUrl}
       />
     </div>

@@ -3,5 +3,12 @@
   "title": "Health Magazine",
   "metaDescription": "Read health articles, tips, and advice on diabetes, nutrition, child health, and more.",
   "notFoundTitle": "Article not found | Vytanexa",
-  "readOnSuffix": " — Read it on the Vytanexa Health Magazine."
+  "readOnSuffix": " — Read it on the Vytanexa Health Magazine.",
+  "filterAll": "All",
+  "noArticlesFound": "No articles found right now",
+  "noMoreArticles": "No more articles",
+  "shareAriaLabel": "Share",
+  "readTimeSuffix": "{n} min read",
+  "tagsHeading": "🏷️ Tags",
+  "relatedHeading": "Related articles"
 }

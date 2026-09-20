@@ -3,5 +3,12 @@
   "title": "স্বাস্থ্য ম্যাগাজিন",
   "metaDescription": "স্বাস্থ্য বিষয়ক নিবন্ধ, টিপস ও পরামর্শ পড়ুন — ডায়াবেটিস, পুষ্টি, শিশু স্বাস্থ্য ও আরো অনেক বিষয়ে।",
   "notFoundTitle": "নিবন্ধ পাওয়া যায়নি | Vytanexa",
-  "readOnSuffix": " — Vytanexa স্বাস্থ্য ম্যাগাজিনে পড়ুন।"
+  "readOnSuffix": " — Vytanexa স্বাস্থ্য ম্যাগাজিনে পড়ুন।",
+  "filterAll": "সব",
+  "noArticlesFound": "এই মুহূর্তে কোনো নিবন্ধ পাওয়া যায়নি",
+  "noMoreArticles": "আর কোনো নিবন্ধ নেই",
+  "shareAriaLabel": "শেয়ার করুন",
+  "readTimeSuffix": "{n} মিনিট পড়া",
+  "tagsHeading": "🏷️ ট্যাগ",
+  "relatedHeading": "সম্পর্কিত আর্টিকেল"
 }

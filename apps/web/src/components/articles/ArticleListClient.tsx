@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import { ArticleCard, ArticleMeta } from '@/components/shared/ArticleCard';
 import type { Json } from '@vytanexa/database';
 
@@ -42,6 +43,8 @@ export function ArticleListClient({
 
   const [articles, setArticles] = useState(initialArticles);
   const localize = useLocalizedField();
+  const t = useT('articles');
+  const tCommon = useT('common');
   const [count, setCount] = useState(initialCount);
   const [page, setPage] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -100,7 +103,7 @@ export function ArticleListClient({
             !activeCategory ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
           }`}
         >
-          সব
+          {t('filterAll')}
         </button>
         {categories.map((cat) => (
           <button
@@ -120,7 +123,7 @@ export function ArticleListClient({
       {articles.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
-            এই মুহূর্তে কোনো নিবন্ধ পাওয়া যায়নি
+            {t('noArticlesFound')}
           </p>
         </div>
       ) : (
@@ -157,11 +160,11 @@ export function ArticleListClient({
 
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? 'লোড হচ্ছে...' : ''}
+              {loadingMore ? tCommon('loading') : ''}
             </div>
           )}
           {!hasMore && rest.length > 0 && (
-            <p className="py-6 text-center text-[13px] text-neutral-400">আর কোনো নিবন্ধ নেই</p>
+            <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreArticles')}</p>
           )}
         </>
       )}
