@@ -2,5 +2,6 @@
   "title": "No internet connection",
   "desc": "Some information may still be available offline.",
   "emergency": "View emergency numbers",
-  "retry": "Try again"
+  "retry": "Try again",
+  "nationalNumbersNote": "National emergency numbers (102, 100, 101) can always be called — even without internet."
 }

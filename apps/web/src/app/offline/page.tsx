@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useT } from '@vytanexa/i18n/client';
 
 /**
  * Offline Fallback — VYTANEXA-BLUEPRINT.md § S22 "Offline Page (/offline)"
@@ -12,6 +13,7 @@ import Link from 'next/link';
  * serialize event handlers per Next.js RSC invariant).
  */
 export default function OfflinePage() {
+  const t = useT('offline');
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-6 py-12 text-center">
       {/* Offline illustration — lightweight inline SVG, no network fetch */}
@@ -27,9 +29,9 @@ export default function OfflinePage() {
         </svg>
       </div>
 
-      <h1 className="text-[18px] font-bold text-neutral-900">ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না</h1>
+      <h1 className="text-[18px] font-bold text-neutral-900">{t('title')}</h1>
       <p className="mt-2 max-w-[28ch] text-[14px] leading-6 text-neutral-500">
-        কিছু তথ্য অফলাইনেও দেখা যেতে পারে।
+        {t('desc')}
       </p>
 
       <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
@@ -37,18 +39,18 @@ export default function OfflinePage() {
           href="/emergency"
           className="flex h-12 items-center justify-center rounded-md bg-emergency-600 text-[15px] font-semibold text-white"
         >
-          🚨 জরুরি নম্বর দেখুন
+          🚨 {t('emergency')}
         </Link>
         <button
           onClick={() => typeof window !== 'undefined' && window.location.reload()}
           className="flex h-12 items-center justify-center rounded-md border border-neutral-200 text-[15px] font-semibold text-neutral-700"
         >
-          🔄 আবার চেষ্টা করুন
+          🔄 {t('retry')}
         </button>
       </div>
 
       <p className="mt-6 text-[12px] text-neutral-400">
-        জাতীয় জরুরি নম্বর (১০২, ১০০, ১০১) সব সময় কল করা যায় — ইন্টারনেট ছাড়াই।
+        {t('nationalNumbersNote')}
       </p>
     </div>
   );
