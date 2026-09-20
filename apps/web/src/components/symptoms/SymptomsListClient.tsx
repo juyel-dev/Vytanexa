@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { SymptomListItem } from '@/lib/queries/symptom-list';
 
 /**
@@ -19,6 +20,7 @@ import type { SymptomListItem } from '@/lib/queries/symptom-list';
 export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }) {
   const [query, setQuery] = useState('');
   const localize = useLocalizedField();
+  const t = useT('symptoms');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,13 +42,13 @@ export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }
       const key = firstLink?.categories?.id ?? 'other';
       const label = firstLink?.categories
         ? localize(firstLink.categories.name_translations)
-        : 'অন্যান্য';
+        : t('otherCategory');
       const group = map.get(key) ?? { label, items: [] };
       group.items.push(s);
       map.set(key, group);
     }
     return [...map.values()];
-  }, [general, localize]);
+  }, [general, localize, t]);
 
   return (
     <div className="pb-6">
@@ -56,7 +58,7 @@ export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="উপসর্গ খুঁজুন..."
+            placeholder={t('searchPlaceholder')}
             className="h-full flex-1 bg-transparent text-[14px] outline-none placeholder:text-neutral-400"
           />
         </div>
@@ -64,7 +66,7 @@ export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }
 
       {emergency.length > 0 && (
         <section className="mb-2 bg-emergency-50 px-4 py-4">
-          <h2 className="mb-3 text-[15px] font-bold text-emergency-700">🚨 জরুরি উপসর্গ</h2>
+          <h2 className="mb-3 text-[15px] font-bold text-emergency-700">{t('emergencySectionTitle')}</h2>
           <div className="grid grid-cols-2 gap-2.5">
             {emergency.map((s) => (
               <SymptomCard key={s.id} symptom={s} />
@@ -86,7 +88,7 @@ export function SymptomsListClient({ symptoms }: { symptoms: SymptomListItem[] }
 
       {filtered.length === 0 && (
         <p className="px-6 py-10 text-center text-[13px] text-neutral-400">
-          কোনো উপসর্গ পাওয়া যায়নি
+          {t('noResults')}
         </p>
       )}
     </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2, AlertTriangle } from 'lucide-react';
 import { useLocalizedField, useLocalizedArray } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { SymptomDetail } from '@/lib/queries/symptom-detail';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 
@@ -30,6 +31,8 @@ export function SymptomDetailClient({
 }) {
   const localize = useLocalizedField();
   const localizeArray = useLocalizedArray();
+  const t = useT('symptoms');
+  const tCommon = useT('common');
   const [shareOpen, setShareOpen] = useState(false);
 
   const title = localize(symptom.title_translations);
@@ -48,7 +51,7 @@ export function SymptomDetailClient({
         <Link
           href="/symptoms"
           className="flex h-11 w-11 items-center justify-center text-neutral-700"
-          aria-label="পেছনে যান"
+          aria-label={tCommon('goBack')}
         >
           <ChevronLeft className="h-6 w-6" />
         </Link>
@@ -58,7 +61,7 @@ export function SymptomDetailClient({
         <button
           onClick={() => setShareOpen(true)}
           className="flex h-11 w-11 items-center justify-center text-neutral-700"
-          aria-label="শেয়ার করুন"
+          aria-label={t('shareAriaLabel')}
         >
           <Share2 className="h-5 w-5" />
         </button>
@@ -74,30 +77,30 @@ export function SymptomDetailClient({
         <div className="mx-4 mt-4 rounded-lg border-l-4 border-emergency-600 bg-emergency-50 p-4">
           <div className="mb-1.5 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-emergency-600" />
-            <h2 className="text-[14px] font-bold text-emergency-700">🚨 জরুরি সতর্কতা</h2>
+            <h2 className="text-[14px] font-bold text-emergency-700">{t('emergencyWarningTitle')}</h2>
           </div>
           <p className="mb-3 text-[13px] leading-relaxed text-emergency-700">
-            এই লক্ষণ গুরুতর হতে পারে। দেরি না করে নিকটস্থ হাসপাতালে যান বা ১০২ নম্বরে কল করুন।
+            {t('emergencyWarningBody')}
           </p>
           <Link
             href="/emergency"
             className="flex h-11 items-center justify-center rounded-md bg-emergency-600 text-[14px] font-semibold text-white"
           >
-            🚨 জরুরি সেবা দেখুন →
+            {t('emergencyServicesCta')}
           </Link>
         </div>
       )}
 
       {description && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">বিবরণ</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('descriptionHeading')}</h3>
           <p className="text-[14px] leading-relaxed text-neutral-700">{description}</p>
         </section>
       )}
 
       {commonCauses.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🔎 সাধারণ কারণ</h3>
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">{t('commonCausesHeading')}</h3>
           <ul className="space-y-1.5">
             {commonCauses.map((cause, i) => (
               <li key={i} className="flex items-start gap-2 text-[14px] text-neutral-700">
@@ -112,7 +115,7 @@ export function SymptomDetailClient({
       {whenToSeeDoctor.length > 0 && (
         <section className="px-4 py-4">
           <h3 className="mb-2 text-[15px] font-bold text-neutral-800">
-            🩺 কখন ডাক্তার দেখাবেন
+            {t('whenToSeeDoctorHeading')}
           </h3>
           <ul className="space-y-1.5">
             {whenToSeeDoctor.map((item, i) => (
@@ -127,7 +130,7 @@ export function SymptomDetailClient({
 
       {specialties.length > 0 && (
         <section className="px-4 py-4">
-          <h3 className="mb-3 text-[15px] font-bold text-neutral-800">এই বিশেষজ্ঞ দেখুন</h3>
+          <h3 className="mb-3 text-[15px] font-bold text-neutral-800">{t('relatedSpecialtiesHeading')}</h3>
           <div className="grid grid-cols-2 gap-2.5">
             {specialties.map((link) => {
               const name = localize(link.categories.name_translations);
@@ -139,7 +142,7 @@ export function SymptomDetailClient({
                   className="rounded-lg border border-neutral-200 p-3.5 text-center transition-transform active:scale-95"
                 >
                   <p className="text-[14px] font-semibold text-neutral-900">{name}</p>
-                  <p className="mt-0.5 text-[12px] text-neutral-500">{count} জন</p>
+                  <p className="mt-0.5 text-[12px] text-neutral-500">{t('doctorCountSuffix', { count })}</p>
                 </Link>
               );
             })}
@@ -156,7 +159,7 @@ export function SymptomDetailClient({
           }
           className="flex h-12 items-center justify-center rounded-md bg-brand-600 text-[15px] font-semibold text-white"
         >
-          সংশ্লিষ্ট বিশেষজ্ঞ ডাক্তার খুঁজুন →
+          {t('findRelatedDoctorsCta')}
         </Link>
       </div>
 

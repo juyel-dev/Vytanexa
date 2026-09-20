@@ -1,0 +1,20 @@
+{
+  "searchPlaceholder": "উপসর্গ খুঁজুন...",
+  "otherCategory": "অন্যান্য",
+  "emergencySectionTitle": "🚨 জরুরি উপসর্গ",
+  "noResults": "কোনো উপসর্গ পাওয়া যায়নি",
+  "shareAriaLabel": "শেয়ার করুন",
+  "emergencyWarningTitle": "🚨 জরুরি সতর্কতা",
+  "emergencyWarningBody": "এই লক্ষণ গুরুতর হতে পারে। দেরি না করে নিকটস্থ হাসপাতালে যান বা ১০২ নম্বরে কল করুন।",
+  "emergencyServicesCta": "🚨 জরুরি সেবা দেখুন →",
+  "descriptionHeading": "বিবরণ",
+  "commonCausesHeading": "🔎 সাধারণ কারণ",
+  "whenToSeeDoctorHeading": "🩺 কখন ডাক্তার দেখাবেন",
+  "relatedSpecialtiesHeading": "এই বিশেষজ্ঞ দেখুন",
+  "doctorCountSuffix": "{count} জন",
+  "findRelatedDoctorsCta": "সংশ্লিষ্ট বিশেষজ্ঞ ডাক্তার খুঁজুন →",
+  "title": "উপসর্গ দেখে ডাক্তার খুঁজুন",
+  "metaDescription": "আপনার উপসর্গ বেছে নিন এবং উপযুক্ত বিশেষজ্ঞ ডাক্তার খুঁজে নিন।",
+  "notFoundTitle": "উপসর্গ পাওয়া যায়নি | Vytanexa",
+  "metaDescriptionFallback": "{title} সম্পর্কে জানুন এবং উপযুক্ত বিশেষজ্ঞ ডাক্তার খুঁজুন — Vytanexa।"
+}

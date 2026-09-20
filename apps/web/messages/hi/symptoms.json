@@ -1,0 +1,20 @@
+{
+  "searchPlaceholder": "लक्षण खोजें...",
+  "otherCategory": "अन्य",
+  "emergencySectionTitle": "🚨 आपातकालीन लक्षण",
+  "noResults": "कोई लक्षण नहीं मिला",
+  "shareAriaLabel": "शेयर करें",
+  "emergencyWarningTitle": "🚨 आपातकालीन चेतावनी",
+  "emergencyWarningBody": "यह लक्षण गंभीर हो सकता है। देर न करें, नज़दीकी अस्पताल जाएं या 102 पर कॉल करें।",
+  "emergencyServicesCta": "🚨 आपातकालीन सेवाएं देखें →",
+  "descriptionHeading": "विवरण",
+  "commonCausesHeading": "🔎 सामान्य कारण",
+  "whenToSeeDoctorHeading": "🩺 कब डॉक्टर को दिखाएं",
+  "relatedSpecialtiesHeading": "यह स्पेशलिस्ट देखें",
+  "doctorCountSuffix": "{count}",
+  "findRelatedDoctorsCta": "संबंधित स्पेशलिस्ट खोजें →",
+  "title": "लक्षण देखकर डॉक्टर खोजें",
+  "metaDescription": "अपना लक्षण चुनें और सही स्पेशलिस्ट डॉक्टर खोजें।",
+  "notFoundTitle": "लक्षण नहीं मिला | Vytanexa",
+  "metaDescriptionFallback": "{title} के बारे में जानें और सही स्पेशलिस्ट खोजें — Vytanexa।"
+}

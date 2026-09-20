@@ -1,0 +1,20 @@
+{
+  "searchPlaceholder": "Search symptoms...",
+  "otherCategory": "Other",
+  "emergencySectionTitle": "🚨 Emergency symptoms",
+  "noResults": "No symptoms found",
+  "shareAriaLabel": "Share",
+  "emergencyWarningTitle": "🚨 Emergency warning",
+  "emergencyWarningBody": "This symptom can be serious. Go to the nearest hospital or call 102 without delay.",
+  "emergencyServicesCta": "🚨 See emergency services →",
+  "descriptionHeading": "Description",
+  "commonCausesHeading": "🔎 Common causes",
+  "whenToSeeDoctorHeading": "🩺 When to see a doctor",
+  "relatedSpecialtiesHeading": "See this specialist",
+  "doctorCountSuffix": "{count}",
+  "findRelatedDoctorsCta": "Find a related specialist →",
+  "title": "Find a doctor by symptom",
+  "metaDescription": "Choose your symptom and find the right specialist doctor.",
+  "notFoundTitle": "Symptom not found | Vytanexa",
+  "metaDescriptionFallback": "Learn about {title} and find the right specialist — Vytanexa."
+}

@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getSymptomBySlug, getSpecialtyDoctorCounts } from '@/lib/queries/symptom-detail';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 import { SymptomDetailClient } from '@/components/symptoms/SymptomDetailClient';
 
 // SSG at build time, ISR revalidate 6hr per S09 spec.
@@ -18,13 +19,13 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const symptom = await loadSymptom(params.slug);
-  if (!symptom) return { title: 'উপসর্গ পাওয়া যায়নি | Vytanexa' };
+  const [symptom, t] = await Promise.all([loadSymptom(params.slug), getT('symptoms')]);
+  if (!symptom) return { title: t('notFoundTitle') };
 
   const title = getLocalizedField(symptom.title_translations);
   const description =
     getLocalizedField(symptom.description_translations) ||
-    `${title} সম্পর্কে জানুন এবং উপযুক্ত বিশেষজ্ঞ ডাক্তার খুঁজুন — Vytanexa।`;
+    t('metaDescriptionFallback', { title });
 
   return {
     title: `${title} | Vytanexa`,
