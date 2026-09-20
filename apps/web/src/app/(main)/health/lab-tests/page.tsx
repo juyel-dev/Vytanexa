@@ -3,11 +3,15 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { LabTestsClient } from '@/components/lab-tests/LabTestsClient';
 import { createClient } from '@/lib/supabase/server';
 import { getPopularTests } from '@/lib/queries/test-search';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'ল্যাব ও ডায়াগনস্টিক টেস্ট | Vytanexa',
-  description: 'CBC, X-Ray, USG সহ যেকোনো টেস্টের জন্য নিকটবর্তী ডায়াগনস্টিক সেন্টার খুঁজুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('labTests');
+  return {
+    title: `${t('pageTitle')} | Vytanexa`,
+    description: t('metaDescription'),
+  };
+}
 
 /**
  * Lab & Diagnostic Tests — VYTANEXA-BLUEPRINT.md § S10
@@ -18,11 +22,11 @@ export const metadata: Metadata = {
  */
 export default async function LabTestsPage() {
   const supabase = createClient();
-  const popularTests = await getPopularTests(supabase);
+  const [popularTests, t] = await Promise.all([getPopularTests(supabase), getT('labTests')]);
 
   return (
     <>
-      <TopBarSection title="ল্যাব ও ডায়াগনস্টিক টেস্ট" />
+      <TopBarSection title={t('pageTitle')} />
       <LabTestsClient popularTests={popularTests} />
     </>
   );

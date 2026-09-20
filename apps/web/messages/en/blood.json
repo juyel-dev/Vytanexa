@@ -31,5 +31,7 @@
     "submitFailed": "Could not complete registration",
     "submitting": "Registering...",
     "submit": "Register"
-  }
+  },
+  "pageTitle": "Blood Services",
+  "metaDescription": "See nearby blood banks and registered donors, or register as a donor."
 }

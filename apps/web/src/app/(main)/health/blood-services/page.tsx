@@ -6,11 +6,15 @@ import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/current-user';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getBloodBanks, getBloodDonors, getDistricts } from '@/lib/queries/blood-services';
+import { getT } from '@vytanexa/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'ব্লাড সার্ভিস | Vytanexa',
-  description: 'নিকটবর্তী ব্লাড ব্যাংক ও রক্তদাতাদের তালিকা দেখুন, অথবা রক্তদাতা হিসেবে নিবন্ধন করুন।',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT('blood');
+  return {
+    title: `${t('pageTitle')} | Vytanexa`,
+    description: t('metaDescription'),
+  };
+}
 
 /**
  * Blood Services — VYTANEXA-BLUEPRINT.md § S11 (`/health/blood-services`).
@@ -40,17 +44,18 @@ export default async function BloodServicesPage({
     notFound();
   }
   const currentUser = await getCurrentUser(supabase);
-  const [bloodBanks, donors, districts] = await Promise.all([
+  const [bloodBanks, donors, districts, t] = await Promise.all([
     getBloodBanks(supabase),
     currentUser ? getBloodDonors(supabase) : Promise.resolve([]),
     getDistricts(supabase),
+    getT('blood'),
   ]);
   // Phase C.5 — homepage blood-group pills link here with ?group=X.
   const initialGroup = VALID_GROUPS.has(searchParams.group ?? '') ? searchParams.group! : null;
 
   return (
     <>
-      <TopBarSection title="ব্লাড সার্ভিস" />
+      <TopBarSection title={t('pageTitle')} />
       <BloodServicesClient
         bloodBanks={bloodBanks}
         donors={donors}

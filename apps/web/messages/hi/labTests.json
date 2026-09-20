@@ -1,0 +1,10 @@
+{
+  "pageTitle": "लैब और डायग्नोस्टिक टेस्ट",
+  "metaDescription": "CBC, X-Ray, USG सहित किसी भी टेस्ट के लिए नज़दीकी डायग्नोस्टिक सेंटर खोजें।",
+  "searchPlaceholder": "टेस्ट का नाम लिखें (CBC, X-Ray, USG...)",
+  "popularHeading": "लोकप्रिय टेस्ट:",
+  "noPopularTests": "अभी टेस्ट की सूची जोड़ी नहीं गई है।",
+  "noResultsTitle": "इस क्षेत्र में अभी तक किसी केंद्र ने यह टेस्ट नहीं जोड़ा है",
+  "seeAllDiagnosticCenters": "सभी डायग्नोस्टिक सेंटर देखें →",
+  "resultsCountLabel": "“{query}” के लिए {count} सेंटर मिले"
+}

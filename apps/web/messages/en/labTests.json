@@ -1,0 +1,10 @@
+{
+  "pageTitle": "Lab & Diagnostic Tests",
+  "metaDescription": "Find the nearest diagnostic center for any test, including CBC, X-Ray, and USG.",
+  "searchPlaceholder": "Type a test name (CBC, X-Ray, USG...)",
+  "popularHeading": "Popular tests:",
+  "noPopularTests": "No test list has been added yet.",
+  "noResultsTitle": "This test hasn't been added by any center in this area yet",
+  "seeAllDiagnosticCenters": "See all diagnostic centers →",
+  "resultsCountLabel": "Found {count} centers for “{query}”"
+}

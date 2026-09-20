@@ -1,0 +1,10 @@
+{
+  "pageTitle": "ল্যাব ও ডায়াগনস্টিক টেস্ট",
+  "metaDescription": "CBC, X-Ray, USG সহ যেকোনো টেস্টের জন্য নিকটবর্তী ডায়াগনস্টিক সেন্টার খুঁজুন।",
+  "searchPlaceholder": "টেস্টের নাম লিখুন (CBC, X-Ray, USG...)",
+  "popularHeading": "জনপ্রিয় টেস্ট:",
+  "noPopularTests": "টেস্টের তালিকা এখনো যোগ করা হয়নি।",
+  "noResultsTitle": "এই টেস্ট এখনো কোনো কেন্দ্রে যোগ হয়নি এই এলাকায়",
+  "seeAllDiagnosticCenters": "সব ডায়াগনস্টিক সেন্টার দেখুন →",
+  "resultsCountLabel": "“{query}” এর জন্য {count}টি সেন্টার পাওয়া গেছে"
+}
