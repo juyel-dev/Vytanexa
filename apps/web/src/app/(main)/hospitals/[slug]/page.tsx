@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getHospitalBySlug, getHospitalServices } from '@/lib/queries/hospital-detail';
 import { getLocalizedField } from '@/lib/i18n';
+import { getT } from '@vytanexa/i18n/server';
 import { HospitalProfileClient } from '@/components/hospital-profile/HospitalProfileClient';
 
 // ISR: revalidate hourly per S02 § 3.2, same caveat as S07's doctor
@@ -20,13 +21,13 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const hospital = await loadHospital(params.slug);
-  if (!hospital) return { title: 'হাসপাতাল পাওয়া যায়নি | Vytanexa' };
+  const [hospital, t] = await Promise.all([loadHospital(params.slug), getT('hospital')]);
+  if (!hospital) return { title: t('notFoundTitle') };
 
   const name = getLocalizedField(hospital.name_translations);
   const description =
     getLocalizedField(hospital.description_translations) ||
-    `${name} — Vytanexa-এ বিস্তারিত দেখুন, যোগাযোগ করুন ও দিকনির্দেশনা পান।`;
+    t('metaDescriptionTemplate', { name });
 
   return {
     title: `${name} | Vytanexa`,

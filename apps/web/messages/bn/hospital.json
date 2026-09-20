@@ -66,5 +66,12 @@
   "emergency247Label": "🚨 জরুরি সেবা ২৪×৭",
   "callCta": "কল করুন",
   "directionsCta": "দিকনির্দেশনা",
-  "imageAltSuffix": "ছবি {n}"
+  "imageAltSuffix": "ছবি {n}",
+  "filterAll": "সব",
+  "resultsCountLabel": "{count} টি পাওয়া গেছে",
+  "noHospitalsFound": "এই মুহূর্তে কোনো হাসপাতাল পাওয়া যায়নি",
+  "noMoreHospitals": "আর কোনো হাসপাতাল নেই",
+  "pageTitle": "হাসপাতাল",
+  "notFoundTitle": "হাসপাতাল পাওয়া যায়নি | Vytanexa",
+  "metaDescriptionTemplate": "{name} — Vytanexa-এ বিস্তারিত দেখুন, যোগাযোগ করুন ও দিকনির্দেশনা পান।"
 }

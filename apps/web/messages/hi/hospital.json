@@ -66,5 +66,12 @@
   "emergency247Label": "🚨 24×7 आपातकालीन सेवा",
   "callCta": "कॉल करें",
   "directionsCta": "दिशा-निर्देश",
-  "imageAltSuffix": "फ़ोटो {n}"
+  "imageAltSuffix": "फ़ोटो {n}",
+  "filterAll": "सभी",
+  "resultsCountLabel": "{count} मिले",
+  "noHospitalsFound": "अभी कोई अस्पताल नहीं मिला",
+  "noMoreHospitals": "और कोई अस्पताल नहीं",
+  "pageTitle": "अस्पताल",
+  "notFoundTitle": "अस्पताल नहीं मिला | Vytanexa",
+  "metaDescriptionTemplate": "{name} — Vytanexa पर विवरण देखें, संपर्क करें और दिशा-निर्देश पाएं।"
 }

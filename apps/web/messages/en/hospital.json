@@ -66,5 +66,12 @@
   "emergency247Label": "🚨 24×7 Emergency Services",
   "callCta": "Call",
   "directionsCta": "Directions",
-  "imageAltSuffix": "Photo {n}"
+  "imageAltSuffix": "Photo {n}",
+  "filterAll": "All",
+  "resultsCountLabel": "{count} found",
+  "noHospitalsFound": "No hospitals found right now",
+  "noMoreHospitals": "No more hospitals",
+  "pageTitle": "Hospitals",
+  "notFoundTitle": "Hospital not found | Vytanexa",
+  "metaDescriptionTemplate": "{name} — See details, contact, and get directions on Vytanexa."
 }

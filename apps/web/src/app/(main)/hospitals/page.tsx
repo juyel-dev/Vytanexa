@@ -3,6 +3,7 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { HospitalListClient } from '@/components/hospitals/HospitalListClient';
 import { createClient } from '@/lib/supabase/server';
 import { queryHospitalList } from '@/lib/queries/hospital-list';
+import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Hospital List Page — VYTANEXA-BLUEPRINT.md § S08. Mirrors the SSR +
@@ -15,16 +16,19 @@ export default async function HospitalsPage({
 }) {
   const supabase = createClient();
 
-  const { data: hospitals, count } = await queryHospitalList(supabase, {
-    type: searchParams.type,
-    emergencyOnly: searchParams.emergencyOnly === 'true',
-    locationId: searchParams.district,
-    page: 0,
-  });
+  const [{ data: hospitals, count }, t] = await Promise.all([
+    queryHospitalList(supabase, {
+      type: searchParams.type,
+      emergencyOnly: searchParams.emergencyOnly === 'true',
+      locationId: searchParams.district,
+      page: 0,
+    }),
+    getT('hospital'),
+  ]);
 
   return (
     <>
-      <TopBarSection title="হাসপাতাল" />
+      <TopBarSection title={t('pageTitle')} />
       <Suspense fallback={null}>
         <HospitalListClient initialHospitals={hospitals} initialCount={count} />
       </Suspense>

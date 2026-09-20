@@ -5,13 +5,9 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { HospitalCard, type HospitalCardData } from '@/components/shared/HospitalCard';
 import { LocationChip } from '@/components/layout/LocationChip';
 import { useLocationStore } from '@/stores/location-store';
+import { useT } from '@vytanexa/i18n/client';
 
-const TYPES: [string, string][] = [
-  ['hospital', 'হাসপাতাল'],
-  ['clinic', 'ক্লিনিক'],
-  ['diagnostic', 'ডায়াগনস্টিক'],
-  ['nursing_home', 'নার্সিং হোম'],
-];
+type TypeKey = 'hospital' | 'clinic' | 'diagnostic' | 'nursing_home';
 
 /**
  * Hospital List Client — VYTANEXA-BLUEPRINT.md § S08, mirrors
@@ -40,6 +36,14 @@ export function HospitalListClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { districtId } = useLocationStore();
+  const t = useT('hospital');
+  const tCommon = useT('common');
+  const TYPES: [TypeKey, string][] = [
+    ['hospital', t('type.hospital')],
+    ['clinic', t('type.clinic')],
+    ['diagnostic', t('type.diagnostic')],
+    ['nursing_home', t('type.nursing_home')],
+  ];
 
   const [hospitals, setHospitals] = useState(initialHospitals);
   const [count, setCount] = useState(initialCount);
@@ -117,7 +121,7 @@ export function HospitalListClient({
             !activeType ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
           }`}
         >
-          সব
+          {t('filterAll')}
         </button>
         {TYPES.map(([value, label]) => (
           <button
@@ -140,16 +144,16 @@ export function HospitalListClient({
               : 'border border-emergency-200 text-emergency-600'
           }`}
         >
-          🚨 জরুরি বিভাগ
+          {t('emergencyDeptBadge')}
         </button>
       </div>
 
-      <p className="px-4 py-2.5 text-[13px] text-neutral-600">{count} টি পাওয়া গেছে</p>
+      <p className="px-4 py-2.5 text-[13px] text-neutral-600">{t('resultsCountLabel', { count })}</p>
 
       {hospitals.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
-            এই মুহূর্তে কোনো হাসপাতাল পাওয়া যায়নি
+            {t('noHospitalsFound')}
           </p>
         </div>
       ) : (
@@ -159,11 +163,11 @@ export function HospitalListClient({
           ))}
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? 'লোড হচ্ছে...' : ''}
+              {loadingMore ? tCommon('loading') : ''}
             </div>
           )}
           {!hasMore && (
-            <p className="py-6 text-center text-[13px] text-neutral-400">আর কোনো হাসপাতাল নেই</p>
+            <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreHospitals')}</p>
           )}
         </>
       )}
