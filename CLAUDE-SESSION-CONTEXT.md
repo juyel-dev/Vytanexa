@@ -152,36 +152,28 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `8b9f65e`** (last commit in this session). Progress:
-49/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `f3d054e`** (last commit in this session). Progress:
+45/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text, or
 intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
 "Blocked" below, that's expected and correct, not a miss.
 
-**Batch 21 — `app/(auth)/auth/{login,verify}/page.tsx`, done this
-session**: new `auth` namespace (bn/en/hi, 8 keys). Heavy reuse of
-`onboarding.signin.*` (phonePlaceholder, otpSendFailed, sending,
-sendOtp, signInWithGoogle — standalone login shares exact copy with
-onboarding's `SigninStep`) and `common.{goBack,signIn,or}` instead of
-duplicating. `login/page.tsx` was one of the original 6 Phase-1
-useTranslations files (per §12) but had drifted back to hardcoded
-Bengali since — now back on the facade.
+**Batch 22 — `symptoms/` full directory, done this session**:
+`components/symptoms/{SymptomsListClient,SymptomDetailClient}.tsx` +
+`app/(main)/symptoms/{page,[slug]/page}.tsx`. New `symptoms`
+namespace (19 keys). Reused `common.goBack`. `title` key deliberately
+duplicates `home.sectionLabels.symptomQuickAccess`'s text (same
+meaning, same precedent as batch 17's articles.title).
 
-**Batch 20 — `doctors/` full directory, done a prior session**:
-`components/doctors/DoctorListClient.tsx` + `FilterSheet.tsx` +
-`app/(main)/doctors/page.tsx` + `app/(main)/doctors/[slug]/page.tsx`.
-Extended `doctor.json` with 15 new keys. Reused `doctor.findTitle`
-and `common.loading`. SORT_OPTIONS moved from an untranslatable
-module-level const to computed-inside-component from `t('sort.*')`.
-
-**Batch 19 — `settings/`, batch 18 — `app/(main)/search/page.tsx`,
-batch 17 — `app/(main)/community/*`**: done in prior sessions, see
-git log (`git show <hash>`) for full detail — summarized here only
-where a pattern is still relevant: `getT` is imported directly from
-`@vytanexa/i18n/server`, NOT re-exported via `apps/web/src/lib/
-i18n.ts` — double-check this import source each time, it's an easy
-one-line typecheck error to hit.
+**Batch 21 — `app/(auth)/auth/{login,verify}`, batch 20 —
+`doctors/`, batch 19 — `settings/`, batch 18 —
+`app/(main)/search/page.tsx`, batch 17 — `app/(main)/community/*`**:
+done in prior sessions, see git log (`git show <hash>`) for full
+detail. One durable gotcha still worth restating: `getT` is imported
+directly from `@vytanexa/i18n/server`, NOT re-exported via
+`apps/web/src/lib/i18n.ts` — double-check this import source each
+time, it's an easy one-line typecheck error to hit.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
