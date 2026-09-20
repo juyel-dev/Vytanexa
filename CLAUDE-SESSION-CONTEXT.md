@@ -152,35 +152,45 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `f366c3e`** (last commit in this session). Progress:
-26/126 web `.tsx` files still have hardcoded Bengali (baseline at the
-start of Phase 3 was 105/126). Note: this count includes files whose
-only remaining Bengali is inside JSDoc comments quoting spec text, or
-intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`,
-`app/global-error.tsx`'s architecturally-necessary hardcoded shell)
-— see "Blocked" below, that's expected and correct, not a miss.
+**Milestone reached this session, as of commit `533c164`: the Phase 3
+web `.tsx` strand is fully closed.** A complete `src/**/*.tsx` sweep
+across both `components/` and `app/` in `apps/web` confirms zero
+remaining hardcoded-Bengali runtime strings anywhere. This is a
+"closed, don't re-scan" state — same category as the `.ts` strand
+closed earlier. `I18N-IMPLEMENTATION-SPEC.md` §12 has been rewritten
+to reflect this and is now the authoritative source for what's done
+vs. what's left; this Work State section restates only the highlights.
 
-**Batch 32 — `components/polls/PollsClient.tsx`, done this
-session**: extended `polls.json` with 5 new keys, `{n}` ICU params.
-`PollCard` is a separate function component from `PollsClient` —
-needed its own `useT('polls')` call. Also confirmed
-`components/layout/LocationPickerSheet.tsx` needs no changes — already
-fully migrated, its remaining hits are comment-only.
+**What's genuinely left in Phase 3** (see spec §12 for full detail):
+(a) the **admin `.tsx` strand** — 78 files, not yet audited at all,
+completely separate codebase area (`apps/admin/src`); (b) the
+deliberately-deferred **`(seo)/*` low-priority strand** (Bengali-only
+by business design until English/Hindi SEO becomes an actual goal).
+Starting a new session on Phase 3 should point at one of these two,
+not re-run the web `.tsx` inventory expecting more work there.
 
-**Batch 31 — `app/layout.tsx` root metadata, batch 30 — error
-boundaries + not-found, batch 29 — `custom-page/`, batch 28 —
-`hospitals/`, batch 27 — `VoiceSearchOverlay`, batch 26 —
-`components/articles/`, batch 25 — `app/offline/page.tsx`, batch
-24 — `hospital-profile/`, batch 23 — `app/(main)/health/*`, batch
-22 — `symptoms/`, batch 21 — `app/(auth)/auth/*`, batch 20 —
-`doctors/`, batch 19 — `settings/`, batch 18 —
-`app/(main)/search/page.tsx`, batch 17 — `app/(main)/community/*`**:
-done in prior sessions, see git log (`git show <hash>`) for full
-detail. Durable gotchas still worth restating: `getT` is imported
-directly from `@vytanexa/i18n/server`, NOT re-exported via
-`apps/web/src/lib/i18n.ts`; avoid backtick-quoted code identifiers in
-shell-heredoc commit messages unless properly quoted — write the
-message to a file with create_file and pass `-F <path>` instead.
+**This session's batches (17 through the closure, batches 17–34,
+~18 batches across two long sessions)** covered: community, search,
+settings, doctors, auth, symptoms, health, hospital-profile, offline
+page, articles, VoiceSearchOverlay, hospitals, custom-page, error
+boundaries + not-found, root layout metadata, polls, notifications +
+LanguageStep footer fix, and the final custom-page/[slug] not-found
+title. Full per-batch detail is in git log
+(`git log --oneline --grep=^i18n:`), not repeated here — each commit
+message documents what was found and why, not just what was changed.
+
+**Durable gotchas for future Phase 3 work (admin strand or `(seo)/*`)**:
+`getT` is imported directly from `@vytanexa/i18n/server`, NOT
+re-exported via `apps/web/src/lib/i18n.ts`; a file's remaining
+Bengali-Unicode grep hits after migration are often JSDoc comments
+quoting spec text — check with `grep -n` before assuming more work is
+needed there; some hardcoded Bengali is architecturally correct to
+leave (an error boundary above the i18n provider, a pre-locale-
+selection language picker, functional non-UI data like a query-alias
+map) — don't force these into `t()`; when writing a commit message via
+shell heredoc, avoid backtick-quoted code identifiers unless the
+heredoc is properly quoted, or write the message to a file with
+create_file and pass `-F <path>` instead.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
