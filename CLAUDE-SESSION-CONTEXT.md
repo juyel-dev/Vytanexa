@@ -152,41 +152,36 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `3da21fb`** (last commit in this session — note this
-one was `--amend`ed once to fix a commit-message body mangled by a
-shell backtick-substitution bug when the message itself quoted code
-identifiers in backticks; the fix and force-push both happened, no
-repo-state issue, just flagging in case the git log looks unusual).
-Progress: 42/126 web `.tsx` files still have hardcoded Bengali
-(baseline at the start of Phase 3 was 105/126). Note: this count
-includes files whose only remaining Bengali is inside JSDoc comments
-quoting spec text, or intentional non-UI data (`search/page.tsx`'s
-`BENGALI_ALIASES`) — see "Blocked" below, that's expected and correct,
-not a miss.
+**As of commit `b93514b`** (last commit in this session). Progress:
+40/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+start of Phase 3 was 105/126). Note: this count includes files whose
+only remaining Bengali is inside JSDoc comments quoting spec text, or
+intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
+"Blocked" below, that's expected and correct, not a miss.
 
-**Gotcha for next session**: when writing a commit message via
-heredoc/shell that contains backtick-quoted code identifiers (e.g.
-"the `t` variable"), the shell will try to execute them as command
-substitution unless the heredoc delimiter is quoted (`<< 'EOF'`) AND
-the message avoids backticks entirely, or is passed via `-F -` with a
-quoted heredoc. Prefer writing the commit message to a temp file with
-create_file/str_replace first, or use plain quotes instead of
-backticks in commit-message code references, to avoid this.
+**Batch 24 — `hospital-profile/`, done this session**:
+`HospitalProfileClient.tsx` + `GalleryCarousel.tsx` (DoctorsTab/
+InfoTab/ServicesTab untouched — their remaining hits are JSDoc-only).
+Extended `hospital.json` with `typeFull` (deliberately separate from
+the existing shorter `hospital.type` — wording differs on 2/4 values,
+checked before reusing), `tabs`, `emergencyBadgeShort`,
+`reviewCountLabel`, `emergency247Label`, `callCta`, `directionsCta`,
+`imageAltSuffix`. Reused `common.close`. TYPE_LABELS/TABS moved from
+untranslatable module consts to computed-inside-component (same
+pattern as batch 20's SORT_OPTIONS).
 
-**Batch 23 — `app/(main)/health/*`, done this session**:
-`blood-services/page.tsx` (extended existing `blood.json` with
-pageTitle+metaDescription) + `lab-tests/page.tsx` +
-`components/lab-tests/LabTestsClient.tsx` (new `labTests` namespace,
-8 keys; cross-reused `search.searching`/`search.whatsappCta`).
-
-**Batch 22 — `symptoms/`, batch 21 — `app/(auth)/auth/*`, batch 20 —
-`doctors/`, batch 19 — `settings/`, batch 18 —
-`app/(main)/search/page.tsx`, batch 17 — `app/(main)/community/*`**:
-done in prior sessions, see git log (`git show <hash>`) for full
-detail. One durable gotcha still worth restating: `getT` is imported
-directly from `@vytanexa/i18n/server`, NOT re-exported via
-`apps/web/src/lib/i18n.ts` — double-check this import source each
-time, it's an easy one-line typecheck error to hit.
+**Batch 23 — `app/(main)/health/*`, batch 22 — `symptoms/`, batch
+21 — `app/(auth)/auth/*`, batch 20 — `doctors/`, batch 19 —
+`settings/`, batch 18 — `app/(main)/search/page.tsx`, batch 17 —
+`app/(main)/community/*`**: done in prior sessions, see git log
+(`git show <hash>`) for full detail. One durable gotcha still worth
+restating: `getT` is imported directly from `@vytanexa/i18n/server`,
+NOT re-exported via `apps/web/src/lib/i18n.ts` — double-check this
+import source each time, it's an easy one-line typecheck error to
+hit. Also: when writing a commit message via shell heredoc, avoid
+backtick-quoted code identifiers (e.g. `` `t` ``) unless the heredoc
+is properly quoted — the shell will try to execute them as command
+substitution (bit once in batch 23, fixed via create_file + `-F`).
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
