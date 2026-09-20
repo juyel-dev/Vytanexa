@@ -30,5 +30,10 @@
     "fri": "শুক্র"
   },
   "closedSuffix": "বন্ধ",
-  "notFoundTitle": "পাওয়া যায়নি | Vytanexa"
+  "notFoundTitle": "পাওয়া যায়নি | Vytanexa",
+  "pageErrorBody": "পৃষ্ঠাটি লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+  "pageErrorBodyShort": "পৃষ্ঠাটি লোড করতে সমস্যা হয়েছে।",
+  "notFoundHeading": "পাওয়া যায়নি",
+  "notFoundBody": "আপনি যে পৃষ্ঠাটি খুঁজছেন তা পাওয়া যায়নি বা সরিয়ে নেওয়া হয়েছে।",
+  "backToHome": "হোমে ফিরে যান"
 }

@@ -30,5 +30,10 @@
     "fri": "शुक्र"
   },
   "closedSuffix": "बंद",
-  "notFoundTitle": "नहीं मिला | Vytanexa"
+  "notFoundTitle": "नहीं मिला | Vytanexa",
+  "pageErrorBody": "पेज लोड करने में समस्या हुई। कृपया फिर से कोशिश करें।",
+  "pageErrorBodyShort": "पेज लोड करने में समस्या हुई।",
+  "notFoundHeading": "नहीं मिला",
+  "notFoundBody": "आप जिस पेज को ढूंढ रहे हैं वह नहीं मिला या हटा दिया गया है।",
+  "backToHome": "होम पर वापस जाएं"
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useT } from '@vytanexa/i18n/client';
 
 /**
  * Global Error Boundary — S01 §11 a11y + Cross-cutting TODO.
@@ -22,21 +23,22 @@ export default function Error({
   useEffect(() => {
     console.error('Route error:', error);
   }, [error]);
+  const t = useT('common');
 
   return (
     <div className="flex min-h-[50dvh] flex-col items-center justify-center px-6 py-12 text-center">
       <p className="text-3xl" aria-hidden>
         ⚠️
       </p>
-      <h1 className="mt-3 text-[17px] font-bold text-neutral-900">কিছু ভুল হয়েছে</h1>
+      <h1 className="mt-3 text-[17px] font-bold text-neutral-900">{t('error')}</h1>
       <p className="mt-1 max-w-[28ch] text-[14px] leading-6 text-neutral-500">
-        পৃষ্ঠাটি লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।
+        {t('pageErrorBody')}
       </p>
       <button
         onClick={reset}
         className="mt-6 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
       >
-        আবার চেষ্টা করুন
+        {t('retry')}
       </button>
       {error.digest && <p className="mt-3 text-[11px] text-neutral-400">ref: {error.digest}</p>}
     </div>

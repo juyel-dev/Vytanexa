@@ -30,5 +30,10 @@
     "fri": "Fri"
   },
   "closedSuffix": "closed",
-  "notFoundTitle": "Not found | Vytanexa"
+  "notFoundTitle": "Not found | Vytanexa",
+  "pageErrorBody": "The page couldn't be loaded. Please try again.",
+  "pageErrorBodyShort": "The page couldn't be loaded.",
+  "notFoundHeading": "Not found",
+  "notFoundBody": "The page you're looking for wasn't found or has been moved.",
+  "backToHome": "Go back home"
 }
