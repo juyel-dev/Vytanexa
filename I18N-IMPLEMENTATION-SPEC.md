@@ -628,8 +628,10 @@ dependency; re-run as a final sweep across both apps with zero remaining
 hits.
 
 **Phase 3 — incremental hardcoded-string migration (ongoing, not one PR).
-Status: IN PROGRESS — see the live checklist below before starting new
-work, not just this prose.**
+Status: web `.tsx` strand ✅ DONE as of commit `cfe34c9` (this session)
+— admin `.tsx` strand (78 files, separate audit, not started) still
+open. See the closure note right after this list before assuming
+there's web `.tsx` work left to resume.**
 
 Highest-reuse-first order (biggest blast radius per hour of work):
 1. `components/shared/*` — ✅ **DONE** (all 8 files: ArticleCard, DoctorCard,
@@ -640,24 +642,57 @@ Highest-reuse-first order (biggest blast radius per hour of work):
    the exact reasoning, not repeated here.
 2. `components/layout/*` — ✅ **DONE** (BottomNav, TopBar, LocationChip,
    LocationPickerSheet, Footer, EmergencyFAB).
-3. Feature verticals, one at a time, each adding its own namespace file:
-   - `doctor-profile/*` — ✅ **DONE** (AppointmentSheet, ChambersTab,
-     HospitalsTab, InfoTab, DoctorProfileClient). `hospital-profile/InfoTab.tsx`
-     done alongside it (shares `lib/chamber-schedule.ts`).
-   - Remaining, in descending hardcoded-char-count order as of the last
-     audit (re-run the inventory command below before resuming — this list
-     goes stale as work lands):
-     `onboarding/`, `blood-services/`, `qa/`, `account/`, `symptoms/`,
-     `settings/`, `emergency/`, `lab-tests/`, `polls/`, `articles/`,
-     remaining `hospital-profile/*`, remaining `home/*`, `custom-page/*`.
+3. Feature verticals — ✅ **ALL DONE**: `doctor-profile/*`,
+   `hospital-profile/*`, `onboarding/`, `blood-services/`, `qa/`,
+   `account/`, `symptoms/`, `settings/`, `emergency/`, `lab-tests/`,
+   `polls/`, `articles/`, `custom-page/*`, `search/`, `doctors/`,
+   `hospitals/`, `auth/`, `health/`, `notifications/`, plus the
+   root-level `app/layout.tsx`, `app/error.tsx`, `app/(main)/error.tsx`,
+   `app/not-found.tsx`, `app/offline/page.tsx`,
+   `app/(main)/page/[slug]/page.tsx`. Batch-by-batch detail lives in
+   git history (`git log --oneline --grep=^i18n:`), not repeated here.
 4. `(seo)/*` programmatic pages + `lib/seo-helpers.ts` templates — lowest
    priority (currently Bengali-only by deliberate business design, not broken;
    migrate only once English/Hindi SEO becomes an actual goal — see
    ARCHITECTURE § 6).
 
-**To resume this work in a new session** (deliberately written for that —
-long-running work across many short sessions is expected, not an edge
-case): re-run the inventory command to get current, not stale, numbers —
+**Web `.tsx` strand closure note (verified, not assumed): full
+`src/**/*.tsx` sweep across both `components/` and `app/` confirms zero
+remaining hardcoded-Bengali *runtime* strings anywhere — closed, don't
+re-scan for new work. A handful of files still show a nonzero
+Bengali-Unicode grep count; every one was individually opened and
+confirmed to be one of three cases, none of which need touching:**
+- **JSDoc/inline comments** quoting spec section headings or original
+  Bengali copy for documentation purposes (the majority of remaining
+  hits) — e.g. `doctor-profile/{ChambersTab,HospitalsTab,InfoTab}.tsx`,
+  `hospital-profile/{DoctorsTab,InfoTab,ServicesTab}.tsx`,
+  `components/qa/*`, `components/account/*`,
+  `app/(main)/account/*/page.tsx`, `components/layout/
+  LocationPickerSheet.tsx`, `components/more/MorePageClient.tsx`,
+  `components/shared/{DataReportSheet,FavoriteToggle}.tsx`,
+  `components/settings/SettingsClient.tsx`, `app/error.tsx`.
+- **Functional, not UI-copy, data**: `search/page.tsx`'s
+  `BENGALI_ALIASES` (Bengali search-query synonym keys the code
+  matches against user input — not display text).
+- **Architectural necessities**, each documented at its own site:
+  `app/global-error.tsx` (must stay self-contained with no dependency
+  on `I18nProvider`, since it's the boundary for errors in the root
+  layout where that provider itself lives) and
+  `onboarding/LanguageStep.tsx`'s pre-locale-selection trilingual
+  content (§11 — a language picker must show all language names/labels
+  simultaneously, which doesn't fit `t()`'s one-active-locale model;
+  one real gap in this file *was* fixed — the footer note had drifted
+  Bengali-only on an otherwise-trilingual screen, now matches the
+  screen's own pattern).
+
+**To resume Phase 3 work in a new session** (deliberately written for
+that — long-running work across many short sessions is expected, not an
+edge case): the web `.tsx` strand above is closed. What's left is either
+(a) the admin `.tsx` strand (78 files, not yet audited — start there
+with the same inventory command below, pointed at `apps/admin/src`
+instead of `apps/web/src`), or (b) the `(seo)/*` low-priority strand
+(deliberately deferred, see item 4 above) — re-run the inventory command
+to get current, not stale, numbers —
 
 ```
 cd apps/web && python3 -c "
@@ -675,28 +710,6 @@ for k, v in sorted(dirs.items(), key=lambda x: -x[1]):
     print(f'{v:6d}  {k}')
 "
 ```
-
-then pick the top of that list, check it's not already `.tsx`-comment-only
-(`grep -n` the specific file — several "done" directories still show a
-nonzero count from JSDoc comments quoting spec text, which is correct to
-leave alone, not a sign the directory needs revisiting), and follow the
-established per-file pattern: (1) check `head -3 file | grep "'use client'"`
-and if absent, check whether any `'use client'` file imports it directly —
-this is the bug class found in batch 1, don't skip this check; (2) extract
-strings into a namespace file (reuse `common.json`/existing sibling
-namespace keys before adding new ones — several near-duplicates were found
-and consolidated in batches 5–6, check first); (3) add real bn/en/hi
-translations, not placeholders; (4) wire `useT`/`getT`, `useLocalizedField`/
-`getLocalizedField`, `useFormatter`/`getFormatter` as appropriate; (5) run
-`npm run typecheck` (must stay clean); (6) grep the file for remaining
-Bengali unicode range to confirm zero runtime hits remain; (7) commit with
-a message that states what was found, not just what was done — several
-real bugs in this migration were only caught by writing the honest
-commit message and re-checking a claim before making it.
-
-Track progress as a literal checklist (file count converted / 105 web + 78
-admin, per the original audit) — visible, incremental, never a "finish i18n"
-mega-task.
 
 **Phase 4 — formatter consolidation (after Phase 3 substantially lands):**
 - [ ] Migrate the ~14 `toBengaliDigits`/`formatRelativeTimeBn` call sites to
