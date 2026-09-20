@@ -152,36 +152,36 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**As of commit `b93514b`** (last commit in this session). Progress:
-40/126 web `.tsx` files still have hardcoded Bengali (baseline at the
+**As of commit `fa08c3f`** (last commit in this session). Progress:
+39/126 web `.tsx` files still have hardcoded Bengali (baseline at the
 start of Phase 3 was 105/126). Note: this count includes files whose
 only remaining Bengali is inside JSDoc comments quoting spec text, or
 intentional non-UI data (`search/page.tsx`'s `BENGALI_ALIASES`) — see
 "Blocked" below, that's expected and correct, not a miss.
 
-**Batch 24 — `hospital-profile/`, done this session**:
-`HospitalProfileClient.tsx` + `GalleryCarousel.tsx` (DoctorsTab/
-InfoTab/ServicesTab untouched — their remaining hits are JSDoc-only).
-Extended `hospital.json` with `typeFull` (deliberately separate from
-the existing shorter `hospital.type` — wording differs on 2/4 values,
-checked before reusing), `tabs`, `emergencyBadgeShort`,
-`reviewCountLabel`, `emergency247Label`, `callCta`, `directionsCta`,
-`imageAltSuffix`. Reused `common.close`. TYPE_LABELS/TABS moved from
-untranslatable module consts to computed-inside-component (same
-pattern as batch 20's SORT_OPTIONS).
+**Batch 25 — `app/offline/page.tsx`, done this session**: the
+`offline.json` namespace already existed (title/desc/emergency/
+retry) — confirms this was one of the original Phase-1 files, drifted
+back to hardcoded since. Added one new key, `nationalNumbersNote`.
+Confirmed safe for the PWA precached-fallback use case: `next.config`'s
+`fallbacks.document: '/offline'` serves this as static precached
+HTML, so `useT()` just hydrates against messages already baked into
+that HTML — no live network/cookie read needed when actually shown
+offline.
 
-**Batch 23 — `app/(main)/health/*`, batch 22 — `symptoms/`, batch
-21 — `app/(auth)/auth/*`, batch 20 — `doctors/`, batch 19 —
-`settings/`, batch 18 — `app/(main)/search/page.tsx`, batch 17 —
+**Batch 24 — `hospital-profile/`, batch 23 —
+`app/(main)/health/*`, batch 22 — `symptoms/`, batch 21 —
+`app/(auth)/auth/*`, batch 20 — `doctors/`, batch 19 — `settings/`,
+batch 18 — `app/(main)/search/page.tsx`, batch 17 —
 `app/(main)/community/*`**: done in prior sessions, see git log
 (`git show <hash>`) for full detail. One durable gotcha still worth
 restating: `getT` is imported directly from `@vytanexa/i18n/server`,
 NOT re-exported via `apps/web/src/lib/i18n.ts` — double-check this
 import source each time, it's an easy one-line typecheck error to
-hit. Also: when writing a commit message via shell heredoc, avoid
-backtick-quoted code identifiers (e.g. `` `t` ``) unless the heredoc
-is properly quoted — the shell will try to execute them as command
-substitution (bit once in batch 23, fixed via create_file + `-F`).
+hit. Also: avoid backtick-quoted code identifiers in shell-heredoc
+commit messages unless properly quoted (bit once in batch 23) —
+prefer writing the message to a file with create_file and passing
+`-F <path>`.
 
 The `.ts` strand (API routes, Zod validations, `manifest.ts`) is fully
 closed — don't re-scan for it.
