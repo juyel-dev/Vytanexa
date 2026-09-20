@@ -48,5 +48,23 @@
     "noScheduleYet": "সময়সূচি এখনো যোগ করা হয়নি",
     "address": "📍 ঠিকানা",
     "seeDirections": "দিকনির্দেশনা দেখুন"
-  }
+  },
+  "typeFull": {
+    "hospital": "সরকারি হাসপাতাল",
+    "clinic": "ক্লিনিক",
+    "diagnostic": "ডায়াগনস্টিক সেন্টার",
+    "nursing_home": "নার্সিং হোম"
+  },
+  "tabs": {
+    "info": "তথ্য",
+    "doctors": "ডাক্তার",
+    "services": "সেবা",
+    "reviews": "রিভিউ"
+  },
+  "emergencyBadgeShort": "🚨 জরুরি",
+  "reviewCountLabel": "({count} রিভিউ)",
+  "emergency247Label": "🚨 জরুরি সেবা ২৪×৭",
+  "callCta": "কল করুন",
+  "directionsCta": "দিকনির্দেশনা",
+  "imageAltSuffix": "ছবি {n}"
 }

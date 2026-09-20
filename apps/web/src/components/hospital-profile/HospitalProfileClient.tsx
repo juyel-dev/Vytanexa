@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Share2, MoreVertical, Phone, Navigation, Star } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
+import { useT } from '@vytanexa/i18n/client';
 import type { HospitalDetail } from '@/lib/queries/hospital-detail';
 import type { MatchedService } from './ServicesTab';
 import { GalleryCarousel } from './GalleryCarousel';
@@ -15,20 +16,6 @@ import { ShareSheet } from '@/components/shared/ShareSheet';
 import { MoreOptionsSheet } from '@/components/shared/MoreOptionsSheet';
 import { DataReportSheet } from '@/components/shared/DataReportSheet';
 
-const TYPE_LABELS: Record<string, string> = {
-  hospital: 'সরকারি হাসপাতাল',
-  clinic: 'ক্লিনিক',
-  diagnostic: 'ডায়াগনস্টিক সেন্টার',
-  nursing_home: 'নার্সিং হোম',
-};
-
-const TABS = [
-  ['info', 'তথ্য'],
-  ['doctors', 'ডাক্তার'],
-  ['services', 'সেবা'],
-  ['reviews', 'রিভিউ'],
-] as const;
-
 /**
  * Hospital Profile — VYTANEXA-BLUEPRINT.md § S08 "Hospital Detail
  * Page". Structure per spec: "Transparent→solid topbar → Image
@@ -36,6 +23,8 @@ const TABS = [
  * (call + directions)." Client-side tab switching, same as S07 (not a
  * route change).
  */
+type TabKey = 'info' | 'doctors' | 'services' | 'reviews';
+
 export function HospitalProfileClient({
   hospital,
   reviews,
@@ -50,7 +39,20 @@ export function HospitalProfileClient({
   pageUrl: string;
 }) {
   const localize = useLocalizedField();
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number][0]>('info');
+  const t = useT('hospital');
+  const TYPE_LABELS: Record<string, string> = {
+    hospital: t('typeFull.hospital'),
+    clinic: t('typeFull.clinic'),
+    diagnostic: t('typeFull.diagnostic'),
+    nursing_home: t('typeFull.nursing_home'),
+  };
+  const TABS: [TabKey, string][] = [
+    ['info', t('tabs.info')],
+    ['doctors', t('tabs.doctors')],
+    ['services', t('tabs.services')],
+    ['reviews', t('tabs.reviews')],
+  ];
+  const [activeTab, setActiveTab] = useState<TabKey>('info');
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -113,7 +115,7 @@ export function HospitalProfileClient({
             )}
             {hospital.has_emergency_dept && (
               <span className="rounded-full bg-emergency-600 px-2 py-0.5 text-[11px] font-semibold text-white">
-                🚨 জরুরি
+                {t('emergencyBadgeShort')}
               </span>
             )}
           </div>
@@ -130,7 +132,7 @@ export function HospitalProfileClient({
           >
             <Star className="h-4 w-4 fill-accent-500 text-accent-500" />
             <span className="text-[14px] font-bold text-neutral-900">{hospital.rating_avg}</span>
-            <span className="text-[13px] text-neutral-500">({hospital.rating_count} রিভিউ)</span>
+            <span className="text-[13px] text-neutral-500">{t('reviewCountLabel', { count: hospital.rating_count })}</span>
           </button>
         )}
 
@@ -140,7 +142,7 @@ export function HospitalProfileClient({
 
         {hospital.has_emergency_dept && (
           <div className="mt-3 rounded-md bg-emergency-50 px-3 py-2.5">
-            <p className="text-[12px] font-semibold text-emergency-700">🚨 জরুরি সেবা ২৪×৭</p>
+            <p className="text-[12px] font-semibold text-emergency-700">{t('emergency247Label')}</p>
             <a href={`tel:${callNumber}`} className="text-[14px] font-bold text-emergency-700">
               📞 {callNumber}
             </a>
@@ -192,7 +194,7 @@ export function HospitalProfileClient({
           href={`tel:${callNumber}`}
           className="flex items-center justify-center gap-2 rounded-md bg-brand-600 text-[15px] font-semibold text-white"
         >
-          <Phone className="h-4 w-4" /> কল করুন
+          <Phone className="h-4 w-4" /> {t('callCta')}
         </a>
         {directionsHref ? (
           <a
@@ -201,11 +203,11 @@ export function HospitalProfileClient({
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-md border border-neutral-200 text-[15px] font-semibold text-neutral-700"
           >
-            <Navigation className="h-4 w-4" /> দিকনির্দেশনা
+            <Navigation className="h-4 w-4" /> {t('directionsCta')}
           </a>
         ) : (
           <span className="flex items-center justify-center gap-2 rounded-md border border-neutral-100 text-[15px] font-semibold text-neutral-300">
-            <Navigation className="h-4 w-4" /> দিকনির্দেশনা
+            <Navigation className="h-4 w-4" /> {t('directionsCta')}
           </span>
         )}
       </div>

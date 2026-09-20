@@ -48,5 +48,23 @@
     "noScheduleYet": "Schedule not added yet",
     "address": "📍 Address",
     "seeDirections": "See directions"
-  }
+  },
+  "typeFull": {
+    "hospital": "Government Hospital",
+    "clinic": "Clinic",
+    "diagnostic": "Diagnostic Center",
+    "nursing_home": "Nursing Home"
+  },
+  "tabs": {
+    "info": "Info",
+    "doctors": "Doctors",
+    "services": "Services",
+    "reviews": "Reviews"
+  },
+  "emergencyBadgeShort": "🚨 Emergency",
+  "reviewCountLabel": "({count} reviews)",
+  "emergency247Label": "🚨 24×7 Emergency Services",
+  "callCta": "Call",
+  "directionsCta": "Directions",
+  "imageAltSuffix": "Photo {n}"
 }

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { useT } from '@vytanexa/i18n/client';
 
 /**
  * Image Gallery — VYTANEXA-BLUEPRINT.md § S08 "Image Gallery":
@@ -20,6 +21,8 @@ export function GalleryCarousel({ images, alt }: { images: string[]; alt: string
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const t = useT('hospital');
+  const tCommon = useT('common');
 
   if (images.length === 0) {
     return <div className="h-[220px] w-full bg-neutral-100" />;
@@ -46,7 +49,7 @@ export function GalleryCarousel({ images, alt }: { images: string[]; alt: string
             <img
               key={src + i}
               src={src}
-              alt={`${alt} — ছবি ${i + 1}`}
+              alt={`${alt} — ${t('imageAltSuffix', { n: i + 1 })}`}
               onClick={() => {
                 setActiveIndex(i);
                 setLightboxOpen(true);
@@ -78,14 +81,14 @@ export function GalleryCarousel({ images, alt }: { images: string[]; alt: string
           <button
             onClick={() => setLightboxOpen(false)}
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
-            aria-label="বন্ধ করুন"
+            aria-label={tCommon('close')}
           >
             <X className="h-5 w-5" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element -- fullscreen lightbox view, relies on native pinch-zoom */}
           <img
             src={images[activeIndex]}
-            alt={`${alt} — ছবি ${activeIndex + 1}`}
+            alt={`${alt} — ${t('imageAltSuffix', { n: activeIndex + 1 })}`}
             className="max-h-full max-w-full object-contain"
           />
         </div>

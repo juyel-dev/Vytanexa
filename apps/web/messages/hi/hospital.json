@@ -48,5 +48,23 @@
     "noScheduleYet": "अभी तक समय-सारिणी नहीं जोड़ी गई",
     "address": "📍 पता",
     "seeDirections": "दिशा-निर्देश देखें"
-  }
+  },
+  "typeFull": {
+    "hospital": "सरकारी अस्पताल",
+    "clinic": "क्लिनिक",
+    "diagnostic": "डायग्नोस्टिक सेंटर",
+    "nursing_home": "नर्सिंग होम"
+  },
+  "tabs": {
+    "info": "जानकारी",
+    "doctors": "डॉक्टर",
+    "services": "सेवाएं",
+    "reviews": "रिव्यू"
+  },
+  "emergencyBadgeShort": "🚨 आपातकालीन",
+  "reviewCountLabel": "({count} रिव्यू)",
+  "emergency247Label": "🚨 24×7 आपातकालीन सेवा",
+  "callCta": "कॉल करें",
+  "directionsCta": "दिशा-निर्देश",
+  "imageAltSuffix": "फ़ोटो {n}"
 }
