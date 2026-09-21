@@ -152,7 +152,24 @@ duplicate design rationale here, link to it.
 
 ## Work State (update this section every session — see skill point 8)
 
-**Milestone reached this session, as of commit `533c164`: the Phase 3
+**Latest milestone, as of commit `1893130`: TODO.md is now fully
+clean (zero unchecked items) and Phase C.3 is shipped.** Re-verified
+every remaining unchecked TODO.md item against real code before
+touching anything — found 7 were already done (stored-XSS
+sanitization, rate-limit IP derivation, admin login rate limit,
+`rate_limit_events` retention, all 3 Theme Editor trim sub-items) and
+just had stale checkboxes; fixed those, then built the 2 genuinely
+open items: the blood bank detail page (reuses `/hospitals/[slug]`
+rather than a new route — a blood bank IS a hospital by schema
+design; added `getFreshBloodStock()`, wired a stock section into
+`ServicesTab.tsx`, linked the blood-services list page's bank cards)
+and blood-service analytics tracking (`blood_bank_call_click`,
+`blood_donor_contact_reveal`, `blood_donor_registration`, same
+fire-and-forget `/api/analytics` pattern used elsewhere). See TODO.md
+itself for the per-item notes — this Work State section doesn't
+duplicate them.
+
+**Prior milestone, as of commit `533c164`: the Phase 3
 web `.tsx` strand is fully closed.** A complete `src/**/*.tsx` sweep
 across both `components/` and `app/` in `apps/web` confirms zero
 remaining hardcoded-Bengali runtime strings anywhere. This is a
