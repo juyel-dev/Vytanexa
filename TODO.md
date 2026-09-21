@@ -1337,42 +1337,28 @@ re-read of this file's own prior claims.**
   `console.error`). One stray `: any` — in a comment, not real code.
 
 **New findings from this pass:**
-- [ ] **[MEDIUM] Article & custom-page HTML is not actually sanitized.**
-      Comments in `ArticleDetailClient.tsx`, `StaticBlocks.tsx`, and
-      `queries/article-detail.ts` assert `body_html`/`content_html` is
-      "sanitized server-side on write" — but the real write paths
-      (`api/admin/articles/route.ts`, `[id]/route.ts`, and the
-      `PageBuilder.tsx` rich_text block) only run Zod's `.min(1)` string
-      check. Admins type raw HTML into a plain `<textarea>` and it goes
-      straight to the DB, then out via `dangerouslySetInnerHTML` to every
-      visitor. Not exploitable by ordinary users today (only trusted
-      admin/editor accounts can write it), but it's a real stored-XSS
-      surface the moment an editor account is compromised or a lower-
-      trust contributor gets the editor role — and the code comments
-      are currently making a safety claim the code doesn't back up.
-      **Fix:** add `isomorphic-dompurify` (or `sanitize-html`) server-side
-      in both write routes before insert/update; keep the textarea UX.
-- [ ] **[LOW] Rate-limit IP derivation worth hardening.** All 9 routes
-      above key `check_rate_limit()` off
-      `request.headers.get('x-forwarded-for')?.split(',')[0]`. On Vercel
-      this is normally edge-set and trustworthy, but it's still reading
-      the *first* (client-closest) hop rather than a platform-verified
-      header. Belt-and-suspenders: prefer `x-real-ip` when present, or
-      confirm Vercel's exact XFF-overwrite behavior for this project's
-      deployment before relying on it as the sole scraping defense for
-      `get_donor_phone` (currently the highest-value target since it's
-      PII).
-- [ ] **[LOW] No app-level rate limit on `/api/admin/login`.** Every
-      public route uses `check_rate_limit()`; the admin login route
-      (`api/admin/login/route.ts`) relies solely on Supabase Auth's
-      built-in throttling for brute-force protection. Fine for now,
-      worth adding the same primitive here before launch given it's the
-      highest-privilege entry point in the system.
-- [ ] **[LOW / ops] `rate_limit_events` has no retention/cleanup.** Table
-      grows forever (every rate-limited call inserts a row, migration
-      0005). Add a `pg_cron` job or a periodic `DELETE ... WHERE
-      created_at < now() - interval '7 days'` before this matters at
-      scale — not urgent pre-launch.
+- [x] **[MEDIUM] Article & custom-page HTML is not actually sanitized.**
+      **RE-VERIFIED FIXED (this pass) — checkbox was stale, code already
+      correct.** `apps/admin/src/lib/sanitize-html.ts` runs
+      `isomorphic-dompurify` with an explicit tag allowlist; wired into
+      both `api/admin/articles/route.ts` + `[id]/route.ts`
+      (`sanitizeContentHtml`) and both `api/admin/custom-pages/route.ts`
+      + `[id]/route.ts` (`sanitizeCustomPageBlocks`). No further action.
+- [x] **[LOW] Rate-limit IP derivation worth hardening.**
+      **RE-VERIFIED FIXED (this pass) — checkbox was stale.**
+      `apps/web/src/lib/get-client-ip.ts` and
+      `apps/admin/src/lib/get-client-ip.ts` both prefer `x-real-ip`,
+      falling back to `x-forwarded-for`'s first segment then `'unknown'`
+      — used consistently across routes (spot-checked `admin/locations`
+      routes). No further action.
+- [x] **[LOW] No app-level rate limit on `/api/admin/login`.**
+      **RE-VERIFIED FIXED (this pass) — checkbox was stale.**
+      `api/admin/login/route.ts` calls `check_rate_limit()` per-IP and
+      per-email (see its own header comment citing this TODO item). No
+      further action.
+- [x] **[LOW / ops] `rate_limit_events` has no retention/cleanup.**
+      **RE-VERIFIED FIXED (this pass) — checkbox was stale.** Migration
+      `0018_rate_limit_events_retention.sql` exists. No further action.
 
 ## PHASE 8 — FINALIZED EXECUTION PLAN (decisions locked 2026-08-30)
 Supersedes the open options in `DEEPDIVE-REFACTOR-PLAN.md` §6 and the
@@ -1382,22 +1368,33 @@ per the WORKING RULES below. `DEEPDIVE-REFACTOR-PLAN.md` stays as the
 reasoning/reference doc; this section is the actual execution order.
 
 ### 8.1 — God Mode: Theme Editor (decision: trim, don't fully build out)
-- [ ] Remove the color-picker UI from `ThemeEditor.tsx` (brand/life/
+- [x] Remove the color-picker UI from `ThemeEditor.tsx` (brand/life/
       emergency/accent hex fields + contrast checker) — this part is
       confirmed dead (saves to DB, `apps/web` never reads it, and
       building the CSS-variable pipeline to make it real costs more
       than a one-time rebrand is worth). Brand colors stay code-level
       in `packages/config/design-tokens.js`, as they already
       effectively are today.
-- [ ] Keep + actually wire Logo/Favicon (the two image-URL fields) —
+- [x] Keep + actually wire Logo/Favicon (the two image-URL fields) —
       simplify `ThemeEditor.tsx` to just those two fields, and add the
       missing read side: `apps/web/src/app/layout.tsx` favicon
       `<link>` (or Next's `icon` metadata field) + wherever the header
       logo renders, both sourced from `app_settings.logo_url` /
       `favicon_url`. This is the one part of Theme that's worth
-      finishing rather than cutting.
-- [ ] Update `ADMIN-PANEL-SPEC.md` § A07 Theme section + the God Mode
+      finishing rather than cutting. **RE-VERIFIED (this pass):**
+      `ThemeEditor.tsx` only has logo/favicon fields; `layout.tsx`'s
+      `generateMetadata()` reads `app_settings.favicon_url` (confirmed
+      — this was touched again in the i18n batch that added
+      `seo.defaultDescription`, still correct). Header wordmark→logo
+      swap in `TopBar.tsx` remains a separate, still-deferred sub-item
+      per this section's own note below — not re-opening that, just
+      confirming the favicon half is real.
+- [x] Update `ADMIN-PANEL-SPEC.md` § A07 Theme section + the God Mode
       nav label/description if needed to match the trimmed scope.
+      **RE-VERIFIED (this pass): already done.** ADMIN-PANEL-SPEC.md's
+      A07 Theme Editor section shows the trimmed logo/favicon-only
+      mockup and has a full "Scope Trimmed — TODO.md Phase 8.1" note
+      explaining the decision. Checking off.
 
 ### 8.2 — God Mode: Feature Flags (decision: trim 5 → 3)
 - [x] Remove `articles` and `blood_services` flags from
@@ -1422,11 +1419,11 @@ reasoning/reference doc; this section is the actual execution order.
   wrapper). Commit `7a3b26c`.
 
 ### 8.3 — God Mode: Homepage Control / Menu Manager / Footer Editor
-- [ ] No changes — confirmed fully working end-to-end this pass, leave
+- [x] No changes — confirmed fully working end-to-end this pass, leave
       as-is.
 
 ### 8.4 — Custom Page Builder / Block Builder (decision: keep, no scope cut)
-- [ ] No removal action. Confirmed load-bearing (`/page/terms`,
+- [x] No removal action. Confirmed load-bearing (`/page/terms`,
       `/page/privacy` have no other implementation). All 12 block
       types stay in the code as-is. Documented decision only: future
       engineering investment on new block types should prioritize
