@@ -68,6 +68,33 @@ export async function getBloodBanks(supabase: SupabaseClient<Database>, location
 export type BloodBank = Awaited<ReturnType<typeof getBloodBanks>>[number];
 
 /**
+ * Fresh (48h window) blood-stock rows for one hospital — same
+ * freshness rule as `getBloodBanks` above, factored out so the
+ * hospital detail page (S08) can show stock for hospitals tagged
+ * `blood_bank` without duplicating the cutoff logic. Added for
+ * TODO.md Phase C.3 (blood bank detail page) — a blood bank IS a
+ * hospital, so this reuses `/hospitals/[slug]` rather than a new
+ * route (see this file's top-of-file note on why there's no separate
+ * blood-bank entity).
+ */
+export async function getFreshBloodStock(supabase: SupabaseClient<Database>, hospitalId: string) {
+  const freshCutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from('blood_bank_inventory')
+    .select('blood_group, stock_level, reported_at')
+    .eq('hospital_id', hospitalId)
+    .gte('reported_at', freshCutoff);
+
+  if (error) {
+    console.error('getFreshBloodStock failed:', error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export type BloodStockRow = Awaited<ReturnType<typeof getFreshBloodStock>>[number];
+
+/**
  * Donor list — VYTANEXA-BLUEPRINT.md § S11 "Donor Registration
  * (Opt-in Directory)": queries the `public_blood_donors` VIEW, which
  * omits `phone` at the schema level (DATABASE-SCHEMA.md § 3.6) —

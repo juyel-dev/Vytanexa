@@ -7,6 +7,7 @@ import { useLocalizedField } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import type { HospitalDetail } from '@/lib/queries/hospital-detail';
 import type { MatchedService } from './ServicesTab';
+import type { BloodStockRow } from '@/lib/queries/blood-services';
 import { GalleryCarousel } from './GalleryCarousel';
 import { InfoTab } from './InfoTab';
 import { DoctorsTab } from './DoctorsTab';
@@ -30,12 +31,14 @@ export function HospitalProfileClient({
   reviews,
   matchedServices,
   unmatchedServiceKeys,
+  bloodStock,
   pageUrl,
 }: {
   hospital: HospitalDetail;
   reviews: Review[];
   matchedServices: MatchedService[];
   unmatchedServiceKeys: string[];
+  bloodStock: BloodStockRow[];
   pageUrl: string;
 }) {
   const localize = useLocalizedField();
@@ -173,7 +176,11 @@ export function HospitalProfileClient({
       {activeTab === 'info' && <InfoTab hospital={hospital} />}
       {activeTab === 'doctors' && <DoctorsTab links={hospital.doctor_hospital_links} />}
       {activeTab === 'services' && (
-        <ServicesTab matched={matchedServices} unmatchedKeys={unmatchedServiceKeys} />
+        <ServicesTab
+          matched={matchedServices}
+          unmatchedKeys={unmatchedServiceKeys}
+          bloodStock={bloodStock}
+        />
       )}
       {activeTab === 'reviews' && (
         <ReviewsTab

@@ -3,6 +3,13 @@
 import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import type { Json } from '@vytanexa/database';
+import type { BloodStockRow } from '@/lib/queries/blood-services';
+
+const STOCK_ICON: Record<string, string> = {
+  available: '✅',
+  low: '⚠️',
+  unavailable: '❌',
+};
 
 export type MatchedService = {
   canonical_key: string;
@@ -29,16 +36,19 @@ export type MatchedService = {
 export function ServicesTab({
   matched,
   unmatchedKeys,
+  bloodStock,
 }: {
   matched: MatchedService[];
   unmatchedKeys: string[];
+  bloodStock: BloodStockRow[];
 }) {
   const t = useT('hospital');
+  const tBlood = useT('blood');
   const localize = useLocalizedField();
   const categoryLabels = t.raw('services.category' as Parameters<typeof t.raw>[0]) as Record<string, string>;
   const generalKeyLabels = t.raw('services.generalKey' as Parameters<typeof t.raw>[0]) as Record<string, string>;
 
-  if (matched.length === 0 && unmatchedKeys.length === 0) {
+  if (matched.length === 0 && unmatchedKeys.length === 0 && bloodStock.length === 0) {
     return (
       <div className="px-6 py-10 text-center">
         <p className="text-[14px] text-neutral-500">{t('services.empty')}</p>
@@ -54,6 +64,19 @@ export function ServicesTab({
 
   return (
     <div className="divide-y divide-neutral-100 pb-6">
+      {bloodStock.length > 0 && (
+        <section className="px-4 py-4">
+          <h3 className="mb-2 text-[15px] font-bold text-neutral-800">🩸 {tBlood('stock.label')}</h3>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
+            {bloodStock.map((s) => (
+              <span key={s.blood_group}>
+                {s.blood_group}
+                {STOCK_ICON[s.stock_level] ?? ''}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
       {[...grouped.entries()].map(([category, items]) => (
         <section key={category} className="px-4 py-4">
           <h3 className="mb-2 text-[15px] font-bold text-neutral-800">

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Phone, MessageCircle, Copy, Check, Lock } from 'lucide-react';
 import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField, useFormatter } from '@/lib/i18n-client';
@@ -151,6 +152,14 @@ export function BloodServicesClient({
   // tel: URL just opens a blank tab. Reveal as copyable text instead.
   const handleContact = async (donorId: string) => {
     setContactError(null);
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_type: 'blood_donor_contact_reveal',
+        entity_type: 'blood_donor',
+        entity_id: donorId,
+      }),
+    }).catch(() => {});
     if (isTouch) {
       window.location.href = `/api/blood-donors/${donorId}/contact`;
       return;
@@ -247,13 +256,15 @@ export function BloodServicesClient({
                   key={bank.id}
                   className="mb-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-card"
                 >
-                  <h3 className="text-[15px] font-bold text-neutral-900">
-                    🏥 {localize(bank.name_translations)}
-                  </h3>
-                  <p className="mt-0.5 text-[13px] text-neutral-500">
-                    📍 {bank.address_line}
-                    {hours?.is_24x7 && `  ·  🕐 ${t('open24x7')}`}
-                  </p>
+                  <Link href={`/hospitals/${bank.slug}`} className="block">
+                    <h3 className="text-[15px] font-bold text-neutral-900">
+                      🏥 {localize(bank.name_translations)}
+                    </h3>
+                    <p className="mt-0.5 text-[13px] text-neutral-500">
+                      📍 {bank.address_line}
+                      {hours?.is_24x7 && `  ·  🕐 ${t('open24x7')}`}
+                    </p>
+                  </Link>
 
                   {bank.stock.length > 0 && (
                     <div className="mt-2">
@@ -274,6 +285,16 @@ export function BloodServicesClient({
                   <div className="mt-3 flex gap-2">
                     <a
                       href={`tel:${bank.phone}`}
+                      onMouseDown={() =>
+                        fetch('/api/analytics', {
+                          method: 'POST',
+                          body: JSON.stringify({
+                            event_type: 'blood_bank_call_click',
+                            entity_type: 'hospital',
+                            entity_id: bank.id,
+                          }),
+                        }).catch(() => {})
+                      }
                       className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-emergency-600 text-[13px] font-semibold text-white"
                     >
                       <Phone className="h-4 w-4" /> {t('callNow')}

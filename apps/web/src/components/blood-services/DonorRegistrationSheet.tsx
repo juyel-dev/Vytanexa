@@ -80,6 +80,13 @@ export function DonorRegistrationSheet({
       return;
     }
     setSuccess(true);
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_type: 'blood_donor_registration',
+        metadata: { blood_group: bloodGroup },
+      }),
+    }).catch(() => {});
     onSuccess?.();
     setTimeout(() => {
       onClose();

@@ -85,7 +85,18 @@ Still open from the original list:
 - [x] Phase C.2 — admin donor edit (name/phone/group/location) — done via a create/edit
       modal in BloodManager (same pattern as AmbulanceManager), backed by an extended
       PATCH (partial update, any field) and a new POST route
-- [ ] Phase C.3 — blood bank detail page
+- [x] Phase C.3 — blood bank detail page. **Implemented, not a new
+      route:** a blood bank IS a hospital (`facility_tags @>
+      {'blood_bank'}`), so this reuses `/hospitals/[slug]` rather than
+      building a parallel page — matches the schema's "one physical-
+      facility table" design (see `blood-services.ts`'s own top-of-file
+      note). Bank name on the list page (`BloodServicesClient.tsx`) is
+      now a `Link` to `/hospitals/${bank.slug}`; the hospital detail
+      page fetches fresh (48h-window) stock via new
+      `getFreshBloodStock()` when `facility_tags` includes
+      `blood_bank`, and `ServicesTab.tsx` renders it as a stock section
+      (reusing `blood.stock.*` keys) so nothing users saw on the list
+      page is lost by following the link.
 - [x] Phase D remainder (per-IP limit) — reconsidered, not implemented: the login-gate
       already caps one donor listing per account (DB-level unique index) plus the
       existing per-phone 90-day limit; a per-IP layer adds little now that spamming
@@ -100,9 +111,14 @@ Still open from the original list:
       or exposed anywhere). Left `BloodServicesCTA` (homepage banner) alone — it's
       already gated by a separate, intentional mechanism (homepage_settings section
       list, see its own comment), not this flag.
-- [ ] Blood service actions (bank call, donor contact reveal, registration) still
+- [x] Blood service actions (bank call, donor contact reveal, registration) still
       untracked in `analytics_events` on the main page — found during deep-dive, not
-      fixed yet
+      fixed yet. **Fixed:** all 3 now fire `POST /api/analytics` (fire-and-forget,
+      same pattern as `emergency_call_click`/`poll_vote`/etc): `blood_bank_call_click`
+      (entity_type `hospital`) on the bank's `tel:` link, `blood_donor_contact_reveal`
+      (entity_type `blood_donor`) in `handleContact()` before the touch/desktop
+      branch, `blood_donor_registration` (metadata: blood_group) after
+      `DonorRegistrationSheet`'s submit succeeds.
 - [x] Login-gated donor directory (Google sign-in) — done, see below
 
 **Login-gate shipped** (migrations 0017-0019, code + build verified):

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { getHospitalBySlug, getHospitalServices } from '@/lib/queries/hospital-detail';
+import { getFreshBloodStock } from '@/lib/queries/blood-services';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 import { HospitalProfileClient } from '@/components/hospital-profile/HospitalProfileClient';
@@ -56,6 +57,9 @@ export default async function HospitalProfilePage({ params }: { params: { slug: 
     .limit(20);
 
   const { matched, unmatchedKeys } = await getHospitalServices(supabase, hospital.services);
+  const bloodStock = hospital.facility_tags.includes('blood_bank')
+    ? await getFreshBloodStock(supabase, hospital.id)
+    : [];
 
   const name = getLocalizedField(hospital.name_translations);
   const pageUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/hospitals/${hospital.slug}`;
@@ -103,6 +107,7 @@ export default async function HospitalProfilePage({ params }: { params: { slug: 
         reviews={reviews ?? []}
         matchedServices={matched}
         unmatchedServiceKeys={unmatchedKeys}
+        bloodStock={bloodStock}
         pageUrl={pageUrl}
       />
     </>
