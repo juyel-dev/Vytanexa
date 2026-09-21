@@ -162,12 +162,19 @@ to reflect this and is now the authoritative source for what's done
 vs. what's left; this Work State section restates only the highlights.
 
 **What's genuinely left in Phase 3** (see spec §12 for full detail):
-(a) the **admin `.tsx` strand** — 78 files, not yet audited at all,
-completely separate codebase area (`apps/admin/src`); (b) the
-deliberately-deferred **`(seo)/*` low-priority strand** (Bengali-only
-by business design until English/Hindi SEO becomes an actual goal).
-Starting a new session on Phase 3 should point at one of these two,
-not re-run the web `.tsx` inventory expecting more work there.
+(a) the **admin `.tsx` strand** — 78 files. Not started, but fully
+researched and planned this session: see `ADMIN-I18N-PLAN.md` (repo
+root) for baseline facts, confirmed reuse keys, the priority-1 shared-
+component batch (`components/ui/*`), and a full per-module batch order
+with char-volume counts — read that file first, don't re-derive its
+research. Note: admin is Bengali-only by design (single operator, spec
+§A02), so this strand is pure architectural consistency, zero
+user-visible change, genuinely low priority — do it when there's a
+lull, never under time pressure. (b) the deliberately-deferred
+**`(seo)/*` low-priority strand** (Bengali-only by business design
+until English/Hindi SEO becomes an actual goal). Starting a new
+session on Phase 3 should point at one of these two, not re-run the
+web `.tsx` inventory expecting more work there.
 
 **This session's batches (17 through the closure, batches 17–34,
 ~18 batches across two long sessions)** covered: community, search,

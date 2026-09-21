@@ -629,9 +629,11 @@ hits.
 
 **Phase 3 — incremental hardcoded-string migration (ongoing, not one PR).
 Status: web `.tsx` strand ✅ DONE as of commit `cfe34c9` (this session)
-— admin `.tsx` strand (78 files, separate audit, not started) still
-open. See the closure note right after this list before assuming
-there's web `.tsx` work left to resume.**
+— admin `.tsx` strand (78 files) has a researched, unstarted execution
+plan in `ADMIN-I18N-PLAN.md` (repo root) — read that file before
+touching `apps/admin`, don't re-derive its research. See the closure
+note right after this list before assuming there's web `.tsx` work
+left to resume.**
 
 Highest-reuse-first order (biggest blast radius per hour of work):
 1. `components/shared/*` — ✅ **DONE** (all 8 files: ArticleCard, DoctorCard,
@@ -687,12 +689,16 @@ confirmed to be one of three cases, none of which need touching:**
 
 **To resume Phase 3 work in a new session** (deliberately written for
 that — long-running work across many short sessions is expected, not an
-edge case): the web `.tsx` strand above is closed. What's left is either
-(a) the admin `.tsx` strand (78 files, not yet audited — start there
-with the same inventory command below, pointed at `apps/admin/src`
-instead of `apps/web/src`), or (b) the `(seo)/*` low-priority strand
-(deliberately deferred, see item 4 above) — re-run the inventory command
-to get current, not stale, numbers —
+edge case): the web `.tsx` strand above is closed. What's left is
+either (a) the admin `.tsx` strand — **researched and planned but not
+started, see `ADMIN-I18N-PLAN.md` in the repo root**, which covers
+baseline facts, reuse-foundation keys already confirmed, the priority-1
+shared-component batch, and a full per-module batch order with
+char-volume counts, so don't re-derive any of that — or (b) the
+`(seo)/*` low-priority strand (deliberately deferred, see item 4
+above). Re-run the inventory command below (or the one inside
+`ADMIN-I18N-PLAN.md` §6 for admin specifically) to get current, not
+stale, numbers —
 
 ```
 cd apps/web && python3 -c "
