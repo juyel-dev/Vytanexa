@@ -61,7 +61,7 @@ export function QaManager({ questions, doctors, tab, badgeUnanswered }: { questi
           questions.map((q) => (
             <div key={q.id} className="rounded-xl border border-admin-border bg-white p-4">
               <p className="text-admin-body font-medium text-neutral-900">❓ {q.title}</p>
-              <p className="mt-1 text-admin-small text-neutral-500">বিভাগ: {q.category ?? '—'} · {new Date(q.created_at).toLocaleDateString('bn-BD')} · {q.answer_count} উত্তর · {q.upvote_count} আপভোট · {q.status}</p>
+              <p className="mt-1 text-admin-small text-neutral-500">বিভাগ: {q.category ?? '—'} · {new Date(q.created_at).toLocaleDateString('bn-IN')} · {q.answer_count} উত্তর · {q.upvote_count} আপভোট · {q.status}</p>
 
               {openId === q.id ? (
                 <div className="mt-3 rounded-lg border border-admin-border bg-neutral-50 p-3">

@@ -93,7 +93,7 @@ export function ArticlesTable({ articles, total, page, perPage, categories, curr
             <td className="px-3 py-2 text-admin-body text-neutral-600">{a.category ?? '—'}</td>
             <td className="px-3 py-2">{a.is_published ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅ প্রকাশিত</span> : <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600">📝 খসড়া</span>}</td>
             <td className="px-3 py-2 text-admin-body text-neutral-700"><span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5 text-neutral-400" />{a.view_count}</span></td>
-            <td className="px-3 py-2 text-admin-small text-neutral-500">{a.published_at ? new Date(a.published_at).toLocaleDateString('bn-BD') : new Date(a.created_at).toLocaleDateString('bn-BD')}</td>
+            <td className="px-3 py-2 text-admin-small text-neutral-500">{a.published_at ? new Date(a.published_at).toLocaleDateString('bn-IN') : new Date(a.created_at).toLocaleDateString('bn-IN')}</td>
             <td className="px-3 py-2">
               <div className="relative">
                 <button onClick={() => setOpenId(openId === a.id ? null : a.id)} className="flex h-7 w-7 items-center justify-center rounded-md border border-admin-border bg-white text-neutral-600 hover:bg-neutral-50"><MoreHorizontal className="h-4 w-4" /></button>

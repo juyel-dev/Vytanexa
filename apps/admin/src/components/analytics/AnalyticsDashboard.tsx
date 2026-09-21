@@ -44,20 +44,20 @@ export function AnalyticsDashboard({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-admin-border bg-white p-4">
           <p className="text-admin-small text-neutral-500">পেজ ভিউ</p>
-          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.pageViews.toLocaleString('bn-BD')}</p>
+          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.pageViews.toLocaleString('bn-IN')}</p>
           <p className={`text-admin-small ${cards.pageViewsDelta >= 0 ? 'text-life-600' : 'text-emergency-600'}`}>{cards.pageViewsDelta >= 0 ? '↑' : '↓'} {Math.abs(cards.pageViewsDelta)}%</p>
         </div>
         <div className="rounded-xl border border-admin-border bg-white p-4">
           <p className="text-admin-small text-neutral-500">কল ক্লিক</p>
-          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.callClicks.toLocaleString('bn-BD')}</p>
+          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.callClicks.toLocaleString('bn-IN')}</p>
         </div>
         <div className="rounded-xl border border-admin-border bg-white p-4">
           <p className="text-admin-small text-neutral-500">WhatsApp ক্লিক</p>
-          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.waClicks.toLocaleString('bn-BD')}</p>
+          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.waClicks.toLocaleString('bn-IN')}</p>
         </div>
         <div className="rounded-xl border border-admin-border bg-white p-4">
           <p className="text-admin-small text-neutral-500">নতুন লিড</p>
-          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.newLeads.toLocaleString('bn-BD')}</p>
+          <p className="mt-1 text-[24px] font-bold text-neutral-900">{cards.newLeads.toLocaleString('bn-IN')}</p>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export function AnalyticsDashboard({
             {topDoctors.length === 0 ? <li className="py-2 text-admin-small text-neutral-500">কোনো ডেটা নেই</li> : topDoctors.map((d, i) => (
               <li key={d.id} className="flex items-center justify-between py-2 text-admin-body">
                 <span className="text-neutral-700">{i + 1}. {d.name}</span>
-                <span className="text-admin-small text-neutral-500">{d.views.toLocaleString('bn-BD')}</span>
+                <span className="text-admin-small text-neutral-500">{d.views.toLocaleString('bn-IN')}</span>
               </li>
             ))}
           </ul>

@@ -69,7 +69,7 @@ export function PollsList({ polls }: { polls: Poll[] }) {
                     <td className="px-3 py-2"><a href={`/polls/${p.id}`} className="block text-admin-body font-medium text-neutral-900 hover:text-brand-600">{p.question}</a><span className="block text-admin-small text-neutral-400">{p.poll_options.length}টি অপশন</span></td>
                     <td className="px-3 py-2 text-admin-body text-neutral-700">{p.total_votes}</td>
                     <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${st.color}`}>{st.label}</span></td>
-                    <td className="px-3 py-2 text-admin-small text-neutral-500">{p.expires_at ? new Date(p.expires_at).toLocaleDateString('bn-BD') : '—'}</td>
+                    <td className="px-3 py-2 text-admin-small text-neutral-500">{p.expires_at ? new Date(p.expires_at).toLocaleDateString('bn-IN') : '—'}</td>
                     <td className="px-3 py-2">
                       <span className="flex gap-1">
                         <a href={`/polls/${p.id}`} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">✏️</a>

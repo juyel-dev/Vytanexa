@@ -80,7 +80,7 @@ export function LeadsManager({ leads, total, page, perPage, counts, doctorOpts, 
     const header = 'patient_name,patient_phone,doctor,chamber,status,created_at,message';
     const rows = leads.map((l) => {
       const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-      return [esc(l.patient_name), esc(l.patient_phone), esc(l.doctor_name), esc(l.chamber_name), esc(l.status), esc(new Date(l.created_at).toLocaleString('bn-BD')), esc(l.message ?? '')].join(',');
+      return [esc(l.patient_name), esc(l.patient_phone), esc(l.doctor_name), esc(l.chamber_name), esc(l.status), esc(new Date(l.created_at).toLocaleString('bn-IN')), esc(l.message ?? '')].join(',');
     });
     const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -154,7 +154,7 @@ export function LeadsManager({ leads, total, page, perPage, counts, doctorOpts, 
             <td className="px-3 py-2"><a href={`tel:${l.patient_phone}`} className="inline-flex items-center gap-1 text-admin-body font-medium text-brand-700 hover:underline"><Phone className="h-3.5 w-3.5" />{l.patient_phone}</a></td>
             <td className="px-3 py-2 text-admin-body text-neutral-700">{l.doctor_name}</td>
             <td className="px-3 py-2 text-admin-body text-neutral-600">{l.chamber_name}</td>
-            <td className="px-3 py-2 text-admin-small text-neutral-500">{new Date(l.created_at).toLocaleString('bn-BD')}</td>
+            <td className="px-3 py-2 text-admin-small text-neutral-500">{new Date(l.created_at).toLocaleString('bn-IN')}</td>
             <td className="px-3 py-2">
               <select value={l.status} onChange={(e) => setStatus(l, e.target.value)} className="h-7 rounded-md border border-admin-border bg-white px-1 text-admin-small">
                 <option value="new">নতুন</option>

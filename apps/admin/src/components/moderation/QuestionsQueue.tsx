@@ -141,7 +141,7 @@ export function QuestionsQueue({
                 {q.body && <p className="mt-1 line-clamp-2 text-admin-small text-neutral-600">{q.body}</p>}
                 <p className="mt-1 text-admin-small text-neutral-500">
                   বিভাগ: {q.category_name} · {q.is_anonymous ? 'বেনামী' : (q.author_name ?? '—')} ·{' '}
-                  {new Date(q.created_at).toLocaleDateString('bn-BD')} · {q.answer_count} উত্তর · {q.upvote_count} আপভোট
+                  {new Date(q.created_at).toLocaleDateString('bn-IN')} · {q.answer_count} উত্তর · {q.upvote_count} আপভোট
                 </p>
                 {q.status === 'pending' && (
                   <div className="mt-3 flex flex-wrap gap-2">

@@ -165,7 +165,7 @@ export function SubscriptionsManager({ plans, subscriptions, tab }: { plans: Pla
                 <td className="px-3 py-2"><span className="block text-admin-body font-medium text-neutral-900">{s.entity_name}</span><span className="block text-admin-small text-neutral-400">{s.entity_type} · {s.entity_id.slice(0, 8)}</span></td>
                 <td className="px-3 py-2 text-admin-body text-neutral-700">{TIER_EMOJI[s.subscription_plans?.tier ?? ''] ?? ''} {s.subscription_plans?.tier ?? s.plan_id.slice(0, 6)}</td>
                 <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${s.status === 'active' ? 'bg-life-100 text-life-700' : 'bg-neutral-100 text-neutral-600'}`}>{s.status}</span></td>
-                <td className="px-3 py-2 text-admin-small text-neutral-500">{s.expires_at ? new Date(s.expires_at).toLocaleDateString('bn-BD') : '—'}</td>
+                <td className="px-3 py-2 text-admin-small text-neutral-500">{s.expires_at ? new Date(s.expires_at).toLocaleDateString('bn-IN') : '—'}</td>
                 <td className="px-3 py-2"><button onClick={() => handleCancelSub(s.id)} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-emergency-600 hover:bg-emergency-50">✕ বাতিল</button></td>
               </>
             )}

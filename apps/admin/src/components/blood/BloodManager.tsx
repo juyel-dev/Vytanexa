@@ -217,7 +217,7 @@ export function BloodManager({
                 <td className="px-3 py-2 text-admin-body font-medium text-neutral-900">{d.name}</td>
                 <td className="px-3 py-2"><span className="rounded-full bg-emergency-100 px-2 py-0.5 text-[12px] font-bold text-emergency-700">{d.blood_group}</span></td>
                 <td className="px-3 py-2 text-admin-body text-neutral-600">{d.location_name}</td>
-                <td className="px-3 py-2 text-admin-body text-neutral-600">{d.last_donated_at ? new Date(d.last_donated_at).toLocaleDateString('bn-BD') : '—'}</td>
+                <td className="px-3 py-2 text-admin-body text-neutral-600">{d.last_donated_at ? new Date(d.last_donated_at).toLocaleDateString('bn-IN') : '—'}</td>
                 <td className="px-3 py-2 text-admin-body text-neutral-700">{d.phone}</td>
                 <td className="px-3 py-2">
                   <StatusBadge
@@ -301,7 +301,7 @@ export function BloodManager({
             const base = h.inventory;
             const edits = invEdits[h.id] ?? {};
             const latestMs = base.length ? Math.max(...base.map((b) => new Date(b.reported_at).getTime())) : null;
-            const updatedAt = latestMs ? new Date(latestMs).toLocaleString('bn-BD') : '—';
+            const updatedAt = latestMs ? new Date(latestMs).toLocaleString('bn-IN') : '—';
             // BLOOD-SERVICE-PLAN.md Phase D — public read RLS hides stock
             // past 48h with no admin-facing signal at all; a bank could
             // go silently blank on the user app and nobody here would know.

@@ -91,7 +91,7 @@ export function PagesList({ initialPages }: { initialPages: PageRow[] }) {
                   <td className="px-3 py-2"><a href={`/pages/${p.id}`} className="block text-admin-body font-medium text-neutral-900 hover:text-brand-600">{p.title}</a><span className="block text-admin-small text-neutral-400">/page/{p.slug}</span></td>
                   <td className="px-3 py-2">{p.is_published ? <span className="rounded-full bg-life-100 px-2 py-0.5 text-[11px] font-medium text-life-700">✅ প্রকাশিত</span> : <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600">📝 খসড়া</span>}</td>
                   <td className="px-3 py-2 text-admin-body">{p.show_in_menu ? '✓' : '✗'}</td>
-                  <td className="px-3 py-2 text-admin-small text-neutral-500">{new Date(p.updated_at).toLocaleDateString('bn-BD')}</td>
+                  <td className="px-3 py-2 text-admin-small text-neutral-500">{new Date(p.updated_at).toLocaleDateString('bn-IN')}</td>
                   <td className="px-3 py-2">
                     <span className="flex gap-1">
                       <a href={`/pages/${p.id}`} className="rounded-md border border-admin-border bg-white px-2 py-1 text-admin-small text-neutral-700 hover:bg-neutral-50">✏️</a>

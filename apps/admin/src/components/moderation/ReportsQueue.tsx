@@ -133,7 +133,7 @@ export function ReportsQueue({
                   {REASON_LABEL[r.reason] ?? r.reason}
                 </span>
                 {r.detail && <p className="mt-1 text-admin-small text-neutral-600">{r.detail}</p>}
-                <p className="mt-1 text-admin-small text-neutral-500">{new Date(r.created_at).toLocaleDateString('bn-BD')}</p>
+                <p className="mt-1 text-admin-small text-neutral-500">{new Date(r.created_at).toLocaleDateString('bn-IN')}</p>
                 {r.status === 'open' && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button onClick={() => act(r.id, 'resolved')} disabled={busyId === r.id} className="h-8 rounded-md bg-life-600 px-3 text-admin-small font-semibold text-white hover:bg-life-700 disabled:opacity-50">✅ সমাধান হয়েছে চিহ্নিত করুন</button>

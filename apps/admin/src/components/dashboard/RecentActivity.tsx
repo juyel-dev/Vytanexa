@@ -53,7 +53,7 @@ export function RecentActivity({ activity }: { activity: Row[] }) {
               <span className="text-neutral-500">{row.entity_type}</span>
             </span>
             <span className="shrink-0 text-admin-small text-neutral-400">
-              {new Date(row.created_at).toLocaleDateString('bn-BD')}
+              {new Date(row.created_at).toLocaleDateString('bn-IN')}
             </span>
           </li>
         ))}

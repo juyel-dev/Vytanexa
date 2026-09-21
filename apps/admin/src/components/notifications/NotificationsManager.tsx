@@ -77,7 +77,7 @@ export function NotificationsManager({ broadcasts, personals, tab }: { broadcast
                 <div key={b.id} className="px-4 py-3">
                   <p className="text-admin-body font-medium text-neutral-900">{b.type === 'emergency' ? '🚨' : 'ℹ️'} {b.title} {b.show_as_banner && <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-700">ব্যানার</span>} {!b.is_active && <span className="ml-1 text-admin-small text-neutral-400">(নিষ্ক্রিয়)</span>}</p>
                   <p className="mt-1 text-admin-small text-neutral-600">{b.body}</p>
-                  <p className="mt-1 text-admin-small text-neutral-400">{new Date(b.created_at).toLocaleString('bn-BD')} {b.target_url ? `· ${b.target_url}` : ''} {b.expires_at ? `· মেয়াদ ${new Date(b.expires_at).toLocaleDateString('bn-BD')}` : ''}</p>
+                  <p className="mt-1 text-admin-small text-neutral-400">{new Date(b.created_at).toLocaleString('bn-IN')} {b.target_url ? `· ${b.target_url}` : ''} {b.expires_at ? `· মেয়াদ ${new Date(b.expires_at).toLocaleDateString('bn-IN')}` : ''}</p>
                 </div>
               ))}
             </div>
@@ -91,7 +91,7 @@ export function NotificationsManager({ broadcasts, personals, tab }: { broadcast
               <div key={p.id} className="px-4 py-3">
                 <p className="text-admin-body font-medium text-neutral-900">💬 {p.title}</p>
                 <p className="mt-1 text-admin-small text-neutral-600">{p.body}</p>
-                <p className="mt-1 text-admin-small text-neutral-400">{new Date(p.created_at).toLocaleString('bn-BD')} · user {p.target_user_id?.slice(0, 8) ?? '—'}</p>
+                <p className="mt-1 text-admin-small text-neutral-400">{new Date(p.created_at).toLocaleString('bn-IN')} · user {p.target_user_id?.slice(0, 8) ?? '—'}</p>
               </div>
             ))}
           </div>

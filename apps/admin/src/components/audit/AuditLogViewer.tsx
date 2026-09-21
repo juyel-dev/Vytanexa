@@ -88,7 +88,7 @@ export function AuditLogViewer({ logs, total, page, perPage, admins, currentFilt
             <tbody className="divide-y divide-admin-border">
               {logs.length === 0 ? <tr><td colSpan={7} className="px-6 py-10 text-center text-admin-body text-neutral-500">কোনো লগ নেই।</td></tr> : logs.map((l) => (
                 <tr key={l.id} className="hover:bg-neutral-50">
-                  <td className="px-3 py-2 text-admin-small text-neutral-600">{new Date(l.created_at).toLocaleString('bn-BD')}</td>
+                  <td className="px-3 py-2 text-admin-small text-neutral-600">{new Date(l.created_at).toLocaleString('bn-IN')}</td>
                   <td className="px-3 py-2 text-admin-body text-neutral-700">{l.admin_users?.name ?? l.admin_id?.slice(0, 8) ?? '—'}</td>
                   <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${l.action === 'create' ? 'bg-life-100 text-life-700' : l.action === 'delete' ? 'bg-emergency-100 text-emergency-700' : l.action === 'publish' ? 'bg-brand-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'}`}>{l.action}</span></td>
                   <td className="px-3 py-2 text-admin-small text-neutral-600">{l.entity_type}</td>

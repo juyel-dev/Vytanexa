@@ -182,7 +182,7 @@ export function ReviewsQueue({
                 </div>
                 <p className="mt-1.5 text-admin-body text-neutral-800">&ldquo;{r.review_text}&rdquo;</p>
                 <p className="mt-1 text-admin-small text-neutral-500">
-                  — {r.reviewer_name} · {new Date(r.created_at).toLocaleDateString('bn-BD')}
+                  — {r.reviewer_name} · {new Date(r.created_at).toLocaleDateString('bn-IN')}
                 </p>
 
                 {r.admin_reply && replyOpenId !== r.id && (
