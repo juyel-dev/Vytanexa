@@ -14,6 +14,14 @@
 > established and found to matter, not generic advice; and (2) a **live
 > snapshot** of exactly where things stand right now. Section headers
 > below use the person's own requested structure.
+>
+> Scope note: this file predates a second ongoing effort —
+> **feature-by-feature correctness/polish audits** against
+> `VYTANEXA-BLUEPRINT.md` (broken/incomplete/incorrect/unpolished, one
+> screen at a time). That work tracks its own status in
+> `FEATURE-AUDIT-LOG.md` — read it too if resuming that thread rather
+> than i18n. Same repo-as-source-of-truth philosophy, same "read before
+> assuming what's left to do" discipline.
 
 ---
 
