@@ -190,6 +190,15 @@ function ReviewSubmissionModal({
       return;
     }
     setSuccess(true);
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_type: 'review_submit',
+        entity_type: entityType,
+        entity_id: entityId,
+        metadata: { rating },
+      }),
+    }).catch(() => {});
     setTimeout(() => {
       onClose();
       setSuccess(false);

@@ -81,6 +81,15 @@ export function AppointmentSheet({
       return;
     }
     setSuccess(true);
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_type: 'lead_submit',
+        entity_type: 'doctor',
+        entity_id: doctorId,
+        metadata: { chamber_id: chamberId || null },
+      }),
+    }).catch(() => {});
     setTimeout(() => {
       onClose();
       setSuccess(false);
@@ -190,6 +199,17 @@ export function AppointmentSheet({
           <div className="flex gap-2">
             <a
               href={`tel:${selectedChamber?.phone ?? ''}`}
+              onMouseDown={() =>
+                fetch('/api/analytics', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    event_type: 'call_click',
+                    entity_type: 'doctor',
+                    entity_id: doctorId,
+                    metadata: { source: 'appointment_sheet' },
+                  }),
+                }).catch(() => {})
+              }
               className="h-11 flex-1 rounded-md border border-neutral-200 text-center text-[13px] font-semibold leading-[44px] text-neutral-700"
             >
               {t('callDirect')}
@@ -199,6 +219,17 @@ export function AppointmentSheet({
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onMouseDown={() =>
+                  fetch('/api/analytics', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      event_type: 'whatsapp_click',
+                      entity_type: 'doctor',
+                      entity_id: doctorId,
+                      metadata: { source: 'appointment_sheet' },
+                    }),
+                  }).catch(() => {})
+                }
                 className="h-11 flex-1 rounded-md border border-neutral-200 text-center text-[13px] font-semibold leading-[44px] text-neutral-700"
               >
                 {t('whatsapp')}

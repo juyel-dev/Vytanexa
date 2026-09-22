@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Share2, MoreVertical, Star, Calendar } from 'lucide-react';
 import { useT } from '@vytanexa/i18n/client';
@@ -46,11 +46,28 @@ export function DoctorProfileClient({
   const tShared = useT('shared');
   const format = useFormatter();
   const tabLabels = t.raw('tabs' as Parameters<typeof t.raw>[0]) as Record<string, string>;
-  const [activeTab, setActiveTab] = useState<(typeof TAB_KEYS)[number]>('info');
+  const [activeTab, setActiveTabRaw] = useState<(typeof TAB_KEYS)[number]>('info');
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+
+  const trackEvent = (event_type: string, metadata?: Record<string, unknown>) => {
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({ event_type, entity_type: 'doctor', entity_id: doctor.id, metadata }),
+    }).catch(() => {});
+  };
+
+  const setActiveTab = (tab: (typeof TAB_KEYS)[number]) => {
+    setActiveTabRaw(tab);
+    trackEvent('tab_view', { tab });
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per doctor page view, not on every render
+  useEffect(() => {
+    trackEvent('doctor_view');
+  }, [doctor.id]);
 
   const name = localize(doctor.name_translations);
   const specialty = doctor.categories
@@ -190,7 +207,7 @@ export function DoctorProfileClient({
 
       {/* Tab content */}
       {activeTab === 'info' && <InfoTab doctor={doctor} />}
-      {activeTab === 'chambers' && <ChambersTab chambers={doctor.chambers} />}
+      {activeTab === 'chambers' && <ChambersTab chambers={doctor.chambers} doctorId={doctor.id} />}
       {activeTab === 'reviews' && (
         <ReviewsTab
           entityType="doctor"
@@ -236,6 +253,8 @@ export function DoctorProfileClient({
         title={name}
         subtitle={specialty}
         url={pageUrl}
+        entityType="doctor"
+        entityId={doctor.id}
       />
       <MoreOptionsSheet
         open={moreOpen}

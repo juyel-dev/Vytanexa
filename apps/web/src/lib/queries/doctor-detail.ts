@@ -17,7 +17,7 @@ export async function getDoctorBySlug(supabase: SupabaseClient<Database>, slug: 
                  phone, whatsapp_number, schedule, consultation_fee, is_primary,
                  display_order, location_id),
        doctor_hospital_links(id, role, hospitals(id, slug, name_translations,
-                 cover_image_url, location_id))`
+                 cover_image_url, address_line, location_id))`
     )
     .eq('slug', slug)
     .eq('verification_status', 'verified')

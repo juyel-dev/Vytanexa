@@ -18,12 +18,24 @@ type Chamber = DoctorDetail['chambers'][number];
  * Uses the schedule grouping + live-status algorithm from
  * lib/chamber-schedule.ts.
  */
-export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
+export function ChambersTab({ chambers, doctorId }: { chambers: Chamber[]; doctorId: string }) {
   const t = useT('doctor.chambers');
   const tc = useT('common');
   const format = useFormatter();
   const dayLabels = tc.raw('day' as Parameters<typeof tc.raw>[0]) as Record<string, string>;
   const closedSuffix = tc('closedSuffix');
+
+  const trackClick = (event_type: string, chamberId: string) => {
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_type,
+        entity_type: 'doctor',
+        entity_id: doctorId,
+        metadata: { chamber_id: chamberId },
+      }),
+    }).catch(() => {});
+  };
 
   if (chambers.length === 0) {
     return (
@@ -110,6 +122,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
             <div className="mt-3 grid grid-cols-3 gap-2">
               <a
                 href={`tel:${chamber.phone}`}
+                onMouseDown={() => trackClick('call_click', chamber.id)}
                 className="flex h-9 items-center justify-center gap-1 rounded-md bg-brand-600 text-[12px] font-semibold text-white"
               >
                 <Phone className="h-3.5 w-3.5" /> {t('callShort')}
@@ -119,6 +132,7 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
                   href={`https://wa.me/${chamber.whatsapp_number}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onMouseDown={() => trackClick('whatsapp_click', chamber.id)}
                   className="flex h-9 items-center justify-center gap-1 rounded-md bg-life-600 text-[12px] font-semibold text-white"
                 >
                   <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
@@ -126,9 +140,12 @@ export function ChambersTab({ chambers }: { chambers: Chamber[] }) {
               ) : (
                 <span />
               )}
-              {chamber.map_link ? (
+              {chamber.map_link || (chamber.latitude && chamber.longitude) ? (
                 <a
-                  href={chamber.map_link}
+                  href={
+                    chamber.map_link ??
+                    `https://www.google.com/maps/search/?api=1&query=${chamber.latitude},${chamber.longitude}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 items-center justify-center rounded-md border border-neutral-200 text-[12px] font-semibold text-neutral-700"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Share2, MoreVertical, Phone, Navigation, Star } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
@@ -56,6 +56,14 @@ export function HospitalProfileClient({
     ['reviews', t('tabs.reviews')],
   ];
   const [activeTab, setActiveTab] = useState<TabKey>('info');
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per hospital page view, not on every render
+  useEffect(() => {
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({ event_type: 'hospital_view', entity_type: 'hospital', entity_id: hospital.id }),
+    }).catch(() => {});
+  }, [hospital.id]);
   const [shareOpen, setShareOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -199,6 +207,16 @@ export function HospitalProfileClient({
       <div className="fixed bottom-0 left-1/2 z-navbar grid h-[72px] w-full max-w-[480px] -translate-x-1/2 grid-cols-2 gap-2 border-t border-neutral-200 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <a
           href={`tel:${callNumber}`}
+          onMouseDown={() =>
+            fetch('/api/analytics', {
+              method: 'POST',
+              body: JSON.stringify({
+                event_type: 'call_click',
+                entity_type: 'hospital',
+                entity_id: hospital.id,
+              }),
+            }).catch(() => {})
+          }
           className="flex items-center justify-center gap-2 rounded-md bg-brand-600 text-[15px] font-semibold text-white"
         >
           <Phone className="h-4 w-4" /> {t('callCta')}
@@ -225,6 +243,8 @@ export function HospitalProfileClient({
         title={name}
         subtitle={TYPE_LABELS[hospital.type] ?? hospital.type}
         url={pageUrl}
+        entityType="hospital"
+        entityId={hospital.id}
       />
       <MoreOptionsSheet
         open={moreOpen}

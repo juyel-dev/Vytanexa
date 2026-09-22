@@ -66,6 +66,9 @@ export function HospitalsTab({
                 {localize(link.hospitals.name_translations)}
               </p>
               {link.role && <p className="text-[12px] text-brand-600">{link.role}</p>}
+              {link.hospitals.address_line && (
+                <p className="mt-0.5 text-[12px] text-neutral-500">📍 {link.hospitals.address_line}</p>
+              )}
               <p className="mt-1 text-[12px] text-brand-600">{t('seeDetails')}</p>
             </div>
           </Link>

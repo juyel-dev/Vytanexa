@@ -16,26 +16,45 @@ export function ShareSheet({
   title,
   subtitle,
   url,
+  entityType,
+  entityId,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   subtitle: string;
   url: string;
+  entityType?: 'doctor' | 'hospital';
+  entityId?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const t = useT('shared.shareSheet');
+
+  const trackShare = (method: 'whatsapp' | 'copy' | 'native') => {
+    if (!entityType || !entityId) return;
+    fetch('/api/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_type: 'share',
+        entity_type: entityType,
+        entity_id: entityId,
+        metadata: { method },
+      }),
+    }).catch(() => {});
+  };
 
   const whatsappText = encodeURIComponent(`${title} - ${subtitle}\n${url}\n\n${t('whatsappSuffix')}`);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url);
+    trackShare('copy');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleNativeShare = () => {
     if (navigator.share) {
+      trackShare('native');
       navigator.share({ title, text: subtitle, url }).catch(() => {});
     }
   };
@@ -52,6 +71,7 @@ export function ShareSheet({
           href={`https://wa.me/?text=${whatsappText}`}
           target="_blank"
           rel="noopener noreferrer"
+          onMouseDown={() => trackShare('whatsapp')}
           className="flex flex-col items-center gap-1.5 py-2"
         >
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-life-50 text-life-600">
