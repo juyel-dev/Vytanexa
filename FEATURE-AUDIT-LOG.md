@@ -20,7 +20,7 @@ from scratch."
 | S01 | Brand system / design tokens | not audited |
 | S02 | Information architecture / nav / routing | not audited |
 | S03 | Splash · language · onboarding · location · sign-in | not audited |
-| S04 | Home page | not audited |
+| S04 | Home page | ✅ **done** — see below |
 | S05 | Universal search | not audited (i18n-migrated only, batch 18) |
 | S06 | Doctor list page | not audited (i18n-migrated only, batch 20) |
 | S07 | Doctor profile page | ✅ **done** — see below |
@@ -39,6 +39,29 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S04 — Home Page — DONE (commit `859606e`)
+
+Full findings and fixes are in that commit's message
+(`git show 859606e`), not repeated here. Summary: the single biggest
+finding was that **the PWA install banner has been permanently dead
+code since launch** — `next-pwa` and its runtime-caching strategy were
+fully wired, all 3 icon sizes existed, but `public/manifest.json`
+never existed and was never linked from `layout.tsx`, so
+`beforeinstallprompt` could never fire. Fixed by adding the manifest
+and wiring it in (plus a proper Next-14-style `viewport` export for
+`themeColor`, replacing the deprecated in-`Metadata` field). Also
+fixed: `TrendingHospitals` was missing 2 of 3 spec-required facility
+pills (ICU/ambulance) despite the schema being explicitly documented
+to drive them; the Footer was missing the spec-required version
+number; `NativeAd` had zero impression/click tracking despite spec
+requiring it and admin's `AdsManager.tsx` already computing CTR from
+those exact events (same "admin already expects this event" pattern
+as S07). Two stale comments were corrected (one falsely claimed the
+location system didn't exist, one falsely claimed PWA infra didn't
+exist) rather than left to mislead a future read. Two low-value gaps
+were noted but deliberately not fixed this pass — see the commit
+message for why.
 
 ## S07 — Doctor Profile — DONE (commit `2078e93`)
 
@@ -66,9 +89,11 @@ next up.
 ## How to resume
 
 Pick the next `not audited` row (order doesn't matter much — go by
-what's most user-facing/highest-traffic first: S04 Home, S06 Doctor
-list, S12 Emergency, S17 Account are good next candidates given S07's
-pattern of admin-already-expects-this-event findings). Read that
+what's most user-facing/highest-traffic first: S06 Doctor list, S12
+Emergency, S17 Account, S08 Hospital detail (still owes its own full
+pass despite the S07 benefit) are good next candidates given the
+pattern so far of "admin already expects an event/field that the
+frontend never sends.") Read that
 screen's `VYTANEXA-BLUEPRINT.md` section fully, then read every file
 in its network end to end before changing anything — the value of this
 pass comes from cross-referencing spec against real code, not from
