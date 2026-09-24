@@ -5,9 +5,15 @@ import { getT } from '@vytanexa/i18n/server';
 
 /**
  * Popular Doctors — VYTANEXA-BLUEPRINT.md § S04 SEC-06
- * Location-filtered sort is deferred until the Location system (S02/
- * S03) is built — for now, sorted by featured status then rating,
- * which is the spec's own secondary sort key anyway.
+ * Location-filtered sort is NOT wired here — not because the location
+ * system doesn't exist (it does, e.g. doctor-list.ts's district
+ * filter, used by the client-side /doctors list), but because this is
+ * an SSR Server Component per S04's own performance strategy ("SEC
+ * 1-6: SSR"), and the user's selected district lives in
+ * `useLocationStore`'s localStorage-only Zustand store — not
+ * server-readable without a cookie bridge that doesn't exist yet.
+ * Sorted by featured status then rating (the spec's own secondary
+ * sort key) until that bridge is built.
  */
 export async function PopularDoctors() {
   const supabase = createClient();

@@ -1,12 +1,14 @@
-import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import { getT } from '@vytanexa/i18n/server';
+import { NativeAdClient } from './NativeAdClient';
 
 /**
  * Native Ad — VYTANEXA-BLUEPRINT.md § S04 SEC-07
  * One ad shown, randomly rotated among active `native_feed` ads (a
  * single extra ORDER BY random() keeps this honest without needing a
- * dedicated rotation table).
+ * dedicated rotation table). Impression+click tracking lives in the
+ * client wrapper (NativeAdClient) — needs useEffect/onClick, which a
+ * Server Component can't carry.
  */
 export async function NativeAd() {
   const supabase = createClient();
@@ -29,19 +31,5 @@ export async function NativeAd() {
 
   const ad = ads[Math.floor(Math.random() * ads.length)]!;
 
-  return (
-    <section className="px-4 py-2">
-      <p className="mb-1 text-right text-[11px] text-neutral-400">{t('label')}</p>
-      <a
-        href={ad.target_url}
-        target="_blank"
-        rel="noopener noreferrer sponsored"
-        className="block overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm"
-      >
-        <div className="relative aspect-[16/6] w-full">
-          <Image src={ad.image_url} alt={ad.sponsor_name} fill sizes="100vw" className="object-cover" />
-        </div>
-      </a>
-    </section>
-  );
+  return <NativeAdClient ad={ad} label={t('label')} />;
 }

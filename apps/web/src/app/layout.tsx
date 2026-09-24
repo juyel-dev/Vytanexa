@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from 'next/font/google';
 import { getMessages } from 'next-intl/server';
 import { I18nProvider } from '@vytanexa/i18n/client';
@@ -50,9 +50,18 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Vytanexa — ${tCommon('tagline')}`,
     description: `Vytanexa — ${tSeo('defaultDescription')}`,
+    manifest: '/manifest.json',
     ...(faviconUrl ? { icons: { icon: faviconUrl } } : {}),
   };
 }
+
+// Separate from generateMetadata() per Next.js 14's split — themeColor
+// (and other viewport-affecting fields) moved out of Metadata into
+// their own export. Matches manifest.json's theme_color (#1756C8,
+// brand-600) so the browser chrome and the installed PWA agree.
+export const viewport: Viewport = {
+  themeColor: '#1756C8',
+};
 
 export default async function RootLayout({
   children,

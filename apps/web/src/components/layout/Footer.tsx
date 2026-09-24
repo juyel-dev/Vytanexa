@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getT } from '@vytanexa/i18n/server';
+import packageJson from '../../../package.json';
 
 type FooterLink = { label: string; href: string };
 type SocialLinks = Record<string, string>;
@@ -13,15 +14,19 @@ const SOCIAL_LABELS: Record<string, string> = {
 
 /**
  * Footer — VYTANEXA-BLUEPRINT.md § S04 Footer
- * Fully admin-controlled via the `app_settings` singleton row
- * (social_links, footer_links, contact_*) — this component renders
- * whatever the Admin Panel's Footer Editor (ADMIN-PANEL-SPEC.md § A08)
- * writes, with zero hardcoded content beyond the brand name/tagline
- * fallback for a completely fresh install.
+ * Mostly admin-controlled via the `app_settings` singleton row
+ * (social_links, footer_links, contact_*) — renders whatever the
+ * Admin Panel's Footer Editor (ADMIN-PANEL-SPEC.md § A08) writes,
+ * with the brand name/tagline as a fallback for a fresh install. The
+ * one non-admin-controlled piece is the spec-required version number,
+ * sourced from `package.json` directly (no `app_settings.version`
+ * column exists, and adding one would need its own admin UI for no
+ * real benefit over the build's actual version).
  */
 export async function Footer() {
   const supabase = createClient();
   const t = await getT('common');
+  const tSettings = await getT('settings');
 
   const { data: settings } = await supabase
     .from('app_settings')
@@ -82,6 +87,8 @@ export async function Footer() {
 
       <p className="mt-4 border-t border-neutral-100 pt-3 text-[11px] text-neutral-400">
         © {new Date().getFullYear()} {settings?.app_name ?? 'Vytanexa'}. All rights reserved.
+        {'  ·  '}
+        {tSettings('version')} {packageJson.version}
       </p>
     </footer>
   );

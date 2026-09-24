@@ -67,8 +67,12 @@ const nextConfig = {
       { protocol: 'https', hostname: 'i.ibb.co' },
     ],
   },
-  // next-pwa wiring happens here in Phase 3 (S22) — deliberately not
-  // added yet to keep this scaffold commit minimal and verifiable.
+  // next-pwa (S22): registered below via withPWA(), with the
+  // runtimeCaching strategy and /offline document fallback. The
+  // matching public/manifest.json + app/layout.tsx's `manifest` field
+  // (needed for `beforeinstallprompt` to fire at all) were the one
+  // piece that had gone missing after this was written — see
+  // components/home/PwaInstallBanner.tsx.
 };
 
 module.exports = withNextIntl(withPWA(nextConfig));

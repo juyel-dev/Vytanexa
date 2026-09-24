@@ -12,10 +12,13 @@ export async function TrendingHospitals() {
   const t = await getT('home.trendingHospitalsSection');
   const tCommon = await getT('common');
   const tHospital = await getT('hospital');
+  const facilityLabels = tHospital.raw(
+    'facility' as Parameters<typeof tHospital.raw>[0]
+  ) as Record<string, string>;
 
   const { data: hospitals, error } = await supabase
     .from('hospitals')
-    .select('id, slug, name_translations, cover_image_url, type, has_emergency_dept')
+    .select('id, slug, name_translations, cover_image_url, type, has_emergency_dept, facility_tags')
     .eq('verification_status', 'verified')
     .order('is_featured', { ascending: false })
     .order('is_trending', { ascending: false })
@@ -75,6 +78,20 @@ export async function TrendingHospitals() {
                   <span className="ml-1 inline-block rounded-full bg-emergency-50 px-2 py-0.5 text-[10px] text-emergency-600">
                     🚨 {t('emergencyBadge')}
                   </span>
+                )}
+                {(h.facility_tags.includes('icu') || h.facility_tags.includes('ambulance')) && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {h.facility_tags.includes('icu') && (
+                      <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-600">
+                        {facilityLabels.icu}
+                      </span>
+                    )}
+                    {h.facility_tags.includes('ambulance') && (
+                      <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-600">
+                        {facilityLabels.ambulance}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </Link>

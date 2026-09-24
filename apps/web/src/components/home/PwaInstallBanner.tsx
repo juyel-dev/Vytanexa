@@ -7,10 +7,12 @@ import { useT } from '@vytanexa/i18n/client';
  * PWA Install Banner — VYTANEXA-BLUEPRINT.md § S04 SEC-13
  * Shows after visits >= 2 AND not dismissed AND not already installed.
  * Captures the native `beforeinstallprompt` event and replays it on
- * tap (per spec). Full PWA manifest/service-worker wiring (S22) is a
- * separate TODO item — this banner is correct and inert (no-op
- * install button) until that infrastructure exists, which is honest
- * behavior rather than faking an install flow prematurely.
+ * tap (per spec). `next-pwa` + a runtime-caching strategy were already
+ * wired in `next.config.js`; the one missing piece keeping this
+ * banner permanently inert was `public/manifest.json` — without it,
+ * Chrome/Android never fire `beforeinstallprompt` at all. Now present
+ * (see `app/layout.tsx`'s `manifest: '/manifest.json'`), so this
+ * banner is live, not a no-op placeholder.
  */
 export function PwaInstallBanner() {
   const t = useT('home.pwaInstall');
