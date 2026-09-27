@@ -74,14 +74,19 @@ export function EmergencyDataSections() {
   const [bloodBanks, setBloodBanks] = useState<BloodBankRow[]>([]);
   const [ambulances, setAmbulances] = useState<AmbulanceProvider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchFailed, setFetchFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setFetchFailed(false);
 
     const params = districtId ? `?district=${districtId}` : '';
     fetch(`/api/emergency-data${params}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`emergency-data ${res.status}`);
+        return res.json();
+      })
       .then((json) => {
         if (cancelled) return;
         setHospitals(json.hospitals ?? []);
@@ -90,7 +95,15 @@ export function EmergencyDataSections() {
         setLoading(false);
       })
       .catch(() => {
-        if (!cancelled) setLoading(false);
+        // S12: "graceful 'ইন্টারনেট সংযোগ দরকার' note only on the
+        // sections that need fresh data" — a failed fetch (offline,
+        // no cached response yet) must not render identically to
+        // "genuinely zero hospitals/ambulances here," which would
+        // wrongly tell a panicking offline user no help exists.
+        if (!cancelled) {
+          setLoading(false);
+          setFetchFailed(true);
+        }
       });
 
     return () => {
@@ -110,6 +123,8 @@ export function EmergencyDataSections() {
         </h2>
         {loading ? (
           <p className="text-[13px] text-neutral-400">{tc('loading')}</p>
+        ) : fetchFailed ? (
+          <p className="text-[13px] text-neutral-400">📡 {t('dataSections.needsInternet')}</p>
         ) : hospitals.length === 0 ? (
           <p className="text-[13px] text-neutral-400">
             {districtName
@@ -149,6 +164,8 @@ export function EmergencyDataSections() {
         </h2>
         {loading ? (
           <p className="text-[13px] text-neutral-400">{tc('loading')}</p>
+        ) : fetchFailed ? (
+          <p className="text-[13px] text-neutral-400">📡 {t('dataSections.needsInternet')}</p>
         ) : bloodBanks.length === 0 ? (
           <p className="text-[13px] text-neutral-400">{t('noBloodBanksYet')}</p>
         ) : (
@@ -184,6 +201,8 @@ export function EmergencyDataSections() {
         </h2>
         {loading ? (
           <p className="text-[13px] text-neutral-400">{tc('loading')}</p>
+        ) : fetchFailed ? (
+          <p className="text-[13px] text-neutral-400">📡 {t('dataSections.needsInternet')}</p>
         ) : ambulances.length === 0 ? (
           <p className="text-[13px] text-neutral-400">
             {districtName

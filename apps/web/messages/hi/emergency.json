@@ -21,7 +21,8 @@
     "womenHelpline": "महिला हेल्पलाइन",
     "childHelpline": "चाइल्ड हेल्पलाइन",
     "mentalHealth": "मानसिक स्वास्थ्य (Kiran)",
-    "cyberCrime": "साइबर क्राइम"
+    "cyberCrime": "साइबर क्राइम",
+    "emergencyAlt": "आपातकालीन सेवा (वैकल्पिक एम्बुलेंस)"
   },
   "dataSections": {
     "hospitalsHeading": "आपातकालीन विभाग (नज़दीकी अस्पताल)",
@@ -30,6 +31,7 @@
     "seeAllBloodServices": "सभी ब्लड सेवाएं देखें →",
     "ambulanceHeading": "एम्बुलेंस सेवाएं",
     "noAmbulanceYet": "अभी कोई एम्बुलेंस सेवा सूचीबद्ध नहीं है।",
-    "noAmbulanceYetInDistrict": "{district} में अभी तक कोई एम्बुलेंस सेवा नहीं जोड़ी गई है।"
+    "noAmbulanceYetInDistrict": "{district} में अभी तक कोई एम्बुलेंस सेवा नहीं जोड़ी गई है।",
+    "needsInternet": "इंटरनेट कनेक्शन ज़रूरी है"
   }
 }

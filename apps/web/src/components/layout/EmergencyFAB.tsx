@@ -21,10 +21,11 @@ type SheetKind = 'ambulance' | 'hospital' | 'blood' | null;
  * National emergency numbers are hardcoded (never DB-dependent) per
  * S12's own instruction: "these render even with zero network
  * connectivity... this is the one page in the app that must work
- * offline." Actual offline caching (service worker precache) is S22
- * PWA scope, not yet built — but the numbers themselves being
- * hardcoded here rather than fetched is the correctness precondition
- * for that to work later without a code change.
+ * offline." Since these are a bundled JS constant (NATIONAL_NUMBERS,
+ * imported below) rather than fetched, they work regardless of
+ * service-worker cache state. The `/emergency` route's own shell +
+ * data now has a matching runtimeCaching rule in next.config.js (see
+ * that file's own note) — was missing until this pass.
  */
 
 
@@ -60,31 +61,35 @@ export function EmergencyFAB() {
     { id: string; name_translations: Json; phone: string }[]
   >([]);
   const [loading, setLoading] = useState(false);
+  const [fetchFailed, setFetchFailed] = useState(false);
 
   const openSheet = async (kind: SheetKind) => {
     setExpanded(false);
     setActiveSheet(kind);
+    setFetchFailed(false);
     if (kind === 'hospital' && hospitals.length === 0) {
       setLoading(true);
       const supabase = createClient();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('hospitals')
         .select('id, slug, name_translations, phone')
         .eq('verification_status', 'verified')
         .eq('has_emergency_dept', true)
         .limit(5);
+      if (error) setFetchFailed(true);
       setHospitals(data ?? []);
       setLoading(false);
     }
     if (kind === 'ambulance' && ambulances.length === 0) {
       setLoading(true);
       const supabase = createClient();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('ambulance_services')
         .select('id, name_translations, phone')
         .eq('verification_status', 'verified')
         .eq('is_active', true)
         .limit(5);
+      if (error) setFetchFailed(true);
       setAmbulances(data ?? []);
       setLoading(false);
     }
@@ -95,12 +100,13 @@ export function EmergencyFAB() {
     if (kind === 'blood' && bloodBanks.length === 0) {
       setLoading(true);
       const supabase = createClient();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('hospitals')
         .select('id, name_translations, phone')
         .eq('verification_status', 'verified')
         .contains('facility_tags', ['blood_bank'])
         .limit(5);
+      if (error) setFetchFailed(true);
       setBloodBanks(data ?? []);
       setLoading(false);
     }
@@ -172,6 +178,9 @@ export function EmergencyFAB() {
           </a>
         ))}
         {loading && <p className="py-3 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
+        {fetchFailed && (
+          <p className="py-3 text-center text-[13px] text-neutral-400">📡 {t('dataSections.needsInternet')}</p>
+        )}
         {ambulances.map((a) => (
           <a
             key={a.id}
@@ -196,7 +205,10 @@ export function EmergencyFAB() {
         title={t('fab.nearbyHospital')}
       >
         {loading && <p className="py-3 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
-        {!loading && hospitals.length === 0 && (
+        {!loading && fetchFailed && (
+          <p className="py-3 text-center text-[13px] text-neutral-400">📡 {t('dataSections.needsInternet')}</p>
+        )}
+        {!loading && !fetchFailed && hospitals.length === 0 && (
           <p className="py-3 text-center text-[13px] text-neutral-400">
             {t('noEmergencyHospitalsYet')}
           </p>
@@ -226,7 +238,10 @@ export function EmergencyFAB() {
         title={t('fab.bloodService')}
       >
         {loading && <p className="py-3 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
-        {!loading && bloodBanks.length === 0 && (
+        {!loading && fetchFailed && (
+          <p className="py-3 text-center text-[13px] text-neutral-400">📡 {t('dataSections.needsInternet')}</p>
+        )}
+        {!loading && !fetchFailed && bloodBanks.length === 0 && (
           <p className="py-3 text-center text-[13px] text-neutral-400">
             {t('noBloodBanksYet')}
           </p>

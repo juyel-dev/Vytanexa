@@ -21,7 +21,8 @@
     "womenHelpline": "নারী হেল্পলাইন",
     "childHelpline": "শিশু হেল্পলাইন",
     "mentalHealth": "মানসিক স্বাস্থ্য (Kiran)",
-    "cyberCrime": "সাইবার ক্রাইম"
+    "cyberCrime": "সাইবার ক্রাইম",
+    "emergencyAlt": "জরুরি সেবা (বিকল্প অ্যাম্বুলেন্স)"
   },
   "dataSections": {
     "hospitalsHeading": "জরুরি বিভাগ (কাছের হাসপাতাল)",
@@ -30,6 +31,7 @@
     "seeAllBloodServices": "সব ব্লাড সার্ভিস দেখুন →",
     "ambulanceHeading": "অ্যাম্বুলেন্স সার্ভিস",
     "noAmbulanceYet": "এই মুহূর্তে কোনো অ্যাম্বুলেন্স সার্ভিস যোগ করা হয়নি।",
-    "noAmbulanceYetInDistrict": "{district}-এ কোনো অ্যাম্বুলেন্স সার্ভিস এখনো যোগ করা হয়নি।"
+    "noAmbulanceYetInDistrict": "{district}-এ কোনো অ্যাম্বুলেন্স সার্ভিস এখনো যোগ করা হয়নি।",
+    "needsInternet": "ইন্টারনেট সংযোগ দরকার"
   }
 }

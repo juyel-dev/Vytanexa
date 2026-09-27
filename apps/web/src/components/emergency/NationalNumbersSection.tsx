@@ -22,6 +22,7 @@ import { useT } from '@vytanexa/i18n/client';
  */
 export const NATIONAL_NUMBERS = [
   { labelKey: 'ambulance', number: '102', type: 'ambulance' },
+  { labelKey: 'emergencyAlt', number: '108', type: 'emergency_alt' },
   { labelKey: 'police', number: '100', type: 'police' },
   { labelKey: 'fire', number: '101', type: 'fire' },
   { labelKey: 'womenHelpline', number: '1091', type: 'women_helpline' },

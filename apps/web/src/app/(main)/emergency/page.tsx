@@ -20,7 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
  * is pure hardcoded content), so they're available the instant the
  * shell paints, before any network request resolves, regardless of
  * how the (heavier, genuinely data-dependent) sections below load.
- * Full offline service-worker precaching is S22 PWA scope.
+ * Service-worker precaching for this route lives in next.config.js's
+ * runtimeCaching (`/emergency` rule, StaleWhileRevalidate) — was
+ * missing until this pass despite every other page-caching rule
+ * already existing.
  *
  * `EmergencyDataSections` fetches via `/api/emergency-data` rather
  * than the browser Supabase client — see that route's comment for

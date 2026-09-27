@@ -39,6 +39,18 @@ const withPWA = require('next-pwa')({
       handler: 'StaleWhileRevalidate',
       options: { cacheName: 'pages', expiration: { maxEntries: 50, maxAgeSeconds: 12 * 60 * 60 } },
     },
+    {
+      // S12: "/emergency page shell + national numbers are precached...
+      // on first visit... this is the one page in the app that must
+      // work offline." Was missing from this list entirely — every
+      // other page-caching rule above had an entry, this one didn't.
+      // Longer maxAgeSeconds than the general 'pages' rule since
+      // emergency data (hospital/blood-bank phone numbers) needs to
+      // survive a much longer offline stretch than a symptom search.
+      urlPattern: /^\/emergency.*$/i,
+      handler: 'StaleWhileRevalidate',
+      options: { cacheName: 'emergency', expiration: { maxEntries: 5, maxAgeSeconds: 7 * 24 * 60 * 60 } },
+    },
   ],
 });
 

@@ -21,7 +21,8 @@
     "womenHelpline": "Women's Helpline",
     "childHelpline": "Child Helpline",
     "mentalHealth": "Mental Health (Kiran)",
-    "cyberCrime": "Cyber Crime"
+    "cyberCrime": "Cyber Crime",
+    "emergencyAlt": "Emergency (alt. ambulance)"
   },
   "dataSections": {
     "hospitalsHeading": "Emergency Department (nearby hospitals)",
@@ -30,6 +31,7 @@
     "seeAllBloodServices": "See all blood services →",
     "ambulanceHeading": "Ambulance Services",
     "noAmbulanceYet": "No ambulance services listed at the moment.",
-    "noAmbulanceYetInDistrict": "No ambulance services added in {district} yet."
+    "noAmbulanceYetInDistrict": "No ambulance services added in {district} yet.",
+    "needsInternet": "Internet connection needed"
   }
 }
