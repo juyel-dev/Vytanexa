@@ -28,7 +28,7 @@ from scratch."
 | S09 | Symptoms page · symptom detail · emergency flagging | not audited (i18n-migrated only, batch 22) |
 | S10 | Lab & diagnostic tests | not audited (i18n-migrated only, batch 23) |
 | S11 | Blood services page | Phase C.3 (blood bank detail) + analytics gap fixed separately (see TODO.md) — not a full audit pass |
-| S12 | Emergency system (FAB + full page) | not audited |
+| S12 | Emergency system (FAB + full page) | ✅ **done** — see below |
 | S13 | Health magazine · articles | not audited (i18n-migrated only, batch 26) |
 | S14 | Q&A community | not audited (i18n-migrated only, batch 17/qa component) |
 | S15 | Polls · reports · user submissions | not audited (i18n-migrated only, batch 32) |
@@ -39,6 +39,25 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S12 — Emergency System — DONE (commit `f7e6420`)
+
+Full findings and fixes are in that commit's message
+(`git show f7e6420`), not repeated here. Picked this feature
+specifically for its safety-critical nature. Summary: **108 (the
+alt-ambulance number many Indian states actually use) was completely
+missing** from the national numbers list — spec calls for 8, code had
+7, both the full page and the FAB sheet share the one array that was
+wrong. **`/emergency` had zero offline service-worker precaching**
+despite being spec's own explicit "the one page in the app that must
+work offline" — every other page had a caching rule, this one didn't.
+**Fetch failures were indistinguishable from genuinely-empty results**
+in both the full page and the FAB's fast-path sheets — a network
+error while offline showed the same "no hospitals found" message as a
+real empty district, which is actively dangerous framing for a
+panicking offline user. Fixed all three, plus three more stale
+"not built yet" comments (same pattern as S04's audit) now that the
+PWA precaching gap is closed.
 
 ## S04 — Home Page — DONE (commit `859606e`)
 
@@ -89,11 +108,11 @@ next up.
 ## How to resume
 
 Pick the next `not audited` row (order doesn't matter much — go by
-what's most user-facing/highest-traffic first: S06 Doctor list, S12
-Emergency, S17 Account, S08 Hospital detail (still owes its own full
-pass despite the S07 benefit) are good next candidates given the
-pattern so far of "admin already expects an event/field that the
-frontend never sends.") Read that
+what's most user-facing/highest-traffic first: S06 Doctor list, S17
+Account, S08 Hospital detail (still owes its own full pass despite the
+S07 benefit) are good next candidates given the pattern so far of
+"admin/infra already expects an event/field/route that the frontend
+never sent.") Read that
 screen's `VYTANEXA-BLUEPRINT.md` section fully, then read every file
 in its network end to end before changing anything — the value of this
 pass comes from cross-referencing spec against real code, not from
