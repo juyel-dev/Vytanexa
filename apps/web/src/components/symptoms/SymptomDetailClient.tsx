@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2, AlertTriangle } from 'lucide-react';
@@ -8,6 +8,14 @@ import { useLocalizedField, useLocalizedArray } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import type { SymptomDetail } from '@/lib/queries/symptom-detail';
 import { ShareSheet } from '@/components/shared/ShareSheet';
+
+function track(event_type: string, symptomId: string, metadata?: Record<string, unknown>) {
+  fetch('/api/analytics', {
+    method: 'POST',
+    body: JSON.stringify({ event_type, entity_type: 'symptom', entity_id: symptomId, metadata }),
+    keepalive: true,
+  }).catch(() => {});
+}
 
 type SpecialtyLink = SymptomDetail['symptom_categories'][number];
 
@@ -26,7 +34,7 @@ export function SymptomDetailClient({
   pageUrl,
 }: {
   symptom: SymptomDetail;
-  doctorCounts: Map<string, number>;
+  doctorCounts: Map<string, number | null>;
   pageUrl: string;
 }) {
   const localize = useLocalizedField();
@@ -34,6 +42,10 @@ export function SymptomDetailClient({
   const t = useT('symptoms');
   const tCommon = useT('common');
   const [shareOpen, setShareOpen] = useState(false);
+
+  useEffect(() => {
+    track('symptom_view', symptom.id, { is_emergency: symptom.is_emergency });
+  }, [symptom.id, symptom.is_emergency]);
 
   const title = localize(symptom.title_translations);
   const description = localize(symptom.description_translations);
@@ -134,15 +146,22 @@ export function SymptomDetailClient({
           <div className="grid grid-cols-2 gap-2.5">
             {specialties.map((link) => {
               const name = localize(link.categories.name_translations);
-              const count = doctorCounts.get(link.categories.id) ?? 0;
+              const count = doctorCounts.get(link.categories.id) ?? null;
               return (
                 <Link
                   key={link.categories.id}
                   href={`/doctors?specialty=${link.categories.slug}`}
+                  onClick={() =>
+                    track('specialty_chip_click', symptom.id, { specialty: link.categories.slug })
+                  }
                   className="rounded-lg border border-neutral-200 p-3.5 text-center transition-transform active:scale-95"
                 >
                   <p className="text-[14px] font-semibold text-neutral-900">{name}</p>
-                  <p className="mt-0.5 text-[12px] text-neutral-500">{t('doctorCountSuffix', { count })}</p>
+                  {count !== null && (
+                    <p className="mt-0.5 text-[12px] text-neutral-500">
+                      {t('doctorCountSuffix', { count })}
+                    </p>
+                  )}
                 </Link>
               );
             })}
@@ -157,6 +176,7 @@ export function SymptomDetailClient({
               ? `/doctors?specialty=${specialties.map((s) => s.categories.slug).join(',')}`
               : '/doctors'
           }
+          onClick={() => track('cta_click', symptom.id, { cta: 'find_related_doctors' })}
           className="flex h-12 items-center justify-center rounded-md bg-brand-600 text-[15px] font-semibold text-white"
         >
           {t('findRelatedDoctorsCta')}

@@ -24,8 +24,13 @@ export async function getSymptomBySlug(supabase: SupabaseClient<Database>, slug:
     .eq('is_active', true)
     .single();
 
-  if (error || !symptom) return null;
-  return symptom;
+  // PGRST116 = zero rows (genuine not-found). Any other error must
+  // throw: returning null would make the page 404, and with ISR that
+  // 404 for a valid (possibly emergency) symptom is cached for 6hr.
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(`getSymptomBySlug failed: ${error.message}`);
+  }
+  return symptom ?? null;
 }
 
 export type SymptomDetail = NonNullable<Awaited<ReturnType<typeof getSymptomBySlug>>>;
@@ -48,7 +53,7 @@ export async function getSpecialtyDoctorCounts(
   supabase: SupabaseClient<Database>,
   categoryIds: string[]
 ) {
-  const counts = new Map<string, number>();
+  const counts = new Map<string, number | null>();
   await Promise.all(
     categoryIds.map(async (id) => {
       const { count, error } = await supabase
@@ -58,7 +63,7 @@ export async function getSpecialtyDoctorCounts(
         .eq('verification_status', 'verified');
       if (error) {
         console.error('getSpecialtyDoctorCounts failed for', id, error.message);
-        counts.set(id, 0);
+        counts.set(id, null); // unknown, not zero — UI hides the count
       } else {
         counts.set(id, count ?? 0);
       }

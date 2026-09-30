@@ -30,10 +30,11 @@ export async function queryAllSymptoms(supabase: SupabaseClient<Database>) {
     .order('is_emergency', { ascending: false })
     .order('display_order', { ascending: true });
 
-  if (error) {
-    console.error('queryAllSymptoms failed:', error.message);
-    return [];
-  }
+  // Throw (don't return []): this page is ISR-cached for 6hr, so a
+  // transient DB failure swallowed into an empty list would be served
+  // as a blank page for 6hr. A thrown error during revalidation makes
+  // Next keep serving the last good page instead.
+  if (error) throw new Error(`queryAllSymptoms failed: ${error.message}`);
   return data ?? [];
 }
 

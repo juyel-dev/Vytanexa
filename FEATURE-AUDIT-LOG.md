@@ -25,7 +25,7 @@ from scratch."
 | S06 | Doctor list page | not audited (i18n-migrated only, batch 20) |
 | S07 | Doctor profile page | ✅ **done** — see below |
 | S08 | Hospital list · hospital detail | partially benefited from S07's fixes (see below) — not independently audited |
-| S09 | Symptoms page · symptom detail · emergency flagging | not audited (i18n-migrated only, batch 22) |
+| S09 | Symptoms page · symptom detail · emergency flagging | ✅ **done** — see below |
 | S10 | Lab & diagnostic tests | not audited (i18n-migrated only, batch 23) |
 | S11 | Blood services page | Phase C.3 (blood bank detail) + analytics gap fixed separately (see TODO.md) — not a full audit pass |
 | S12 | Emergency system (FAB + full page) | ✅ **done** — see below |
@@ -39,6 +39,11 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S09 — Symptoms — DONE
+
+Fixed: (1) `queryAllSymptoms` / `getSymptomBySlug` swallowed DB errors into `[]` / `null`, so with ISR (6hr) a transient failure cached a blank list or a 404 for a valid symptom — now throw (only PGRST116 = real not-found); (2) `getSpecialtyDoctorCounts` showed "0" on error — now `null`, count hidden; (3) spec analytics `symptom_view`, `specialty_chip_click`, `cta_click` were missing — added.
+**Deferred/flagged (medical content, needs owner call):** emergency banner text says "call 102" (in India 102 is the maternal/child ambulance; 108 / 112 is the general emergency line) and is not tap-to-call. List page groups by first specialty, not a symptom-category taxonomy (schema gap, see `symptom-list.ts`).
 
 ## S12 — Emergency System — DONE (commit `f7e6420`)
 
