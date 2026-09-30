@@ -95,7 +95,7 @@ export function SymptomDetailClient({
             {t('emergencyWarningBody')}
           </p>
           <div className="mb-2 grid grid-cols-2 gap-2">
-            {['102', '108'].map((number) => (
+            {['108', '112'].map((number) => (
               <a
                 key={number}
                 href={`tel:${number}`}
