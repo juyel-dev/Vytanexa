@@ -13,16 +13,45 @@ import {
   clearRecentSearches,
 } from '@/lib/recent-searches';
 import type { SearchApiResponse, TrendingApiResponse } from '@/lib/search-types';
+import { SUPPORT_WHATSAPP } from '@/lib/support-contact';
 import { VoiceSearchOverlay } from '@/components/search/VoiceSearchOverlay';
 
-const BENGALI_ALIASES: Record<string, string> = {
-  'হার্ট': 'cardiology',
-  'বুকে ব্যথা': 'chest pain cardiology',
-  'চিনি রোগ': 'diabetes',
-  'বাচ্চার ডাক্তার': 'pediatrics',
-  'কিডনি': 'nephrology',
-  'পেটের সমস্যা': 'gastroenterology',
+// Bengali term -> English stems searched IN ADDITION to the typed text
+// (stems, not full words: 'cardiolog' matches Cardiology/Cardiologist).
+const BENGALI_ALIASES: Record<string, string[]> = {
+  'হার্ট': ['cardiolog', 'heart'],
+  'বুকে ব্যথা': ['chest pain', 'cardiolog'],
+  'চিনি রোগ': ['diabet'],
+  'বাচ্চার ডাক্তার': ['pediatric'],
+  'কিডনি': ['nephrolog', 'kidney'],
+  'পেটের সমস্যা': ['gastroenterolog', 'stomach'],
 };
+
+/** Builds the /api/search URL. Alias match is "contains" so
+ *  "হার্টের ডাক্তার" also resolves, not just the exact key. */
+function buildSearchUrl(text: string, limit: number, track: boolean) {
+  const params = new URLSearchParams({ q: text, limit: String(limit) });
+  const aliases = new Set<string>();
+  for (const [key, terms] of Object.entries(BENGALI_ALIASES)) {
+    if (text.includes(key)) terms.forEach((t) => aliases.add(t));
+  }
+  [...aliases].slice(0, 3).forEach((a) => params.append('alias', a));
+  if (track) params.set('track', '1');
+  return `/api/search?${params.toString()}`;
+}
+
+function trackSelect(query: string, entityType: string, entityId: string) {
+  fetch('/api/analytics', {
+    method: 'POST',
+    body: JSON.stringify({
+      event_type: 'search_select',
+      entity_type: entityType,
+      entity_id: entityId,
+      metadata: { query },
+    }),
+    keepalive: true,
+  }).catch(() => {});
+}
 
 export default function SearchPage() {
   const router = useRouter();
@@ -36,7 +65,11 @@ export default function SearchPage() {
   const [dropdown, setDropdown] = useState<SearchApiResponse | null>(null);
   const [results, setResults] = useState<SearchApiResponse | null>(null);
   const [trending, setTrending] = useState<TrendingApiResponse | null>(null);
-  const [recent, setRecent] = useState(getRecentSearches());
+  // Loaded in an effect, not the initializer: localStorage doesn't exist
+  // during SSR, so reading it in render caused a hydration mismatch.
+  const [recent, setRecent] = useState<ReturnType<typeof getRecentSearches>>([]);
+  const [searchFailed, setSearchFailed] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
   const [loading, setLoading] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   // Hidden until the trending fetch confirms the flag — fail-safe
@@ -49,6 +82,7 @@ export default function SearchPage() {
   const requestIdRef = useRef(0);
 
   useEffect(() => {
+    setRecent(getRecentSearches());
     inputRef.current?.focus();
     fetch('/api/search/trending')
       .then((r) => r.json())
@@ -65,22 +99,27 @@ export default function SearchPage() {
       setDropdown(null);
       return;
     }
-    const expanded = BENGALI_ALIASES[query] ? `${query} ${BENGALI_ALIASES[query]}` : query;
     const timer = setTimeout(() => {
       const id = ++requestIdRef.current;
       setLoading(true);
-      fetch(`/api/search?q=${encodeURIComponent(expanded)}&limit=3`)
-        .then((r) => r.json())
+      setSearchFailed(false);
+      fetch(buildSearchUrl(query, 3, false))
+        .then((r) => {
+          if (!r.ok) throw new Error('search failed');
+          return r.json();
+        })
         .then((json) => {
           if (requestIdRef.current === id) setDropdown(json);
         })
-        .catch(() => {})
+        .catch(() => {
+          if (requestIdRef.current === id) setSearchFailed(true);
+        })
         .finally(() => {
           if (requestIdRef.current === id) setLoading(false);
         });
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, submittedQuery]);
+  }, [query, submittedQuery, retryTick]);
 
   const submitSearch = (text: string) => {
     const trimmed = text.trim();
@@ -91,14 +130,20 @@ export default function SearchPage() {
     saveRecentSearch(trimmed);
     setRecent(getRecentSearches());
     setLoading(true);
+    setSearchFailed(false);
+    setResults(null);
     const id = ++requestIdRef.current;
-    const expanded = BENGALI_ALIASES[trimmed] ? `${trimmed} ${BENGALI_ALIASES[trimmed]}` : trimmed;
-    fetch(`/api/search?q=${encodeURIComponent(expanded)}&limit=20`)
-      .then((r) => r.json())
+    fetch(buildSearchUrl(trimmed, 20, true))
+      .then((r) => {
+        if (!r.ok) throw new Error('search failed');
+        return r.json();
+      })
       .then((json) => {
         if (requestIdRef.current === id) setResults(json);
       })
-      .catch(() => {})
+      .catch(() => {
+        if (requestIdRef.current === id) setSearchFailed(true);
+      })
       .finally(() => {
         if (requestIdRef.current === id) setLoading(false);
       });
@@ -109,6 +154,7 @@ export default function SearchPage() {
     setSubmittedQuery('');
     setDropdown(null);
     setResults(null);
+    setSearchFailed(false);
     inputRef.current?.focus();
   };
 
@@ -117,7 +163,10 @@ export default function SearchPage() {
   const isResults = Boolean(submittedQuery) && query === submittedQuery;
 
   const totalResultCount = results
-    ? results.doctors.length + results.hospitals.length + results.symptoms.length
+    ? results.doctors.length +
+      results.hospitals.length +
+      results.categories.length +
+      results.symptoms.length
     : 0;
 
   return (
@@ -244,10 +293,23 @@ export default function SearchPage() {
             {loading && (
               <p className="py-6 text-center text-[13px] text-neutral-400">{t('searching')}</p>
             )}
-            {!loading && dropdown && (
+            {!loading && searchFailed && (
+              <div className="px-4 py-6 text-center">
+                <p className="text-[13px] text-neutral-600">{tCommon('error')}</p>
+                <button
+                  onClick={() => setRetryTick((n) => n + 1)}
+                  className="mt-3 h-10 rounded-md border border-neutral-300 px-5 text-[13px] font-semibold text-neutral-700"
+                >
+                  {tCommon('retry')}
+                </button>
+              </div>
+            )}
+            {!loading && !searchFailed && dropdown && (
               <>
                 <DropdownSection
                   label={t('sectionDoctors')}
+                  entityType="doctor"
+                  query={query}
                   items={dropdown.doctors.map((d) => ({
                     id: d.id,
                     label: localize(d.name_translations),
@@ -257,6 +319,8 @@ export default function SearchPage() {
                 />
                 <DropdownSection
                   label={t('sectionHospitals')}
+                  entityType="hospital"
+                  query={query}
                   items={dropdown.hospitals.map((h) => ({
                     id: h.id,
                     label: localize(h.name_translations),
@@ -266,6 +330,8 @@ export default function SearchPage() {
                 />
                 <DropdownSection
                   label={t('sectionCategories')}
+                  entityType="category"
+                  query={query}
                   items={dropdown.categories.map((c) => ({
                     id: c.id,
                     label: localize(c.name_translations),
@@ -275,6 +341,8 @@ export default function SearchPage() {
                 />
                 <DropdownSection
                   label={t('sectionSymptoms')}
+                  entityType="symptom"
+                  query={query}
                   items={dropdown.symptoms.map((s) => ({
                     id: s.id,
                     label: localize(s.title_translations),
@@ -324,6 +392,18 @@ export default function SearchPage() {
             <p className="py-8 text-center text-[13px] text-neutral-400">{t('searching')}</p>
           )}
 
+          {!loading && searchFailed && (
+            <div className="px-6 py-10 text-center">
+              <p className="text-[15px] font-semibold text-neutral-700">{tCommon('error')}</p>
+              <button
+                onClick={() => submitSearch(submittedQuery)}
+                className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+              >
+                {tCommon('retry')}
+              </button>
+            </div>
+          )}
+
           {!loading && results && totalResultCount === 0 && (
             <div className="px-6 py-10 text-center">
               <p className="text-[15px] font-semibold text-neutral-700">
@@ -332,19 +412,34 @@ export default function SearchPage() {
               <p className="mt-2 text-[13px] text-neutral-500">
                 {t('noResultsHint')}
               </p>
-              <a
-                href="https://wa.me/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"
-              >
-                {t('whatsappCta')}
-              </a>
+              {SUPPORT_WHATSAPP && (
+                <a
+                  href={`https://wa.me/${SUPPORT_WHATSAPP}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"
+                >
+                  {t('whatsappCta')}
+                </a>
+              )}
             </div>
           )}
 
           {!loading && results && (
             <div className="px-4 py-3">
+              {activeTab === 'all' &&
+                results.categories.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/doctors?specialty=${c.slug}`}
+                    className="mb-2 block rounded-lg border border-neutral-200 p-3"
+                  >
+                    <p className="text-[14px] font-semibold text-neutral-900">
+                      {localize(c.name_translations)}
+                    </p>
+                    <p className="text-[12px] text-brand-600">{t('seeAllInCategory')}</p>
+                  </Link>
+                ))}
               {(activeTab === 'all' || activeTab === 'doctors') &&
                 results.doctors.map((d) => (
                   <Link
@@ -402,9 +497,13 @@ export default function SearchPage() {
 
 function DropdownSection({
   label,
+  entityType,
+  query,
   items,
 }: {
   label: string;
+  entityType: string;
+  query: string;
   items: { id: string; label: string; sub: string; href: string }[];
 }) {
   if (items.length === 0) return null;
@@ -417,6 +516,7 @@ function DropdownSection({
         <Link
           key={item.id}
           href={item.href}
+          onClick={() => trackSelect(query, entityType, item.id)}
           className="flex items-center gap-2 border-b border-neutral-50 px-4 py-3"
         >
           <div>

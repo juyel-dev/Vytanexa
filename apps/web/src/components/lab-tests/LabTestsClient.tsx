@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { SUPPORT_WHATSAPP } from '@/lib/support-contact';
 import { Search } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
@@ -116,16 +117,18 @@ export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }
           >
             {t('seeAllDiagnosticCenters')}
           </a>
-          <div>
-            <a
-              href="https://wa.me/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"
-            >
-              {tSearch('whatsappCta')}
-            </a>
-          </div>
+          {SUPPORT_WHATSAPP && (
+            <div>
+              <a
+                href={`https://wa.me/${SUPPORT_WHATSAPP}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"
+              >
+                {tSearch('whatsappCta')}
+              </a>
+            </div>
+          )}
         </div>
       )}
 

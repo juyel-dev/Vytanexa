@@ -14,8 +14,21 @@ import { createClient } from '@/lib/supabase/server';
  * results page.
  */
 export async function GET(request: NextRequest) {
-  const q = request.nextUrl.searchParams.get('q')?.trim() ?? '';
-  const limit = Number(request.nextUrl.searchParams.get('limit') ?? '3');
+  const q = (request.nextUrl.searchParams.get('q')?.trim() ?? '').slice(0, 100);
+  const rawLimit = Number(request.nextUrl.searchParams.get('limit') ?? '3');
+  // Clamp: NaN / huge values would reach `.limit()` (abuse + errors).
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 50) : 3;
+  // Analytics only for submitted searches (see below), never for
+  // debounced autocomplete keystrokes.
+  const track = request.nextUrl.searchParams.get('track') === '1';
+  // Alias terms (e.g. হার্ট -> cardiolog) are searched as SEPARATE
+  // OR-ed patterns. Previously the client glued them into one string
+  // ("হার্ট cardiology") which as a single ILIKE pattern matched nothing.
+  const extraTerms = request.nextUrl.searchParams
+    .getAll('alias')
+    .map((a) => a.trim())
+    .filter((a) => a.length >= 2 && a.length <= 40)
+    .slice(0, 3);
 
   if (q.length < 2) {
     return NextResponse.json({ doctors: [], hospitals: [], categories: [], symptoms: [] });
@@ -26,33 +39,39 @@ export async function GET(request: NextRequest) {
   // own wildcards (broken/unexpected results, slow scans on big tables).
   // Also neutralize ,()" — PostgREST's `or=` param uses commas/parens
   // as syntax, so a raw comma in the query would corrupt the filter.
-  const safe = q.replace(/[,()"']/g, ' ');
-  const pattern = `%${safe.replace(/[%_\\]/g, '\\$&')}%`;
+  const toPattern = (text: string) => {
+    const safe = text.replace(/[,()"']/g, ' ');
+    return `%${safe.replace(/[%_\\]/g, '\\$&')}%`;
+  };
+  const patterns = [q, ...extraTerms].map(toPattern);
+  const orFor = (bn: string, en: string) =>
+    patterns.flatMap((pt) => [`${bn}.ilike.${pt}`, `${en}.ilike.${pt}`]).join(',');
+  const nameOr = orFor('name_translations->>bn', 'name_translations->>en');
 
   const [doctorsRes, hospitalsRes, categoriesRes, symptomsRes] = await Promise.all([
     supabase
       .from('doctors')
       .select('id, slug, name_translations, photo_url, categories(name_translations)')
       .eq('verification_status', 'verified')
-      .or(`name_translations->>bn.ilike.${pattern},name_translations->>en.ilike.${pattern}`)
+      .or(nameOr)
       .limit(limit),
     supabase
       .from('hospitals')
       .select('id, slug, name_translations, type')
       .eq('verification_status', 'verified')
-      .or(`name_translations->>bn.ilike.${pattern},name_translations->>en.ilike.${pattern}`)
+      .or(nameOr)
       .limit(limit),
     supabase
       .from('categories')
       .select('id, slug, name_translations')
       .eq('is_active', true)
-      .or(`name_translations->>bn.ilike.${pattern},name_translations->>en.ilike.${pattern}`)
+      .or(nameOr)
       .limit(limit),
     supabase
       .from('symptoms')
       .select('id, slug, title_translations')
       .eq('is_active', true)
-      .or(`title_translations->>bn.ilike.${pattern},title_translations->>en.ilike.${pattern}`)
+      .or(orFor('title_translations->>bn', 'title_translations->>en'))
       .limit(limit),
   ]);
 
@@ -65,21 +84,30 @@ export async function GET(request: NextRequest) {
   if (errors.length > 0) {
     console.error('search route query errors:', errors);
   }
+  // Every section failed => this is an outage, not "no results". Tell
+  // the client (500) so it can show a retry state instead of the
+  // misleading "nothing found" screen.
+  if (errors.length === 4) {
+    return NextResponse.json({ error: 'search_failed' }, { status: 500 });
+  }
 
-  // Fire-and-forget analytics (the search-tracking event that feeds
-  // get_trending_searches) -- doesn't block the response.
-  const totalResults =
-    (doctorsRes.data?.length ?? 0) +
-    (hospitalsRes.data?.length ?? 0) +
-    (categoriesRes.data?.length ?? 0) +
-    (symptomsRes.data?.length ?? 0);
-  void supabase
-    .from('analytics_events')
-    .insert({
-      event_type: 'search',
-      metadata: { query: q, result_count: totalResults },
-    })
-    .then(() => {});
+  // Fire-and-forget analytics feeding get_trending_searches. Only for
+  // submitted searches: logging every debounced autocomplete request
+  // filled trending with partial keystrokes ("kar", "kard", ...).
+  if (track) {
+    const totalResults =
+      (doctorsRes.data?.length ?? 0) +
+      (hospitalsRes.data?.length ?? 0) +
+      (categoriesRes.data?.length ?? 0) +
+      (symptomsRes.data?.length ?? 0);
+    void supabase
+      .from('analytics_events')
+      .insert({
+        event_type: 'search',
+        metadata: { query: q, result_count: totalResults },
+      })
+      .then(() => {});
+  }
 
   return NextResponse.json({
     doctors: doctorsRes.data ?? [],

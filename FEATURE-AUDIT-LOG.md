@@ -21,7 +21,7 @@ from scratch."
 | S02 | Information architecture / nav / routing | not audited |
 | S03 | Splash · language · onboarding · location · sign-in | not audited |
 | S04 | Home page | ✅ **done** — see below |
-| S05 | Universal search | not audited (i18n-migrated only, batch 18) |
+| S05 | Universal search | ✅ **done** — see below |
 | S06 | Doctor list page | ✅ **done** — see below |
 | S07 | Doctor profile page | ✅ **done** — see below |
 | S08 | Hospital list · hospital detail | partially benefited from S07's fixes (see below) — not independently audited |
@@ -39,6 +39,11 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S05 — Universal search — DONE
+
+Fixed: (1) **alias expansion was broken** — client glued `"হার্ট cardiology"` into ONE ILIKE pattern that matches nothing, making aliased searches worse; now aliases are sent as separate OR-ed stem terms (`alias=` params), matched by "contains"; (2) category matches shown in the dropdown were **dropped from the results page** (count/tab ignored `categories`, so "cardiology" showed "no results") — now listed under All and counted; (3) `search` analytics fired on every debounced keystroke (trending filled with "kar", "kard"…) — now only on submitted searches (`track=1`); spec's `search_select` on dropdown picks added; (4) API outage returned 200 + empty arrays ("no results") — now 500 when all 4 queries fail, client shows retry (dropdown + results); (5) `limit` unclamped (NaN / huge) and `q` uncapped — clamped 1–50 / 100 chars; (6) `useState(getRecentSearches())` read localStorage during render → hydration mismatch, moved to effect; (7) "জানান" WhatsApp CTA linked to bare `https://wa.me/` (dead-end) here and in Lab Tests (S10) — now `lib/support-contact.ts`, CTA hidden unless `NEXT_PUBLIC_SUPPORT_WHATSAPP` is set.
+**Owner action:** set `NEXT_PUBLIC_SUPPORT_WHATSAPP` (e.g. `91XXXXXXXXXX`) in Vercel to show the CTA. Deferred: spec's results filter sheet / sort popover / Tests tab, no-result category fallback chips, voice `lang` (`bn-BD` in spec vs `bn-IN` convention) — VoiceSearchOverlay not audited.
 
 ## S06 — Doctor list — DONE
 
