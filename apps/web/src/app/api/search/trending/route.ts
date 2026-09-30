@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { getSupportWhatsapp } from '@/lib/support-contact';
 
 /**
  * GET /api/search/trending — VYTANEXA-BLUEPRINT.md § S05 "Trending
@@ -12,7 +13,7 @@ import { isFeatureEnabled } from '@/lib/feature-flags';
 export async function GET() {
   const supabase = createClient();
 
-  const [trendingRes, categoriesRes, voiceSearchEnabled] = await Promise.all([
+  const [trendingRes, categoriesRes, voiceSearchEnabled, supportWhatsapp] = await Promise.all([
     supabase.rpc('get_trending_searches', { p_limit: 8 }),
     supabase
       .from('categories')
@@ -24,6 +25,7 @@ export async function GET() {
     // already fires once on mount before the mic button needs to
     // decide whether to render (app_settings.features.voice_search).
     isFeatureEnabled(supabase, 'voice_search'),
+    getSupportWhatsapp(supabase),
   ]);
 
   if (trendingRes.error) {
@@ -37,5 +39,6 @@ export async function GET() {
     trending: trendingRes.data ?? [],
     categories: categoriesRes.data ?? [],
     voiceSearchEnabled,
+    supportWhatsapp,
   });
 }

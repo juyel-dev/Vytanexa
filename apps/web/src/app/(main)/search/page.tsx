@@ -13,7 +13,6 @@ import {
   clearRecentSearches,
 } from '@/lib/recent-searches';
 import type { SearchApiResponse, TrendingApiResponse } from '@/lib/search-types';
-import { SUPPORT_WHATSAPP } from '@/lib/support-contact';
 import { VoiceSearchOverlay } from '@/components/search/VoiceSearchOverlay';
 
 // Bengali term -> English stems searched IN ADDITION to the typed text
@@ -69,6 +68,7 @@ export default function SearchPage() {
   // during SSR, so reading it in render caused a hydration mismatch.
   const [recent, setRecent] = useState<ReturnType<typeof getRecentSearches>>([]);
   const [searchFailed, setSearchFailed] = useState(false);
+  const [supportWhatsapp, setSupportWhatsapp] = useState('');
   const [retryTick, setRetryTick] = useState(0);
   const [loading, setLoading] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
@@ -89,6 +89,7 @@ export default function SearchPage() {
       .then((data: TrendingApiResponse) => {
         setTrending(data);
         setVoiceSearchEnabled(!!data.voiceSearchEnabled);
+        setSupportWhatsapp(data.supportWhatsapp ?? '');
       })
       .catch(() => {});
   }, []);
@@ -412,9 +413,9 @@ export default function SearchPage() {
               <p className="mt-2 text-[13px] text-neutral-500">
                 {t('noResultsHint')}
               </p>
-              {SUPPORT_WHATSAPP && (
+              {supportWhatsapp && (
                 <a
-                  href={`https://wa.me/${SUPPORT_WHATSAPP}`}
+                  href={`https://wa.me/${supportWhatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"

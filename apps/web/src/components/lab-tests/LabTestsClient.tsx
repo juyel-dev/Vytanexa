@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { SUPPORT_WHATSAPP } from '@/lib/support-contact';
 import { Search } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
@@ -39,7 +38,13 @@ type SearchResult = {
  * changing district re-runs the current search against the new area
  * without the person needing to retype anything.
  */
-export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }) {
+export function LabTestsClient({
+  popularTests,
+  supportWhatsapp,
+}: {
+  popularTests: PopularTest[];
+  supportWhatsapp: string;
+}) {
   const { districtId } = useLocationStore();
   const localize = useLocalizedField();
   const t = useT('labTests');
@@ -117,10 +122,10 @@ export function LabTestsClient({ popularTests }: { popularTests: PopularTest[] }
           >
             {t('seeAllDiagnosticCenters')}
           </a>
-          {SUPPORT_WHATSAPP && (
+          {supportWhatsapp && (
             <div>
               <a
-                href={`https://wa.me/${SUPPORT_WHATSAPP}`}
+                href={`https://wa.me/${supportWhatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-block rounded-md bg-life-600 px-4 py-2.5 text-[13px] font-semibold text-white"

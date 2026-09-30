@@ -3,6 +3,7 @@ import { TopBarSection } from '@/components/layout/TopBar';
 import { LabTestsClient } from '@/components/lab-tests/LabTestsClient';
 import { createClient } from '@/lib/supabase/server';
 import { getPopularTests } from '@/lib/queries/test-search';
+import { getSupportWhatsapp } from '@/lib/support-contact';
 import { getT } from '@vytanexa/i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,12 +23,16 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function LabTestsPage() {
   const supabase = createClient();
-  const [popularTests, t] = await Promise.all([getPopularTests(supabase), getT('labTests')]);
+  const [popularTests, supportWhatsapp, t] = await Promise.all([
+    getPopularTests(supabase),
+    getSupportWhatsapp(supabase),
+    getT('labTests'),
+  ]);
 
   return (
     <>
       <TopBarSection title={t('pageTitle')} />
-      <LabTestsClient popularTests={popularTests} />
+      <LabTestsClient popularTests={popularTests} supportWhatsapp={supportWhatsapp} />
     </>
   );
 }
