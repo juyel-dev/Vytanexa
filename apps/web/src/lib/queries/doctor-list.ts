@@ -32,7 +32,19 @@ export async function queryDoctorList(
   supabase: SupabaseClient<Database>,
   params: DoctorListParams
 ) {
-  const page = params.page ?? 0;
+  // URL/query-string input is untrusted: NaN/negative values would reach
+  // PostgREST (`gte.NaN`, `range(NaN)`) and error out — which callers
+  // previously showed as "no doctors found". Normalize centrally so the
+  // SSR page and /api/doctors both get the same protection.
+  const finite = (v: unknown): number | undefined =>
+    typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+  const feeMin = finite(params.feeMin);
+  const feeMax = finite(params.feeMax);
+  const ratingMin = params.rating ? parseFloat(params.rating) : NaN;
+  const page =
+    Number.isInteger(params.page) && (params.page as number) >= 0 && (params.page as number) <= 1000
+      ? (params.page as number)
+      : 0;
 
   let query = supabase
     .from('doctors')
@@ -50,11 +62,11 @@ export async function queryDoctorList(
     if (slugs.length > 0) query = query.in('categories.slug', slugs);
   }
 
-  if (params.feeMin != null) query = query.gte('consultation_fee_min', params.feeMin);
-  if (params.feeMax != null) query = query.lte('consultation_fee_min', params.feeMax);
+  if (feeMin != null) query = query.gte('consultation_fee_min', feeMin);
+  if (feeMax != null) query = query.lte('consultation_fee_min', feeMax);
 
-  if (params.rating && params.rating !== 'any') {
-    query = query.gte('rating_avg', parseFloat(params.rating));
+  if (Number.isFinite(ratingMin) && ratingMin > 0 && ratingMin <= 5) {
+    query = query.gte('rating_avg', ratingMin);
   }
 
   if (params.languages) {
@@ -83,6 +95,11 @@ export async function queryDoctorList(
         .order('featured_priority', { ascending: false })
         .order('rating_avg', { ascending: false });
   }
+
+  // Unique tiebreaker: without it, rows tied on the sort key (e.g. many
+  // doctors with rating 0) can reorder between page requests, so
+  // infinite scroll shows duplicates and silently skips other doctors.
+  query = query.order('id', { ascending: true });
 
   query = query.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 

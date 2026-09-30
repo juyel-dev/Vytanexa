@@ -21,10 +21,12 @@ type DoctorRow = DoctorCardData & { categories: { name_translations: Json; slug:
 export function DoctorListClient({
   initialDoctors,
   initialCount,
+  loadError = false,
   categories,
 }: {
   initialDoctors: DoctorRow[];
   initialCount: number;
+  loadError?: boolean;
   categories: Category[];
 }) {
   const router = useRouter();
@@ -47,37 +49,55 @@ export function DoctorListClient({
   const [hasMore, setHasMore] = useState(initialDoctors.length < initialCount);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [moreFailed, setMoreFailed] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Query string the currently-displayed list belongs to. A slow
+  // load-more response for an *old* filter must not append into the
+  // list of a *new* filter.
+  const queryKeyRef = useRef(searchParams.toString());
+  queryKeyRef.current = searchParams.toString();
 
   useEffect(() => {
     setDoctors(initialDoctors);
     setCount(initialCount);
     setPage(0);
     setHasMore(initialDoctors.length < initialCount);
+    setMoreFailed(false);
   }, [initialDoctors, initialCount]);
 
   // useCallback with real deps — the observer always calls the latest
   // closure, so a slow in-flight page can't append with a stale `page`.
   const loadMore = useCallback(async () => {
     setLoadingMore(true);
+    setMoreFailed(false);
     const nextPage = page + 1;
     const params = new URLSearchParams(searchParams.toString());
+    const requestKey = params.toString();
     params.set('page', String(nextPage));
     try {
       const res = await fetch(`/api/doctors?${params.toString()}`);
+      if (!res.ok) throw new Error(`status ${res.status}`);
       const json = await res.json();
-      setDoctors((prev) => [...prev, ...(json.doctors ?? [])]);
+      if (queryKeyRef.current !== requestKey) return; // filters changed meanwhile
+      // De-dupe by id as a second line of defense against overlapping pages.
+      setDoctors((prev) => {
+        const seen = new Set(prev.map((d) => d.id));
+        return [...prev, ...(json.doctors ?? []).filter((d: DoctorRow) => !seen.has(d.id))];
+      });
       setHasMore(json.hasMore);
       setPage(nextPage);
     } catch {
-      // network failure — stop spinning, keep existing results
+      // Keep hasMore=true (the list did NOT end) and surface a retry
+      // control instead of silently pretending there are no more doctors.
+      if (queryKeyRef.current === requestKey) setMoreFailed(true);
+    } finally {
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   }, [page, searchParams]);
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || !hasMore) return;
+    if (!el || !hasMore || moreFailed) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && !loadingMore) {
@@ -88,9 +108,13 @@ export function DoctorListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loadMore]);
+  }, [hasMore, loadingMore, loadMore, moreFailed]);
 
-  const activeSpecialty = searchParams.get('specialty')?.split(',')[0];
+  const specialtySlugs = (searchParams.get('specialty') ?? '').split(',').filter(Boolean);
+  // Chips are single-select, but links (e.g. symptom pages) can carry
+  // several slugs. Highlight a chip only when it accurately describes
+  // the list; with multiple slugs neither a chip nor "All" is lit.
+  const activeSpecialty = specialtySlugs.length === 1 ? specialtySlugs[0] : undefined;
   const activeSort = searchParams.get('sort') ?? 'rating';
 
   const setSpecialtyChip = (slug: string | null) => {
@@ -113,7 +137,7 @@ export function DoctorListClient({
         <button
           onClick={() => setSpecialtyChip(null)}
           className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
-            !activeSpecialty ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
+            specialtySlugs.length === 0 ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
           }`}
         >
           {t('filterAll')}
@@ -164,7 +188,17 @@ export function DoctorListClient({
       </div>
 
       {/* Results */}
-      {doctors.length === 0 ? (
+      {doctors.length === 0 && loadError ? (
+        <div className="px-6 py-12 text-center">
+          <p className="text-[15px] font-semibold text-neutral-700">{tCommon('error')}</p>
+          <button
+            onClick={() => router.refresh()}
+            className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+          >
+            {tCommon('retry')}
+          </button>
+        </div>
+      ) : doctors.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
             {t('noResultsTitle')}
@@ -180,10 +214,21 @@ export function DoctorListClient({
           ))}
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? tCommon('loading') : ''}
+              {moreFailed ? (
+                <button
+                  onClick={loadMore}
+                  className="h-10 rounded-md border border-neutral-300 px-5 font-semibold text-neutral-700"
+                >
+                  {tCommon('retry')}
+                </button>
+              ) : loadingMore ? (
+                tCommon('loading')
+              ) : (
+                ''
+              )}
             </div>
           )}
-          {!hasMore && (
+          {!hasMore && !moreFailed && (
             <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreDoctors')}</p>
           )}
         </>

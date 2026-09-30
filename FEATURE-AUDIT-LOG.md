@@ -22,7 +22,7 @@ from scratch."
 | S03 | Splash · language · onboarding · location · sign-in | not audited |
 | S04 | Home page | ✅ **done** — see below |
 | S05 | Universal search | not audited (i18n-migrated only, batch 18) |
-| S06 | Doctor list page | not audited (i18n-migrated only, batch 20) |
+| S06 | Doctor list page | ✅ **done** — see below |
 | S07 | Doctor profile page | ✅ **done** — see below |
 | S08 | Hospital list · hospital detail | partially benefited from S07's fixes (see below) — not independently audited |
 | S09 | Symptoms page · symptom detail · emergency flagging | ✅ **done** — see below |
@@ -39,6 +39,11 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S06 — Doctor list — DONE
+
+Fixed: (1) no unique sort tiebreaker -> infinite scroll showed duplicate doctors and skipped others on tied keys (added `order('id')` + client de-dupe); (2) SSR query error was shown as "no doctors found" — now an error state with retry; (3) load-more failure/500 was shown as "no more doctors" — now a retry button, `hasMore` kept; (4) slow load-more response for an old filter could append into a new filter's list — guarded by query-key ref; (5) NaN/invalid `feeMin`/`feeMax`/`rating`/`page` from URL reached PostgREST and errored — sanitized centrally in `queryDoctorList`; (6) multi-slug `?specialty=a,b` (from symptom CTA) highlighted only the first chip — now no misleading highlight.
+Deferred (as documented in code): `district`, `availableToday`, sort by availability/nearest (need chamber data/geolocation); spec's native ad every 5th card and filter-sheet extras not audited.
 
 ## S09 — Symptoms — DONE
 

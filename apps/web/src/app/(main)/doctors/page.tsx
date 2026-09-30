@@ -19,7 +19,7 @@ export default async function DoctorsPage({
 }) {
   const supabase = createClient();
 
-  const [{ data: doctors, count }, { data: categories }, t] = await Promise.all([
+  const [{ data: doctors, count, error }, { data: categories }, t] = await Promise.all([
     queryDoctorList(supabase, {
       specialty: searchParams.specialty,
       feeMin: searchParams.feeMin ? Number(searchParams.feeMin) : undefined,
@@ -37,6 +37,8 @@ export default async function DoctorsPage({
     getT('doctor'),
   ]);
 
+  if (error) console.error('doctors SSR query failed:', error.message);
+
   return (
     <>
       <TopBarSection title={t('findTitle')} />
@@ -44,6 +46,7 @@ export default async function DoctorsPage({
         <DoctorListClient
           initialDoctors={doctors}
           initialCount={count}
+          loadError={Boolean(error)}
           categories={categories ?? []}
         />
       </Suspense>
