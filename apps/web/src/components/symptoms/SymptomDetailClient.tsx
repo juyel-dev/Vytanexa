@@ -94,6 +94,18 @@ export function SymptomDetailClient({
           <p className="mb-3 text-[13px] leading-relaxed text-emergency-700">
             {t('emergencyWarningBody')}
           </p>
+          <div className="mb-2 grid grid-cols-2 gap-2">
+            {['102', '108'].map((number) => (
+              <a
+                key={number}
+                href={`tel:${number}`}
+                onClick={() => track('emergency_call_click', symptom.id, { number })}
+                className="flex h-11 items-center justify-center rounded-md border-2 border-emergency-600 bg-white text-[14px] font-bold text-emergency-700"
+              >
+                {t('emergencyCallCta', { number })}
+              </a>
+            ))}
+          </div>
           <Link
             href="/emergency"
             className="flex h-11 items-center justify-center rounded-md bg-emergency-600 text-[14px] font-semibold text-white"

@@ -43,7 +43,7 @@ from scratch."
 ## S09 — Symptoms — DONE
 
 Fixed: (1) `queryAllSymptoms` / `getSymptomBySlug` swallowed DB errors into `[]` / `null`, so with ISR (6hr) a transient failure cached a blank list or a 404 for a valid symptom — now throw (only PGRST116 = real not-found); (2) `getSpecialtyDoctorCounts` showed "0" on error — now `null`, count hidden; (3) spec analytics `symptom_view`, `specialty_chip_click`, `cta_click` were missing — added.
-**Deferred/flagged (medical content, needs owner call):** emergency banner text says "call 102" (in India 102 is the maternal/child ambulance; 108 / 112 is the general emergency line) and is not tap-to-call. List page groups by first specialty, not a symptom-category taxonomy (schema gap, see `symptom-list.ts`).
+**Follow-up done:** emergency banner now says 102 or 108 with tap-to-call buttons (`emergency_call_click`). Still deferred: list groups by first specialty, not a symptom-category taxonomy (schema gap, see `symptom-list.ts`).
 
 ## S12 — Emergency System — DONE (commit `f7e6420`)
 
