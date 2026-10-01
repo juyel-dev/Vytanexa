@@ -1924,6 +1924,26 @@ export type Database = {
         Returns: boolean
       }
       get_donor_phone: { Args: { p_donor_id: string }; Returns: string }
+      register_blood_donor: {
+        Args: {
+          p_name: string
+          p_phone: string
+          p_blood_group: string
+          p_location_id: string
+          p_consent: boolean
+        }
+        Returns: string
+      }
+      list_blood_donors: {
+        Args: { p_blood_group?: string; p_location_id?: string; p_limit?: number }
+        Returns: {
+          id: string
+          name: string
+          blood_group: string
+          location_id: string
+          last_donated_at: string | null
+        }[]
+      }
       get_trending_searches: {
         Args: { p_limit?: number }
         Returns: {

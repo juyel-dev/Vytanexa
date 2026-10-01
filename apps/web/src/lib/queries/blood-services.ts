@@ -96,10 +96,15 @@ export type BloodStockRow = Awaited<ReturnType<typeof getFreshBloodStock>>[numbe
 
 /**
  * Donor list — VYTANEXA-BLUEPRINT.md § S11 "Donor Registration
- * (Opt-in Directory)": queries the `public_blood_donors` VIEW, which
- * omits `phone` at the schema level (DATABASE-SCHEMA.md § 3.6) —
- * never the raw `blood_donors` table, and RLS blocks that table
- * entirely for the anon key regardless (`blood_donors_service_only`).
+ * (Opt-in Directory)". Reads via the `list_blood_donors()` RPC (migration
+ * 0019): SECURITY DEFINER, executable by signed-in users only, returns
+ * name + blood group + district + last-donated — never `phone` — newest
+ * registrations first.
+ *
+ * Why an RPC and not the `public_blood_donors` view: that view is
+ * `security_invoker`, and `blood_donors` blocks every direct SELECT
+ * (`blood_donors_service_only`, `USING (false)`), so the view returned
+ * ZERO rows to every signed-in user — the donor list was always empty.
  *
  * `locationId` (optional) scopes to a district via EXACT match —
  * deliberately NOT subtree-expanded: donor registration only allows
@@ -110,27 +115,13 @@ export async function getBloodDonors(
   bloodGroup?: string,
   locationId?: string
 ) {
-  let query = supabase
-    .from('public_blood_donors')
-    .select('id, name, blood_group, location_id, last_donated_at')
-    .order('id', { ascending: false })
-    .limit(30);
-  // (view exposes no created_at, so `id` is only a stable order, not recency)
-
-  if (bloodGroup) query = query.eq('blood_group', bloodGroup);
-  if (locationId) query = query.eq('location_id', locationId);
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc('list_blood_donors', {
+    p_blood_group: bloodGroup,
+    p_location_id: locationId,
+    p_limit: 30,
+  });
   if (error) throw new Error(`getBloodDonors failed: ${error.message}`);
-  // public_blood_donors is a VIEW, so Postgres doesn't carry the
-  // underlying table's NOT NULL constraints into its generated types
-  // (every column types as nullable) even though the view's WHERE
-  // clause guarantees these are always populated in practice. Filter
-  // defensively rather than asserting.
-  return (data ?? []).filter(
-    (d): d is { id: string; name: string; blood_group: string; location_id: string; last_donated_at: string | null } =>
-      d.id !== null && d.name !== null && d.blood_group !== null && d.location_id !== null
-  );
+  return data ?? [];
 }
 
 /** Districts for the donor registration form's required location field. */

@@ -17,10 +17,11 @@ import { getT } from '@vytanexa/i18n/server';
  * defaults to 'verified') — no approval queue, no OTP; a moderator
  * suspends fakes after the fact via WhatsApp, per the agreed model.
  *
- * Rate-limited 1 registration per phone per 90 days via the generic
- * `check_rate_limit()` function (matches WHO's donation interval),
- * PLUS a DB-level unique index (`uq_blood_donors_one_per_user`)
- * capping one active listing per account.
+ * Rate-limited 1 registration per phone per 90 days (matches WHO's
+ * donation interval), PLUS a DB-level unique index
+ * (`uq_blood_donors_one_per_user`) capping one active listing per
+ * account. Both live inside the `register_blood_donor()` RPC so the
+ * rate-limit slot is only consumed when the insert actually succeeds.
  *
  * `consent_contact` is mandatory both here and at the DB CHECK
  * constraint level (`chk_donor_consent`) — belt and suspenders.
@@ -50,43 +51,39 @@ export async function POST(request: NextRequest) {
   }
   const { name, phone, blood_group, location_id, consent_contact } = parsed.data;
 
-  const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-    p_key: `donor_register:${phone}`,
-    p_max_count: 1,
-    p_window: '90 days',
-  });
-
-  if (rateLimitError) {
-    console.error('rate limit check failed:', rateLimitError.message);
-    return NextResponse.json({ error: t('bloodDonors.registerRetryLater') }, { status: 503 });
-  }
-  if (!allowed) {
-    return NextResponse.json(
-      { error: t('bloodDonors.alreadyRegistered90d') },
-      { status: 429 }
-    );
-  }
-
-  const { error } = await supabase.from('blood_donors').insert({
-    name,
-    phone,
-    blood_group,
-    location_id,
-    consent_contact: true,
-    user_id: user.id,
+  // One atomic RPC (migration 0019): listing-exists check -> 90-day
+  // per-phone rate limit -> INSERT. The rate-limit slot and the INSERT
+  // commit or roll back together, so a failed registration no longer
+  // locks the phone out for 90 days.
+  const { data: status, error } = await supabase.rpc('register_blood_donor', {
+    p_name: name,
+    p_phone: phone,
+    p_blood_group: blood_group,
+    p_location_id: location_id,
+    p_consent: consent_contact,
   });
 
   if (error) {
-    if (error.code === '23505') {
-      // uq_blood_donors_one_per_user — this account already has a listing.
-      return NextResponse.json(
-        { error: t('bloodDonors.alreadyHasListing') },
-        { status: 409 }
-      );
-    }
-    console.error('donor registration insert failed:', error.message);
+    console.error('donor registration rpc failed:', error.message);
     return NextResponse.json({ error: t('bloodDonors.registerFailed') }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true });
+  switch (status) {
+    case 'ok':
+      return NextResponse.json({ success: true });
+    case 'unauthenticated':
+      return NextResponse.json({ error: t('bloodDonors.mustSignIn') }, { status: 401 });
+    case 'already_listed':
+      return NextResponse.json({ error: t('bloodDonors.alreadyHasListing') }, { status: 409 });
+    case 'rate_limited':
+      return NextResponse.json({ error: t('bloodDonors.alreadyRegistered90d') }, { status: 429 });
+    case 'invalid_phone':
+      return NextResponse.json({ error: t('bloodDonors.phoneInvalid') }, { status: 400 });
+    case 'invalid_location':
+      return NextResponse.json({ error: t('bloodDonors.locationRequired') }, { status: 400 });
+    case 'consent_required':
+      return NextResponse.json({ error: t('bloodDonors.consentRequired') }, { status: 400 });
+    default:
+      return NextResponse.json({ error: t('bloodDonors.registerFailed') }, { status: 400 });
+  }
 }
