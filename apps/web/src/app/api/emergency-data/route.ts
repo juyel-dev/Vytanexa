@@ -51,7 +51,12 @@ export async function GET(request: NextRequest) {
   const [hospitalRes, ambulanceRes, bloodBanks] = await Promise.all([
     hospitalQuery,
     ambulanceQuery,
-    getBloodBanks(supabase),
+    // Partial data beats none here: a blood-bank failure must not take
+    // hospitals/ambulances down with it.
+    getBloodBanks(supabase).catch((err) => {
+      console.error('emergency-data: blood banks failed:', err);
+      return [];
+    }),
   ]);
 
   if (hospitalRes.error) console.error('emergency-data: hospitals failed:', hospitalRes.error.message);

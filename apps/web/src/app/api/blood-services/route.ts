@@ -12,15 +12,24 @@ import { getBloodBanks, getBloodDonors } from '@/lib/queries/blood-services';
  * since the server can't see the client's persisted district
  * selection); this route only serves subsequent client-side refetches.
  */
+const VALID_GROUPS = new Set(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']);
+
 export async function GET(request: NextRequest) {
   const district = request.nextUrl.searchParams.get('district') ?? undefined;
-  const bloodGroup = request.nextUrl.searchParams.get('bloodGroup') ?? undefined;
+  const rawGroup = request.nextUrl.searchParams.get('bloodGroup') ?? undefined;
+  const bloodGroup = rawGroup && VALID_GROUPS.has(rawGroup) ? rawGroup : undefined;
 
-  const supabase = createClient();
-  const [bloodBanks, donors] = await Promise.all([
-    getBloodBanks(supabase, district),
-    getBloodDonors(supabase, bloodGroup, district),
-  ]);
-
-  return NextResponse.json({ bloodBanks, donors });
+  try {
+    const supabase = createClient();
+    const [bloodBanks, donors] = await Promise.all([
+      getBloodBanks(supabase, district),
+      getBloodDonors(supabase, bloodGroup, district),
+    ]);
+    return NextResponse.json({ bloodBanks, donors });
+  } catch (err) {
+    console.error('blood-services route failed:', err);
+    // 500, not an empty 200: the client keeps the list it already has
+    // and offers a retry instead of showing "no blood banks".
+    return NextResponse.json({ error: 'blood_services_failed' }, { status: 500 });
+  }
 }

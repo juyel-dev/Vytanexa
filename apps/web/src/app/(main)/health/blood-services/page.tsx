@@ -44,9 +44,20 @@ export default async function BloodServicesPage({
     notFound();
   }
   const currentUser = await getCurrentUser(supabase);
+  let loadError = false;
   const [bloodBanks, donors, districts, t] = await Promise.all([
-    getBloodBanks(supabase),
-    currentUser ? getBloodDonors(supabase) : Promise.resolve([]),
+    getBloodBanks(supabase).catch((err) => {
+      console.error('blood-services SSR banks failed:', err);
+      loadError = true;
+      return [];
+    }),
+    currentUser
+      ? getBloodDonors(supabase).catch((err) => {
+          console.error('blood-services SSR donors failed:', err);
+          loadError = true;
+          return [];
+        })
+      : Promise.resolve([]),
     getDistricts(supabase),
     getT('blood'),
   ]);
@@ -62,6 +73,7 @@ export default async function BloodServicesPage({
         districts={districts}
         initialGroup={initialGroup}
         isLoggedIn={!!currentUser}
+        loadError={loadError}
       />
     </>
   );

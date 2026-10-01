@@ -133,6 +133,7 @@ export function DonorRegistrationSheet({
             {BLOOD_GROUPS.map((bg) => (
               <button
                 key={bg}
+                aria-pressed={bloodGroup === bg}
                 onClick={() => setBloodGroup(bg)}
                 className={`h-10 rounded-md border text-[13px] font-semibold ${
                   bloodGroup === bg

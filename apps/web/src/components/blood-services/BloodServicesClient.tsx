@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Phone, MessageCircle, Copy, Check, Lock } from 'lucide-react';
@@ -58,12 +58,14 @@ export function BloodServicesClient({
   districts,
   initialGroup = null,
   isLoggedIn,
+  loadError: initialLoadError = false,
 }: {
   bloodBanks: BloodBank[];
   donors: Donor[];
   districts: District[];
   initialGroup?: string | null;
   isLoggedIn: boolean;
+  loadError?: boolean;
 }) {
   const t = useT('blood');
   const tc = useT('common');
@@ -81,6 +83,7 @@ export function BloodServicesClient({
   const [revealing, setRevealing] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(initialLoadError);
 
   useEffect(() => {
     setIsTouch(window.matchMedia('(pointer: coarse)').matches);
@@ -91,39 +94,39 @@ export function BloodServicesClient({
     [districts, localize]
   );
 
-  const refetchServices = () => {
+  const requestIdRef = useRef(0);
+
+  // One loader for the district/group effect AND post-registration
+  // refresh. On failure the list already on screen is KEPT (previously a
+  // 500 was parsed as `{}` and silently wiped every blood bank) and an
+  // error + retry is shown. Stale responses are dropped by request id.
+  const loadServices = useCallback(async () => {
+    const id = ++requestIdRef.current;
     const params = new URLSearchParams();
     if (districtId) params.set('district', districtId);
     if (selectedGroup) params.set('bloodGroup', selectedGroup);
-    fetch(`/api/blood-services?${params.toString()}`)
-      .then((res) => res.json())
-      .then((json) => {
-        setBloodBanks(json.bloodBanks ?? []);
-        setDonors(json.donors ?? []);
-      })
-      .catch(() => {});
-  };
+    try {
+      const res = await fetch(`/api/blood-services?${params.toString()}`);
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const json = await res.json();
+      if (requestIdRef.current !== id) return;
+      setBloodBanks(json.bloodBanks ?? []);
+      setDonors(json.donors ?? []);
+      setLoadError(false);
+    } catch {
+      if (requestIdRef.current === id) setLoadError(true);
+    }
+  }, [districtId, selectedGroup]);
 
   useEffect(() => {
     if (!districtId) {
+      requestIdRef.current++; // drop any in-flight district request
       setBloodBanks(initialBloodBanks);
       setDonors(initialDonors);
+      setLoadError(initialLoadError);
       return;
     }
-    let cancelled = false;
-    const params = new URLSearchParams({ district: districtId });
-    if (selectedGroup) params.set('bloodGroup', selectedGroup);
-    fetch(`/api/blood-services?${params.toString()}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (cancelled) return;
-        setBloodBanks(json.bloodBanks ?? []);
-        setDonors(json.donors ?? []);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    loadServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [districtId, selectedGroup]);
 
@@ -133,16 +136,17 @@ export function BloodServicesClient({
   );
 
   // BLOOD-SERVICE-PLAN.md Phase A.2/A.3 — compute the *rendered* set
-  // once, reuse its length for the header (was bloodBanks.length,
-  // uncorrelated with what's actually shown) and its "has stock" check
-  // against stock_level (was presence-only, so an "unavailable" row
-  // still counted as "has this group").
+  // once and reuse its length for the header. A bank that reports the
+  // selected group as "unavailable" is hidden (A.3). A bank with NO fresh
+  // report for that group stays listed: stock reporting is optional
+  // (spec § S11) and "unknown" is not "none" — hiding it removed phone
+  // numbers a person in an emergency could still have called.
   const visibleBanks = useMemo(
     () =>
       bloodBanks.filter(
         (b) =>
           !selectedGroup ||
-          b.stock.some((s) => s.blood_group === selectedGroup && HAS_STOCK_LEVELS.has(s.stock_level))
+          !b.stock.some((s) => s.blood_group === selectedGroup && !HAS_STOCK_LEVELS.has(s.stock_level))
       ),
     [bloodBanks, selectedGroup]
   );
@@ -159,12 +163,9 @@ export function BloodServicesClient({
         entity_type: 'blood_donor',
         entity_id: donorId,
       }),
+      keepalive: true,
     }).catch(() => {});
-    if (isTouch) {
-      window.location.href = `/api/blood-donors/${donorId}/contact`;
-      return;
-    }
-    if (revealed[donorId]) return;
+    if (!isTouch && revealed[donorId]) return;
     setRevealing(donorId);
     const res = await fetch(`/api/blood-donors/${donorId}/contact?format=json`).catch(() => null);
     setRevealing(null);
@@ -174,7 +175,18 @@ export function BloodServicesClient({
       return;
     }
     const json = await res.json().catch(() => null);
-    if (json?.phone) setRevealed((prev) => ({ ...prev, [donorId]: json.phone }));
+    if (!json?.phone) {
+      setContactError(t('contactError'));
+      return;
+    }
+    // Touch: hand off to the dialer (number is never rendered as text).
+    // Going through fetch first means a 429/404/503 shows an inline
+    // message instead of navigating the person away to a raw JSON page.
+    if (isTouch) {
+      window.location.href = `tel:${json.phone}`;
+      return;
+    }
+    setRevealed((prev) => ({ ...prev, [donorId]: json.phone }));
   };
 
   const handleCopy = (donorId: string, phone: string) => {
@@ -202,6 +214,7 @@ export function BloodServicesClient({
           {BLOOD_GROUPS.map((bg) => (
             <button
               key={bg}
+              aria-pressed={selectedGroup === bg}
               onClick={() => setSelectedGroup(selectedGroup === bg ? null : bg)}
               className={`h-9 rounded-full border px-4 text-[13px] font-semibold ${
                 selectedGroup === bg
@@ -213,6 +226,7 @@ export function BloodServicesClient({
             </button>
           ))}
           <button
+            aria-pressed={selectedGroup === null}
             onClick={() => setSelectedGroup(null)}
             className={`h-9 rounded-full border px-4 text-[13px] font-semibold ${
               selectedGroup === null
@@ -233,6 +247,18 @@ export function BloodServicesClient({
           🩸 {t('registerAsDonor')}
         </button>
       </div>
+
+      {loadError && (
+        <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-lg border border-emergency-600/30 bg-emergency-50 px-3 py-2.5">
+          <p className="text-[13px] text-emergency-700">{tc('error')}</p>
+          <button
+            onClick={() => (districtId ? loadServices() : router.refresh())}
+            className="h-9 shrink-0 rounded-md bg-emergency-600 px-4 text-[13px] font-semibold text-white"
+          >
+            {tc('retry')}
+          </button>
+        </div>
+      )}
 
       <section className="px-4 py-4">
         <h2 className="mb-3 text-[15px] font-bold text-neutral-800">
@@ -293,6 +319,7 @@ export function BloodServicesClient({
                             entity_type: 'hospital',
                             entity_id: bank.id,
                           }),
+                          keepalive: true,
                         }).catch(() => {})
                       }
                       className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-emergency-600 text-[13px] font-semibold text-white"
@@ -390,7 +417,7 @@ export function BloodServicesClient({
       <DonorRegistrationSheet
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
-        onSuccess={refetchServices}
+        onSuccess={loadServices}
         districts={districts}
       />
     </div>

@@ -40,10 +40,10 @@ export async function getBloodBanks(supabase: SupabaseClient<Database>, location
     ascending: false,
   });
 
-  if (hospitalError) {
-    console.error('getBloodBanks failed:', hospitalError.message);
-    return [];
-  }
+  // Throw (don't return []): "no blood banks" during a DB outage is the
+  // worst possible message for someone in a blood emergency. Callers
+  // decide how to degrade (page/API show an error + retry).
+  if (hospitalError) throw new Error(`getBloodBanks failed: ${hospitalError.message}`);
   if (!hospitals || hospitals.length === 0) return [];
 
   const hospitalIds = hospitals.map((h) => h.id);
@@ -115,15 +115,13 @@ export async function getBloodDonors(
     .select('id, name, blood_group, location_id, last_donated_at')
     .order('id', { ascending: false })
     .limit(30);
+  // (view exposes no created_at, so `id` is only a stable order, not recency)
 
   if (bloodGroup) query = query.eq('blood_group', bloodGroup);
   if (locationId) query = query.eq('location_id', locationId);
 
   const { data, error } = await query;
-  if (error) {
-    console.error('getBloodDonors failed:', error.message);
-    return [];
-  }
+  if (error) throw new Error(`getBloodDonors failed: ${error.message}`);
   // public_blood_donors is a VIEW, so Postgres doesn't carry the
   // underlying table's NOT NULL constraints into its generated types
   // (every column types as nullable) even though the view's WHERE
