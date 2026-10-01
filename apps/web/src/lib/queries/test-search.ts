@@ -48,21 +48,23 @@ export async function searchTests(
   query: string,
   locationId?: string
 ) {
-  const pattern = `%${query}%`;
+  // Escape LIKE wildcards and PostgREST `or()` separators in user input
+  // (a raw `,` / `)` / `%` / `_` in the query changed the filter itself).
+  const safe = query.replace(/[,()"'{}]/g, ' ').trim();
+  const pattern = `%${safe.replace(/[%_\\]/g, '\\$&')}%`;
 
   const { data: matchedTests, error: testError } = await supabase
     .from('test_catalog')
     .select('canonical_key, name_translations, aliases')
     .eq('is_active', true)
     .or(
-      `name_translations->>bn.ilike.${pattern},name_translations->>en.ilike.${pattern},canonical_key.ilike.${pattern},aliases.cs.{${query}}`
+      `name_translations->>bn.ilike.${pattern},name_translations->>en.ilike.${pattern},canonical_key.ilike.${pattern},aliases.cs.{${safe}}`
     )
     .limit(10);
 
-  if (testError) {
-    console.error('searchTests: test_catalog lookup failed:', testError.message);
-    return { results: [], matchedTests: [] };
-  }
+  // Throw (don't return empty): an outage must reach the caller as an
+  // error, not masquerade as "this test isn't available in your area".
+  if (testError) throw new Error(`searchTests: test_catalog lookup failed: ${testError.message}`);
   if (!matchedTests || matchedTests.length === 0) {
     return { results: [], matchedTests: [] };
   }
@@ -88,12 +90,10 @@ export async function searchTests(
   const { data: hospitals, error: hospitalError } = await hospitalQuery
     .order('is_featured', { ascending: false })
     .order('rating_avg', { ascending: false })
+    .order('id', { ascending: true }) // stable order for ties
     .limit(20);
 
-  if (hospitalError) {
-    console.error('searchTests: hospitals lookup failed:', hospitalError.message);
-    return { results: [], matchedTests };
-  }
+  if (hospitalError) throw new Error(`searchTests: hospitals lookup failed: ${hospitalError.message}`);
 
   const nameByKey = new Map(matchedTests.map((t) => [t.canonical_key, t.name_translations]));
 

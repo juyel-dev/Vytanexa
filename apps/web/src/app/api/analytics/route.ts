@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'event_type is required' }, { status: 400 });
     }
-    const { event_type, entity_type, entity_id, metadata } = parsed.data;
+    const { event_type, entity_type, entity_id, location_id, metadata } = parsed.data;
 
     // Metadata size cap — analytics is fire-and-forget from the client's
     // perspective, but an uncapped JSONB column is a cheap abuse vector
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       event_type,
       entity_type: entity_type ?? null,
       entity_id: entity_id ?? null,
+      location_id: location_id ?? null,
       metadata: (metadata ?? {}) as unknown as Json,
       device_type: request.headers.get('user-agent')?.includes('Mobile')
         ? 'mobile'

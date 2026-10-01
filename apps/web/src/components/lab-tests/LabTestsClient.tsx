@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
@@ -49,29 +49,73 @@ export function LabTestsClient({
   const localize = useLocalizedField();
   const t = useT('labTests');
   const tSearch = useT('search');
+  const tCommon = useT('common');
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [failed, setFailed] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
+  const requestIdRef = useRef(0);
+
   useEffect(() => {
     if (query.trim().length < 2) {
+      requestIdRef.current++; // invalidate any in-flight request
       setResults(null);
       setSubmittedQuery('');
+      setLoading(false);
+      setFailed(false);
       return;
     }
     setLoading(true);
+    setFailed(false);
     const handle = setTimeout(async () => {
+      // Stale-response guard: an older, slower request must not overwrite
+      // the results of what the user has typed since.
+      const id = ++requestIdRef.current;
       const params = new URLSearchParams({ q: query.trim() });
       if (districtId) params.set('district', districtId);
-      const res = await fetch(`/api/test-search?${params.toString()}`);
-      const json = await res.json();
-      setResults(json.results ?? []);
-      setSubmittedQuery(query.trim());
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/test-search?${params.toString()}`);
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const json = await res.json();
+        if (requestIdRef.current !== id) return;
+        setResults(json.results ?? []);
+        setSubmittedQuery(query.trim());
+      } catch {
+        if (requestIdRef.current !== id) return;
+        setResults(null);
+        setFailed(true);
+      } finally {
+        if (requestIdRef.current === id) setLoading(false);
+      }
     }, 300);
     return () => clearTimeout(handle);
-  }, [query, districtId]);
+  }, [query, districtId, retryTick]);
+
+  // Spec § S10 analytics `test_search { query, results_count }`, logged
+  // once per *settled* query (stable for 1s, results loaded) — not per
+  // keystroke — so searched-but-unavailable counts reflect real intent.
+  const lastLoggedRef = useRef('');
+  useEffect(() => {
+    if (!results || !submittedQuery || submittedQuery !== query.trim()) return;
+    const key = `${submittedQuery}|${districtId ?? ''}`;
+    if (lastLoggedRef.current === key) return;
+    const timer = setTimeout(() => {
+      lastLoggedRef.current = key;
+      fetch('/api/analytics', {
+        method: 'POST',
+        body: JSON.stringify({
+          event_type: 'test_search',
+          location_id: districtId ?? null,
+          metadata: { query: submittedQuery, results_count: results.length },
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [results, submittedQuery, query, districtId]);
 
   return (
     <div className="pb-6">
@@ -111,7 +155,19 @@ export function LabTestsClient({
 
       {loading && <p className="py-8 text-center text-[13px] text-neutral-400">{tSearch('searching')}</p>}
 
-      {!loading && results && results.length === 0 && (
+      {!loading && failed && (
+        <div className="px-6 py-10 text-center">
+          <p className="text-[15px] font-semibold text-neutral-700">{tCommon('error')}</p>
+          <button
+            onClick={() => setRetryTick((n) => n + 1)}
+            className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+          >
+            {tCommon('retry')}
+          </button>
+        </div>
+      )}
+
+      {!loading && !failed && results && results.length === 0 && (
         <div className="px-6 py-10 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
             {t('noResultsTitle')}
