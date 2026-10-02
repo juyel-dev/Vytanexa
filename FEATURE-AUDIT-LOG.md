@@ -24,7 +24,7 @@ from scratch."
 | S05 | Universal search | ✅ **done** — see below |
 | S06 | Doctor list page | ✅ **done** — see below |
 | S07 | Doctor profile page | ✅ **done** — see below |
-| S08 | Hospital list · hospital detail | partially benefited from S07's fixes (see below) — not independently audited |
+| S08 | Hospital list · hospital detail | ✅ **done** — see below |
 | S09 | Symptoms page · symptom detail · emergency flagging | ✅ **done** — see below |
 | S10 | Lab & diagnostic tests | not audited (i18n-migrated only, batch 23) |
 | S11 | Blood services page | Phase C.3 (blood bank detail) + analytics gap fixed separately (see TODO.md) — not a full audit pass |
