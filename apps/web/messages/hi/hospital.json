@@ -62,6 +62,7 @@
     "reviews": "रिव्यू"
   },
   "emergencyBadgeShort": "🚨 आपातकालीन",
+  "verifiedBadge": "✅ सत्यापित",
   "reviewCountLabel": "({count} रिव्यू)",
   "emergency247Label": "🚨 24×7 आपातकालीन सेवा",
   "callCta": "कॉल करें",

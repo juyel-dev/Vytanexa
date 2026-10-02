@@ -28,9 +28,11 @@ type TypeKey = 'hospital' | 'clinic' | 'diagnostic' | 'nursing_home';
 export function HospitalListClient({
   initialHospitals,
   initialCount,
+  loadError = false,
 }: {
   initialHospitals: HospitalCardData[];
   initialCount: number;
+  loadError?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,37 +52,53 @@ export function HospitalListClient({
   const [page, setPage] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialHospitals.length < initialCount);
+  const [moreFailed, setMoreFailed] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Query string the displayed list belongs to — a slow load-more for an
+  // OLD filter must not append into the list of a NEW filter.
+  const queryKeyRef = useRef(searchParams.toString());
+  queryKeyRef.current = searchParams.toString();
 
   useEffect(() => {
     setHospitals(initialHospitals);
     setCount(initialCount);
     setPage(0);
     setHasMore(initialHospitals.length < initialCount);
+    setMoreFailed(false);
   }, [initialHospitals, initialCount]);
 
   // useCallback with real deps — the observer always calls the latest
   // closure, so a slow in-flight page can't append with a stale `page`.
   const loadMore = useCallback(async () => {
     setLoadingMore(true);
+    setMoreFailed(false);
     const nextPage = page + 1;
     const params = new URLSearchParams(searchParams.toString());
+    const requestKey = params.toString();
     params.set('page', String(nextPage));
     try {
       const res = await fetch(`/api/hospitals?${params.toString()}`);
+      if (!res.ok) throw new Error(`status ${res.status}`);
       const json = await res.json();
-      setHospitals((prev) => [...prev, ...(json.hospitals ?? [])]);
+      if (queryKeyRef.current !== requestKey) return; // filters changed meanwhile
+      setHospitals((prev) => {
+        const seen = new Set(prev.map((h) => h.id));
+        return [...prev, ...(json.hospitals ?? []).filter((h: HospitalCardData) => !seen.has(h.id))];
+      });
       setHasMore(json.hasMore);
       setPage(nextPage);
     } catch {
-      // network failure — stop spinning, keep existing results
+      // The list did NOT end — keep hasMore and offer a retry instead of
+      // showing "no more hospitals".
+      if (queryKeyRef.current === requestKey) setMoreFailed(true);
+    } finally {
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   }, [page, searchParams]);
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || !hasMore) return;
+    if (!el || !hasMore || moreFailed) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && !loadingMore) loadMore();
@@ -89,7 +107,7 @@ export function HospitalListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loadMore]);
+  }, [hasMore, loadingMore, loadMore, moreFailed]);
 
   const activeType = searchParams.get('type');
   const emergencyOnly = searchParams.get('emergencyOnly') === 'true';
@@ -116,6 +134,7 @@ export function HospitalListClient({
       <LocationChip />
       <div className="flex gap-2 overflow-x-auto border-b border-neutral-100 px-4 py-2.5 [scrollbar-width:none]">
         <button
+          aria-pressed={!activeType}
           onClick={() => updateParam('type', null)}
           className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
             !activeType ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
@@ -126,6 +145,7 @@ export function HospitalListClient({
         {TYPES.map(([value, label]) => (
           <button
             key={value}
+            aria-pressed={activeType === value}
             onClick={() => updateParam('type', value)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
               activeType === value
@@ -137,6 +157,7 @@ export function HospitalListClient({
           </button>
         ))}
         <button
+          aria-pressed={emergencyOnly}
           onClick={() => updateParam('emergencyOnly', emergencyOnly ? null : 'true')}
           className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
             emergencyOnly
@@ -150,7 +171,17 @@ export function HospitalListClient({
 
       <p className="px-4 py-2.5 text-[13px] text-neutral-600">{t('resultsCountLabel', { count })}</p>
 
-      {hospitals.length === 0 ? (
+      {hospitals.length === 0 && loadError ? (
+        <div className="px-6 py-12 text-center">
+          <p className="text-[15px] font-semibold text-neutral-700">{tCommon('error')}</p>
+          <button
+            onClick={() => router.refresh()}
+            className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+          >
+            {tCommon('retry')}
+          </button>
+        </div>
+      ) : hospitals.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
             {t('noHospitalsFound')}
@@ -163,10 +194,21 @@ export function HospitalListClient({
           ))}
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? tCommon('loading') : ''}
+              {moreFailed ? (
+                <button
+                  onClick={loadMore}
+                  className="h-10 rounded-md border border-neutral-300 px-5 font-semibold text-neutral-700"
+                >
+                  {tCommon('retry')}
+                </button>
+              ) : loadingMore ? (
+                tCommon('loading')
+              ) : (
+                ''
+              )}
             </div>
           )}
-          {!hasMore && (
+          {!hasMore && !moreFailed && (
             <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreHospitals')}</p>
           )}
         </>

@@ -30,6 +30,7 @@ import {
 } from '@/lib/seo-helpers';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
+import { safeJsonLd } from '@/lib/json-ld';
 
 export const revalidate = 21600;
 export const dynamicParams = true;
@@ -178,11 +179,11 @@ export default async function DistrictSpecialtyLandingPage({
   return (
     <>
       {/* eslint-disable-next-line react/no-danger */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }} />
       {/* eslint-disable-next-line react/no-danger */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListLd) }} />
       {/* eslint-disable-next-line react/no-danger */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(faqLd) }} />
 
       <TopBarSection title={specialtyName} />
 

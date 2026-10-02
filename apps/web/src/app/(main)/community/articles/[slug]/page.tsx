@@ -5,6 +5,7 @@ import { getArticleBySlug, getRelatedArticles } from '@/lib/queries/article-deta
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 import { ArticleDetailClient } from '@/components/articles/ArticleDetailClient';
+import { safeJsonLd } from '@/lib/json-ld';
 
 // ISR revalidate 1hr per S13 spec ("SSG+ISR(1hr)"). Same
 // cookies()-inside-createClient() caveat noted elsewhere in this app
@@ -69,7 +70,7 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
       {/* eslint-disable-next-line react/no-danger -- static JSON-LD we constructed ourselves, not user input */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <ArticleDetailClient article={article} related={related} pageUrl={pageUrl} />
     </>

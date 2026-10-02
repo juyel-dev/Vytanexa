@@ -121,7 +121,7 @@ export function HospitalProfileClient({
           <div className="flex shrink-0 flex-col items-end gap-1">
             {hospital.verification_status === 'verified' && (
               <span className="rounded-full bg-life-50 px-2 py-0.5 text-[11px] font-semibold text-life-700">
-                ✅ Verified
+                {t('verifiedBadge')}
               </span>
             )}
             {hospital.has_emergency_dept && (
@@ -215,6 +215,7 @@ export function HospitalProfileClient({
                 entity_type: 'hospital',
                 entity_id: hospital.id,
               }),
+              keepalive: true,
             }).catch(() => {})
           }
           className="flex items-center justify-center gap-2 rounded-md bg-brand-600 text-[15px] font-semibold text-white"

@@ -5,6 +5,7 @@ import { getSymptomBySlug, getSpecialtyDoctorCounts } from '@/lib/queries/sympto
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 import { SymptomDetailClient } from '@/components/symptoms/SymptomDetailClient';
+import { safeJsonLd } from '@/lib/json-ld';
 
 // SSG at build time, ISR revalidate 6hr per S09 spec.
 export const revalidate = 21600;
@@ -65,7 +66,7 @@ export default async function SymptomDetailPage({ params }: { params: { slug: st
       {/* eslint-disable-next-line react/no-danger -- static JSON-LD we constructed ourselves, not user input */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <SymptomDetailClient symptom={symptom} doctorCounts={doctorCounts} pageUrl={pageUrl} />
     </>

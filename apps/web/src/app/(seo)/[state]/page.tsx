@@ -14,6 +14,7 @@ import {
 } from '@/lib/queries/seo';
 import { buildStateSeo, buildSeoUrls, buildBreadcrumbJsonLd } from '@/lib/seo-helpers';
 import { getT } from '@vytanexa/i18n/server';
+import { safeJsonLd } from '@/lib/json-ld';
 
 export const revalidate = 21600; // 6hr — VYTANEXA-BLUEPRINT.md § S21 "ISR revalidate 6hr"
 export const dynamicParams = true;
@@ -91,7 +92,7 @@ export default async function StateHubPage({ params }: { params: { state: string
   return (
     <>
       {/* eslint-disable-next-line react/no-danger -- static JSON-LD we constructed ourselves */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }} />
 
       <TopBarSection title={stateName} />
 

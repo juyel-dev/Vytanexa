@@ -16,7 +16,7 @@ export default async function HospitalsPage({
 }) {
   const supabase = createClient();
 
-  const [{ data: hospitals, count }, t] = await Promise.all([
+  const [{ data: hospitals, count, error }, t] = await Promise.all([
     queryHospitalList(supabase, {
       type: searchParams.type,
       emergencyOnly: searchParams.emergencyOnly === 'true',
@@ -26,11 +26,17 @@ export default async function HospitalsPage({
     getT('hospital'),
   ]);
 
+  if (error) console.error('hospitals SSR query failed:', error.message);
+
   return (
     <>
       <TopBarSection title={t('pageTitle')} />
       <Suspense fallback={null}>
-        <HospitalListClient initialHospitals={hospitals} initialCount={count} />
+        <HospitalListClient
+          initialHospitals={hospitals}
+          initialCount={count}
+          loadError={Boolean(error)}
+        />
       </Suspense>
     </>
   );

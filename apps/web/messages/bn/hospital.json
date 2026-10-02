@@ -62,6 +62,7 @@
     "reviews": "রিভিউ"
   },
   "emergencyBadgeShort": "🚨 জরুরি",
+  "verifiedBadge": "✅ ভেরিফাইড",
   "reviewCountLabel": "({count} রিভিউ)",
   "emergency247Label": "🚨 জরুরি সেবা ২৪×৭",
   "callCta": "কল করুন",

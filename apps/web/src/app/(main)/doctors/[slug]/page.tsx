@@ -5,6 +5,7 @@ import { getDoctorBySlug } from '@/lib/queries/doctor-detail';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 import { DoctorProfileClient } from '@/components/doctor-profile/DoctorProfileClient';
+import { safeJsonLd } from '@/lib/json-ld';
 
 // ISR: revalidate hourly per S02 § 3.2 ("revalidate: 1 hour for
 // profiles"). Combined with `cookies()` usage inside createClient()
@@ -85,7 +86,7 @@ export default async function DoctorProfilePage({ params }: { params: { slug: st
       {/* eslint-disable-next-line react/no-danger -- static JSON-LD we constructed ourselves, not user input */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <DoctorProfileClient doctor={doctor} reviews={reviews ?? []} pageUrl={pageUrl} />
     </>

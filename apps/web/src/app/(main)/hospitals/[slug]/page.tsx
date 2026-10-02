@@ -6,6 +6,7 @@ import { getFreshBloodStock } from '@/lib/queries/blood-services';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 import { HospitalProfileClient } from '@/components/hospital-profile/HospitalProfileClient';
+import { safeJsonLd } from '@/lib/json-ld';
 
 // ISR: revalidate hourly per S02 § 3.2, same caveat as S07's doctor
 // detail page (cookies() usage inside createClient() means this ends
@@ -100,7 +101,7 @@ export default async function HospitalProfilePage({ params }: { params: { slug: 
       {/* eslint-disable-next-line react/no-danger -- static JSON-LD we constructed ourselves, not user input */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <HospitalProfileClient
         hospital={hospital}

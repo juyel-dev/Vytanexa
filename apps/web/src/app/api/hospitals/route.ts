@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('hospitals list query failed:', error.message);
-    return NextResponse.json({ hospitals: [], count: 0, hasMore: false }, { status: 500 });
+    // 500 with no list payload: the client keeps what it has and offers retry.
+    return NextResponse.json({ error: 'hospitals_failed' }, { status: 500 });
   }
 
   const hasMore = ((params.page ?? 0) + 1) * pageSize < count;

@@ -62,6 +62,7 @@
     "reviews": "Reviews"
   },
   "emergencyBadgeShort": "🚨 Emergency",
+  "verifiedBadge": "✅ Verified",
   "reviewCountLabel": "({count} reviews)",
   "emergency247Label": "🚨 24×7 Emergency Services",
   "callCta": "Call",

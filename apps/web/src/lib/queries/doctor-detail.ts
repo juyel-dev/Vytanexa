@@ -23,8 +23,13 @@ export async function getDoctorBySlug(supabase: SupabaseClient<Database>, slug: 
     .eq('verification_status', 'verified')
     .single();
 
-  if (error || !doctor) return null;
-  return doctor;
+  // PGRST116 = zero rows (a genuine 404). Any other error must throw:
+  // returning null made a transient DB failure render notFound() for a
+  // real page, and with ISR that 404 gets cached.
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(`getDoctorBySlug failed: ${error.message}`);
+  }
+  return doctor ?? null;
 }
 
 export type DoctorDetail = NonNullable<Awaited<ReturnType<typeof getDoctorBySlug>>>;

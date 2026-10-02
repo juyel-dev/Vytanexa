@@ -10,6 +10,7 @@ export type HospitalListParams = {
 };
 
 const PAGE_SIZE = 12;
+const HOSPITAL_TYPES = ['hospital', 'clinic', 'diagnostic', 'nursing_home'] as const;
 
 /**
  * Shared query builder for the Hospital List — same pattern as
@@ -25,7 +26,16 @@ export async function queryHospitalList(
   supabase: SupabaseClient<Database>,
   params: HospitalListParams
 ) {
-  const page = params.page ?? 0;
+  // Untrusted URL input: a bad `type` hit Postgres as an invalid enum
+  // value (error -> silently shown as "no hospitals") and a NaN/negative
+  // `page` broke `.range()`. Validate here so SSR page and API agree.
+  const type = HOSPITAL_TYPES.includes(params.type as (typeof HOSPITAL_TYPES)[number])
+    ? (params.type as Database['public']['Enums']['hospital_type'])
+    : undefined;
+  const page =
+    Number.isInteger(params.page) && (params.page as number) >= 0 && (params.page as number) <= 1000
+      ? (params.page as number)
+      : 0;
 
   let query = supabase
     .from('hospitals')
@@ -37,9 +47,7 @@ export async function queryHospitalList(
     )
     .eq('verification_status', 'verified');
 
-  if (params.type) {
-    query = query.eq('type', params.type as Database['public']['Enums']['hospital_type']);
-  }
+  if (type) query = query.eq('type', type);
   if (params.emergencyOnly) query = query.eq('has_emergency_dept', true);
   if (params.locationId) {
     query = query.in('location_id', await getLocationSubtreeIds(supabase, params.locationId));
@@ -49,6 +57,9 @@ export async function queryHospitalList(
     .order('is_featured', { ascending: false })
     .order('is_trending', { ascending: false })
     .order('rating_avg', { ascending: false })
+    // Unique tiebreaker: ties on the keys above reordered between page
+    // requests -> infinite scroll showed duplicates and skipped hospitals.
+    .order('id', { ascending: true })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
   const { data, error, count } = await query;
