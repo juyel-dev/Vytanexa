@@ -24,8 +24,13 @@ export async function getArticleBySlug(supabase: SupabaseClient<Database>, slug:
     .eq('is_published', true)
     .single();
 
-  if (error || !article) return null;
-  return article;
+  // PGRST116 = zero rows (a genuine 404). Any other error must throw: a
+  // transient DB failure returned null -> notFound(), and with ISR (1hr)
+  // a real article could be cached as a 404.
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(`getArticleBySlug failed: ${error.message}`);
+  }
+  return article ?? null;
 }
 
 export type ArticleDetail = NonNullable<Awaited<ReturnType<typeof getArticleBySlug>>>;

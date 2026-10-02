@@ -23,11 +23,13 @@ export default async function ArticlesPage({
   searchParams: { [key: string]: string | undefined };
 }) {
   const supabase = createClient();
-  const [{ data: articles, count }, categories, t] = await Promise.all([
+  const [{ data: articles, count, error }, categories, t] = await Promise.all([
     queryArticleList(supabase, { category: searchParams.category, page: 0 }),
     getArticleCategories(supabase),
     getT('articles'),
   ]);
+
+  if (error) console.error('articles SSR query failed:', error.message);
 
   return (
     <>
@@ -35,6 +37,7 @@ export default async function ArticlesPage({
       <ArticleListClient
         initialArticles={articles}
         initialCount={count}
+        loadError={Boolean(error)}
         categories={categories}
       />
     </>

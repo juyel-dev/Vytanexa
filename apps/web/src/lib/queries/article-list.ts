@@ -17,7 +17,12 @@ export async function queryArticleList(
   supabase: SupabaseClient<Database>,
   params: ArticleListParams
 ) {
-  const page = params.page ?? 0;
+  // Untrusted URL input: NaN/negative `page` broke `.range()` (shown as
+  // "no articles"). Normalize here so SSR page and API agree.
+  const page =
+    Number.isInteger(params.page) && (params.page as number) >= 0 && (params.page as number) <= 1000
+      ? (params.page as number)
+      : 0;
 
   let query = supabase
     .from('articles')
@@ -30,7 +35,12 @@ export async function queryArticleList(
   if (params.category) query = query.eq('category', params.category);
 
   query = query
-    .order('published_at', { ascending: false })
+    // DESC sorts NULLs FIRST in Postgres: a published row with no
+    // published_at would be pinned above every dated article.
+    .order('published_at', { ascending: false, nullsFirst: false })
+    // Unique tiebreaker: equal timestamps (bulk-seeded articles) reordered
+    // between page requests -> duplicates/skips in infinite scroll.
+    .order('id', { ascending: true })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
   const { data, error, count } = await query;

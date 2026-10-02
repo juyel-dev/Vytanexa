@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n-client';
+import { useLocalizedField } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import { ArticleCard, ArticleMeta } from '@/components/shared/ArticleCard';
 import type { Json } from '@vytanexa/database';
@@ -31,10 +31,12 @@ type ArticleListItem = {
 export function ArticleListClient({
   initialArticles,
   initialCount,
+  loadError = false,
   categories,
 }: {
   initialArticles: ArticleListItem[];
   initialCount: number;
+  loadError?: boolean;
   categories: string[];
 }) {
   const router = useRouter();
@@ -49,18 +51,52 @@ export function ArticleListClient({
   const [page, setPage] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialArticles.length < initialCount);
+  const [moreFailed, setMoreFailed] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Query string the displayed list belongs to — a slow load-more for an
+  // OLD category must not append into the list of a NEW one.
+  const queryKeyRef = useRef(searchParams.toString());
+  queryKeyRef.current = searchParams.toString();
 
   useEffect(() => {
     setArticles(initialArticles);
     setCount(initialCount);
     setPage(0);
     setHasMore(initialArticles.length < initialCount);
+    setMoreFailed(false);
   }, [initialArticles, initialCount]);
+
+  // Previously: no try/catch and no res.ok check — a network error or a
+  // 500 (`json.articles` undefined -> spread throws) left `loadingMore`
+  // true forever, which froze infinite scroll for the rest of the visit.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    setMoreFailed(false);
+    const nextPage = page + 1;
+    const params = new URLSearchParams(searchParams.toString());
+    const requestKey = params.toString();
+    params.set('page', String(nextPage));
+    try {
+      const res = await fetch(`/api/articles?${params.toString()}`);
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const json = await res.json();
+      if (queryKeyRef.current !== requestKey) return; // category changed meanwhile
+      setArticles((prev) => {
+        const seen = new Set(prev.map((a) => a.id));
+        return [...prev, ...(json.articles ?? []).filter((a: ArticleListItem) => !seen.has(a.id))];
+      });
+      setHasMore(json.hasMore);
+      setPage(nextPage);
+    } catch {
+      if (queryKeyRef.current === requestKey) setMoreFailed(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page, searchParams]);
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || !hasMore) return;
+    if (!el || !hasMore || moreFailed) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && !loadingMore) loadMore();
@@ -69,27 +105,15 @@ export function ArticleListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loadingMore, page]);
-
-  const loadMore = async () => {
-    setLoadingMore(true);
-    const nextPage = page + 1;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', String(nextPage));
-    const res = await fetch(`/api/articles?${params.toString()}`);
-    const json = await res.json();
-    setArticles((prev) => [...prev, ...json.articles]);
-    setHasMore(json.hasMore);
-    setPage(nextPage);
-    setLoadingMore(false);
-  };
+  }, [hasMore, loadingMore, loadMore, moreFailed]);
 
   const activeCategory = searchParams.get('category');
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     value ? params.set(key, value) : params.delete(key);
-    router.push(`${pathname}?${params.toString()}`);
+    // replace, not push — chip taps shouldn't stack history entries
+    // (same as the Doctor/Hospital lists).
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
   const [featured, ...rest] = articles;
@@ -98,6 +122,7 @@ export function ArticleListClient({
     <div className="pb-6">
       <div className="flex gap-2 overflow-x-auto border-b border-neutral-100 px-4 py-2.5 [scrollbar-width:none]">
         <button
+          aria-pressed={!activeCategory}
           onClick={() => updateParam('category', null)}
           className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
             !activeCategory ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-700'
@@ -108,6 +133,7 @@ export function ArticleListClient({
         {categories.map((cat) => (
           <button
             key={cat}
+            aria-pressed={activeCategory === cat}
             onClick={() => updateParam('category', cat)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
               activeCategory === cat
@@ -120,7 +146,17 @@ export function ArticleListClient({
         ))}
       </div>
 
-      {articles.length === 0 ? (
+      {articles.length === 0 && loadError ? (
+        <div className="px-6 py-12 text-center">
+          <p className="text-[15px] font-semibold text-neutral-700">{tCommon('error')}</p>
+          <button
+            onClick={() => router.refresh()}
+            className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+          >
+            {tCommon('retry')}
+          </button>
+        </div>
+      ) : articles.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
             {t('noArticlesFound')}
@@ -136,6 +172,8 @@ export function ArticleListClient({
                     src={featured.cover_image_url}
                     alt={localize(featured.title_translations)}
                     fill
+                    priority
+                    sizes="100vw"
                     className="object-cover"
                   />
                 )}
@@ -160,10 +198,21 @@ export function ArticleListClient({
 
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? tCommon('loading') : ''}
+              {moreFailed ? (
+                <button
+                  onClick={loadMore}
+                  className="h-10 rounded-md border border-neutral-300 px-5 font-semibold text-neutral-700"
+                >
+                  {tCommon('retry')}
+                </button>
+              ) : loadingMore ? (
+                tCommon('loading')
+              ) : (
+                ''
+              )}
             </div>
           )}
-          {!hasMore && rest.length > 0 && (
+          {!hasMore && !moreFailed && rest.length > 0 && (
             <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreArticles')}</p>
           )}
         </>

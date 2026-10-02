@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Share2 } from 'lucide-react';
-import { useLocalizedField, formatRelativeTimeBn, toBengaliDigits } from '@/lib/i18n-client';
+import { useLocalizedField, formatRelativeTimeBn } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import { ShareSheet } from '@/components/shared/ShareSheet';
 import type { ArticleDetail } from '@/lib/queries/article-detail';
@@ -52,6 +52,7 @@ export function ArticleDetailClient({
         entity_type: 'article',
         entity_id: article.id,
       }),
+      keepalive: true,
     }).catch(() => {});
   }, [article.id]);
 
@@ -70,6 +71,7 @@ export function ArticleDetailClient({
             entity_type: 'article',
             entity_id: article.id,
           }),
+          keepalive: true,
         }).catch(() => {});
         window.removeEventListener('scroll', handleScroll);
       }
@@ -87,6 +89,7 @@ export function ArticleDetailClient({
         entity_id: relatedId,
         metadata: { from_article_id: article.id },
       }),
+      keepalive: true, // fired on tap, right before navigation
     }).catch(() => {});
   };
 
@@ -111,7 +114,14 @@ export function ArticleDetailClient({
 
       {article.cover_image_url && (
         <div className="relative h-[220px] w-full bg-neutral-100">
-          <Image src={article.cover_image_url} alt={title} fill className="object-cover" />
+          <Image
+            src={article.cover_image_url}
+            alt={title}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
         </div>
       )}
 
@@ -134,7 +144,7 @@ export function ArticleDetailClient({
           {article.read_time_minutes && (
             <>
               {authorName && '  ·  '}
-              {t('readTimeSuffix', { n: toBengaliDigits(article.read_time_minutes) })}
+              {t('readTime', { minutes: article.read_time_minutes })}
             </>
           )}
           {article.published_at && (

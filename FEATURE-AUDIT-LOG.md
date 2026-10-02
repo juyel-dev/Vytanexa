@@ -29,7 +29,7 @@ from scratch."
 | S10 | Lab & diagnostic tests | ✅ **done** — see below |
 | S11 | Blood services page | ✅ **done** — see below (+ migration 0019) |
 | S12 | Emergency system (FAB + full page) | ✅ **done** — see below |
-| S13 | Health magazine · articles | not audited (i18n-migrated only, batch 26) |
+| S13 | Health magazine · articles | ✅ **done** — see below |
 | S14 | Q&A community | not audited (i18n-migrated only, batch 17/qa component) |
 | S15 | Polls · reports · user submissions | not audited (i18n-migrated only, batch 32) |
 | S16 | More page | not audited |
@@ -39,6 +39,11 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S13 — Health magazine · articles — DONE
+
+Fixed: (1) **infinite scroll froze for the rest of the visit** on any network error or 500 — `loadMore` had no try/catch/`res.ok`, `json.articles` undefined made the spread throw, `loadingMore` stayed true; now retry button, list kept, stale (old-category) responses dropped, de-dupe by id; (2) `published_at DESC` put published rows with NULL `published_at` FIRST (Postgres NULLS FIRST) — now `nullsFirst: false`, plus unique `id` tiebreaker (bulk-seeded equal timestamps reordered between pages); (3) `getArticleBySlug` turned any DB error into `notFound()` — with ISR (1hr) a real article could be cached as 404; now only PGRST116 is a 404; (4) SSR list error shown as "no articles" -> error + retry; `page` NaN/negative validated; (5) detail page showed Bengali digits in the read time on English/Hindi UI (`toBengaliDigits` + `readTimeSuffix`) — now the locale-aware `readTime` ICU key like the card (`readTimeSuffix` key now unused); (6) chips `router.push` -> `replace` (history spam), `aria-pressed`; hero images `priority`+`sizes`; analytics beacons `keepalive` (related-click fires right before navigation).
+Verified OK: body HTML is sanitized with DOMPurify at admin write time (`apps/admin/src/lib/sanitize-html.ts`, both create + update routes). Flagged, not changed: web renders `body_html` as-is, so rows inserted by SQL/seed bypass that sanitizer — adding render-side sanitizing needs a new web dependency (`isomorphic-dompurify`); `formatRelativeTimeBn` is Bengali-only text even on English/Hindi UI (shared helper, used app-wide — needs a locale-aware replacement); spec analytics `article_share` not added.
 
 ## S08 — Hospital list & detail — DONE
 
