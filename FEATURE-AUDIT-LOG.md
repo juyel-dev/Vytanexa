@@ -26,8 +26,8 @@ from scratch."
 | S07 | Doctor profile page | ✅ **done** — see below |
 | S08 | Hospital list · hospital detail | ✅ **done** — see below |
 | S09 | Symptoms page · symptom detail · emergency flagging | ✅ **done** — see below |
-| S10 | Lab & diagnostic tests | not audited (i18n-migrated only, batch 23) |
-| S11 | Blood services page | Phase C.3 (blood bank detail) + analytics gap fixed separately (see TODO.md) — not a full audit pass |
+| S10 | Lab & diagnostic tests | ✅ **done** — see below |
+| S11 | Blood services page | ✅ **done** — see below (+ migration 0019) |
 | S12 | Emergency system (FAB + full page) | ✅ **done** — see below |
 | S13 | Health magazine · articles | not audited (i18n-migrated only, batch 26) |
 | S14 | Q&A community | not audited (i18n-migrated only, batch 17/qa component) |
