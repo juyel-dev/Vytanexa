@@ -12,6 +12,13 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function POST() {
   const supabase = createClient();
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+  // Don't report success when sign-out failed: the client closes its
+  // dialog and shows the guest state, leaving someone on a shared phone
+  // believing they're signed out while the session is still live.
+  if (error) {
+    console.error('signout failed:', error.message);
+    return NextResponse.json({ error: 'signout_failed' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

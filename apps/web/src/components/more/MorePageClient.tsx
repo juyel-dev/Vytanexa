@@ -39,6 +39,27 @@ type CustomPageLink = { slug: string; title: string; menu_icon: string | null };
 
 const APP_VERSION = '1.0.0';
 
+/** Spec § S16: "masked phone". Keeps the first 3 and last 2 characters
+ *  (e.g. `+91•••••••••10`) so the number isn't readable to anyone glancing
+ *  at the screen — it was previously shown in full. */
+function maskPhone(phone: string): string {
+  if (phone.length <= 6) return phone;
+  return `${phone.slice(0, 3)}${'•'.repeat(phone.length - 5)}${phone.slice(-2)}`;
+}
+
+/** Admin's `menu_icon` is free text: a Lucide key OR an emoji (the admin
+ *  Menu Manager previews it as an emoji). The web used to ignore emoji and
+ *  show a generic globe for every custom page. */
+function resolveMenuIcon(menuIcon: string | null): {
+  icon?: React.ComponentType<{ className?: string }>;
+  emoji?: string;
+} {
+  const value = menuIcon?.trim();
+  if (!value) return { icon: Globe };
+  if (value in CUSTOM_PAGE_ICONS) return { icon: CUSTOM_PAGE_ICONS[value as MenuIconKey] };
+  return value.length <= 8 ? { emoji: value } : { icon: Globe };
+}
+
 /**
  * More Page — VYTANEXA-BLUEPRINT.md § S16. Grouped sections exactly
  * per the spec's mockup: account, health tools, community, custom
@@ -82,13 +103,24 @@ export function MorePageClient({
   const { districtName } = useLocationStore();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState(false);
 
   const handleSignOut = async () => {
     setSigningOut(true);
-    await fetch('/api/auth/signout', { method: 'POST' });
-    setSigningOut(false);
-    setConfirmSignOut(false);
-    router.refresh();
+    setSignOutError(false);
+    // Previously the dialog closed and the page refreshed regardless of the
+    // outcome, so a failed sign-out (network / server error) looked like a
+    // success. Keep the dialog open with an error until it really worked.
+    try {
+      const res = await fetch('/api/auth/signout', { method: 'POST' });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      setConfirmSignOut(false);
+      router.refresh();
+    } catch {
+      setSignOutError(true);
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   return (
@@ -100,14 +132,14 @@ export function MorePageClient({
           className="flex items-center gap-3 border-b border-neutral-100 px-4 py-4"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[18px] font-bold text-brand-700">
-            {currentUser.name ? currentUser.name.charAt(0) : '👤'}
+            {currentUser.name ? (Array.from(currentUser.name)[0] ?? '👤') : '👤'}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold text-neutral-900">
               {t('welcome', { name: currentUser.name ?? tAccount('defaultUserName') })}
             </p>
             {currentUser.phone && (
-              <p className="text-[13px] text-neutral-500">{currentUser.phone}</p>
+              <p className="text-[13px] text-neutral-500">{maskPhone(currentUser.phone)}</p>
             )}
           </div>
           <ChevronRight className="h-4 w-4 shrink-0 text-neutral-300" />
@@ -148,9 +180,15 @@ export function MorePageClient({
       {customPages.length > 0 && (
         <MenuSection title={t('sections.info')}>
           {customPages.map((page) => {
-            const Icon = CUSTOM_PAGE_ICONS[page.menu_icon as MenuIconKey] ?? Globe;
+            const { icon, emoji } = resolveMenuIcon(page.menu_icon);
             return (
-              <MenuRow key={page.slug} href={`/page/${page.slug}`} icon={Icon} label={page.title} />
+              <MenuRow
+                key={page.slug}
+                href={`/page/${page.slug}`}
+                icon={icon}
+                emoji={emoji}
+                label={page.title}
+              />
             );
           })}
         </MenuSection>
@@ -193,9 +231,15 @@ export function MorePageClient({
             <p className="mb-4 text-center text-[15px] font-semibold text-neutral-900">
               {t('signOutConfirm')}
             </p>
+            {signOutError && (
+              <p className="mb-3 text-center text-[12px] text-emergency-600">{tc('error')}</p>
+            )}
             <div className="flex gap-2">
               <button
-                onClick={() => setConfirmSignOut(false)}
+                onClick={() => {
+                  setConfirmSignOut(false);
+                  setSignOutError(false);
+                }}
                 className="h-11 flex-1 rounded-md border border-neutral-200 text-[14px] font-semibold text-neutral-700"
               >
                 {tc('cancel')}
@@ -229,12 +273,14 @@ function MenuSection({ title, children }: { title: string; children: React.React
 function MenuRow({
   href,
   icon: Icon,
+  emoji,
   label,
   value,
   showDot,
 }: {
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
+  emoji?: string;
   label: string;
   value?: string;
   showDot?: boolean;
@@ -242,7 +288,13 @@ function MenuRow({
   return (
     <Link href={href} className="flex h-[52px] items-center gap-3 active:bg-neutral-50">
       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50">
-        <Icon className="h-[22px] w-[22px] text-brand-600" />
+        {Icon ? (
+          <Icon className="h-[22px] w-[22px] text-brand-600" />
+        ) : (
+          <span className="text-[20px] leading-none" aria-hidden="true">
+            {emoji}
+          </span>
+        )}
         {showDot && (
           <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-emergency-600" />
         )}

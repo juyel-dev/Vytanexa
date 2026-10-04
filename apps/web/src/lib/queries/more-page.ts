@@ -50,7 +50,12 @@ export async function hasUnreadNotifications(
     .from('notifications')
     .select('id')
     .eq('is_active', true)
-    .or(`type.in.(general,emergency),and(type.eq.personal,target_user_id.eq.${userId})`);
+    .or(`type.in.(general,emergency),and(type.eq.personal,target_user_id.eq.${userId})`)
+    // Mirror `getNotifications` (latest 50): the Notifications page can't
+    // show anything older, so counting older unread rows left the red dot
+    // stuck on with nothing to read.
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error || !notifications || notifications.length === 0) return false;
 

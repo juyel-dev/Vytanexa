@@ -32,13 +32,18 @@ from scratch."
 | S13 | Health magazine · articles | ✅ **done** — see below |
 | S14 | Q&A community | ✅ **done** — see below |
 | S15 | Polls · reports · user submissions | ✅ **done** — see below |
-| S16 | More page | not audited |
+| S16 | More page | ✅ **done** — see below |
 | S17 | User account | not audited |
 | S18 | Settings | not audited (i18n-migrated only, batch 19) |
 | S19 | Custom pages / block builder | not audited (i18n-migrated only, batch 29) |
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S16 — More page — DONE
+
+Fixed: (1) phone number was shown in full — spec says "masked phone" — now `+91•••••••••10`; (2) **failed sign-out looked like success**: the dialog closed and the page refreshed regardless of the result, and `/api/auth/signout` returned success even when `signOut()` errored (risky on shared phones) — route now 500s on error, client keeps the dialog open with an error; (3) admin sets a custom page's `menu_icon` as an **emoji** (Menu Manager previews it so) but the web ignored it and showed a generic globe on every custom page — now renders the emoji (Lucide keys still work); (4) notification red dot counted ALL active unread notifications while the Notifications page shows only the latest 50, so older unread rows left the dot stuck on with nothing to read — badge query now mirrors the page; (5) avatar initial used `charAt(0)` (breaks emoji/surrogate-pair names) — `Array.from`.
+Flagged, not changed: `/page/support`, `/page/terms`, `/page/privacy` are hardcoded links — they 404 unless admin creates custom pages with exactly those slugs (verify in Admin); "Privacy" row and the Language/Location rows all go to `/settings`; guests never get a notification dot (documented scope line in `more-page.ts`); spec's 2-column compact-row grid isn't used (single-column rows).
 
 ## S15 — Polls · reports · submissions — DONE
 
