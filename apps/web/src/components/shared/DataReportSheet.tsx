@@ -36,14 +36,23 @@ export function DataReportSheet({
     if (!reason) return;
     setSubmitting(true);
     setError(null);
-    const res = await fetch('/api/data-reports', {
-      method: 'POST',
-      body: JSON.stringify({ entity_type: entityType, entity_id: entityId, reason, detail }),
-    });
+    // try/catch: a network error left `submitting` true forever (the
+    // person could never retry) and a non-JSON error body threw.
+    let res: Response;
+    try {
+      res = await fetch('/api/data-reports', {
+        method: 'POST',
+        body: JSON.stringify({ entity_type: entityType, entity_id: entityId, reason, detail }),
+      });
+    } catch {
+      setSubmitting(false);
+      setError(t('submitFailed'));
+      return;
+    }
     setSubmitting(false);
     if (!res.ok) {
-      const json = await res.json();
-      setError(json.error ?? t('submitFailed'));
+      const json = await res.json().catch(() => null);
+      setError(json?.error ?? t('submitFailed'));
       return;
     }
     fetch('/api/analytics', {
@@ -96,6 +105,7 @@ export function DataReportSheet({
           <textarea
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
+            maxLength={1000}
             rows={3}
             className="mb-3 w-full rounded-md border border-neutral-200 px-3 py-2 text-[14px]"
           />

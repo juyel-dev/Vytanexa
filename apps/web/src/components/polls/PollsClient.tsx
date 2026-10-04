@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getDeviceId } from '@/lib/device-id';
-import { toBengaliDigits } from '@/lib/i18n-client';
+import { useResolvedLocale } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import type { PollWithOptions } from '@/lib/queries/polls';
 
@@ -17,14 +18,36 @@ import type { PollWithOptions } from '@/lib/queries/polls';
  * try to vote optimistically; if the server says "already voted"
  * (409), that also tells us to show results-only for that poll.
  */
-export function PollsClient({ polls }: { polls: PollWithOptions[] }) {
+export function PollsClient({
+  polls,
+  loadError = false,
+}: {
+  polls: PollWithOptions[];
+  loadError?: boolean;
+}) {
   const t = useT('polls');
+  const tc = useT('common');
+  const router = useRouter();
   useEffect(() => {
     fetch('/api/analytics', {
       method: 'POST',
       body: JSON.stringify({ event_type: 'poll_view' }),
     }).catch(() => {});
   }, []);
+
+  if (polls.length === 0 && loadError) {
+    return (
+      <div className="px-6 py-12 text-center">
+        <p className="text-[15px] font-semibold text-neutral-700">{tc('error')}</p>
+        <button
+          onClick={() => router.refresh()}
+          className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+        >
+          {tc('retry')}
+        </button>
+      </div>
+    );
+  }
 
   if (polls.length === 0) {
     return (
@@ -45,6 +68,10 @@ export function PollsClient({ polls }: { polls: PollWithOptions[] }) {
 
 function PollCard({ poll }: { poll: PollWithOptions }) {
   const t = useT('polls');
+  // Locale-aware digits (Bengali digits on bn, Latin on en/hi) — this used
+  // to force Bengali digits on every language.
+  const locale = useResolvedLocale();
+  const nf = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const votedKey = `vytanexa_voted_poll_${poll.id}`;
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -59,8 +86,10 @@ function PollCard({ poll }: { poll: PollWithOptions }) {
   const showResults = hasVoted || isExpired;
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem(votedKey)) {
-      setHasVoted(true);
+    try {
+      if (localStorage.getItem(votedKey)) setHasVoted(true);
+    } catch {
+      // storage blocked — the server still enforces one vote per device
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -71,34 +100,52 @@ function PollCard({ poll }: { poll: PollWithOptions }) {
     setSubmitting(true);
     setError(null);
 
-    const res = await fetch(`/api/polls/${poll.id}/vote`, {
-      method: 'POST',
-      body: JSON.stringify({ optionId, voterKey: getDeviceId() }),
-    });
-    const json = await res.json();
+    // try/catch + safe storage: a network error / non-JSON body used to
+    // throw here, leaving `submitting` stuck true (poll frozen), and a
+    // storage exception AFTER a successful vote skipped the results reveal.
+    const rememberVoted = () => {
+      try {
+        localStorage.setItem(votedKey, '1');
+      } catch {
+        /* storage blocked */
+      }
+    };
+    let res: Response;
+    try {
+      res = await fetch(`/api/polls/${poll.id}/vote`, {
+        method: 'POST',
+        body: JSON.stringify({ optionId, voterKey: getDeviceId() }),
+      });
+    } catch {
+      setSubmitting(false);
+      setError(t('voteErrorFallback'));
+      setSelectedOption(null);
+      return;
+    }
+    const json = await res.json().catch(() => null);
     setSubmitting(false);
 
     if (!res.ok) {
       if (res.status === 409) {
         // Already voted from this device previously (e.g. localStorage
         // was cleared) — show results anyway rather than erroring.
-        localStorage.setItem(votedKey, '1');
+        rememberVoted();
         setHasVoted(true);
         return;
       }
-      setError(json.error ?? t('voteErrorFallback'));
+      setError(json?.error ?? t('voteErrorFallback'));
       setSelectedOption(null);
       return;
     }
 
-    localStorage.setItem(votedKey, '1');
+    rememberVoted();
     setOptions((prev) =>
       prev.map((o) => {
-        const updated = json.options.find((u: { id: string; vote_count: number }) => u.id === o.id);
+        const updated = json?.options?.find((u: { id: string; vote_count: number }) => u.id === o.id);
         return updated ? { ...o, vote_count: updated.vote_count } : o;
       })
     );
-    setTotalVotes(json.totalVotes);
+    if (typeof json?.totalVotes === 'number') setTotalVotes(json.totalVotes);
     setHasVoted(true);
 
     fetch('/api/analytics', {
@@ -148,7 +195,7 @@ function PollCard({ poll }: { poll: PollWithOptions }) {
                 </span>
                 {showResults && (
                   <span className="font-semibold text-neutral-700">
-                    {toBengaliDigits(pct)}%
+                    {nf.format(pct)}%
                   </span>
                 )}
               </div>
@@ -160,11 +207,11 @@ function PollCard({ poll }: { poll: PollWithOptions }) {
       {error && <p className="mt-2 text-[12px] text-emergency-600">{error}</p>}
 
       <p className="mt-3 text-[12px] text-neutral-500">
-        {t('totalVotesLabel', { n: toBengaliDigits(totalVotes) })}
+        {t('totalVotesLabel', { n: nf.format(totalVotes) })}
         {isExpired
           ? `  ·  ${t('pollEndedSuffix')}`
           : daysLeft !== null && daysLeft >= 0
-            ? `  ·  ${t('daysLeftSuffix', { n: toBengaliDigits(daysLeft) })}`
+            ? `  ·  ${t('daysLeftSuffix', { n: nf.format(daysLeft) })}`
             : ''}
       </p>
     </div>

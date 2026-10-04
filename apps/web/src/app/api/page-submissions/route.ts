@@ -16,7 +16,8 @@ import { getT } from '@vytanexa/i18n/server';
  */
 export async function POST(request: NextRequest) {
   const t = await getT('validation');
-  const body = await request.json();
+  // Malformed JSON used to throw -> unhandled 500.
+  const body = await request.json().catch(() => null);
   const parsed = pageSubmissionSchema(t).safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });

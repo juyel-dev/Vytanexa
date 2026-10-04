@@ -18,10 +18,9 @@ export async function getActivePolls(supabase: SupabaseClient<Database>) {
     .order('created_at', { ascending: false })
     .limit(10);
 
-  if (error) {
-    console.error('getActivePolls failed:', error.message);
-    return [];
-  }
+  // Throw (don't return []): an outage must not read as "no polls right
+  // now". The page catches this and shows an error + retry.
+  if (error) throw new Error(`getActivePolls failed: ${error.message}`);
   return data ?? [];
 }
 

@@ -31,7 +31,7 @@ from scratch."
 | S12 | Emergency system (FAB + full page) | ✅ **done** — see below |
 | S13 | Health magazine · articles | ✅ **done** — see below |
 | S14 | Q&A community | ✅ **done** — see below |
-| S15 | Polls · reports · user submissions | not audited (i18n-migrated only, batch 32) |
+| S15 | Polls · reports · user submissions | ✅ **done** — see below |
 | S16 | More page | not audited |
 | S17 | User account | not audited |
 | S18 | Settings | not audited (i18n-migrated only, batch 19) |
@@ -39,6 +39,11 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S15 — Polls · reports · submissions — DONE
+
+Fixed: (1) **vote route accepted any `optionId`** — never checked it belongs to the poll in the URL, so a vote could land on another poll's option; also voted on missing/admin-deactivated polls (RLS hides them -> `poll` null was ignored, insert went ahead / 500) — now 404 for missing/inactive, 400 for a foreign option, non-UUID id is a clean 404, and the rate-limit slot is only consumed after those cheap checks; (2) `getActivePolls` swallowed errors into `[]` ("no polls right now" during an outage) — now throws, page shows error + retry; (3) poll vote client: network error / non-JSON body left `submitting` stuck (poll frozen), and a `localStorage` exception *after* a successful vote skipped the results reveal — try/catch + safe storage; (4) **`getDeviceId()` threw when storage is blocked** (Safari private mode / blocked cookies) which broke Q&A upvotes AND poll votes — now falls back to an in-memory id; (5) poll numbers forced Bengali digits on every language — now `Intl.NumberFormat(locale)`; (6) data-report sheet: network error left the button stuck, non-JSON error bodies threw, textarea `maxLength` = server limit; (7) `/api/data-reports` and `/api/page-submissions` threw unhandled 500 on malformed JSON; `page_submissions.submission_data` was **unbounded** (multi-MB blobs per request) — capped at 10 KB.
+Flagged, not changed: poll vote rate-limit key includes `voterKey`, so a script can mint fresh keys and stuff ballots (spec accepts device-level dedup as non-security); tightening to per-IP would hit shared mobile NAT users — your call; data reports accept any UUID for `entity_id` (no existence check; limited to 10/day/IP); spec "or per-account if signed in" dedup and `poll_view`-per-poll not built; reports sheet is wired on Doctor + Hospital only (as spec).
 
 ## S14 — Q&A community — DONE
 

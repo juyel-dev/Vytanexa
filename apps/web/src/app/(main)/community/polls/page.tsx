@@ -28,12 +28,20 @@ export default async function PollsPage() {
     notFound();
   }
 
-  const [polls, t] = await Promise.all([getActivePolls(supabase), getT('polls')]);
+  let loadError = false;
+  const [polls, t] = await Promise.all([
+    getActivePolls(supabase).catch((err) => {
+      console.error('polls SSR query failed:', err);
+      loadError = true;
+      return [];
+    }),
+    getT('polls'),
+  ]);
 
   return (
     <>
       <TopBarSection title={t('title')} />
-      <PollsClient polls={polls} />
+      <PollsClient polls={polls} loadError={loadError} />
     </>
   );
 }

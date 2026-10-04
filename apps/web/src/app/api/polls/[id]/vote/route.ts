@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { pollVoteSchema } from '@/lib/validations/polls';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { z } from 'zod';
 import { getT } from '@vytanexa/i18n/server';
 
 /**
@@ -27,6 +28,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return NextResponse.json({ error: t('polls.featureDisabled') }, { status: 404 });
   }
 
+  // A non-UUID id used to reach Postgres and come back as a 500.
+  if (!z.string().uuid().safeParse(params.id).success) {
+    return NextResponse.json({ error: t('polls.voteFailed') }, { status: 404 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -39,8 +45,35 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
   const { optionId, voterKey } = parsed.data;
 
-  // Rate-limit polls vote per voterKey + poll (anti-flood, in addition to
-  // the DB UNIQUE(poll_id,voter_key) that translates to 409 on duplicate).
+  // `polls` RLS only returns active polls, so null here = missing OR
+  // admin-deactivated. Previously the insert went ahead anyway (and failed
+  // as a 500 / was accepted for a poll the admin had turned off).
+  const { data: poll } = await supabase
+    .from('polls')
+    .select('expires_at')
+    .eq('id', params.id)
+    .maybeSingle();
+  if (!poll) {
+    return NextResponse.json({ error: t('polls.voteFailed') }, { status: 404 });
+  }
+  if (poll.expires_at && new Date(poll.expires_at) < new Date()) {
+    return NextResponse.json({ error: t('polls.expired') }, { status: 400 });
+  }
+
+  // The option must belong to THIS poll — `optionId` was never checked, so
+  // a vote could be recorded against another poll's option.
+  const { data: option } = await supabase
+    .from('poll_options')
+    .select('id')
+    .eq('id', optionId)
+    .eq('poll_id', params.id)
+    .maybeSingle();
+  if (!option) {
+    return NextResponse.json({ error: t('polls.invalidOption') }, { status: 400 });
+  }
+
+  // Rate-limit AFTER the cheap validity checks so invalid requests don't
+  // burn a person's hourly allowance.
   const ip = getClientIp(request);
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
     p_key: `poll_vote:${ip}:${params.id}:${voterKey}`,
@@ -51,16 +84,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     console.error('rate limit check failed:', rateLimitError.message);
   } else if (!allowed) {
     return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
-  }
-
-  const { data: poll } = await supabase
-    .from('polls')
-    .select('expires_at')
-    .eq('id', params.id)
-    .single();
-
-  if (poll?.expires_at && new Date(poll.expires_at) < new Date()) {
-    return NextResponse.json({ error: t('polls.expired') }, { status: 400 });
   }
 
   const { error } = await supabase

@@ -16,12 +16,21 @@ const STORAGE_KEY = 'vytanexa_device_id';
  * `user_id` becomes the stronger key for signed-in users; this stays
  * as the guest fallback.
  */
+// Fallback when localStorage is unavailable (blocked cookies / some
+// private modes throw SecurityError on access): without it every caller
+// (upvotes, poll votes) threw before doing anything.
+let memoryId: string | null = null;
+
 export function getDeviceId(): string {
   if (typeof window === 'undefined') return '';
-  let id = localStorage.getItem(STORAGE_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(STORAGE_KEY, id);
+  try {
+    let id = localStorage.getItem(STORAGE_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(STORAGE_KEY, id);
+    }
+    return id;
+  } catch {
+    return (memoryId ??= crypto.randomUUID());
   }
-  return id;
 }
