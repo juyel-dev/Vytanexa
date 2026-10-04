@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { answerSchema } from '@/lib/validations/answers';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getT } from '@vytanexa/i18n/server';
 
 /**
@@ -22,19 +23,27 @@ import { getT } from '@vytanexa/i18n/server';
  */
 export async function POST(request: NextRequest) {
   const t = await getT('validation');
-  const body = await request.json();
-  // Normalize client field `body` → schema field `body`, plus validate
+  const supabase = createClient();
+
+  // Spec § S14: the ENTIRE module sits behind `community_qa`. The pages and
+  // /api/questions honored it, but this write endpoint stayed open when
+  // the admin turned Q&A off.
+  if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
+    return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
+  }
+
+  // Malformed JSON used to throw -> unhandled 500.
+  const body = await request.json().catch(() => null);
   const parsed = answerSchema(t).safeParse({
-    question_id: body.question_id,
-    body: body.body,
-    author_name: body.author_name,
+    question_id: body?.question_id,
+    body: body?.body,
+    author_name: body?.author_name,
   });
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
   }
   const { question_id, body: answerBody, author_name } = parsed.data;
 
-  const supabase = createClient();
   const ip = getClientIp(request);
 
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {

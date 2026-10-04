@@ -30,7 +30,7 @@ from scratch."
 | S11 | Blood services page | ✅ **done** — see below (+ migration 0019) |
 | S12 | Emergency system (FAB + full page) | ✅ **done** — see below |
 | S13 | Health magazine · articles | ✅ **done** — see below |
-| S14 | Q&A community | not audited (i18n-migrated only, batch 17/qa component) |
+| S14 | Q&A community | ✅ **done** — see below |
 | S15 | Polls · reports · user submissions | not audited (i18n-migrated only, batch 32) |
 | S16 | More page | not audited |
 | S17 | User account | not audited |
@@ -39,6 +39,11 @@ from scratch."
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S14 — Q&A community — DONE
+
+Fixed: (1) **upvote toggle silently removed votes** — `upvoted` started `false` on every load but the API toggles, so a returning voter tapping "agree" deleted their vote; now this device's votes persist in localStorage, the UI reconciles to the server's `{upvoted}` response, button disabled while in flight (double-tap), network errors revert instead of an unhandled rejection; (2) `/api/answers` and `/api/questions/[id]/upvote` ignored the `community_qa` flag (spec: whole module gated) — writes stayed open when admin disabled Q&A; (3) load-more 500/404 -> false "no more questions" (parsed `{}`) — now retry button, stale-filter guard, de-dupe; (4) no sort tiebreaker (most questions have upvote_count 0) -> duplicates/skips; upvoted sort now secondary `created_at`; (5) "✅ answered by verified doctor" badge was lost on every page after the first — API now returns `doctorAnsweredIds` per page; (6) `getQuestionById` turned DB errors into 404 (and non-UUID ids are now a clean 404 instead of a DB error); (7) malformed JSON bodies threw unhandled 500s (3 routes); concurrent double-vote (23505) showed a false error; invalid `filter`/`sort`/`page` validated; (8) Ask sheet / answer form: network error left the submit button stuck forever + non-JSON error bodies threw — fixed; input `maxLength` matches server limits; SSR list error -> error + retry; chips `replace` + `aria-pressed`.
+Flagged, not changed: sort UI (newest / most-upvoted / unanswered-first) is spec'd but only filter chips exist (API supports `sort=upvoted`) — not adding; answer form isn't sign-in-gated (deferred to S22 by design); `getAnswers` failure shows "no answers yet" (could invite duplicate answers) ; spec analytics `question_submit` not added; shared `formatRelativeTimeBn` Bengali-only issue (see S13).
 
 ## S13 — Health magazine · articles — DONE
 

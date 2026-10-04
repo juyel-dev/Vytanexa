@@ -36,12 +36,14 @@ const FILTERS = ['all', 'answered', 'unanswered'] as const;
 export function QAListClient({
   initialQuestions,
   initialCount,
-  doctorAnsweredIds,
+  doctorAnsweredIds: initialDoctorAnsweredIds,
+  loadError = false,
   categories,
 }: {
   initialQuestions: QuestionListItem[];
   initialCount: number;
   doctorAnsweredIds: Set<string>;
+  loadError?: boolean;
   categories: Category[];
 }) {
   const t = useT('qa');
@@ -57,37 +59,55 @@ export function QAListClient({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialQuestions.length < initialCount);
   const [askOpen, setAskOpen] = useState(false);
+  const [doctorAnsweredIds, setDoctorAnsweredIds] = useState(initialDoctorAnsweredIds);
+  const [moreFailed, setMoreFailed] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Query string the displayed list belongs to — a slow load-more for an
+  // OLD filter must not append into the list of a NEW one.
+  const queryKeyRef = useRef(searchParams.toString());
+  queryKeyRef.current = searchParams.toString();
 
   useEffect(() => {
     setQuestions(initialQuestions);
     setCount(initialCount);
     setPage(0);
     setHasMore(initialQuestions.length < initialCount);
-  }, [initialQuestions, initialCount]);
+    setDoctorAnsweredIds(initialDoctorAnsweredIds);
+    setMoreFailed(false);
+  }, [initialQuestions, initialCount, initialDoctorAnsweredIds]);
 
-  // useCallback with real deps — the observer always calls the latest
-  // closure, so a slow in-flight page can't append with a stale `page`.
+  // Previously a 500/404 was parsed as `{}`: nothing appended and `hasMore`
+  // became undefined -> a false "no more questions". Now: retry button,
+  // stale (old-filter) responses dropped, de-dupe by id.
   const loadMore = useCallback(async () => {
     setLoadingMore(true);
+    setMoreFailed(false);
     const nextPage = page + 1;
     const params = new URLSearchParams(searchParams.toString());
+    const requestKey = params.toString();
     params.set('page', String(nextPage));
     try {
       const res = await fetch(`/api/questions?${params.toString()}`);
+      if (!res.ok) throw new Error(`status ${res.status}`);
       const json = await res.json();
-      setQuestions((prev) => [...prev, ...(json.questions ?? [])]);
+      if (queryKeyRef.current !== requestKey) return; // filter changed meanwhile
+      setQuestions((prev) => {
+        const seen = new Set(prev.map((q) => q.id));
+        return [...prev, ...(json.questions ?? []).filter((q: QuestionListItem) => !seen.has(q.id))];
+      });
+      setDoctorAnsweredIds((prev) => new Set([...prev, ...(json.doctorAnsweredIds ?? [])]));
       setHasMore(json.hasMore);
       setPage(nextPage);
     } catch {
-      // network failure — stop spinning, keep existing results
+      if (queryKeyRef.current === requestKey) setMoreFailed(true);
+    } finally {
+      setLoadingMore(false);
     }
-    setLoadingMore(false);
   }, [page, searchParams]);
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || !hasMore) return;
+    if (!el || !hasMore || moreFailed) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && !loadingMore) loadMore();
@@ -96,13 +116,14 @@ export function QAListClient({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loadMore]);
+  }, [hasMore, loadingMore, loadMore, moreFailed]);
 
   const activeFilter = searchParams.get('filter') ?? 'all';
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
     value && value !== 'all' ? params.set(key, value) : params.delete(key);
-    router.push(`${pathname}?${params.toString()}`);
+    // replace, not push — chip taps shouldn't stack history entries.
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
   return (
@@ -121,6 +142,7 @@ export function QAListClient({
         {FILTERS.map((value) => (
           <button
             key={value}
+            aria-pressed={activeFilter === value}
             onClick={() => updateParam('filter', value)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-[13px] ${
               activeFilter === value
@@ -133,7 +155,17 @@ export function QAListClient({
         ))}
       </div>
 
-      {questions.length === 0 ? (
+      {questions.length === 0 && loadError ? (
+        <div className="px-6 py-12 text-center">
+          <p className="text-[15px] font-semibold text-neutral-700">{tc('error')}</p>
+          <button
+            onClick={() => router.refresh()}
+            className="mt-4 h-11 rounded-md bg-brand-600 px-6 text-[14px] font-semibold text-white"
+          >
+            {tc('retry')}
+          </button>
+        </div>
+      ) : questions.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-neutral-700">
             {t('noQuestionsYet')}
@@ -166,10 +198,21 @@ export function QAListClient({
           ))}
           {hasMore && (
             <div ref={sentinelRef} className="py-4 text-center text-[13px] text-neutral-400">
-              {loadingMore ? tc('loading') : ''}
+              {moreFailed ? (
+                <button
+                  onClick={loadMore}
+                  className="h-10 rounded-md border border-neutral-300 px-5 font-semibold text-neutral-700"
+                >
+                  {tc('retry')}
+                </button>
+              ) : loadingMore ? (
+                tc('loading')
+              ) : (
+                ''
+              )}
             </div>
           )}
-          {!hasMore && (
+          {!hasMore && !moreFailed && (
             <p className="py-6 text-center text-[13px] text-neutral-400">{t('noMoreQuestions')}</p>
           )}
         </>

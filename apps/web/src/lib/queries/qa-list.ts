@@ -21,7 +21,12 @@ export async function queryQuestionList(
   supabase: SupabaseClient<Database>,
   params: QAListParams
 ) {
-  const page = params.page ?? 0;
+  // Untrusted URL input: NaN/negative `page` broke `.range()` (shown as
+  // "no questions"). Normalize here so SSR page and API agree.
+  const page =
+    Number.isInteger(params.page) && (params.page as number) >= 0 && (params.page as number) <= 1000
+      ? (params.page as number)
+      : 0;
 
   let query = supabase
     .from('questions')
@@ -35,10 +40,16 @@ export async function queryQuestionList(
   if (params.filter === 'unanswered') query = query.eq('answer_count', 0);
 
   if (params.sort === 'upvoted') {
-    query = query.order('upvote_count', { ascending: false });
+    query = query
+      .order('upvote_count', { ascending: false })
+      .order('created_at', { ascending: false });
   } else {
     query = query.order('created_at', { ascending: false });
   }
+  // Unique tiebreaker: most questions share upvote_count 0 (and bulk rows
+  // share timestamps), so without it rows reordered between page requests
+  // -> duplicates/skips in infinite scroll.
+  query = query.order('id', { ascending: true });
 
   query = query.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
-import { queryQuestionList, type QAListParams } from '@/lib/queries/qa-list';
+import {
+  queryQuestionList,
+  getDoctorAnsweredQuestionIds,
+  type QAListParams,
+} from '@/lib/queries/qa-list';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { questionSchema } from '@/lib/validations/questions';
 import { getT } from '@vytanexa/i18n/server';
@@ -16,8 +20,8 @@ export async function GET(request: NextRequest) {
 
   const sp = request.nextUrl.searchParams;
   const params: QAListParams = {
-    filter: (sp.get('filter') as QAListParams['filter']) ?? 'all',
-    sort: (sp.get('sort') as QAListParams['sort']) ?? 'newest',
+    filter: (['answered', 'unanswered'] as const).find((f) => f === sp.get('filter')) ?? 'all',
+    sort: sp.get('sort') === 'upvoted' ? 'upvoted' : 'newest',
     page: sp.get('page') ? Number(sp.get('page')) : 0,
   };
 
@@ -25,11 +29,20 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('questions list query failed:', error.message);
-    return NextResponse.json({ questions: [], count: 0, hasMore: false }, { status: 500 });
+    // 500 with no list payload: the client keeps what it has and offers retry.
+    return NextResponse.json({ error: 'questions_failed' }, { status: 500 });
   }
 
+  // Later pages used to lose the "✅ answered by verified doctor" badge
+  // (it was only computed for page 0) — compute it per page here.
+  const doctorAnsweredIds = [
+    ...(await getDoctorAnsweredQuestionIds(
+      supabase,
+      data.map((q) => q.id)
+    )),
+  ];
   const hasMore = ((params.page ?? 0) + 1) * pageSize < count;
-  return NextResponse.json({ questions: data, count, hasMore });
+  return NextResponse.json({ questions: data, count, hasMore, doctorAnsweredIds });
 }
 
 /**
@@ -49,7 +62,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
   }
 
-  const body = await request.json();
+  // Malformed JSON used to throw -> unhandled 500.
+  const body = await request.json().catch(() => null);
   const parsed = questionSchema(t).safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });

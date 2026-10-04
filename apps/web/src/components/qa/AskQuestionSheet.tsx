@@ -45,20 +45,29 @@ export function AskQuestionSheet({
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
-    const res = await fetch('/api/questions', {
-      method: 'POST',
-      body: JSON.stringify({
-        title,
-        body,
-        category_id: categoryId,
-        is_anonymous: isAnonymous,
-        author_name: isAnonymous ? null : authorName,
-      }),
-    });
+    // try/catch: a network error left `submitting` true forever (the
+    // person could never retry) and a non-JSON error body threw.
+    let res: Response;
+    try {
+      res = await fetch('/api/questions', {
+        method: 'POST',
+        body: JSON.stringify({
+          title,
+          body,
+          category_id: categoryId,
+          is_anonymous: isAnonymous,
+          author_name: isAnonymous ? null : authorName,
+        }),
+      });
+    } catch {
+      setSubmitting(false);
+      setError(t('submitFailed'));
+      return;
+    }
     setSubmitting(false);
     if (!res.ok) {
-      const json = await res.json();
-      setError(json.error ?? t('submitFailed'));
+      const json = await res.json().catch(() => null);
+      setError(json?.error ?? t('submitFailed'));
       return;
     }
     setSuccess(true);
@@ -88,6 +97,7 @@ export function AskQuestionSheet({
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
             placeholder={t('titlePlaceholder')}
             className="mb-3 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
           />
@@ -96,6 +106,7 @@ export function AskQuestionSheet({
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            maxLength={2000}
             rows={3}
             className="mb-3 w-full rounded-md border border-neutral-200 px-3 py-2 text-[14px]"
           />

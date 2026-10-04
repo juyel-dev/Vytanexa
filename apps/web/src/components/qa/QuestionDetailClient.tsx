@@ -24,6 +24,29 @@ type Answer = {
   } | null;
 };
 
+const UPVOTED_KEY = 'vytanexa_qa_upvoted';
+
+function readUpvoted(): string[] {
+  try {
+    const raw = localStorage.getItem(UPVOTED_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeUpvoted(id: string, upvoted: boolean) {
+  try {
+    const ids = new Set(readUpvoted());
+    if (upvoted) ids.add(id);
+    else ids.delete(id);
+    localStorage.setItem(UPVOTED_KEY, JSON.stringify([...ids].slice(-500)));
+  } catch {
+    // storage unavailable (private mode) — the server is still the truth
+  }
+}
+
 /**
  * Question Detail — VYTANEXA-BLUEPRINT.md § S14 "Question Detail":
  * "Question body → answer list (doctor answers pinned top with ✅
@@ -49,12 +72,20 @@ export function QuestionDetailClient({
   const tc = useT('common');
   const localize = useLocalizedField();
   const [upvoted, setUpvoted] = useState(false);
+  const [voting, setVoting] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(question.upvote_count);
   const [answerBody, setAnswerBody] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // The upvote toggle lives on the server, but `upvoted` started as `false`
+  // on every page load — so someone who had already voted and tapped again
+  // to "upvote" silently REMOVED their vote. Remember this device's votes.
+  useEffect(() => {
+    setUpvoted(readUpvoted().includes(question.id));
+  }, [question.id]);
 
   useEffect(() => {
     fetch('/api/analytics', {
@@ -68,49 +99,73 @@ export function QuestionDetailClient({
   }, [question.id]);
 
   const handleUpvote = async () => {
-    const deviceId = getDeviceId();
+    if (voting) return; // double-tap would toggle the vote on then off
+    setVoting(true);
+    const wasUpvoted = upvoted;
     // Optimistic UI, matching S15's polls: "reveals + animates
     // immediately after voting, then reconciled with server count."
-    const wasUpvoted = upvoted;
     setUpvoted(!wasUpvoted);
     setUpvoteCount((c) => (wasUpvoted ? c - 1 : c + 1));
-
-    const res = await fetch(`/api/questions/${question.id}/upvote`, {
-      method: 'POST',
-      body: JSON.stringify({ voterKey: deviceId }),
-    });
-    if (!res.ok) {
-      // revert on failure
+    try {
+      const res = await fetch(`/api/questions/${question.id}/upvote`, {
+        method: 'POST',
+        body: JSON.stringify({ voterKey: getDeviceId() }),
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const json = await res.json();
+      // The server is the truth (our local memory can be stale, e.g. the
+      // vote was cast in another tab) — reconcile state and count to it.
+      const nowUpvoted = Boolean(json.upvoted);
+      if (nowUpvoted !== !wasUpvoted) {
+        setUpvoted(nowUpvoted);
+        setUpvoteCount((c) => c + (nowUpvoted ? 1 : -1) - (wasUpvoted ? -1 : 1));
+      }
+      writeUpvoted(question.id, nowUpvoted);
+      if (nowUpvoted) {
+        fetch('/api/analytics', {
+          method: 'POST',
+          body: JSON.stringify({
+            event_type: 'question_upvote',
+            entity_type: 'question',
+            entity_id: question.id,
+          }),
+        }).catch(() => {});
+      }
+    } catch {
+      // revert on failure (HTTP error OR network error — the latter used
+      // to be an unhandled rejection that left the UI out of sync)
       setUpvoted(wasUpvoted);
       setUpvoteCount((c) => (wasUpvoted ? c + 1 : c - 1));
-      return;
+    } finally {
+      setVoting(false);
     }
-    fetch('/api/analytics', {
-      method: 'POST',
-      body: JSON.stringify({
-        event_type: 'question_upvote',
-        entity_type: 'question',
-        entity_id: question.id,
-      }),
-    }).catch(() => {});
   };
 
   const handleSubmitAnswer = async () => {
     if (answerBody.trim().length < 5) return;
     setSubmitting(true);
     setError(null);
-    const res = await fetch('/api/answers', {
-      method: 'POST',
-      body: JSON.stringify({
-        question_id: question.id,
-        body: answerBody,
-        author_name: authorName,
-      }),
-    });
+    // try/catch: a network error left `submitting` true forever (button
+    // stuck on "...") and a non-JSON error body threw on `res.json()`.
+    let res: Response;
+    try {
+      res = await fetch('/api/answers', {
+        method: 'POST',
+        body: JSON.stringify({
+          question_id: question.id,
+          body: answerBody,
+          author_name: authorName,
+        }),
+      });
+    } catch {
+      setSubmitting(false);
+      setError(t('answerSubmitFailed'));
+      return;
+    }
     setSubmitting(false);
     if (!res.ok) {
-      const json = await res.json();
-      setError(json.error ?? t('answerSubmitFailed'));
+      const json = await res.json().catch(() => null);
+      setError(json?.error ?? t('answerSubmitFailed'));
       return;
     }
     fetch('/api/analytics', {
@@ -154,6 +209,8 @@ export function QuestionDetailClient({
 
         <button
           onClick={handleUpvote}
+          aria-pressed={upvoted}
+          disabled={voting}
           className={`mt-3 flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-semibold ${
             upvoted
               ? 'border-brand-600 bg-brand-50 text-brand-700'
@@ -231,6 +288,7 @@ export function QuestionDetailClient({
               <input
                 value={answerBody}
                 onChange={(e) => setAnswerBody(e.target.value)}
+                maxLength={2000}
                 placeholder={t('answerPlaceholder')}
                 className="h-11 flex-1 rounded-full border border-neutral-200 px-4 text-[14px]"
               />

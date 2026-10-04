@@ -33,13 +33,15 @@ export default async function QAPage({
     notFound();
   }
 
-  const [{ data: questions, count }, categories] = await Promise.all([
+  const [{ data: questions, count, error }, categories] = await Promise.all([
     queryQuestionList(supabase, {
-      filter: (searchParams.filter as 'all' | 'answered' | 'unanswered') ?? 'all',
+      filter: (['answered', 'unanswered'] as const).find((f) => f === searchParams.filter) ?? 'all',
       page: 0,
     }),
     getQACategories(supabase),
   ]);
+
+  if (error) console.error('qa SSR query failed:', error.message);
 
   const doctorAnsweredIds = await getDoctorAnsweredQuestionIds(
     supabase,
@@ -50,6 +52,7 @@ export default async function QAPage({
     <QAListClient
       initialQuestions={questions}
       initialCount={count}
+      loadError={Boolean(error)}
       doctorAnsweredIds={doctorAnsweredIds}
       categories={categories}
     />

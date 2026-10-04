@@ -2,7 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@vytanexa/database';
 
 /** Question Detail — VYTANEXA-BLUEPRINT.md § S14 "Question Detail". */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getQuestionById(supabase: SupabaseClient<Database>, id: string) {
+  // A malformed id is a genuine 404, not a DB error (Postgres would raise
+  // 22P02 invalid-uuid, which we now treat as a real failure below).
+  if (!UUID_RE.test(id)) return null;
   const { data, error } = await supabase
     .from('questions')
     .select('*, categories(name_translations)')
@@ -10,8 +15,12 @@ export async function getQuestionById(supabase: SupabaseClient<Database>, id: st
     .eq('status', 'approved')
     .single();
 
-  if (error || !data) return null;
-  return data;
+  // PGRST116 = zero rows (a genuine 404). Any other error must throw so a
+  // transient DB failure isn't served (and crawled) as "question not found".
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(`getQuestionById failed: ${error.message}`);
+  }
+  return data ?? null;
 }
 
 export type QuestionDetail = NonNullable<Awaited<ReturnType<typeof getQuestionById>>>;
