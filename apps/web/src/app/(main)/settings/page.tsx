@@ -22,10 +22,13 @@ export default async function SettingsPage() {
       <TopBarSection title={t('title')} backHref="/more" />
       <SettingsClient
         isSignedIn={!!currentUser}
-        initialLanguage={currentUser?.profile.preferred_language ?? 'bn'}
-        initialPrefs={
-          (currentUser?.profile.notification_prefs as typeof DEFAULT_PREFS) ?? DEFAULT_PREFS
-        }
+        // Merge over defaults: a missing/partial prefs object made unset
+        // keys read as `undefined` -> toggles shown OFF though the default is ON.
+        initialPrefs={{
+          ...DEFAULT_PREFS,
+          ...((currentUser?.profile.notification_prefs as Partial<typeof DEFAULT_PREFS> | null) ?? {}),
+          emergency: true,
+        }}
       />
     </>
   );

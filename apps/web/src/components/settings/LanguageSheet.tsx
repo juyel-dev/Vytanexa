@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useT } from '@vytanexa/i18n/client';
 import { Check } from 'lucide-react';
@@ -42,10 +42,16 @@ export function LanguageSheet({
   const [selected, setSelected] = useState(currentLanguage);
   const [saving, setSaving] = useState(false);
 
+  // Re-sync with the real language each time the sheet opens (the initial
+  // state alone went stale after a change).
+  useEffect(() => {
+    if (open) setSelected(currentLanguage);
+  }, [open, currentLanguage]);
+
   const handleSelect = async (code: string) => {
     setSelected(code);
     setSaving(true);
-    document.cookie = `locale=${code}; path=/; max-age=31536000`;
+    document.cookie = `locale=${code}; path=/; max-age=31536000; SameSite=Lax`;
 
     if (isSignedIn) {
       await fetch('/api/account/profile', {

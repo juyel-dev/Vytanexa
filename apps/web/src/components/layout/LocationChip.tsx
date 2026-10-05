@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { MapPin, ChevronDown } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useT } from '@vytanexa/i18n/client';
-import { useLocationStore } from '@/stores/location-store';
+import { useLocationNames } from '@/lib/use-location-names';
 
 // Same code-splitting rationale as EmergencyFAB (see (main)/layout.tsx)
 // -- the picker's Supabase browser-client queries only matter once the
@@ -22,7 +22,7 @@ const LocationPickerSheet = dynamic(
  */
 export function LocationChip() {
   const [open, setOpen] = useState(false);
-  const { districtName, stateName, subDistrictName } = useLocationStore();
+  const { districtName, stateName, subDistrictName } = useLocationNames();
   const t = useT('location');
 
   const label = stateName

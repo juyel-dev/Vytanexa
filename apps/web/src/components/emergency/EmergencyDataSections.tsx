@@ -8,6 +8,7 @@ import { LocationChip } from '@/components/layout/LocationChip';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import type { Json } from '@vytanexa/database';
+import { useLocationNames } from '@/lib/use-location-names';
 
 type EmergencyHospital = {
   id: string;
@@ -66,7 +67,8 @@ function trackCall(numberType: string, label: string) {
  * those pages too.
  */
 export function EmergencyDataSections() {
-  const { districtId, districtName } = useLocationStore();
+  const { districtId } = useLocationStore();
+  const { districtName } = useLocationNames();
   const localize = useLocalizedField();
   const t = useT('emergency');
   const tc = useT('common');

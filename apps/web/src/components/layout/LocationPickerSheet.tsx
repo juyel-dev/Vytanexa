@@ -43,6 +43,8 @@ export function LocationPickerSheet({
   const [options, setOptions] = useState<LocationRow[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -56,6 +58,7 @@ export function LocationPickerSheet({
     if (!open) return;
     let cancelled = false;
     setLoading(true);
+    setFailed(false);
 
     const supabase = createClient();
     const type = step;
@@ -72,15 +75,22 @@ export function LocationPickerSheet({
 
     query.then(({ data, error }) => {
       if (cancelled) return;
-      if (error) console.error('LocationPickerSheet query failed:', error.message);
-      setOptions(data ?? []);
+      // A failed query used to fall through to "no states yet" — an outage
+      // reads as "your area isn't supported". Show an error + retry.
+      if (error) {
+        console.error('LocationPickerSheet query failed:', error.message);
+        setFailed(true);
+        setOptions([]);
+      } else {
+        setOptions(data ?? []);
+      }
       setLoading(false);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [open, step, selectedState, selectedDistrict]);
+  }, [open, step, selectedState, selectedDistrict, retryTick]);
 
   const filtered = options.filter((o) =>
     localize(o.name_translations).toLowerCase().includes(search.toLowerCase())
@@ -103,6 +113,8 @@ export function LocationPickerSheet({
       districtId: loc.id,
       stateName: localize(selectedState!.name_translations),
       districtName: localize(loc.name_translations),
+      stateNameTx: selectedState!.name_translations,
+      districtNameTx: loc.name_translations,
     });
     setStep('sub_district');
     setSearch('');
@@ -116,6 +128,9 @@ export function LocationPickerSheet({
       stateName: localize(selectedState!.name_translations),
       districtName: localize(selectedDistrict!.name_translations),
       subDistrictName: localize(loc.name_translations),
+      stateNameTx: selectedState!.name_translations,
+      districtNameTx: selectedDistrict!.name_translations,
+      subDistrictNameTx: loc.name_translations,
     });
     onClose();
   };
@@ -144,7 +159,19 @@ export function LocationPickerSheet({
 
       {loading && <p className="py-6 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
 
-      {!loading && filtered.length === 0 && (
+      {!loading && failed && (
+        <div className="py-6 text-center">
+          <p className="text-[13px] text-neutral-600">{tc('error')}</p>
+          <button
+            onClick={() => setRetryTick((n) => n + 1)}
+            className="mt-3 h-10 rounded-md border border-neutral-300 px-5 text-[13px] font-semibold text-neutral-700"
+          >
+            {tc('retry')}
+          </button>
+        </div>
+      )}
+
+      {!loading && !failed && filtered.length === 0 && (
         <p className="py-6 text-center text-[13px] text-neutral-400">
           {step === 'state' ? t('noStatesYet') : t('noSubDivisionsYet')}
         </p>

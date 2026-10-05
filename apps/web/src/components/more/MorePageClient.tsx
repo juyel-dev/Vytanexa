@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLocationStore } from '@/stores/location-store';
-import { LANGUAGE_NAMES } from '@/lib/i18n-client';
+import { useLocationNames } from '@/lib/use-location-names';
+import { LANGUAGE_NAMES, useResolvedLocale } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 import {
   Heart,
@@ -71,14 +71,12 @@ function resolveMenuIcon(menuIcon: string | null): {
  */
 export function MorePageClient({
   currentUser,
-  language,
   customPages,
   showQA,
   showPolls,
   hasUnreadNotifications,
 }: {
   currentUser: CurrentUserView;
-  language: string;
   customPages: CustomPageLink[];
   showQA: boolean;
   showPolls: boolean;
@@ -100,7 +98,10 @@ export function MorePageClient({
   // it — client-side from the location store, since that (not
   // users.default_location_id, a separate account-profile field) is
   // the "current active location" concept used app-wide.
-  const { districtName } = useLocationStore();
+  const { districtName } = useLocationNames();
+  // Real current language (cookie-driven). The profile value was always
+  // 'bn' for guests and stale for signed-in users on another device.
+  const language = useResolvedLocale();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);

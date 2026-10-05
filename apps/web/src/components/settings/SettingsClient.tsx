@@ -5,8 +5,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { ChevronRight, Trash2 } from 'lucide-react';
 import { LanguageSheet } from './LanguageSheet';
-import { useLocationStore } from '@/stores/location-store';
-import { LANGUAGE_NAMES } from '@/lib/i18n-client';
+import { useLocationNames } from '@/lib/use-location-names';
+import { LANGUAGE_NAMES, useResolvedLocale } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
 
 // Same code-splitting rationale as LocationChip.tsx: LocationPickerSheet
@@ -31,38 +31,65 @@ type NotificationPrefs = { general: boolean; emergency: boolean; articles: boole
  */
 export function SettingsClient({
   isSignedIn,
-  initialLanguage,
   initialPrefs,
 }: {
   isSignedIn: boolean;
-  initialLanguage: string;
   initialPrefs: NotificationPrefs;
 }) {
-  const { districtName } = useLocationStore();
+  const { districtName } = useLocationNames();
   const t = useT('settings');
   const tCommon = useT('common');
   const [languageOpen, setLanguageOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const [language, setLanguage] = useState(initialLanguage);
+  // The language row used to show a value frozen at first render (and the
+  // profile's preferred_language, which for guests is always 'bn'): after
+  // switching language it kept the OLD name until a hard reload. The
+  // resolved locale (cookie-driven) is the real current language.
+  const language = useResolvedLocale();
   const [prefs, setPrefs] = useState(initialPrefs);
   const [exportSent, setExportSent] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+  const [toggleError, setToggleError] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
   const [cacheCleared, setCacheCleared] = useState(false);
 
   const handleToggle = async (key: 'general' | 'articles') => {
-    const next = { ...prefs, [key]: !prefs[key] };
-    setPrefs(next); // optimistic, per spec
-    await fetch('/api/account/notification-prefs', {
-      method: 'PATCH',
-      body: JSON.stringify({ [key]: next[key] }),
-    }).catch(() => {
-      setPrefs(prefs); // revert on network failure
-    });
+    const nextValue = !prefs[key];
+    setToggleError(false);
+    // Optimistic per spec. Functional updates so two quick toggles don't
+    // overwrite each other from a stale `prefs` closure, and each failure
+    // reverts only ITS key.
+    setPrefs((p) => ({ ...p, [key]: nextValue }));
+    try {
+      const res = await fetch('/api/account/notification-prefs', {
+        method: 'PATCH',
+        body: JSON.stringify({ [key]: nextValue }),
+      });
+      // Previously only a *network* failure reverted: a 4xx/5xx left the
+      // switch showing a state the server never saved.
+      if (!res.ok) throw new Error(`status ${res.status}`);
+    } catch {
+      setPrefs((p) => ({ ...p, [key]: !nextValue }));
+      setToggleError(true);
+    }
   };
 
   const handleDataExport = async () => {
-    const res = await fetch('/api/account/data-export-request', { method: 'POST' });
-    if (res.ok) setExportSent(true);
+    if (exporting) return;
+    setExporting(true);
+    setExportFailed(false);
+    // try/catch: a network error was an unhandled rejection with no
+    // feedback, and rapid taps queued duplicate requests.
+    try {
+      const res = await fetch('/api/account/data-export-request', { method: 'POST' });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      setExportSent(true);
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setExporting(false);
+    }
   };
 
   /**
@@ -119,6 +146,9 @@ export function SettingsClient({
               checked={prefs.articles}
               onChange={() => handleToggle('articles')}
             />
+            {toggleError && (
+              <p className="mt-1 text-[12px] text-emergency-600">{tCommon('error')}</p>
+            )}
           </>
         ) : (
           <Link
@@ -137,7 +167,7 @@ export function SettingsClient({
         {isSignedIn && (
           <button
             onClick={handleDataExport}
-            disabled={exportSent}
+            disabled={exportSent || exporting}
             className="flex h-[46px] w-full items-center justify-between text-left"
           >
             <span className="text-[14px] text-neutral-800">
@@ -146,6 +176,7 @@ export function SettingsClient({
             {!exportSent && <ChevronRight className="h-4 w-4 text-neutral-300" />}
           </button>
         )}
+        {exportFailed && <p className="text-[12px] text-emergency-600">{tCommon('error')}</p>}
       </div>
 
       <div className="px-4 py-3">

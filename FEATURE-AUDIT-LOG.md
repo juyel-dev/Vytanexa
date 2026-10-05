@@ -34,11 +34,17 @@ from scratch."
 | S15 | Polls · reports · user submissions | ✅ **done** — see below |
 | S16 | More page | ✅ **done** — see below |
 | S17 | User account | ✅ **done (code)** — DB part needs owner approval, see below |
-| S18 | Settings | not audited (i18n-migrated only, batch 19) |
+| S18 | Settings | ✅ **done** — see below |
 | S19 | Custom pages / block builder | not audited (i18n-migrated only, batch 29) |
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S18 — Settings (+ Location picker) — DONE
+
+Fixed: (1) **language row showed a stale value** — frozen at first render (`setLanguage` was never called) so after switching language it kept the OLD name until a hard reload, and it read `profile.preferred_language`, which is always 'bn' for guests (same bug on the More page) — both now use the real resolved locale; (2) **location names stuck in the language they were picked in** — the store persisted only the localized string, so after switching language the chip / settings / more / emergency / onboarding kept the old-language district until re-picked; store now also keeps `name_translations`, `useLocationNames()` resolves them at render (old persisted state falls back to the string); (3) notification toggles reverted only on *network* failure — a 4xx/5xx left the switch showing a state the server never saved; also rapid taps overwrote each other from a stale closure — functional updates, per-key revert, error shown; (4) data-export button: network error = unhandled rejection with no feedback, rapid taps queued duplicates — try/catch, in-flight guard, error shown; (5) location picker: a failed query fell through to "no states yet" (outage reads as "your area isn't supported") — error + retry; (6) notification prefs now merged over defaults (a partial object showed ON-by-default toggles as OFF); language sheet re-syncs on open; locale cookie `SameSite=Lax`.
+Verified OK: `locations` RLS already hides inactive/deleted rows; DB default for `notification_prefs` is full.
+Flagged, not changed: "Clear cache" clears Cache Storage only (spec also says IndexedDB — the app uses none, so nothing to clear) and deliberately never unregisters the service worker; GPS auto-detect is documented-deferred; picker has no "back" step (close + reopen resets); version string `1.0.0` is hardcoded in two places.
 
 ## S17 — User account — DONE (code); account deletion needs a DB change awaiting approval
 

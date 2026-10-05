@@ -6,7 +6,7 @@ import { MapPin } from 'lucide-react';
 import { useT } from '@vytanexa/i18n/client';
 import { useFormatter } from '@/lib/i18n-client';
 import { useOnboardingStore } from '@/stores/onboarding-store';
-import { useLocationStore } from '@/stores/location-store';
+import { useLocationNames } from '@/lib/use-location-names';
 
 const LocationPickerSheet = dynamic(
   () =>
@@ -24,7 +24,7 @@ const LocationPickerSheet = dynamic(
  */
 export function LocationStep() {
   const setStep = useOnboardingStore((s) => s.setStep);
-  const { stateName, districtName } = useLocationStore();
+  const { stateName, districtName } = useLocationNames();
   const [pickerOpen, setPickerOpen] = useState(false);
   const t = useT('onboarding.locationStep' as Parameters<typeof useT>[0]);
   const format = useFormatter();

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Json } from '@vytanexa/database';
 
 /**
  * Location Store — VYTANEXA-BLUEPRINT.md § S03 "STATE MANAGEMENT —
@@ -15,6 +16,11 @@ export type LocationState = {
   stateName: string | null;
   districtName: string | null;
   subDistrictName: string | null;
+  // Raw translations so names re-localize when the language changes
+  // (see lib/use-location-names.ts). Optional: older persisted state has none.
+  stateNameTx?: Json | null;
+  districtNameTx?: Json | null;
+  subDistrictNameTx?: Json | null;
   setLocation: (loc: {
     stateId: string | null;
     districtId: string | null;
@@ -22,6 +28,9 @@ export type LocationState = {
     stateName: string | null;
     districtName: string | null;
     subDistrictName?: string | null;
+    stateNameTx?: Json | null;
+    districtNameTx?: Json | null;
+    subDistrictNameTx?: Json | null;
   }) => void;
   clearLocation: () => void;
 };
@@ -35,6 +44,9 @@ export const useLocationStore = create<LocationState>()(
       stateName: null,
       districtName: null,
       subDistrictName: null,
+      stateNameTx: null,
+      districtNameTx: null,
+      subDistrictNameTx: null,
       setLocation: (loc) =>
         set({
           stateId: loc.stateId,
@@ -43,6 +55,9 @@ export const useLocationStore = create<LocationState>()(
           stateName: loc.stateName,
           districtName: loc.districtName,
           subDistrictName: loc.subDistrictName ?? null,
+          stateNameTx: loc.stateNameTx ?? null,
+          districtNameTx: loc.districtNameTx ?? null,
+          subDistrictNameTx: loc.subDistrictNameTx ?? null,
         }),
       clearLocation: () =>
         set({
@@ -52,6 +67,9 @@ export const useLocationStore = create<LocationState>()(
           stateName: null,
           districtName: null,
           subDistrictName: null,
+          stateNameTx: null,
+          districtNameTx: null,
+          subDistrictNameTx: null,
         }),
     }),
     { name: 'vytanexa_location' }
