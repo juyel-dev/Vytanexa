@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Heart, ClipboardList, HelpCircle, Star, ChevronRight, Pencil } from 'lucide-react';
 import { useT } from '@vytanexa/i18n/client';
-import { toBengaliDigits } from '@/lib/i18n-client';
+import { useResolvedLocale } from '@/lib/i18n-client';
 
 /**
  * Account Home Client — VYTANEXA-BLUEPRINT.md § S17 "Account Home".
@@ -36,12 +36,17 @@ export function AccountHomeClient({
     if (confirmText !== confirmWord) return;
     setDeleting(true);
     setError(null);
-    const res = await fetch('/api/account/delete', { method: 'POST' });
-    setDeleting(false);
-    if (!res.ok) {
+    // try/catch: a network error left `deleting` true forever (the person
+    // could neither retry nor close the dialog's confirm button).
+    try {
+      const res = await fetch('/api/account/delete', { method: 'POST' });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+    } catch {
+      setDeleting(false);
       setError(t('deleteAccountFailed'));
       return;
     }
+    setDeleting(false);
     router.replace('/');
     router.refresh();
   };
@@ -50,7 +55,7 @@ export function AccountHomeClient({
     <div className="pb-8">
       <div className="flex items-center gap-3 border-b border-neutral-100 px-4 py-5">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[22px] font-bold text-brand-700">
-          {name ? name.charAt(0) : '👤'}
+          {name ? (Array.from(name)[0] ?? '👤') : '👤'}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-bold text-neutral-900">
@@ -150,13 +155,17 @@ function AccountRow({
   label: string;
   count: number;
 }) {
+  // Locale-aware digits (Bengali digits on bn, Latin on en/hi) — this used
+  // to force Bengali digits on every language.
+  const locale = useResolvedLocale();
+  const nf = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   return (
     <Link href={href} className="flex h-[52px] items-center gap-3 active:bg-neutral-50">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50">
         <Icon className="h-[20px] w-[20px] text-brand-600" />
       </span>
       <span className="flex-1 text-[15px] font-medium text-neutral-800">{label}</span>
-      <span className="text-[13px] text-neutral-500">({toBengaliDigits(count)})</span>
+      <span className="text-[13px] text-neutral-500">({nf.format(count)})</span>
       <ChevronRight className="h-4 w-4 text-neutral-300" />
     </Link>
   );

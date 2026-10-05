@@ -46,18 +46,27 @@ export function ProfileEditClient({
     setSaving(true);
     setError(null);
     setSaved(false);
-    const res = await fetch('/api/account/profile', {
-      method: 'PATCH',
-      body: JSON.stringify({
-        name,
-        email: email || null,
-        default_location_id: locationId || null,
-      }),
-    });
+    // try/catch: a network error left `saving` true forever (button stuck
+    // on "saving…") and a non-JSON error body threw on `res.json()`.
+    let res: Response;
+    try {
+      res = await fetch('/api/account/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name,
+          email: email.trim() || null,
+          default_location_id: locationId || null,
+        }),
+      });
+    } catch {
+      setSaving(false);
+      setError(t('updateFailed'));
+      return;
+    }
     setSaving(false);
     if (!res.ok) {
-      const json = await res.json();
-      setError(json.error ?? t('updateFailed'));
+      const json = await res.json().catch(() => null);
+      setError(json?.error ?? t('updateFailed'));
       return;
     }
     setSaved(true);
@@ -71,6 +80,7 @@ export function ProfileEditClient({
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
+        maxLength={100}
         className="mb-4 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
       />
 
@@ -88,6 +98,7 @@ export function ProfileEditClient({
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        maxLength={255}
         type="email"
         className="mb-4 h-11 w-full rounded-md border border-neutral-200 px-3 text-[14px]"
       />

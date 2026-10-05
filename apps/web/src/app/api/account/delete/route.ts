@@ -34,7 +34,10 @@ export async function POST() {
     return NextResponse.json({ error: t('generic.notSignedIn') }, { status: 401 });
   }
 
-  const { error } = await supabase
+  // `.select('id')`: an UPDATE that RLS filters to zero rows is NOT an
+  // error, so this route used to report success (and sign the person out)
+  // even when nothing had been changed.
+  const { data: updated, error } = await supabase
     .from('users')
     .update({
       name: null,
@@ -42,10 +45,11 @@ export async function POST() {
       phone: null,
       deleted_at: new Date().toISOString(),
     })
-    .eq('id', user.id);
+    .eq('id', user.id)
+    .select('id');
 
-  if (error) {
-    console.error('account delete (anonymize) failed:', error.message);
+  if (error || !updated || updated.length === 0) {
+    console.error('account delete (anonymize) failed:', error?.message ?? 'no row updated');
     return NextResponse.json({ error: t('account.deleteFailed') }, { status: 500 });
   }
 

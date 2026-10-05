@@ -31,6 +31,20 @@ export async function POST() {
     return NextResponse.json({ error: tCommon('signIn') }, { status: 401 });
   }
 
+  // Every tap used to insert another request row — an admin queue could be
+  // flooded by one user. One request per 24h; repeats are acknowledged
+  // (not an error) since the earlier request is still pending.
+  const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+    p_key: `data_export:${user.id}`,
+    p_max_count: 1,
+    p_window: '24 hours',
+  });
+  if (rateLimitError) {
+    console.error('rate limit check failed:', rateLimitError.message);
+  } else if (!allowed) {
+    return NextResponse.json({ success: true, alreadyRequested: true });
+  }
+
   const { error } = await supabase.from('analytics_events').insert({
     event_type: 'data_export_request',
     user_id: user.id,

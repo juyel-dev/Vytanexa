@@ -28,7 +28,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: tCommon('signIn') }, { status: 401 });
   }
 
-  const body = await request.json();
+  // Malformed JSON used to throw -> unhandled 500.
+  const body = await request.json().catch(() => null);
   const parsed = profileUpdateSchema(t).safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
@@ -44,10 +45,16 @@ export async function PATCH(request: NextRequest) {
   if (preferred_language !== undefined) updates.preferred_language = preferred_language;
   if (default_location_id !== undefined) updates.default_location_id = default_location_id;
 
-  const { error } = await supabase.from('users').update(updates).eq('id', user.id);
+  // `.select('id')`: a zero-row UPDATE isn't an error, so a save that
+  // changed nothing used to show "saved".
+  const { data: updated, error } = await supabase
+    .from('users')
+    .update(updates)
+    .eq('id', user.id)
+    .select('id');
 
-  if (error) {
-    console.error('profile update failed:', error.message);
+  if (error || !updated || updated.length === 0) {
+    console.error('profile update failed:', error?.message ?? 'no row updated');
     return NextResponse.json({ error: t('account.updateFailed') }, { status: 500 });
   }
 

@@ -33,12 +33,18 @@ from scratch."
 | S14 | Q&A community | ✅ **done** — see below |
 | S15 | Polls · reports · user submissions | ✅ **done** — see below |
 | S16 | More page | ✅ **done** — see below |
-| S17 | User account | not audited |
+| S17 | User account | ✅ **done (code)** — DB part needs owner approval, see below |
 | S18 | Settings | not audited (i18n-migrated only, batch 19) |
 | S19 | Custom pages / block builder | not audited (i18n-migrated only, batch 29) |
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+
+## S17 — User account — DONE (code); account deletion needs a DB change awaiting approval
+
+Fixed (code): (1) favorites/history/questions/reviews queries swallowed DB errors into empty lists (account home showed "0", favorites showed "no favorites" on a blip — reads as data loss) — now throw into the `(main)` error boundary; (2) `POST /api/account/delete` and `PATCH /api/account/profile` returned success when the UPDATE matched **zero rows** (RLS filters aren't errors) — deletion even signed the person out having changed nothing; now `.select('id')` + check; (3) data-export request inserted a new queue row on every tap — now 1 per 24h per user (repeat taps acknowledged); (4) delete dialog / profile save: network error left the button stuck forever + non-JSON error bodies threw; malformed JSON threw unhandled 500 on profile + notification-prefs routes; (5) account row counts forced Bengali digits on every language -> `Intl.NumberFormat(locale)`; avatar initial `Array.from`; input `maxLength` matches schema.
+**NOT fixed — needs your approval (production DB change, I attempted it and it was not approved, so nothing was applied):** "delete account" is only a cosmetic soft-delete. It blanks `users.name/email/phone` + sets `deleted_at`, but leaves: the **auth user (the person can sign straight back in)**, their **blood-donor listing with phone number still public**, `questions.author_name/author_phone`, review/answer author names, favorites, analytics `user_id`. The schema is already built for a real delete (`public.users` cascades from `auth.users`; favorites/notification_reads cascade; content tables SET NULL; leads kept unlinked). Proposed fix = one `SECURITY DEFINER` function `delete_my_account()` (authenticated only): delete the donor row, scrub question/answer/review author fields + analytics `user_id`, then `DELETE FROM auth.users WHERE id = auth.uid()`; route calls it via RPC. Tell me "apply it" and I will (and test it in a rolled-back transaction first).
+Flagged, not changed: profile page has no preferred-language shortcut (spec) and phone change/OTP re-verification flow isn't built (read-only by design); favorites list doesn't animate out/undo on unfavorite (documented simplification); `getCurrentUser` doesn't look at `deleted_at`; `/account/qa` and `/account/reviews` pages not read in this pass.
 
 ## S16 — More page — DONE
 

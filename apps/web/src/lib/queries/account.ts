@@ -17,17 +17,17 @@ export async function getFavorites(supabase: SupabaseClient<Database>, userId: s
     .eq('user_id', userId)
     .in('entity_type', ['doctor', 'hospital']);
 
-  if (error || !favRows) {
-    console.error('getFavorites failed:', error?.message);
-    return { doctors: [], hospitals: [] };
-  }
+  // Throw (don't return empty): "no favorites" / "0 favorites" on a DB
+  // blip reads as data loss. The (main) error boundary offers a retry.
+  if (error || !favRows) throw new Error(`getFavorites failed: ${error?.message}`);
 
   const doctorIds = favRows.filter((f) => f.entity_type === 'doctor').map((f) => f.entity_id);
   const hospitalIds = favRows
     .filter((f) => f.entity_type === 'hospital')
     .map((f) => f.entity_id);
 
-  const [{ data: doctors }, { data: hospitals }] = await Promise.all([
+  const [{ data: doctors, error: doctorsError }, { data: hospitals, error: hospitalsError }] =
+    await Promise.all([
     doctorIds.length > 0
       ? supabase
           .from('doctors')
@@ -35,7 +35,7 @@ export async function getFavorites(supabase: SupabaseClient<Database>, userId: s
             'id, slug, name_translations, photo_url, experience_years, rating_avg, rating_count, consultation_fee_min, consultation_fee_max, is_featured, whatsapp_number, categories(name_translations)'
           )
           .in('id', doctorIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     hospitalIds.length > 0
       ? supabase
           .from('hospitals')
@@ -43,8 +43,11 @@ export async function getFavorites(supabase: SupabaseClient<Database>, userId: s
             'id, slug, name_translations, cover_image_url, type, has_emergency_dept, facility_tags, phone, rating_avg, rating_count'
           )
           .in('id', hospitalIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
   ]);
+  if (doctorsError || hospitalsError) {
+    throw new Error(`getFavorites cards failed: ${(doctorsError ?? hospitalsError)?.message}`);
+  }
 
   return { doctors: doctors ?? [], hospitals: hospitals ?? [] };
 }
@@ -67,10 +70,8 @@ export async function getLeadsHistory(supabase: SupabaseClient<Database>, userId
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('getLeadsHistory failed:', error.message);
-    return [];
-  }
+  // Throw: an error must not render as an empty list / "0" count.
+  if (error) throw new Error(`getLeadsHistory failed: ${error.message}`);
   return data ?? [];
 }
 
@@ -87,10 +88,8 @@ export async function getMyQuestions(supabase: SupabaseClient<Database>, userId:
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('getMyQuestions failed:', error.message);
-    return [];
-  }
+  // Throw: an error must not render as an empty list / "0" count.
+  if (error) throw new Error(`getMyQuestions failed: ${error.message}`);
   return data ?? [];
 }
 
@@ -109,10 +108,8 @@ export async function getMyReviews(supabase: SupabaseClient<Database>, userId: s
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('getMyReviews failed:', error.message);
-    return [];
-  }
+  // Throw: an error must not render as an empty list / "0" count.
+  if (error) throw new Error(`getMyReviews failed: ${error.message}`);
   return data ?? [];
 }
 

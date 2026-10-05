@@ -24,7 +24,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: tCommon('signIn') }, { status: 401 });
   }
 
-  const body = await request.json();
+  // Malformed JSON used to throw -> unhandled 500.
+  const body = await request.json().catch(() => null);
   const parsed = notificationPrefsUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: t('generic.invalidData') }, { status: 400 });
