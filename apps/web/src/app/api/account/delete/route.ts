@@ -4,24 +4,18 @@ import { getT } from '@vytanexa/i18n/server';
 
 /**
  * POST /api/account/delete — VYTANEXA-BLUEPRINT.md § S17 "Account
- * Deletion": "soft-deletes account (anonymizes PII, retains aggregate
- * analytics per data-retention policy) → signs out."
+ * Deletion" (erase the person's data, then sign out).
  *
- * Soft delete via `deleted_at` (already a column on `users`,
- * DATABASE-SCHEMA.md § 5.1) rather than a hard DELETE — matches the
- * pattern used everywhere else in this schema (`hospitals.deleted_at`,
- * `doctors.deleted_at`, etc.). PII fields (`name`, `email`, `phone`)
- * are cleared here per the spec's "anonymizes PII" instruction;
- * `analytics_events` rows referencing this `user_id` are untouched
- * (that's the "retains aggregate analytics" half — those rows carry
- * no PII themselves, just event counts).
+ * Calls the `delete_my_account()` RPC (migration 0020), which in ONE
+ * transaction deletes the donor listing (it carried a public phone
+ * number), scrubs author name/phone from questions/answers/reviews and
+ * the analytics `user_id`, then deletes the auth user — cascading
+ * `public.users`, favorites, notification reads. Leads are kept (the
+ * provider's record of a request) but unlinked from the account.
  *
- * Does NOT delete the underlying `auth.users` row — Supabase Auth
- * manages that separately, and leaving it intact means the same phone
- * number re-signing-in later gets a fresh (re-populated by the
- * `trg_on_auth_user_created` trigger's `ON CONFLICT DO NOTHING`,
- * DATABASE-SCHEMA.md § 5.1) `public.users` row rather than colliding
- * with the anonymized one.
+ * This replaced a cosmetic soft-delete that only blanked name/email/phone
+ * on `public.users`: the auth user remained (the person could sign straight
+ * back in) and the donor listing with their phone stayed public.
  */
 export async function POST() {
   const t = await getT('validation');
@@ -34,25 +28,17 @@ export async function POST() {
     return NextResponse.json({ error: t('generic.notSignedIn') }, { status: 401 });
   }
 
-  // `.select('id')`: an UPDATE that RLS filters to zero rows is NOT an
-  // error, so this route used to report success (and sign the person out)
-  // even when nothing had been changed.
-  const { data: updated, error } = await supabase
-    .from('users')
-    .update({
-      name: null,
-      email: null,
-      phone: null,
-      deleted_at: new Date().toISOString(),
-    })
-    .eq('id', user.id)
-    .select('id');
+  const { data: status, error } = await supabase.rpc('delete_my_account');
 
-  if (error || !updated || updated.length === 0) {
-    console.error('account delete (anonymize) failed:', error?.message ?? 'no row updated');
-    return NextResponse.json({ error: t('account.deleteFailed') }, { status: 500 });
+  if (error || status !== 'ok') {
+    console.error('account delete failed:', error?.message ?? status);
+    // An admin account is refused on purpose (deleting it would also remove
+    // their admin access) — surfaced as a plain failure to the user.
+    return NextResponse.json({ error: t('account.deleteFailed') }, { status: status === 'admin_account' ? 403 : 500 });
   }
 
-  await supabase.auth.signOut();
+  // The auth user is already gone; this only clears the session cookies, so
+  // a failure here (session not found) is expected and ignored.
+  await supabase.auth.signOut().catch(() => {});
   return NextResponse.json({ success: true });
 }

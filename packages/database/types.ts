@@ -1934,6 +1934,7 @@ export type Database = {
         }
         Returns: string
       }
+      delete_my_account: { Args: Record<PropertyKey, never>; Returns: string }
       list_blood_donors: {
         Args: { p_blood_group?: string; p_location_id?: string; p_limit?: number }
         Returns: {
