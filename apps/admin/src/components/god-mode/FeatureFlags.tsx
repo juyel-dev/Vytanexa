@@ -10,6 +10,8 @@ const FLAGS: FlagMeta[] = [
   { key: 'polls', emoji: '📊', bn: 'জরিপ (Polls)', desc: 'চালু করলে /community/polls এবং "আরো" মেনুতে জরিপ দেখা যাবে ও ভোট দেওয়া যাবে; বন্ধ করলে রুট 404 করবে, মেনু থেকে লুকাবে।' },
   { key: 'voice_search', emoji: '🎙️', bn: 'ভয়েস সার্চ', desc: 'সার্চ বারে মাইক বাটন দেখাবে; বন্ধ করলে টেক্সট সার্চ থাকবে, বাটন দেখাবে না।' },
   { key: 'blood_services', emoji: '🩸', bn: 'ব্লাড সার্ভিস', desc: 'চালু থাকলে /health/blood-services পেজ, রক্তদাতা নিবন্ধন ও তালিকা কাজ করবে; বন্ধ করলে পেজ 404 করবে। হোমপেজে ব্যানার দেখানো আলাদাভাবে হোমপেজ সেকশন সেটিংস থেকে নিয়ন্ত্রিত হয়।' },
+  { key: 'phone_auth', emoji: '📱', bn: 'সাইন ইন: মোবাইল নম্বর + OTP', desc: 'SMS পাঠাতে খরচ হয় — Supabase-এ SMS provider (যেমন Twilio) চালু করার পরেই এটা চালু করুন। বন্ধ থাকলে অ্যাপে মোবাইল OTP বাটন দেখাবে না।' },
+  { key: 'google_auth', emoji: '🔑', bn: 'সাইন ইন: Google', desc: 'বিনামূল্যে। Supabase-এ Google provider ও Google Cloud OAuth credentials বসানোর পরেই চালু করুন। বন্ধ থাকলে "Google দিয়ে সাইন ইন" বাটন দেখাবে না। দুটোই বন্ধ থাকলে অ্যাপ শুধু অতিথি মোডে চলবে।' },
 ];
 
 export function FeatureFlags({ initialFeatures }: { initialFeatures: Record<string, boolean> | null }) {

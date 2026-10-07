@@ -6,6 +6,11 @@ export type FeatureFlags = {
   polls?: boolean;
   voice_search?: boolean;
   blood_services?: boolean;
+  // Sign-in methods. Both default OFF (absent = off): phone OTP needs a paid
+  // SMS provider and Google needs OAuth credentials in Supabase. The admin
+  // flips these on once the provider is actually configured.
+  phone_auth?: boolean;
+  google_auth?: boolean;
 };
 
 /**

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLocationNames } from '@/lib/use-location-names';
 import { LANGUAGE_NAMES, useResolvedLocale } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
+import { useAuthMethods } from '@/lib/use-auth-methods';
 import {
   Heart,
   User,
@@ -102,6 +103,8 @@ export function MorePageClient({
   // Real current language (cookie-driven). The profile value was always
   // 'bn' for guests and stale for signed-in users on another device.
   const language = useResolvedLocale();
+  const authMethods = useAuthMethods();
+  const signInAvailable = !!authMethods && (authMethods.phone || authMethods.google);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
@@ -148,12 +151,14 @@ export function MorePageClient({
       ) : (
         <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-4">
           <p className="text-[15px] font-semibold text-neutral-700">{t('guestMode')}</p>
-          <Link
-            href="/auth/login"
-            className="rounded-full bg-brand-50 px-4 py-2 text-[13px] font-semibold text-brand-700"
-          >
-            {t('signIn')}
-          </Link>
+          {signInAvailable && (
+            <Link
+              href="/auth/login"
+              className="rounded-full bg-brand-50 px-4 py-2 text-[13px] font-semibold text-brand-700"
+            >
+              {t('signIn')}
+            </Link>
+          )}
         </div>
       )}
 

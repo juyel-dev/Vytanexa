@@ -8,6 +8,7 @@ import { LanguageSheet } from './LanguageSheet';
 import { useLocationNames } from '@/lib/use-location-names';
 import { LANGUAGE_NAMES, useResolvedLocale } from '@/lib/i18n-client';
 import { useT } from '@vytanexa/i18n/client';
+import { useAuthMethods } from '@/lib/use-auth-methods';
 
 // Same code-splitting rationale as LocationChip.tsx: LocationPickerSheet
 // pulls in the browser Supabase client for its district/state queries,
@@ -46,6 +47,8 @@ export function SettingsClient({
   // switching language it kept the OLD name until a hard reload. The
   // resolved locale (cookie-driven) is the real current language.
   const language = useResolvedLocale();
+  const authMethods = useAuthMethods();
+  const signInAvailable = !!authMethods && (authMethods.phone || authMethods.google);
   const [prefs, setPrefs] = useState(initialPrefs);
   const [exportSent, setExportSent] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -150,14 +153,14 @@ export function SettingsClient({
               <p className="mt-1 text-[12px] text-emergency-600">{tCommon('error')}</p>
             )}
           </>
-        ) : (
+        ) : signInAvailable ? (
           <Link
             href="/auth/login"
             className="block rounded-md bg-brand-50 px-3 py-2.5 text-[13px] font-semibold text-brand-700"
           >
             {t('signInForNotifications')}
           </Link>
-        )}
+        ) : null}
       </div>
 
       <div className="border-b border-neutral-100 px-4 py-3">

@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useT } from '@vytanexa/i18n/client';
-import { useFormatter } from '@/lib/i18n-client';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useT } from "@vytanexa/i18n/client";
+import { useFormatter } from "@/lib/i18n-client";
+import { createClient } from "@/lib/supabase/client";
+import { useAuthMethods } from "@/lib/use-auth-methods";
 
 /**
  * Optional Sign-in — VYTANEXA-BLUEPRINT.md § S03 "SCREEN 5"
@@ -22,22 +23,34 @@ import { createClient } from '@/lib/supabase/client';
  */
 export function SigninStep() {
   const router = useRouter();
-  const t = useT('onboarding.signin' as Parameters<typeof useT>[0]);
-  const tc = useT('common');
+  const t = useT("onboarding.signin" as Parameters<typeof useT>[0]);
+  const tc = useT("common");
   const format = useFormatter();
-  const BENEFITS = t.raw('benefits' as Parameters<typeof t.raw>[0]) as { emoji: string; text: string }[];
-  const [phone, setPhone] = useState('');
+  const BENEFITS = t.raw("benefits" as Parameters<typeof t.raw>[0]) as {
+    emoji: string;
+    text: string;
+  }[];
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isValidPhone = /^[6-9]\d{9}$/.test(phone);
+  const methods = useAuthMethods();
+  const noMethods = methods !== null && !methods.phone && !methods.google;
 
   const completeAsGuest = () => {
-    localStorage.setItem('vytanexa_first_run', 'done');
-    localStorage.setItem('vytanexa_user_guest', 'true');
-    document.cookie = 'vytanexa_first_run=done; path=/; max-age=31536000';
-    router.replace('/');
+    localStorage.setItem("vytanexa_first_run", "done");
+    localStorage.setItem("vytanexa_user_guest", "true");
+    document.cookie = "vytanexa_first_run=done; path=/; max-age=31536000";
+    router.replace("/");
   };
+
+  // No sign-in method is switched on (admin flags): this step would be
+  // buttons that only error, so finish onboarding as a guest instead.
+  useEffect(() => {
+    if (noMethods) completeAsGuest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noMethods]);
 
   const handleSendOtp = async () => {
     if (!isValidPhone) return;
@@ -45,34 +58,43 @@ export function SigninStep() {
     setError(null);
     const supabase = createClient();
     const fullPhone = `+91${phone}`;
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: fullPhone });
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      phone: fullPhone,
+    });
     setLoading(false);
     if (otpError) {
-      setError(t('otpSendFailed'));
+      setError(t("otpSendFailed"));
       return;
     }
     router.push(`/auth/verify?phone=${encodeURIComponent(fullPhone)}`);
   };
 
   const handleGoogleSignin = async () => {
-    localStorage.setItem('vytanexa_first_run', 'done');
-    document.cookie = 'vytanexa_first_run=done; path=/; max-age=31536000';
+    localStorage.setItem("vytanexa_first_run", "done");
+    document.cookie = "vytanexa_first_run=done; path=/; max-age=31536000";
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: { redirectTo: `${window.location.origin}/` },
     });
   };
 
   return (
     <div className="flex min-h-dvh flex-col px-6 pt-10">
-      <p className="text-[13px] text-neutral-400">{format.number(2)}/{format.number(2)}</p>
-      <h1 className="mt-1 text-[20px] font-bold text-neutral-900">{t('welcome')}</h1>
-      <p className="mt-1 text-[14px] text-neutral-600">{t('subtitle')}</p>
+      <p className="text-[13px] text-neutral-400">
+        {format.number(2)}/{format.number(2)}
+      </p>
+      <h1 className="mt-1 text-[20px] font-bold text-neutral-900">
+        {t("welcome")}
+      </h1>
+      <p className="mt-1 text-[14px] text-neutral-600">{t("subtitle")}</p>
 
       <div className="mt-5 flex flex-col gap-2">
         {BENEFITS.map((b, i) => (
-          <div key={i} className="flex items-center gap-2 rounded-lg bg-neutral-50 px-3 py-2.5">
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-lg bg-neutral-50 px-3 py-2.5"
+          >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-50 text-[16px]">
               {b.emoji}
             </span>
@@ -81,49 +103,70 @@ export function SigninStep() {
         ))}
       </div>
 
-      <p className="mt-6 text-[13px] font-medium text-neutral-700">
-        {t('phoneLabel')}
-      </p>
-      <div className="mt-2 flex h-12 items-center rounded-md border border-neutral-200 px-3">
-        <span className="mr-2 text-[14px] text-neutral-500">🇮🇳 +91</span>
-        <input
-          value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-          placeholder={t('phonePlaceholder')}
-          inputMode="numeric"
-          className="flex-1 text-[14px] outline-none placeholder:text-neutral-400"
-        />
-      </div>
-      {error && <p className="mt-1 text-[12px] text-emergency-600">{error}</p>}
+      {methods === null || noMethods ? null : (
+        <>
+          {methods.phone && (
+            <>
+              <p className="mt-6 text-[13px] font-medium text-neutral-700">
+                {t("phoneLabel")}
+              </p>
+              <div className="mt-2 flex h-12 items-center rounded-md border border-neutral-200 px-3">
+                <span className="mr-2 text-[14px] text-neutral-500">
+                  🇮🇳 +91
+                </span>
+                <input
+                  value={phone}
+                  onChange={(e) =>
+                    setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  placeholder={t("phonePlaceholder")}
+                  inputMode="numeric"
+                  className="flex-1 text-[14px] outline-none placeholder:text-neutral-400"
+                />
+              </div>
+              {error && (
+                <p className="mt-1 text-[12px] text-emergency-600">{error}</p>
+              )}
 
-      <button
-        onClick={handleSendOtp}
-        disabled={!isValidPhone || loading}
-        className="mt-3 h-12 rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
-      >
-        {loading ? t('sending') : t('sendOtp')}
-      </button>
+              <button
+                onClick={handleSendOtp}
+                disabled={!isValidPhone || loading}
+                className="mt-3 h-12 rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
+              >
+                {loading ? t("sending") : t("sendOtp")}
+              </button>
+            </>
+          )}
 
-      <div className="my-4 flex items-center gap-3">
-        <span className="h-px flex-1 bg-neutral-200" />
-        <span className="text-[12px] text-neutral-400">{tc('or')}</span>
-        <span className="h-px flex-1 bg-neutral-200" />
-      </div>
+          {methods.phone && methods.google && (
+            <div className="my-4 flex items-center gap-3">
+              <span className="h-px flex-1 bg-neutral-200" />
+              <span className="text-[12px] text-neutral-400">{tc("or")}</span>
+              <span className="h-px flex-1 bg-neutral-200" />
+            </div>
+          )}
 
-      <button
-        onClick={handleGoogleSignin}
-        className="h-12 rounded-md border border-neutral-200 text-[14px] font-medium text-neutral-700"
-      >
-        {t('signInWithGoogle')}
-      </button>
+          {methods.google && (
+            <button
+              onClick={handleGoogleSignin}
+              className={`h-12 rounded-md border border-neutral-200 text-[14px] font-medium text-neutral-700 ${methods.phone ? "" : "mt-6"}`}
+            >
+              {t("signInWithGoogle")}
+            </button>
+          )}
+        </>
+      )}
 
       <div className="flex-1" />
 
       <div className="pb-8 text-center">
-        <button onClick={completeAsGuest} className="text-[14px] text-neutral-500">
-          {t('notNow')}
+        <button
+          onClick={completeAsGuest}
+          className="text-[14px] text-neutral-500"
+        >
+          {t("notNow")}
         </button>
-        <p className="mt-1 text-[12px] text-neutral-400">{t('laterHint')}</p>
+        <p className="mt-1 text-[12px] text-neutral-400">{t("laterHint")}</p>
       </div>
     </div>
   );

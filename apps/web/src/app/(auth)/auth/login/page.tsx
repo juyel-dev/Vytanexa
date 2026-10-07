@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import { useT } from '@vytanexa/i18n/client';
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useT } from "@vytanexa/i18n/client";
+import { useAuthMethods } from "@/lib/use-auth-methods";
 
 export default function LoginPage() {
   return (
@@ -26,16 +27,18 @@ export default function LoginPage() {
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') ?? '/';
+  const returnUrl = searchParams.get("returnUrl") ?? "/";
 
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const t = useT('auth');
-  const tOnboarding = useT('onboarding');
-  const tCommon = useT('common');
+  const t = useT("auth");
+  const tOnboarding = useT("onboarding");
+  const tCommon = useT("common");
 
   const isValidPhone = /^[6-9]\d{9}$/.test(phone);
+  const methods = useAuthMethods();
+  const unavailable = methods !== null && !methods.phone && !methods.google;
 
   const handleSendOtp = async () => {
     if (!isValidPhone) return;
@@ -43,66 +46,100 @@ function LoginPageContent() {
     setError(null);
     const supabase = createClient();
     const fullPhone = `+91${phone}`;
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: fullPhone });
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      phone: fullPhone,
+    });
     setLoading(false);
     if (otpError) {
-      setError(tOnboarding('signin.otpSendFailed'));
+      setError(tOnboarding("signin.otpSendFailed"));
       return;
     }
     router.push(
-      `/auth/verify?phone=${encodeURIComponent(fullPhone)}&returnUrl=${encodeURIComponent(returnUrl)}`
+      `/auth/verify?phone=${encodeURIComponent(fullPhone)}&returnUrl=${encodeURIComponent(returnUrl)}`,
     );
   };
 
   const handleGoogleSignin = async () => {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: { redirectTo: `${window.location.origin}${returnUrl}` },
     });
   };
 
   return (
     <div className="flex min-h-dvh flex-col px-6 pt-6">
-      <button onClick={() => router.back()} aria-label={tCommon('goBack')}>
+      <button onClick={() => router.back()} aria-label={tCommon("goBack")}>
         <ChevronLeft className="h-6 w-6 text-neutral-700" />
       </button>
 
-      <h1 className="mt-6 text-[20px] font-bold text-neutral-900">{tCommon('signIn')}</h1>
+      <h1 className="mt-6 text-[20px] font-bold text-neutral-900">
+        {tCommon("signIn")}
+      </h1>
 
-      <p className="mt-6 text-[13px] font-medium text-neutral-700">{t('phoneLabelShort')}</p>
-      <div className="mt-2 flex h-12 items-center rounded-md border border-neutral-200 px-3">
-        <span className="mr-2 text-[14px] text-neutral-500">🇮🇳 +91</span>
-        <input
-          value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-          placeholder={tOnboarding('signin.phonePlaceholder')}
-          inputMode="numeric"
-          className="flex-1 text-[14px] outline-none placeholder:text-neutral-400"
-        />
-      </div>
-      {error && <p className="mt-1 text-[12px] text-emergency-600">{error}</p>}
+      {unavailable && (
+        <p className="mt-6 text-[14px] text-neutral-600">
+          {t("signInUnavailable")}
+        </p>
+      )}
 
-      <button
-        onClick={handleSendOtp}
-        disabled={!isValidPhone || loading}
-        className="mt-3 h-12 rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
-      >
-        {loading ? tOnboarding('signin.sending') : tOnboarding('signin.sendOtp')}
-      </button>
+      {methods && !unavailable && (
+        <>
+          {methods.phone && (
+            <>
+              <p className="mt-6 text-[13px] font-medium text-neutral-700">
+                {t("phoneLabelShort")}
+              </p>
+              <div className="mt-2 flex h-12 items-center rounded-md border border-neutral-200 px-3">
+                <span className="mr-2 text-[14px] text-neutral-500">
+                  🇮🇳 +91
+                </span>
+                <input
+                  value={phone}
+                  onChange={(e) =>
+                    setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  }
+                  placeholder={tOnboarding("signin.phonePlaceholder")}
+                  inputMode="numeric"
+                  className="flex-1 text-[14px] outline-none placeholder:text-neutral-400"
+                />
+              </div>
+              {error && (
+                <p className="mt-1 text-[12px] text-emergency-600">{error}</p>
+              )}
 
-      <div className="my-4 flex items-center gap-3">
-        <span className="h-px flex-1 bg-neutral-200" />
-        <span className="text-[12px] text-neutral-400">{tCommon('or')}</span>
-        <span className="h-px flex-1 bg-neutral-200" />
-      </div>
+              <button
+                onClick={handleSendOtp}
+                disabled={!isValidPhone || loading}
+                className="mt-3 h-12 rounded-md bg-brand-600 text-[15px] font-semibold text-white disabled:opacity-40"
+              >
+                {loading
+                  ? tOnboarding("signin.sending")
+                  : tOnboarding("signin.sendOtp")}
+              </button>
+            </>
+          )}
 
-      <button
-        onClick={handleGoogleSignin}
-        className="h-12 rounded-md border border-neutral-200 text-[14px] font-medium text-neutral-700"
-      >
-        {tOnboarding('signin.signInWithGoogle')}
-      </button>
+          {methods.phone && methods.google && (
+            <div className="my-4 flex items-center gap-3">
+              <span className="h-px flex-1 bg-neutral-200" />
+              <span className="text-[12px] text-neutral-400">
+                {tCommon("or")}
+              </span>
+              <span className="h-px flex-1 bg-neutral-200" />
+            </div>
+          )}
+
+          {methods.google && (
+            <button
+              onClick={handleGoogleSignin}
+              className={`h-12 rounded-md border border-neutral-200 text-[14px] font-medium text-neutral-700 ${methods.phone ? "" : "mt-6"}`}
+            >
+              {tOnboarding("signin.signInWithGoogle")}
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
