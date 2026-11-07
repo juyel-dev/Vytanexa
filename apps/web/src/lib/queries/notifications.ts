@@ -15,12 +15,12 @@ export async function getNotifications(supabase: SupabaseClient<Database>) {
     .select('id, type, title, body, target_url, created_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(50);
 
-  if (error) {
-    console.error('getNotifications failed:', error.message);
-    return [];
-  }
+  // Throw (don't return []): a failed query used to render the
+  // "no notifications" empty state, hiding an outage as "all clear".
+  if (error) throw new Error(`getNotifications failed: ${error.message}`);
   return data ?? [];
 }
 
@@ -41,6 +41,8 @@ export async function getReadNotificationIds(
     .select('notification_id')
     .eq('user_id', userId);
 
+  // Read-state is cosmetic: on failure show everything as unread rather
+  // than failing the whole page.
   if (error) {
     console.error('getReadNotificationIds failed:', error.message);
     return [];

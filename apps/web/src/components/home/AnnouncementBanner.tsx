@@ -17,6 +17,7 @@ export async function AnnouncementBanner() {
     .select('id, type, title, body, target_url')
     .eq('show_as_banner', true)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(2);
 
   if (error) {

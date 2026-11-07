@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getT } from '@vytanexa/i18n/server';
 
 /** POST /api/notifications/mark-all-read — "সব পড়া হয়েছে" bulk action, signed-in users only. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function POST(request: NextRequest) {
   const t = await getT('validation');
   const supabase = createClient();
@@ -14,7 +16,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true }); // guest handles this entirely client-side
   }
 
-  const { notificationIds } = await request.json();
+  const body = await request.json().catch(() => null);
+  const notificationIds: unknown = body?.notificationIds;
   if (!Array.isArray(notificationIds) || notificationIds.length === 0) {
     return NextResponse.json({ success: true });
   }
@@ -28,7 +31,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: t('generic.tooManyItems') }, { status: 400 });
   }
 
-  const rows = notificationIds.map((id: string) => ({ notification_id: id, user_id: user.id }));
+  const valid = notificationIds.filter((id): id is string => typeof id === 'string' && UUID_RE.test(id));
+  if (valid.length === 0) return NextResponse.json({ success: true });
+  const rows = valid.map((id) => ({ notification_id: id, user_id: user.id }));
 
   const { error } = await supabase
     .from('notification_reads')

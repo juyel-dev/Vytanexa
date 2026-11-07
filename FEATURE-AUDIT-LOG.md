@@ -36,7 +36,7 @@ from scratch."
 | S17 | User account | ✅ **done (code)** — DB part needs owner approval, see below |
 | S18 | Settings | ✅ **done** — see below |
 | S19 | Custom pages / block builder | audited (web renderer) — see section below |
-| S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
+| S20 | Notifications center · announcement banner | audited (code) — see section below |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
 
@@ -200,3 +200,17 @@ Fixed:
 
 Not changed (already OK): admin write path sanitizes `rich_text` (DOMPurify) on POST/PATCH; `/api/page-submissions` is rate-limited and size-capped.
 Open/optional: render-side sanitize for rich_text (defence in depth), admin-side URL validation for CTA.
+
+## S20 — Notifications center · announcement banner
+
+Fixed:
+- `getNotifications` returned `[]` on a DB error, so an outage rendered the "no notifications" empty state. Now throws (error boundary). Read-state query stays best-effort (everything shows unread).
+- Banner: reading `localStorage` in the `useState` initializer caused a hydration mismatch for anyone who had dismissed a banner. Now loaded in an effect. Dismiss merges with stored ids (multi-tab) and is bounded.
+- Banner: `<button>` nested inside `<a>` (invalid HTML, bad for keyboard/AT) → sibling layout; `role="alert"` on emergency; `aria-hidden` icons.
+- `target_url` is admin free text: banner + notification tap now go through `safeHref` (no `javascript:`); external links open safely, internal use the router.
+- mark-read / mark-all-read: malformed JSON → 500; now 400/no-op, ids validated as UUIDs. Client sends JSON content-type.
+- Guest "mark all read" overwrote stored ids (older reads forgotten); now merged (bounded to 500). Stored value shape-checked.
+- Relative time showed Bengali for every language: `formatRelativeTimeBn(iso, locale)` now uses `Intl.RelativeTimeFormat` for en/hi (default `bn` unchanged, so other callers are untouched). Invalid date → ''.
+- Deterministic `id` tiebreaker on the three newest-first queries.
+
+Not changed / open: list is capped at 50 (no infinite scroll — spec mentions it; fine at current volume); other `formatRelativeTimeBn` callers (articles, Q&A, account pages) still need to pass `locale`; RLS (`notifications_*`, expiry) could not be re-verified this session (no DB access).

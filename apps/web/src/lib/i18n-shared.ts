@@ -77,10 +77,24 @@ export function toBengaliDigits(input: string | number): string {
  *  `useFormatter().relativeTime()` — locale-aware (works for en/hi too),
  *  same second/minute/hour/day/month bucket cascade as this function, on
  *  top of native `Intl.RelativeTimeFormat`. */
-export function formatRelativeTimeBn(isoDate: string): string {
+export function formatRelativeTimeBn(isoDate: string, locale: string = 'bn'): string {
   const then = new Date(isoDate).getTime();
+  if (Number.isNaN(then)) return '';
   const now = Date.now();
   const diffSec = Math.max(0, Math.floor((now - then) / 1000));
+
+  // Non-Bengali locales (en/hi): native Intl instead of hard-coded Bengali strings.
+  if (locale !== 'bn') {
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+    if (diffSec < 60) return rtf.format(0, 'second');
+    const m = Math.floor(diffSec / 60);
+    if (m < 60) return rtf.format(-m, 'minute');
+    const h = Math.floor(m / 60);
+    if (h < 24) return rtf.format(-h, 'hour');
+    const d = Math.floor(h / 24);
+    if (d < 30) return rtf.format(-d, 'day');
+    return new Date(isoDate).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
 
   if (diffSec < 60) return 'এইমাত্র';
   const diffMin = Math.floor(diffSec / 60);

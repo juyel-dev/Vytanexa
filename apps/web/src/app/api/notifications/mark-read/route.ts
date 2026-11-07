@@ -10,6 +10,8 @@ import { getT } from '@vytanexa/i18n/server';
  * already-read notification again should be a harmless no-op, not a
  * duplicate-key error surfaced to the client.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function POST(request: NextRequest) {
   const t = await getT('validation');
   const supabase = createClient();
@@ -21,8 +23,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true }); // guest: nothing to persist server-side
   }
 
-  const { notificationId } = await request.json();
-  if (!notificationId) {
+  // Malformed JSON used to throw -> unhandled 500.
+  const body = await request.json().catch(() => null);
+  const notificationId = body?.notificationId;
+  if (typeof notificationId !== 'string' || !UUID_RE.test(notificationId)) {
     return NextResponse.json({ error: t('generic.incompleteData') }, { status: 400 });
   }
 

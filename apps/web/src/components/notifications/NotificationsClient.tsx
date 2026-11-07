@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Info, MessageCircle } from 'lucide-react';
-import { formatRelativeTimeBn } from '@/lib/i18n-client';
+import { formatRelativeTimeBn, useResolvedLocale } from '@/lib/i18n-client';
+import { safeHref } from '@/lib/safe-url';
 import { useT } from '@vytanexa/i18n/client';
 
 const STORAGE_KEY = 'vytanexa_read_notification_ids';
@@ -40,12 +41,14 @@ export function NotificationsClient({
 }) {
   const router = useRouter();
   const t = useT('notifications');
+  const locale = useResolvedLocale();
   const [readIds, setReadIds] = useState<Set<string>>(new Set(initialReadIds));
 
   useEffect(() => {
     if (isSignedIn) return; // signed-in read-state already came from the server
     try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as string[];
+      const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+      const stored = Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
       setReadIds((prev) => new Set([...prev, ...stored]));
     } catch {
       // malformed localStorage value — treat as empty rather than crashing
@@ -59,6 +62,7 @@ export function NotificationsClient({
     if (isSignedIn) {
       fetch('/api/notifications/mark-read', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId: id }),
       }).catch(() => {});
     } else {
@@ -74,7 +78,11 @@ export function NotificationsClient({
 
   const handleTap = (n: Notification) => {
     markRead(n.id);
-    if (n.target_url) router.push(n.target_url);
+    // target_url is admin free text: only same-site paths / http(s) / tel / mailto.
+    const href = safeHref(n.target_url);
+    if (!href) return;
+    if (href.startsWith('/')) router.push(href);
+    else window.location.assign(href);
   };
 
   const markAllRead = async () => {
@@ -84,11 +92,15 @@ export function NotificationsClient({
     if (isSignedIn) {
       fetch('/api/notifications/mark-all-read', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationIds: allIds }),
       }).catch(() => {});
     } else {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allIds));
+        // Merge, don't overwrite: ids read earlier that have since scrolled
+        // past the 50-item window must stay remembered.
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as string[];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...new Set([...stored, ...allIds])].slice(-500)));
       } catch {
         // best-effort
       }
@@ -102,6 +114,7 @@ export function NotificationsClient({
       {notifications.length > 0 && (
         <div className="flex justify-end border-b border-neutral-100 px-4 py-2">
           <button
+            type="button"
             onClick={markAllRead}
             disabled={!hasUnread}
             className="text-[13px] font-semibold text-brand-600 disabled:text-neutral-300"
@@ -121,6 +134,7 @@ export function NotificationsClient({
             return (
               <button
                 key={n.id}
+                type="button"
                 onClick={() => handleTap(n)}
                 className={`flex w-full items-start gap-2.5 px-4 py-3.5 text-left ${
                   isUnread ? 'bg-brand-50/50' : ''
@@ -140,7 +154,7 @@ export function NotificationsClient({
                   </p>
                   <p className="mt-0.5 line-clamp-2 text-[13px] text-neutral-500">{n.body}</p>
                   <p className="mt-1 text-[11px] text-neutral-400">
-                    {formatRelativeTimeBn(n.created_at)}
+                    {formatRelativeTimeBn(n.created_at, locale)}
                   </p>
                 </div>
               </button>

@@ -55,6 +55,7 @@ export async function hasUnreadNotifications(
     // show anything older, so counting older unread rows left the red dot
     // stuck on with nothing to read.
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(50);
 
   if (error || !notifications || notifications.length === 0) return false;
