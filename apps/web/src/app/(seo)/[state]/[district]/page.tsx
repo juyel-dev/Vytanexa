@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -41,7 +42,7 @@ export async function generateStaticParams() {
   }
 }
 
-async function loadDistrict(stateSlug: string, districtSlug: string) {
+const loadDistrict = cache(async (stateSlug: string, districtSlug: string) => {
   const supabase = createClient();
   const state = await getStateBySlug(supabase, stateSlug);
   if (!state) return null;
@@ -59,7 +60,7 @@ async function loadDistrict(stateSlug: string, districtSlug: string) {
     siblings,
     categories: categories.length > 0 ? categories : fallbackCats,
   };
-}
+});
 
 export async function generateMetadata({
   params,

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -30,7 +31,7 @@ export async function generateStaticParams() {
   }
 }
 
-async function loadState(stateSlug: string) {
+const loadState = cache(async (stateSlug: string) => {
   const supabase = createClient();
   const state = await getStateBySlug(supabase, stateSlug);
   if (!state) return null;
@@ -39,7 +40,7 @@ async function loadState(stateSlug: string) {
     getAllActiveCategories(supabase),
   ]);
   return { state, districts, categories };
-}
+});
 
 export async function generateMetadata({
   params,

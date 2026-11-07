@@ -35,11 +35,21 @@ export type SeoCategory = {
 
 // --- Basic location / category fetchers ---
 
+/**
+ * These pages are ISR-cached for 6h. Swallowing a DB error here made a
+ * transient outage look like "page doesn't exist" (404 cached for hours,
+ * and Google sees it). Real errors must throw so ISR keeps serving the
+ * last good page; only a genuinely missing row (null data, no error) is a 404.
+ */
+function assertOk(error: { message: string } | null, what: string): void {
+  if (error) throw new Error(`SEO ${what} failed: ${error.message}`);
+}
+
 export async function getStateBySlug(
   supabase: SupabaseClient<Database>,
   slug: string
 ): Promise<SeoLocation | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('locations')
     .select('id, slug, name_translations, type, parent_id')
     .eq('slug', slug)
@@ -47,6 +57,7 @@ export async function getStateBySlug(
     .is('deleted_at', null)
     .eq('is_active', true)
     .maybeSingle();
+  assertOk(error, 'location lookup');
   return (data as SeoLocation | null) ?? null;
 }
 
@@ -55,7 +66,7 @@ export async function getDistrictBySlug(
   slug: string,
   stateId: string
 ): Promise<SeoLocation | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('locations')
     .select('id, slug, name_translations, type, parent_id')
     .eq('slug', slug)
@@ -64,6 +75,7 @@ export async function getDistrictBySlug(
     .is('deleted_at', null)
     .eq('is_active', true)
     .maybeSingle();
+  assertOk(error, 'location lookup');
   return (data as SeoLocation | null) ?? null;
 }
 
@@ -71,13 +83,14 @@ export async function getCategoryBySlug(
   supabase: SupabaseClient<Database>,
   slug: string
 ): Promise<SeoCategory | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('categories')
     .select('id, slug, name_translations')
     .eq('slug', slug)
     .eq('is_active', true)
     .is('deleted_at', null)
     .maybeSingle();
+  assertOk(error, 'category lookup');
   return (data as SeoCategory | null) ?? null;
 }
 
@@ -146,11 +159,12 @@ export async function getCategoriesWithDoctors(
   // Parallel head counts per category — DB-enforced, never throws.
   const counts = await Promise.all(
     categories.map(async (cat) => {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('doctors')
         .select('id', { count: 'exact', head: true })
         .eq('category_id', cat.id)
         .eq('verification_status', 'verified');
+      assertOk(error, 'doctor count');
       return { cat, count: count ?? 0 };
     })
   );
@@ -162,11 +176,14 @@ export async function getDoctorCountForCategory(
   supabase: SupabaseClient<Database>,
   categoryId: string
 ): Promise<number> {
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from('doctors')
     .select('id', { count: 'exact', head: true })
     .eq('category_id', categoryId)
     .eq('verification_status', 'verified');
+  // A failed count used to read as 0 -> notFound() -> a 404 cached by ISR
+  // for 6h for a perfectly valid page. Throw so the previous page is kept.
+  assertOk(error, 'doctor count');
   return count ?? 0;
 }
 

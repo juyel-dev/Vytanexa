@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -70,7 +71,7 @@ export async function generateStaticParams() {
   }
 }
 
-async function loadSeoData(stateSlug: string, districtSlug: string, specialtySlug: string) {
+const loadSeoData = cache(async (stateSlug: string, districtSlug: string, specialtySlug: string) => {
   const supabase = createClient();
 
   const state = await getStateBySlug(supabase, stateSlug);
@@ -102,7 +103,7 @@ async function loadSeoData(stateSlug: string, districtSlug: string, specialtySlu
     siblings,
     otherCats,
   };
-}
+});
 
 export async function generateMetadata({
   params,

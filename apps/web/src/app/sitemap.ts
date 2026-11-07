@@ -46,15 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!supabase) return staticRoutes;
 
   try {
-    const [
-      { data: doctors },
-      { data: hospitals },
-      { data: symptoms },
-      { data: articles },
-      { data: customPages },
-      { data: locations },
-      { data: categories },
-    ] = await Promise.all([
+    const results = await Promise.all([
       supabase.from('doctors').select('slug, updated_at').eq('verification_status', 'verified').limit(5000),
       supabase.from('hospitals').select('slug, updated_at').eq('verification_status', 'verified').limit(5000),
       supabase.from('symptoms').select('slug, updated_at').eq('is_active', true).limit(2000),
@@ -63,6 +55,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       supabase.from('locations').select('id, slug, type, parent_id').eq('is_active', true).is('deleted_at', null).limit(10000),
       supabase.from('categories').select('id, slug').eq('is_active', true).is('deleted_at', null).limit(1000),
     ]);
+    const [rDoctors, rHospitals, rSymptoms, rArticles, rCustomPages, rLocations, rCategories] = results;
+    const { data: doctors } = rDoctors;
+    const { data: hospitals } = rHospitals;
+    const { data: symptoms } = rSymptoms;
+    const { data: articles } = rArticles;
+    const { data: customPages } = rCustomPages;
+    const { data: locations } = rLocations;
+    const { data: categories } = rCategories;
+
+    // A failed query used to leave `data` null and silently shrink the
+    // sitemap (cached for 1h). At runtime throw so Next keeps serving the
+    // last good sitemap; during `next build` degrade as before.
+    const failed = results.some((r) => r.error);
+    if (failed && process.env.NEXT_PHASE !== 'phase-production-build') {
+      throw new Error('sitemap: a source query failed; keeping previous sitemap');
+    }
 
     const entries: MetadataRoute.Sitemap = [...staticRoutes];
 
@@ -134,11 +142,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (cats.length > 0 && districts.length > 0 && states.length > 0) {
       const counts = await Promise.all(
         cats.map(async (c) => {
-          const { count } = await supabase
+          const { count, error } = await supabase
             .from('doctors')
             .select('id', { count: 'exact', head: true })
             .eq('category_id', c.id)
             .eq('verification_status', 'verified');
+          if (error && process.env.NEXT_PHASE !== 'phase-production-build') throw error;
           return { cat: c, count: count ?? 0 };
         })
       );
@@ -157,9 +166,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    return entries;
-  } catch {
-    // Network / RLS error at build time — degrade to static routes only.
+    // Sitemap protocol limit: 50,000 URLs per file. Programmatic district x
+    // specialty combos can exceed it; truncating keeps the file valid
+    // (statics/doctors/hospitals come first, combos last).
+    return entries.slice(0, 50000);
+  } catch (err) {
+    // At build time degrade to static routes only; at runtime rethrow so ISR
+    // keeps the previous (complete) sitemap instead of caching a stub for 1h.
+    if (process.env.NEXT_PHASE !== 'phase-production-build') throw err;
     return staticRoutes;
   }
 }

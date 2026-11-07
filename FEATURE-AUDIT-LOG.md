@@ -37,7 +37,7 @@ from scratch."
 | S18 | Settings | ✅ **done** — see below |
 | S19 | Custom pages / block builder | audited (web renderer) — see section below |
 | S20 | Notifications center · announcement banner | audited (code) — see section below |
-| S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
+| S21 | SEO landing pages | audited (code) — see section below |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
 
 ## Sign-in methods gated by admin flags (owner decision, not an audit row)
@@ -214,3 +214,17 @@ Fixed:
 - Deterministic `id` tiebreaker on the three newest-first queries.
 
 Not changed / open: list is capped at 50 (no infinite scroll — spec mentions it; fine at current volume); other `formatRelativeTimeBn` callers (articles, Q&A, account pages) still need to pass `locale`; RLS (`notifications_*`, expiry) could not be re-verified this session (no DB access).
+
+## S21 — SEO landing pages (`/[state]/[district]/[specialty]`, sitemap)
+
+Fixed:
+- **ISR-cached false 404s:** `getStateBySlug` / `getDistrictBySlug` / `getCategoryBySlug` / `getDoctorCountForCategory` / `getCategoriesWithDoctors` dropped the DB `error`, so a transient outage looked like "row missing" (or "0 doctors") → `notFound()` → a 404 cached for 6h (`revalidate = 21600`) for a valid, indexable page. They now throw on real errors (ISR keeps the last good page); only a genuinely missing row is a 404.
+- `generateMetadata` + page each ran the full loader (≈6 queries ×2 per render): the three page loaders are wrapped in React `cache()`.
+- Sitemap: a failed source query silently shrank the sitemap (cached 1h) and the catch returned a static-only stub. Now: at runtime it throws (previous sitemap kept); during `next build` it degrades as before. Hard cap 50,000 URLs (sitemap protocol limit) — district × specialty combos can exceed it; statics/doctors/hospitals come first.
+- FAQ accordion: `type="button"`, `aria-hidden` icon.
+
+Open — needs a product decision, not changed:
+- **Duplicate-content risk:** doctors have no district link yet (needs the `chambers` join, documented deferral in `queries/seo.ts` / `doctor-list.ts`), so every `/[state]/[district]/[specialty]` page for one specialty lists the *same* national doctors, and "N doctors in {district}" actually shows the national count. Google may treat the thousands of near-identical pages as thin/doorway content. Recommended: once chamber data exists, filter by district and apply the spec's guardrail (`doctor_count >= 1` per district); until then consider `noindex` (or dropping combos from the sitemap) for district×specialty pages.
+- Base URL fallbacks differ (`https://vytanexa.app` in SEO/sitemap/robots vs `''` on doctor/hospital/article pages) — set `NEXT_PUBLIC_APP_URL` in Vercel to the real domain.
+- hreflang alternates all point to the same URL (cookie-based locale) — harmless but not useful to crawlers.
+- `generateStaticParams` pre-renders every district × specialty at build; with all Indian districts seeded that is tens of thousands of pages — consider returning a subset (`dynamicParams = true` renders the rest on demand).

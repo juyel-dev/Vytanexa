@@ -21,12 +21,14 @@ export function SeoFaq({ faqs }: { faqs: FaqItem[] }) {
           return (
             <div key={i}>
               <button
+                type="button"
                 onClick={() => setOpenIndex(open ? null : i)}
                 className="flex w-full items-center justify-between gap-3 py-3 text-left"
                 aria-expanded={open}
               >
                 <span className="text-[14px] font-semibold text-neutral-800">{f.question}</span>
                 <ChevronDown
+                  aria-hidden="true"
                   className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
               </button>
