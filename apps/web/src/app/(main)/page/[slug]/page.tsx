@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { TopBarSection } from '@/components/layout/TopBar';
@@ -13,9 +14,15 @@ import type { PageBlock } from '@/lib/custom-page-blocks';
 // in this app (ends up dynamically rendered per-request in practice).
 export const revalidate = 60;
 
-async function loadPage(slug: string) {
-  const supabase = createClient();
-  return getCustomPageBySlug(supabase, slug);
+// generateMetadata and the page body share one query per request.
+const loadPage = cache(async (slug: string) => getCustomPageBySlug(createClient(), slug));
+
+// blocks is untyped JSONB: anything but an array (or non-object entries)
+// would crash .map / the renderer, so normalize once.
+function toBlocks(raw: unknown): PageBlock[] {
+  return Array.isArray(raw)
+    ? raw.filter((b): b is PageBlock => !!b && typeof b === 'object' && typeof (b as { type?: unknown }).type === 'string')
+    : [];
 }
 
 export async function generateMetadata({
@@ -30,7 +37,7 @@ export async function generateMetadata({
   const description = page.meta_description || undefined;
 
   // OG image fallback: first hero or image block, per spec.
-  const blocks = (page.blocks as unknown as PageBlock[]) ?? [];
+  const blocks = toBlocks(page.blocks);
   const firstImageBlock = blocks.find(
     (b): b is Extract<PageBlock, { type: 'hero' | 'image' }> =>
       (b.type === 'hero' || b.type === 'image') && !!b.image
@@ -65,7 +72,7 @@ export default async function CustomPage({ params }: { params: { slug: string } 
   const page = await loadPage(params.slug);
   if (!page) notFound();
 
-  const blocks = (page.blocks as unknown as PageBlock[]) ?? [];
+  const blocks = toBlocks(page.blocks);
 
   return (
     <>

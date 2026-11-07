@@ -9,9 +9,16 @@ export async function getCustomPageBySlug(supabase: SupabaseClient<Database>, sl
     .eq('slug', slug)
     .single();
 
-  if (error || !data) return null;
-  return data;
+  // PGRST116 = no row (missing or unpublished via RLS) -> real 404.
+  // Any other error must surface (error boundary / retry), not a fake 404
+  // that search engines would cache as "page gone".
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(`getCustomPageBySlug failed: ${error.message}`);
+  }
+  return data ?? null;
 }
+
 
 export type CustomPageDetail = NonNullable<Awaited<ReturnType<typeof getCustomPageBySlug>>>;
 

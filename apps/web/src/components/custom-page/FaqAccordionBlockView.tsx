@@ -8,7 +8,7 @@ import type { FaqAccordionBlock } from '@/lib/custom-page-blocks';
 export function FaqAccordionBlockView({ block }: { block: FaqAccordionBlock }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  if (!block.items || block.items.length === 0) return null;
+  if (!Array.isArray(block.items) || block.items.length === 0) return null;
 
   return (
     <div className="px-4 py-4">
@@ -21,11 +21,14 @@ export function FaqAccordionBlockView({ block }: { block: FaqAccordionBlock }) {
           return (
             <div key={i} className="rounded-lg border border-neutral-200">
               <button
+                type="button"
+                aria-expanded={isOpen}
                 onClick={() => setOpenIndex(isOpen ? null : i)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
                 <span className="text-[14px] font-medium text-neutral-800">{item.question}</span>
                 <ChevronDown
+                  aria-hidden="true"
                   className={`h-4 w-4 shrink-0 text-neutral-400 transition-transform ${
                     isOpen ? 'rotate-180' : ''
                   }`}

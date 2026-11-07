@@ -15,9 +15,9 @@ import type { MagazineGridBlock, DoctorGridBlock, HospitalGridBlock } from '@/li
 export async function MagazineGridBlockView({ block }: { block: MagazineGridBlock }) {
   const supabase = createClient();
   const articles = await getArticlesForGrid(supabase, {
-    category: block.category,
-    tags: block.tags,
-    limit: block.limit ?? 6,
+    category: typeof block.category === 'string' ? block.category : undefined,
+    tags: Array.isArray(block.tags) ? block.tags.filter((t) => typeof t === 'string') : undefined,
+    limit: Math.min(Math.max(Math.trunc(Number(block.limit)) || 6, 1), 24),
   });
   if (articles.length === 0) return null;
 
@@ -42,9 +42,10 @@ export async function MagazineGridBlockView({ block }: { block: MagazineGridBloc
  * preserves the admin's chosen order rather than DB return order.
  */
 export async function DoctorGridBlockView({ block }: { block: DoctorGridBlock }) {
-  if (!block.doctor_ids || block.doctor_ids.length === 0) return null;
+  const ids = Array.isArray(block.doctor_ids) ? block.doctor_ids.filter((x) => typeof x === 'string').slice(0, 30) : [];
+  if (ids.length === 0) return null;
   const supabase = createClient();
-  const doctors = await getDoctorsByIds(supabase, block.doctor_ids);
+  const doctors = await getDoctorsByIds(supabase, ids);
   if (doctors.length === 0) return null;
 
   return (
@@ -60,9 +61,10 @@ export async function DoctorGridBlockView({ block }: { block: DoctorGridBlock })
 }
 
 export async function HospitalGridBlockView({ block }: { block: HospitalGridBlock }) {
-  if (!block.hospital_ids || block.hospital_ids.length === 0) return null;
+  const ids = Array.isArray(block.hospital_ids) ? block.hospital_ids.filter((x) => typeof x === 'string').slice(0, 30) : [];
+  if (ids.length === 0) return null;
   const supabase = createClient();
-  const hospitals = await getHospitalsByIds(supabase, block.hospital_ids);
+  const hospitals = await getHospitalsByIds(supabase, ids);
   if (hospitals.length === 0) return null;
 
   return (

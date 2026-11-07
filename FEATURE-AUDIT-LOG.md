@@ -35,7 +35,7 @@ from scratch."
 | S16 | More page | ✅ **done** — see below |
 | S17 | User account | ✅ **done (code)** — DB part needs owner approval, see below |
 | S18 | Settings | ✅ **done** — see below |
-| S19 | Custom pages / block builder | not audited (i18n-migrated only, batch 29) |
+| S19 | Custom pages / block builder | audited (web renderer) — see section below |
 | S20 | Notifications center · announcement banner | not audited (i18n-migrated only, batch 33) |
 | S21 | SEO landing pages | not audited — also Phase 3's deliberately-deferred i18n strand |
 | S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
@@ -186,3 +186,17 @@ pass comes from cross-referencing spec against real code, not from
 skimming. Update this table's row to done with a one-line pointer to
 the commit, same as S07 above — don't restate the findings here, the
 commit message is the record.
+
+## S19 — Custom pages / block builder (web renderer)
+
+Fixed:
+- `getCustomPageBySlug` turned every DB error into a 404 (search engines would cache a transient outage as "page gone"). Now only PGRST116 = not found; other errors throw. Page + `generateMetadata` share one query via React `cache()`.
+- `custom_pages.blocks` is untyped JSONB: non-array / non-object entries crashed `.map`. Normalized once in `toBlocks()`. Grid/FAQ/report blocks also guard non-array fields; grid `limit` clamped 1–24, id lists capped at 30.
+- **report_form bug:** empty optional phone was sent as `''` and failed the server's phone regex, so the form could not be submitted without a phone. Now sends `null`.
+- report_form: network failure left the button stuck on "submitting" (no try/catch) and `res.json()` could throw. Added try/catch/finally, JSON header, double-submit guard, `role="alert"`, label↔input association (`useId`), `maxLength`, numeric phone input.
+- CTA banner `button_url` is admin free text → `javascript:` link possible. New `lib/safe-url.ts` (`safeHref`): only `/path`, http(s), tel, mailto.
+- FAQ accordion: `aria-expanded`, `type="button"`. Image/hero: `sizes`.
+- Poll embed: forced Bengali digits → locale-aware `Intl.NumberFormat` percent.
+
+Not changed (already OK): admin write path sanitizes `rich_text` (DOMPurify) on POST/PATCH; `/api/page-submissions` is rate-limited and size-capped.
+Open/optional: render-side sanitize for rich_text (defence in depth), admin-side URL validation for CTA.

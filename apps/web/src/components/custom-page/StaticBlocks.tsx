@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { safeHref } from '@/lib/safe-url';
 import type {
   HeroBlock,
   RichTextBlock,
@@ -11,7 +12,7 @@ import type {
 export function HeroBlockView({ block }: { block: HeroBlock }) {
   return (
     <div className="relative h-[220px] w-full bg-neutral-200">
-      {block.image && <Image src={block.image} alt={block.title ?? ''} fill className="object-cover" />}
+      {block.image && <Image src={block.image} alt={block.title ?? ''} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />}
       {(block.title || block.subtitle) && (
         <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 to-transparent p-4">
           {block.title && (
@@ -48,7 +49,7 @@ export function ImageBlockView({ block }: { block: ImageBlock }) {
   return (
     <div className="px-4 py-3">
       <div className="relative h-[200px] w-full overflow-hidden rounded-lg bg-neutral-100">
-        <Image src={block.image} alt={block.caption ?? ''} fill className="object-cover" />
+        <Image src={block.image} alt={block.caption ?? ''} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
       </div>
       {block.caption && (
         <p className="mt-1.5 text-center text-[12px] text-neutral-500">{block.caption}</p>
@@ -67,14 +68,15 @@ const BANNER_COLORS: Record<string, string> = {
 export function CtaBannerBlockView({ block }: { block: CtaBannerBlock }) {
   if (!block.headline) return null;
   const bgClass = BANNER_COLORS[block.color ?? 'brand'] ?? BANNER_COLORS.brand;
-  const isExternal = block.button_url?.startsWith('http');
+  const href = safeHref(block.button_url);
+  const isExternal = !!href && /^https?:/i.test(href);
 
   return (
     <div className={`mx-4 my-3 rounded-xl p-5 text-center ${bgClass}`}>
       <p className="text-[17px] font-bold text-white">{block.headline}</p>
-      {block.button_text && block.button_url && (
+      {block.button_text && href && (
         <Link
-          href={block.button_url}
+          href={href}
           target={isExternal ? '_blank' : undefined}
           rel={isExternal ? 'noopener noreferrer' : undefined}
           className="mt-3 inline-block rounded-md bg-white px-5 py-2.5 text-[14px] font-semibold text-neutral-900"

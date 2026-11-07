@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { toBengaliDigits } from '@/lib/i18n';
+import { getResolvedLocale } from '@/lib/i18n';
 import { getPollById } from '@/lib/queries/polls';
 import { createClient } from '@/lib/supabase/server';
 import { getT } from '@vytanexa/i18n/server';
@@ -26,6 +26,7 @@ export async function PollEmbedBlockView({ block }: { block: PollBlock }) {
   if (!poll) return null;
   const t = await getT('polls');
 
+  const pctFmt = new Intl.NumberFormat(getResolvedLocale(), { style: 'percent' });
   const options = [...poll.poll_options].sort((a, b) => a.display_order - b.display_order);
 
   return (
@@ -35,12 +36,11 @@ export async function PollEmbedBlockView({ block }: { block: PollBlock }) {
     >
       <p className="mb-2 text-[14px] font-semibold text-neutral-900">📊 {poll.question}</p>
       {options.slice(0, 3).map((opt) => {
-        const pct =
-          poll.total_votes > 0 ? Math.round((opt.vote_count / poll.total_votes) * 100) : 0;
+        const ratio = poll.total_votes > 0 ? opt.vote_count / poll.total_votes : 0;
         return (
           <div key={opt.id} className="mb-1 flex items-center justify-between text-[12px]">
             <span className="text-neutral-600">{opt.option_text}</span>
-            <span className="font-semibold text-neutral-700">{toBengaliDigits(pct)}%</span>
+            <span className="font-semibold text-neutral-700">{pctFmt.format(ratio)}</span>
           </div>
         );
       })}
