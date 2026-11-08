@@ -38,7 +38,7 @@ from scratch."
 | S19 | Custom pages / block builder | audited (web renderer) — see section below |
 | S20 | Notifications center · announcement banner | audited (code) — see section below |
 | S21 | SEO landing pages | audited (code) — see section below |
-| S22 | Offline page · PWA · Next.js architecture · i18n | i18n-migrated (batch 25); architecture itself not audited |
+| S22 | Offline page · PWA · Next.js architecture · i18n | PWA rebuilt (Serwist + Web Push) — see section below; rest of architecture not audited |
 
 ## Sign-in methods gated by admin flags (owner decision, not an audit row)
 
@@ -228,3 +228,19 @@ Open — needs a product decision, not changed:
 - Base URL fallbacks differ (`https://vytanexa.app` in SEO/sitemap/robots vs `''` on doctor/hospital/article pages) — set `NEXT_PUBLIC_APP_URL` in Vercel to the real domain.
 - hreflang alternates all point to the same URL (cookie-based locale) — harmless but not useful to crawlers.
 - `generateStaticParams` pre-renders every district × specialty at build; with all Indian districts seeded that is tens of thousands of pages — consider returning a subset (`dynamicParams = true` renders the rest on demand).
+
+## S22 — PWA (install, offline, push)
+
+Found: all icons were 1×1 placeholders (not installable); two manifests (`public/manifest.json` + `manifest.ts`); `next-pwa` 5.6.0 (abandoned 2022) whose same-origin page/API cache rules never matched (Workbox RegExp matches the full URL, `^\/path` never hits); install banner dead; no update UX, no offline indicator; language change served stale-language cached pages; "clear cache" wiped offline emergency data.
+
+Rebuilt:
+- **Serwist** (`app/sw.ts`, `next.config.mjs`). Emergency page + `/api/emergency-data` NetworkFirst with cache fallback, warmed on load (works offline after one visit). Public pages NetworkFirst (freshness over speed — phone numbers change); `/auth /account /notifications /settings /api/*` never cached; `/offline` precached fallback; `ignoreVary` so Next's `Vary: RSC…` doesn't break offline lookups.
+- User-controlled updates (toast → SKIP_WAITING → reload); offline banner; language change clears page caches; clear-cache keeps precache + emergency.
+- One manifest (`manifest.ts`: id/scope/lang/shortcuts), real 'V' icons (192/512/maskable/apple/favicon), iOS metadata.
+- **Web Push** (VAPID): `push_subscriptions` + RPCs (`0021_push_subscriptions.sql`), `/api/push/{subscribe,unsubscribe}`, SW push / click (same-origin only) / subscription-change, app badge, `PushToggle` in Settings + Notifications; admin send route fans out via `web-push` (prunes 404/410, ~45s budget).
+
+Verified (Chromium, prod build): installability + manifest errors `[]`; SW active; offline `/emergency` served from cache with national numbers; uncached page → `/offline`; typecheck clean (web, admin). Not verifiable headless: notification display (headless has no notification UI) and real push delivery.
+
+Needs action: (1) Vercel env — `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (web + admin), `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (admin), `NEXT_PUBLIC_APP_URL`; (2) apply migration `0021` (until then subscribe returns 500 → toggle shows error). Rotating VAPID keys invalidates all subscriptions.
+
+Non-goals (intentional): offline write queue / background sync, store screenshots in manifest.

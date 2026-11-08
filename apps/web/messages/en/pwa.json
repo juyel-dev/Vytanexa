@@ -1,0 +1,28 @@
+{
+  "updateTitle": "A new version is available",
+  "updateAction": "Update now",
+  "updateLater": "Later",
+  "offlineBanner": "You're offline — showing saved information. Emergency numbers still work.",
+  "backOnline": "Back online",
+  "install": {
+    "iosTitle": "Install on iPhone",
+    "iosStep1": "Tap the Share button in Safari",
+    "iosStep2": "Choose “Add to Home Screen”",
+    "iosStep3": "Tap “Add”",
+    "gotIt": "Got it",
+    "howTo": "How to install"
+  },
+  "push": {
+    "title": "Emergency alerts & replies",
+    "desc": "Get important health alerts and answers to your questions, even when the app is closed.",
+    "enable": "Turn on notifications",
+    "disable": "Turn off notifications",
+    "enabled": "Notifications are on",
+    "disabled": "Notifications are off",
+    "blocked": "Notifications are blocked. Allow them in your browser or phone settings, then try again.",
+    "iosNeedsInstall": "On iPhone, first add Vytanexa to your Home Screen, then turn on notifications here.",
+    "unsupported": "This browser doesn't support notifications.",
+    "notConfigured": "Notifications aren't available right now.",
+    "error": "Something went wrong. Please try again."
+  }
+}

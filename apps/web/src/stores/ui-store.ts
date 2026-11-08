@@ -18,6 +18,13 @@ type UiState = {
   // PWA install prompt — captured once globally, replayed on user tap
   deferredPrompt: Event | null;
   setDeferredPrompt: (e: Event | null) => void;
+  // Service-worker lifecycle / connectivity (set by components/pwa/PwaProvider)
+  updateAvailable: boolean;
+  setUpdateAvailable: (v: boolean) => void;
+  isOffline: boolean;
+  setOffline: (v: boolean) => void;
+  isInstalled: boolean;
+  setInstalled: (v: boolean) => void;
 };
 
 export const useUiStore = create<UiState>((set) => ({
@@ -29,4 +36,10 @@ export const useUiStore = create<UiState>((set) => ({
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),
   deferredPrompt: null,
   setDeferredPrompt: (e) => set({ deferredPrompt: e }),
+  updateAvailable: false,
+  setUpdateAvailable: (v) => set({ updateAvailable: v }),
+  isOffline: false,
+  setOffline: (v) => set({ isOffline: v }),
+  isInstalled: false,
+  setInstalled: (v) => set({ isInstalled: v }),
 }));

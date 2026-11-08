@@ -11,18 +11,21 @@
     "i18n:check": "node ../../scripts/i18n-check.mjs messages bn"
   },
   "dependencies": {
+    "@serwist/next": "^9.5.13",
+    "@serwist/window": "^9.5.13",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^0.446.0",
     "next": "^14.2.15",
     "next-intl": "^3.26.5",
-    "next-pwa": "^5.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "serwist": "^9.5.13",
     "zod": "^3.25.76",
     "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@serwist/cli": "^9.5.13",
     "@types/node": "^20.14.15",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

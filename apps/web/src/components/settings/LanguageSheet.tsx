@@ -1,5 +1,6 @@
 'use client';
 
+import { clearPageCaches } from '@/lib/pwa';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useT } from '@vytanexa/i18n/client';
@@ -52,6 +53,8 @@ export function LanguageSheet({
     setSelected(code);
     setSaving(true);
     document.cookie = `locale=${code}; path=/; max-age=31536000; SameSite=Lax`;
+    // Cached pages/manifest are in the old language: drop them (service worker).
+    clearPageCaches();
 
     if (isSignedIn) {
       await fetch('/api/account/profile', {

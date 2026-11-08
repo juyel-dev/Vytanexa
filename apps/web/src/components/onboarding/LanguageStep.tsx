@@ -1,5 +1,6 @@
 'use client';
 
+import { clearPageCaches } from '@/lib/pwa';
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { useOnboardingStore } from '@/stores/onboarding-store';
@@ -19,6 +20,7 @@ export function LanguageStep() {
   const handleContinue = () => {
     setLanguageInStore(selected);
     document.cookie = `locale=${selected}; path=/; max-age=31536000`;
+    clearPageCaches();
     setStep('slides');
   };
 

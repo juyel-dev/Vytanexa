@@ -35,6 +35,7 @@ import type symptoms from '../../messages/bn/symptoms.json';
 import type labTests from '../../messages/bn/labTests.json';
 import type customPage from '../../messages/bn/customPage.json';
 import type notifications from '../../messages/bn/notifications.json';
+import type pwa from '../../messages/bn/pwa.json';
 
 type Messages = {
   common: typeof common;
@@ -63,6 +64,7 @@ type Messages = {
   labTests: typeof labTests;
   customPage: typeof customPage;
   notifications: typeof notifications;
+  pwa: typeof pwa;
 };
 
 declare global {

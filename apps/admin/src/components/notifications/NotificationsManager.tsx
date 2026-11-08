@@ -37,9 +37,20 @@ export function NotificationsManager({ broadcasts, personals, tab }: { broadcast
       toast.push(d?.error ?? 'পাঠানো যায়নি', 'error');
       return;
     }
-    toast.push('✅ নোটিফিকেশন পাঠানো হয়েছে', 'success');
+    const d = await res.json().catch(() => null) as { push?: { configured?: boolean; sent?: number; failed?: number; removed?: number; skipped?: number; error?: string } } | null;
+    const push = d?.push;
+    let pushMsg = '';
+    if (push?.error) pushMsg = ` · ⚠️ Push ব্যর্থ: ${push.error}`;
+    else if (push && push.configured === false) pushMsg = ' · Push সেটআপ নেই (VAPID key দিন)';
+    else if (push && push.configured) {
+      pushMsg = ` · 📲 ${push.sent ?? 0} ডিভাইসে push পাঠানো হয়েছে`;
+      if (push.failed) pushMsg += `, ${push.failed} ব্যর্থ`;
+      if (push.skipped) pushMsg += `, ${push.skipped} বাকি (সময় শেষ)`;
+    }
+    toast.push(`✅ নোটিফিকেশন পাঠানো হয়েছে${pushMsg}`, push?.error ? 'error' : 'success');
     setTitle(''); setBody(''); setTargetUrl(''); setShowBanner(false); setExpiresAt('');
-    location.reload();
+    // Reload after a beat so the push summary above stays readable.
+    setTimeout(() => location.reload(), 2500);
   };
 
   return (

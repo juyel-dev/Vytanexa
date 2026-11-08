@@ -1,5 +1,6 @@
 'use client';
 
+import { PushToggle } from '@/components/pwa/PushToggle';
 import { useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -107,7 +108,14 @@ export function SettingsClient({
     try {
       if ('caches' in window) {
         const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
+        // Keep the app shell (precache incl. /offline) and the emergency
+        // data: wiping them would break offline emergency access until the
+        // next online visit. Only content caches are cleared.
+        await Promise.all(
+          keys
+            .filter((k) => !k.includes('precache') && k !== 'emergency-pages' && k !== 'emergency-data')
+            .map((k) => caches.delete(k))
+        );
       }
     } catch {
       // best-effort — clearing cache should never surface an error to the user
@@ -119,6 +127,7 @@ export function SettingsClient({
 
   return (
     <div className="pb-8">
+      <PushToggle compact />
       <div className="border-b border-neutral-100 px-4 py-2">
         <SettingsRow
           icon="🌐"

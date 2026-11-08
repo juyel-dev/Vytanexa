@@ -1,5 +1,6 @@
 'use client';
 
+import { PushToggle } from '@/components/pwa/PushToggle';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Info, MessageCircle } from 'lucide-react';
@@ -111,6 +112,7 @@ export function NotificationsClient({
 
   return (
     <div className="pb-8">
+      <PushToggle />
       {notifications.length > 0 && (
         <div className="flex justify-end border-b border-neutral-100 px-4 py-2">
           <button

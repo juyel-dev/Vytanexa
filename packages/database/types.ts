@@ -1177,6 +1177,45 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failed_count: number
+          id: string
+          last_seen_at: string
+          locale: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failed_count?: number
+          id?: string
+          last_seen_at?: string
+          locale?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failed_count?: number
+          id?: string
+          last_seen_at?: string
+          locale?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -1934,6 +1973,18 @@ export type Database = {
         }
         Returns: string
       }
+      register_push_subscription: {
+        Args: {
+          p_endpoint: string
+          p_p256dh: string
+          p_auth: string
+          p_locale?: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
+      unregister_push_subscription: { Args: { p_endpoint: string }; Returns: string }
+      prune_push_subscriptions: { Args: Record<PropertyKey, never>; Returns: number }
       delete_my_account: { Args: Record<PropertyKey, never>; Returns: string }
       list_blood_donors: {
         Args: { p_blood_group?: string; p_location_id?: string; p_limit?: number }

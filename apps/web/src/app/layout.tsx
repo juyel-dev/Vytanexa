@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from 'next/font/google';
 import { getMessages } from 'next-intl/server';
+import { PwaProvider } from '@/components/pwa/PwaProvider';
 import { I18nProvider } from '@vytanexa/i18n/client';
 import './globals.css';
 import { cookies } from 'next/headers';
@@ -50,7 +51,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Vytanexa — ${tCommon('tagline')}`,
     description: `Vytanexa — ${tSeo('defaultDescription')}`,
-    manifest: '/manifest.json',
+    // Manifest comes from app/manifest.ts (auto-linked); iOS needs these
+    // explicitly for a proper standalone Home Screen app.
+    applicationName: 'Vytanexa',
+    appleWebApp: { capable: true, title: 'Vytanexa', statusBarStyle: 'default' },
+    formatDetection: { telephone: false },
     ...(faviconUrl ? { icons: { icon: faviconUrl } } : {}),
   };
 }
@@ -61,6 +66,11 @@ export async function generateMetadata(): Promise<Metadata> {
 // brand-600) so the browser chrome and the installed PWA agree.
 export const viewport: Viewport = {
   themeColor: '#1756C8',
+  width: 'device-width',
+  initialScale: 1,
+  // viewport-fit=cover lets the installed app draw under notches; safe-area
+  // insets are applied in globals.css / fixed bars.
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -111,6 +121,7 @@ export default async function RootLayout({
           <div className="mx-auto min-h-dvh w-full max-w-[480px] bg-white lg:border-x lg:border-neutral-200 lg:shadow-sm">
             {children}
           </div>
+          <PwaProvider />
         </I18nProvider>
       </body>
     </html>
