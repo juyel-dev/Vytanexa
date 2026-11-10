@@ -12,6 +12,9 @@ ALTER TABLE public.blood_donors
 DROP INDEX IF EXISTS public.idx_donors_blood_group;
 DROP INDEX IF EXISTS public.idx_donors_location;
 
+-- The old security-invoker view depends on is_active; recreate it below.
+DROP VIEW IF EXISTS public.public_blood_donors;
+
 ALTER TABLE public.blood_donors
   DROP COLUMN is_active;
 
@@ -41,8 +44,8 @@ CREATE OR REPLACE VIEW public.public_blood_donors AS
     AND deleted_at IS NULL
     AND consent_contact = true;
 
-REVOKE SELECT ON public.public_blood_donors FROM anon;
-GRANT SELECT ON public.public_blood_donors TO authenticated;
+REVOKE ALL ON TABLE public.public_blood_donors FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON TABLE public.public_blood_donors TO authenticated;
 
 REVOKE EXECUTE ON FUNCTION public.get_donor_phone(uuid) FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_donor_phone(uuid) TO authenticated;
