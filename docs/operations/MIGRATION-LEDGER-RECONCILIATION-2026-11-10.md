@@ -83,3 +83,14 @@ The historical source provenance above shows that dropping `is_active` was a del
 - The live migration history stores versions and names, not original SQL checksums.
 - Function/policy/view definitions and Git commit messages show current effects and decisions, but do not prove the exact text of missing historical migrations.
 - No migration repair, SQL apply, schema reset, data export, backup, or restore was performed in this audit.
+
+
+## 7. Forward-only donor phone correction prepared for local replay
+
+A new local migration file has been added on the database-baseline feature branch:
+
+- `supabase/migrations/20261110122000_fix_get_donor_phone_rpc.sql`
+
+It replaces the broken `get_donor_phone(uuid)` function with a version that checks the current session, donor verification status, deletion and contact consent. It uses a transaction-scoped advisory lock and a private helper to enforce an atomic per-account rate limit. The helper is in a non-exposed `private` schema and cannot be called directly by API roles. The web route now also explicitly requires authentication, fails closed if the IP limiter errors, handles the database's rate-limit SQLSTATE, sends private no-store responses and validates the stored mobile number before using it in a `tel:` redirect.
+
+**This is local migration/source work only. It has not been applied to the main Supabase project.** It must pass clean local migration replay, pgTAP, application build and PR review before a separate, backup-gated main-project deployment.
