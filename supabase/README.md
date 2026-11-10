@@ -32,6 +32,8 @@ The timestamp prefixes in `migrations/` match the live 23-entry migration ledger
 
 Three September 2026 donor migrations were applied to the hosted database via Supabase MCP, but their original SQL was not committed. Their files in this directory are explicitly labelled **RECONSTRUCTED REPLAY MIGRATION**. They recreate the confirmed resulting state for clean local replay; they are not claimed to be byte-identical to the original SQL. Their source/provenance limitations are recorded in the reconciliation document.
 
+A new forward-only migration `20261110122000_fix_get_donor_phone_rpc.sql` replaces the obsolete donor-phone function. It filters by `verification_status`, `deleted_at` and `consent_contact`, and adds an atomic per-account rate limiter in the non-exposed `private` schema. The web contact route also requires a signed-in user and validates stored phone format before returning JSON or redirecting to `tel:`. This migration is included in local replay but has **not** been applied to the hosted main project.
+
 The old `packages/database/migrations/` directory is retained as a legacy source archive. Do not add new migrations there. New database changes belong in `supabase/migrations/`, generated with the pinned Supabase CLI.
 
 The repository file `0017_fix_rate_limit_security_definer.sql` is not a separate live-ledger entry. Its final function effect is present in the subsequent live `rate_limit_events_retention` migration, so it is not replayed as a second migration.
