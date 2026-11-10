@@ -28,7 +28,7 @@ The local config uses PostgreSQL 17, matching the main project's major version. 
 
 ## Canonical migration history
 
-The timestamp prefixes in `migrations/` match the live 23-entry migration ledger captured in `docs/operations/MIGRATION-LEDGER-RECONCILIATION-2026-11-10.md`.
+The timestamp prefixes in `migrations/` reproduce the live 23-entry migration ledger captured in `docs/operations/MIGRATION-LEDGER-RECONCILIATION-2026-11-10.md`, followed by forward-only corrections for the donor phone RPC and user profile permissions.
 
 Three September 2026 donor migrations were applied to the hosted database via Supabase MCP, but their original SQL was not committed. Their files in this directory are explicitly labelled **RECONSTRUCTED REPLAY MIGRATION**. They recreate the confirmed resulting state for clean local replay; they are not claimed to be byte-identical to the original SQL. Their source/provenance limitations are recorded in the reconciliation document.
 
