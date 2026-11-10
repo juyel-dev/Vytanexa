@@ -1,0 +1,67 @@
+name: database-ci
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "packages/database/migrations/**"
+      - "packages/database/types.ts"
+      - ".github/workflows/database-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/**"
+      - "packages/database/migrations/**"
+      - "packages/database/types.ts"
+      - ".github/workflows/database-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-database:
+    name: Local migration replay and pgTAP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      SUPABASE_API_MAX_RETRIES: "0"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install pinned Supabase CLI
+        env:
+          SUPABASE_CLI_VERSION: "3.1.0"
+          SUPABASE_CLI_SHA256: "dbe9fd66771337fc198727da86b9d3551302f87a7091cd8781be2a4cd0c8ac4d"
+        run: |
+          set -euo pipefail
+          archive="${RUNNER_TEMP}/supabase_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
+            --output "${archive}"
+          printf '%s  %s\n' "${SUPABASE_CLI_SHA256}" "${archive}" | sha256sum --check -
+          tar -xzf "${archive}" -C "${RUNNER_TEMP}"
+          sudo install -m 0755 "${RUNNER_TEMP}/supabase" /usr/local/bin/supabase
+          supabase --version
+
+      - name: Start disposable local Supabase stack
+        run: supabase start
+
+      - name: Replay every migration against a clean local database
+        run: supabase db reset --local
+
+      - name: Run pgTAP database tests
+        run: supabase test db
+
+      - name: Lint local database
+        run: supabase db lint --level error
+
+      - name: Stop disposable local stack
+        if: always()
+        run: supabase stop || true
