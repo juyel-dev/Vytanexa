@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     if (ipCheck.error) console.error('admin login IP rate limit check failed:', ipCheck.error.message);
     if (emailCheck.error) console.error('admin login email rate limit check failed:', emailCheck.error.message);
     return NextResponse.json(
-      { error: 'লগইন সুরক্ষা সাময়িকভাবে unavailable. পরে আবার চেষ্টা করুন।' },
+      { error: 'লগইন সুরক্ষা সেবা সাময়িকভাবে কাজ করছে না। পরে আবার চেষ্টা করুন।' },
       { status: 503 }
     );
   }
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   if (ipCheck.data == null || emailCheck.data == null) {
     console.error('admin login rate limit check returned no decision');
     return NextResponse.json(
-      { error: 'লগইন সুরক্ষা সাময়িকভাবে unavailable. পরে আবার চেষ্টা করুন।' },
+      { error: 'লগইন সুরক্ষা সেবা সাময়িকভাবে কাজ করছে না। পরে আবার চেষ্টা করুন।' },
       { status: 503 }
     );
   }
