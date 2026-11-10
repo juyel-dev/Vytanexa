@@ -171,3 +171,17 @@ The current patch updates all eight public write routes that previously logged a
 Those routes now return HTTP 503 with their existing localized failure message and do not execute the INSERT/UPDATE/DELETE after a limiter error. The analytics endpoint keeps its fire-and-forget contract by silently dropping the event with HTTP 204 when the limiter is unavailable. The donor contact route was already fail-closed.
 
 **Scope limitation:** This only fixes fail-open behavior when the route calls the limiter and it errors. It does not close direct PostgREST writes against permissive public policies, and it does not make the currently public `check_rate_limit()` RPC private or atomic. Those require a separate write-boundary redesign and tests that exercise direct PostgREST requests.
+
+
+## 10. Admin login limiter now fails closed
+
+Source tracing found that `apps/admin/src/app/api/admin/login/route.ts` logged rate-limit RPC errors but still proceeded to Supabase Auth. That meant an unavailable limiter could disable the login throttles at the highest-privilege entry point.
+
+The forward source patch now:
+- invokes both per-IP and per-email limiter checks through the existing `server-only` service-role client;
+- keeps the cookie-backed anon client for Supabase Auth sign-in and the active-admin membership check;
+- returns HTTP 503 if either limiter RPC errors or returns no decision;
+- returns HTTP 429 if either limit is exhausted; and
+- does not call `signInWithPassword` unless both checks explicitly return `true`.
+
+This is an application-source change only. It does not modify the hosted database, change the public ACL of `check_rate_limit()`, or close direct PostgREST table writes. The remaining web routes still call the public rate-limit RPC and require a separate, complete server-side boundary migration before its public EXECUTE grant can be revoked.
