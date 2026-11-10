@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(39);
+SELECT plan(45);
 
 SELECT ok(
   EXISTS (
@@ -140,14 +140,13 @@ SELECT ok(
 );
 
 SELECT ok(
-  EXISTS (
+  NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public'
       AND tablename = 'blood_donors'
       AND policyname = 'authenticated_insert_own_donor'
-      AND cmd = 'INSERT'
   ),
-  'donor insert is guarded by the authenticated own-row policy'
+  'direct authenticated donor INSERT policy is removed'
 );
 
 SELECT ok(
@@ -158,6 +157,45 @@ SELECT ok(
       AND policyname = 'public_insert_donor'
   ),
   'legacy anonymous donor insert policy is absent'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.blood_donors', 'INSERT'),
+  'anonymous clients cannot insert donor rows directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.blood_donors', 'INSERT'),
+  'authenticated clients must use the guarded donor registration RPC'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.blood_donors', 'INSERT'),
+  'server-side admin workflows retain donor INSERT access'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'public.register_blood_donor(text,text,text,uuid,boolean)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated users retain the guarded donor registration RPC'
+);
+
+SELECT ok(
+  NOT has_function_privilege(
+    'anon',
+    'public.register_blood_donor(text,text,text,uuid,boolean)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous users cannot register donors without an account'
+);
+
+SELECT ok(
+  (SELECT prosecdef FROM pg_proc
+   WHERE oid = 'public.register_blood_donor(text,text,text,uuid,boolean)'::regprocedure),
+  'donor registration remains a SECURITY DEFINER function'
 );
 
 SELECT ok(
