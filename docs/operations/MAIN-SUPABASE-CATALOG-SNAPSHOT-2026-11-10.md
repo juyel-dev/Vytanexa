@@ -29,47 +29,47 @@ All 37 inspected public tables have RLS enabled. Four currently have no RLS poli
 
 ## 2. Public table inventory
 
-All rows below are estimates from PostgreSQL statistics, not exact counts. Every table has RLS enabled.
+Every table has RLS enabled. Row counts are intentionally omitted because PostgreSQL statistics had not been freshly analyzed and were not reliable as record counts.
 
-| Table | Columns | Estimated rows |
+| Table | Columns |
 | --- | ---: | ---: |
-| `admin_users` | 8 | 0 |
-| `ads` | 12 | 0 |
-| `ambulance_services` | 16 | 0 |
-| `analytics_events` | 10 | 3 |
-| `answers` | 10 | 0 |
-| `app_settings` | 17 | 0 |
-| `articles` | 18 | 0 |
-| `audit_logs` | 9 | 3 |
-| `blood_bank_inventory` | 5 | 0 |
-| `blood_donors` | 12 | 0 |
-| `categories` | 11 | 0 |
-| `chambers` | 18 | 0 |
-| `custom_pages` | 15 | 0 |
-| `data_reports` | 10 | 0 |
-| `doctor_hospital_links` | 7 | 0 |
-| `doctors` | 26 | 0 |
-| `hospitals` | 28 | 0 |
-| `leads` | 13 | 0 |
-| `locations` | 12 | 0 |
-| `notification_reads` | 3 | 0 |
-| `notifications` | 11 | 3 |
-| `page_submissions` | 7 | 0 |
-| `poll_options` | 5 | 0 |
-| `poll_votes` | 5 | 0 |
-| `polls` | 9 | 0 |
-| `push_subscriptions` | 10 | 1 |
-| `question_upvotes` | 4 | 0 |
-| `questions` | 14 | 0 |
-| `rate_limit_events` | 3 | 11 |
-| `reviews` | 15 | 0 |
-| `subscription_plans` | 10 | 0 |
-| `subscriptions` | 11 | 0 |
-| `symptom_categories` | 4 | 0 |
-| `symptoms` | 13 | 0 |
-| `test_catalog` | 10 | 0 |
-| `user_favorites` | 5 | 0 |
-| `users` | 11 | 0 |
+| `admin_users` | 8 | |
+| `ads` | 12 | |
+| `ambulance_services` | 16 | |
+| `analytics_events` | 10 | |
+| `answers` | 10 | |
+| `app_settings` | 17 | |
+| `articles` | 18 | |
+| `audit_logs` | 9 | |
+| `blood_bank_inventory` | 5 | |
+| `blood_donors` | 12 | |
+| `categories` | 11 | |
+| `chambers` | 18 | |
+| `custom_pages` | 15 | |
+| `data_reports` | 10 | |
+| `doctor_hospital_links` | 7 | |
+| `doctors` | 26 | |
+| `hospitals` | 28 | |
+| `leads` | 13 | |
+| `locations` | 12 | |
+| `notification_reads` | 3 | |
+| `notifications` | 11 | |
+| `page_submissions` | 7 | |
+| `poll_options` | 5 | |
+| `poll_votes` | 5 | |
+| `polls` | 9 | |
+| `push_subscriptions` | 10 | |
+| `question_upvotes` | 4 | |
+| `questions` | 14 | |
+| `rate_limit_events` | 3 | |
+| `reviews` | 15 | |
+| `subscription_plans` | 10 | |
+| `subscriptions` | 11 | |
+| `symptom_categories` | 4 | |
+| `symptoms` | 13 | |
+| `test_catalog` | 10 | |
+| `user_favorites` | 5 | |
+| `users` | 11 | |
 
 ## 3. Public views
 
