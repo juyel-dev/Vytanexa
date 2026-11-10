@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getClientIp } from '@/lib/get-client-ip';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
 /**
  * POST /api/admin/login — ADMIN-PANEL-SPEC.md § A02 "Authentication
@@ -20,9 +21,10 @@ import { getClientIp } from '@/lib/get-client-ip';
  * denied" rather than a dashboard that renders nothing (the layout
  * would reject them, but rejecting here is clearer + earlier).
  *
- * Rate-limited per-IP and per-email via `check_rate_limit()` (TODO.md
- * Phase 8.5) — every public write route in apps/web already had this,
- * this was the one gap given it's the highest-privilege entry point.
+ * Rate limiting is performed with the server-only service-role client
+ * so this privileged RPC call does not depend on the public anon
+ * function grant. The cookie-backed anon client remains responsible
+ * for the actual sign-in and admin-membership check.
  */
 export async function POST(request: Request) {
   const { email, password } = (await request.json()) as {
@@ -51,33 +53,44 @@ export async function POST(request: Request) {
     }
   );
 
-  // TODO.md Phase 8.5: this is the highest-privilege entry point in
-  // the system, and unlike every public write route in apps/web, it
-  // had no app-level throttle at all — only Supabase Auth's own
-  // defaults. Two keys: per-IP (catches broad brute force / password
-  // spraying across many admin emails) and per-email (catches
-  // sustained credential stuffing against one account from rotating
-  // IPs) — both must pass.
+  // Two independent keys: per-IP catches broad password spraying,
+  // while per-email catches credential stuffing from rotating IPs.
   const ip = getClientIp(request);
   const normalizedEmail = email.trim().toLowerCase();
+  const rateLimiter = createServiceRoleClient();
 
   const [ipCheck, emailCheck] = await Promise.all([
-    supabase.rpc('check_rate_limit', {
+    rateLimiter.rpc('check_rate_limit', {
       p_key: `admin_login_ip:${ip}`,
       p_max_count: 10,
       p_window: '15 minutes',
     }),
-    supabase.rpc('check_rate_limit', {
+    rateLimiter.rpc('check_rate_limit', {
       p_key: `admin_login_email:${normalizedEmail}`,
       p_max_count: 5,
       p_window: '15 minutes',
     }),
   ]);
 
-  if (ipCheck.error) console.error('admin login IP rate limit check failed:', ipCheck.error.message);
-  if (emailCheck.error) console.error('admin login email rate limit check failed:', emailCheck.error.message);
+  if (ipCheck.error || emailCheck.error) {
+    if (ipCheck.error) console.error('admin login IP rate limit check failed:', ipCheck.error.message);
+    if (emailCheck.error) console.error('admin login email rate limit check failed:', emailCheck.error.message);
+    return NextResponse.json(
+      { error: 'লগইন সুরক্ষা সাময়িকভাবে unavailable. পরে আবার চেষ্টা করুন।' },
+      { status: 503 }
+    );
+  }
 
-  if (ipCheck.data === false || emailCheck.data === false) {
+  // An unexpected null result is not permission to attempt a login.
+  if (ipCheck.data == null || emailCheck.data == null) {
+    console.error('admin login rate limit check returned no decision');
+    return NextResponse.json(
+      { error: 'লগইন সুরক্ষা সাময়িকভাবে unavailable. পরে আবার চেষ্টা করুন।' },
+      { status: 503 }
+    );
+  }
+
+  if (!ipCheck.data || !emailCheck.data) {
     return NextResponse.json(
       { error: 'অনেকবার চেষ্টা করা হয়েছে, ১৫ মিনিট পরে আবার চেষ্টা করুন' },
       { status: 429 }
