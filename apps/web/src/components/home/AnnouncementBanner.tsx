@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { AnnouncementBannerClient } from './AnnouncementBannerClient';
 
 /**
@@ -10,7 +10,7 @@ import { AnnouncementBannerClient } from './AnnouncementBannerClient';
  * client wrapper (tap ✕ hides + remembers in localStorage).
  */
 export async function AnnouncementBanner() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   const { data: banners, error } = await supabase
     .from('notifications')

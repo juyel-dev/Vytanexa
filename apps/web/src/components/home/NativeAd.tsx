@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { getT } from '@vytanexa/i18n/server';
 import { NativeAdClient } from './NativeAdClient';
 
@@ -11,7 +11,7 @@ import { NativeAdClient } from './NativeAdClient';
  * Server Component can't carry.
  */
 export async function NativeAd() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.nativeAd');
   const today = new Date().toISOString().slice(0, 10);
 

@@ -6,7 +6,7 @@ import { I18nProvider } from '@vytanexa/i18n/client';
 import './globals.css';
 import { cookies } from 'next/headers';
 import { isValidLocale, defaultLocale, localeConfig } from '@/i18n/config';
-import { createClient } from '@/lib/supabase/server';
+import { getPublicAppSettings } from '@/lib/app-settings';
 import { getT } from '@vytanexa/i18n/server';
 
 // Self-hosted via next/font (no external Google Fonts network request
@@ -43,10 +43,12 @@ export async function generateMetadata(): Promise<Metadata> {
   // no custom favicon is set (i.e. today, for everyone, until an
   // admin actually sets one) by omitting `icons` rather than pointing
   // it at a hardcoded default.
-  const supabase = createClient();
-  const { data } = await supabase.from('app_settings').select('favicon_url').eq('id', 1).maybeSingle();
-  const faviconUrl = (data as { favicon_url?: string | null } | null)?.favicon_url;
-  const [tCommon, tSeo] = await Promise.all([getT('common'), getT('seo')]);
+  const [settings, tCommon, tSeo] = await Promise.all([
+    getPublicAppSettings(),
+    getT('common'),
+    getT('seo'),
+  ]);
+  const faviconUrl = settings?.favicon_url;
 
   return {
     title: `Vytanexa — ${tCommon('tagline')}`,

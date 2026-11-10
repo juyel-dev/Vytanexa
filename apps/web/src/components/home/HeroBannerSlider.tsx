@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { HeroBannerSliderClient } from './HeroBannerSliderClient';
 
 /**
@@ -7,7 +7,7 @@ import { HeroBannerSliderClient } from './HeroBannerSliderClient';
  * the client sub-component (auto-advance/swipe need browser APIs).
  */
 export async function HeroBannerSlider() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: ads, error } = await supabase

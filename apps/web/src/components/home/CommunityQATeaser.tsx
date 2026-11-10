@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -13,7 +13,7 @@ import { getT } from '@vytanexa/i18n/server';
  * themselves rather than its own inline query.
  */
 export async function CommunityQATeaser() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.communityQa');
   const tCommon = await getT('common');
   const tQa = await getT('qa');

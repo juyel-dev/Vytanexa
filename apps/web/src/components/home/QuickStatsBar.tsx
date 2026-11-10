@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { getT } from '@vytanexa/i18n/server';
 
 /**
@@ -14,7 +14,7 @@ import { getT } from '@vytanexa/i18n/server';
  * correctness requirement.
  */
 export async function QuickStatsBar() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.quickStats');
   const tNav = await getT('nav');
 

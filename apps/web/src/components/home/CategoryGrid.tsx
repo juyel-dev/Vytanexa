@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -14,7 +14,7 @@ import { getT } from '@vytanexa/i18n/server';
  * intent (S04: "Empty-data sections auto-hide").
  */
 export async function CategoryGrid() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.categoryGrid');
   const tCommon = await getT('common');
 

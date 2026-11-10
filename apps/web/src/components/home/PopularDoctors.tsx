@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { DoctorCard } from '@/components/shared/DoctorCard';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -16,7 +16,7 @@ import { getT } from '@vytanexa/i18n/server';
  * sort key) until that bridge is built.
  */
 export async function PopularDoctors() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.popularDoctorsSection');
   const tCommon = await getT('common');
 

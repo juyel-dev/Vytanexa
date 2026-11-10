@@ -244,3 +244,10 @@ Verified (Chromium, prod build): installability + manifest errors `[]`; SW activ
 Needs action: (1) Vercel env — `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (web + admin), `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (admin), `NEXT_PUBLIC_APP_URL`; (2) apply migration `0021` (until then subscribe returns 500 → toggle shows error). Rotating VAPID keys invalidates all subscriptions.
 
 Non-goals (intentional): offline write queue / background sync, store screenshots in manifest.
+
+## S23 — Latency (region + public data cache)
+- Found: Vercel fns in iad1 vs Supabase ap-southeast-2 → ~450–750ms/query. Fixed: both Vercel projects `syd1` (now ~11–46ms/query).
+- Found: every page dynamic (cookies() for locale+auth) so `revalidate` never applied; `app_settings` read 3× per request.
+- Done: `lib/supabase/public.ts` cookie-less anon client with Next Data Cache (5 min, tag `public-data`) for public home reads; `lib/app-settings.ts` React-cache dedupe (1 read/request); per-section `<Suspense>` streaming on home; added missing Fragment key.
+- Non-goals: URL-based locale (needed for full-page CDN cache); user-specific pages stay uncached.
+- Needs action: Mumbai migration (new Supabase project in ap-south-1, then Vercel bom1) — user will create the project later.

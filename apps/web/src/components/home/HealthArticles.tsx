@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -10,7 +10,7 @@ import { getT } from '@vytanexa/i18n/server';
  * per spec.
  */
 export async function HealthArticles() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.healthArticlesSection');
   const tCommon = await getT('common');
   const tArticles = await getT('articles');

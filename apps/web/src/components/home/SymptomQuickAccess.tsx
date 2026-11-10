@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -11,7 +11,7 @@ import { getT } from '@vytanexa/i18n/server';
  * red-flagged treatment per spec.
  */
 export async function SymptomQuickAccess() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.symptomQuickAccessSection');
   const tCommon = await getT('common');
 

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { getLocalizedField } from '@/lib/i18n';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -8,7 +8,7 @@ import { getT } from '@vytanexa/i18n/server';
  * Trending Hospitals — VYTANEXA-BLUEPRINT.md § S04 SEC-08
  */
 export async function TrendingHospitals() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const t = await getT('home.trendingHospitalsSection');
   const tCommon = await getT('common');
   const tHospital = await getT('hospital');
