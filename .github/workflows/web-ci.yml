@@ -49,5 +49,8 @@ jobs:
       - name: Typecheck and verify translation keys
         run: npm run typecheck --workspace=apps/web
 
+      - name: Install pinned ESLint tooling for this legacy Next.js workspace
+        run: npm install --no-save --package-lock=false --workspaces=false eslint@8.57.1 eslint-config-next@14.2.15
+
       - name: Lint web application
         run: npm run lint --workspace=apps/web
