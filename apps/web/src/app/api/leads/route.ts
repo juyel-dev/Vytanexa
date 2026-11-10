@@ -29,7 +29,9 @@ export async function POST(request: NextRequest) {
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-  } else if (!allowed) {
+    return NextResponse.json({ error: t('leads.sendFailed') }, { status: 503 });
+  }
+  if (!allowed) {
     return NextResponse.json(
       { error: t('leads.alreadySent') },
       { status: 429 }
