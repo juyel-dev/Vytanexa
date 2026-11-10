@@ -13,7 +13,12 @@
     "build:web": "npm run build --workspace=apps/web",
     "build:admin": "npm run build --workspace=apps/admin",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:start": "npx --yes supabase@3.1.0 start",
+    "db:reset:local": "npx --yes supabase@3.1.0 db reset --local",
+    "db:test": "npx --yes supabase@3.1.0 test db",
+    "db:lint": "npx --yes supabase@3.1.0 db lint --level error",
+    "db:stop": "npx --yes supabase@3.1.0 stop"
   },
   "engines": {
     "node": ">=18.18.0"
