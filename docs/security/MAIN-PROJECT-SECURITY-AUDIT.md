@@ -185,3 +185,27 @@ The forward source patch now:
 - does not call `signInWithPassword` unless both checks explicitly return `true`.
 
 This is an application-source change only. It does not modify the hosted database, change the public ACL of `check_rate_limit()`, or close direct PostgREST table writes. The remaining web routes still call the public rate-limit RPC and require a separate, complete server-side boundary migration before its public EXECUTE grant can be revoked.
+
+
+## 11. Donor registration can bypass its guarded RPC
+
+A read-only live-catalog check on 2026-11-10 confirmed:
+
+- `authenticated_insert_own_donor` permits an authenticated user to INSERT a donor row when `consent_contact = true` and `user_id = auth.uid()`;
+- the table ACL grants INSERT to `authenticated`;
+- `verification_status` defaults to `'verified'`; and
+- `public_blood_donors` exposes rows whose status is verified, which are not deleted, and whose contact consent is true.
+
+The normal user route, `apps/web/src/app/api/blood-donors/route.ts`, calls `register_blood_donor()`. That SECURITY DEFINER function enforces authenticated identity, consent, name and phone validation, an active district location, one active listing per account, and a 90-day per-phone rate limit. Direct INSERT skips that entire contract and can create a verified row using the column default.
+
+A forward-only candidate migration, `supabase/migrations/20261110150000_restrict_blood_donor_direct_insert.sql`, drops the direct INSERT policy, revokes table INSERT from `PUBLIC`, `anon`, and `authenticated`, and keeps the guarded RPC executable for authenticated users and the service role. The service role retains table INSERT for authorized admin workflows.
+
+**The candidate migration is not applied to the hosted project.** Its local replay and pgTAP permission tests must pass before any hosted deployment is considered.
+
+## 12. Q&A upvote toggle does not match the live DELETE policy
+
+The live `question_upvotes` policies currently permit public SELECT and INSERT, but there is no DELETE policy. The table ACL grants DELETE to `anon` and `authenticated`, but RLS still denies a DELETE when no permissive DELETE policy exists.
+
+However, `apps/web/src/app/api/questions/[id]/upvote/route.ts` implements a toggle: when an existing row is found it calls `.delete()`. Therefore, the unvote branch conflicts with the current live RLS policy and is expected to be rejected by PostgreSQL. This is a source/live behavior mismatch; a successful user-facing unvote has not been demonstrated.
+
+The original `packages/database/migrations/0004_engagement.sql` contains an older `FOR ALL` policy, while the current live catalog has the narrower SELECT and INSERT policies. Do not assume the historical source file matches the live ACL/policy state. The upvote contract needs a dedicated fix and an integration test before changing its permissions.
