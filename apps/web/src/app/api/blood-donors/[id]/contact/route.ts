@@ -1,70 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
 import { getT } from '@vytanexa/i18n/server';
 
-/**
- * GET /api/blood-donors/[id]/contact — VYTANEXA-BLUEPRINT.md § S11:
- * "donor phone numbers are never shown in plaintext publicly ...
- * phone revealed via a tap which triggers a tel: intent directly (the
- * number never rendered as visible text, prevents scraping/spam
- * harvesting)."
- *
- * The client renders a plain `<a href="/api/blood-donors/{id}/contact">`
- * — a top-level navigation, not a fetch — so the 302 to a `tel:` URL
- * triggers the device's dialer the same way a normal `tel:` link
- * would, and the phone number never appears in any JSON response body
- * a script could read.
- *
- * Reads via `get_donor_phone()` (migration 0012, SECURITY DEFINER —
- * see that migration's comment for why a plain RLS-scoped query can't
- * do this from apps/web's anon-key-only client). Rate-limited per IP
- * per donor via `check_rate_limit()` to blunt scraping attempts that
- * try every donor id in sequence.
- */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const t = await getT('validation');
-  const supabase = createClient();
-  const ip = getClientIp(request);
+const idSchema = z.string().uuid();
+const privateHeaders = {
+  'Cache-Control': 'private, no-store, max-age=0',
+  Vary: 'Cookie',
+};
 
+/**
+ * GET /api/blood-donors/[id]/contact
+ *
+ * Donor phone is a private contact detail. A signed-in caller must pass
+ * both an IP/donor route limit and a separate atomic per-account limit
+ * enforced inside get_donor_phone(). The database function only returns
+ * verified, not-deleted, explicitly contact-consented donors.
+ *
+ * Mobile uses a tel: redirect. Desktop uses ?format=json so it can render
+ * a copyable number; both responses are private and never cacheable.
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const t = await getT('validation');
+
+  if (!idSchema.safeParse(params.id).success) {
+    return NextResponse.json(
+      { error: t('bloodDonors.donorUnavailable') },
+      { status: 404, headers: privateHeaders }
+    );
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: t('bloodDonors.mustSignIn') },
+      { status: 401, headers: privateHeaders }
+    );
+  }
+
+  const ip = getClientIp(request);
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
     p_key: `donor_contact:${ip}:${params.id}`,
     p_max_count: 5,
     p_window: '1 hour',
   });
 
+  // Fail closed. A rate-limiter outage must never silently disable a
+  // privacy control protecting donor phone numbers.
   if (rateLimitError) {
-    console.error('rate limit check failed:', rateLimitError.message);
-    return NextResponse.json({ error: t('bloodDonors.contactRetryLater') }, {
-      status: 503,
-    });
+    console.error('donor contact rate-limit check failed:', rateLimitError.message);
+    return NextResponse.json(
+      { error: t('bloodDonors.contactRetryLater') },
+      { status: 503, headers: privateHeaders }
+    );
   }
+
   if (!allowed) {
-    return NextResponse.json({ error: t('generic.rateLimited') }, {
-      status: 429,
-    });
+    return NextResponse.json(
+      { error: t('generic.rateLimited') },
+      { status: 429, headers: privateHeaders }
+    );
   }
 
   const { data: phone, error } = await supabase.rpc('get_donor_phone', {
     p_donor_id: params.id,
   });
 
+  if (error?.code === 'P4290') {
+    return NextResponse.json(
+      { error: t('generic.rateLimited') },
+      { status: 429, headers: privateHeaders }
+    );
+  }
+
+  if (error?.code === '42501') {
+    return NextResponse.json(
+      { error: t('bloodDonors.mustSignIn') },
+      { status: 401, headers: privateHeaders }
+    );
+  }
+
   if (error) {
     console.error('get_donor_phone RPC failed:', error.message);
-    return NextResponse.json({ error: t('bloodDonors.contactNotFound') }, { status: 500 });
+    return NextResponse.json(
+      { error: t('bloodDonors.contactRetryLater') },
+      { status: 503, headers: privateHeaders }
+    );
   }
+
   if (!phone) {
-    return NextResponse.json({ error: t('bloodDonors.donorUnavailable') }, { status: 404 });
+    return NextResponse.json(
+      { error: t('bloodDonors.donorUnavailable') },
+      { status: 404, headers: privateHeaders }
+    );
   }
 
-  // BLOOD-SERVICE-PLAN.md Phase A.9 — desktop has no tel: handler, so a
-  // top-level nav to one just opens a blank tab. The client fetches
-  // with ?format=json on non-touch devices to show the number as
-  // copyable text instead; mobile keeps the original redirect (a real
-  // top-level nav, so the dialer intent still fires the same way).
   if (request.nextUrl.searchParams.get('format') === 'json') {
-    return NextResponse.json({ phone });
+    return NextResponse.json({ phone }, { headers: privateHeaders });
   }
 
-  return NextResponse.redirect(`tel:${phone}`);
+  return NextResponse.redirect(`tel:${phone}`, { headers: privateHeaders });
 }
