@@ -5,6 +5,7 @@ import { getClientIp } from '@/lib/get-client-ip';
 import { getT } from '@vytanexa/i18n/server';
 
 const idSchema = z.string().uuid();
+const donorPhoneSchema = z.string().regex(/^[6-9][0-9]{9}$/);
 const privateHeaders = {
   'Cache-Control': 'private, no-store, max-age=0',
   Vary: 'Cookie',
@@ -97,7 +98,7 @@ export async function GET(
     );
   }
 
-  if (!phone) {
+  if (!phone || !donorPhoneSchema.safeParse(phone).success) {
     return NextResponse.json(
       { error: t('bloodDonors.donorUnavailable') },
       { status: 404, headers: privateHeaders }
