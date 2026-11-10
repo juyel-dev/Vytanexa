@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-  } else if (!allowed) {
+    return NextResponse.json({ error: t('dataReports.submitFailed') }, { status: 503 });
+  }
+  if (!allowed) {
     return NextResponse.json(
       { error: t('dataReports.dailyLimitReached') },
       { status: 429 }

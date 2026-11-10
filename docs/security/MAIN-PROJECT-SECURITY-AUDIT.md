@@ -153,3 +153,21 @@ The live table-grant inventory confirmed that `anon` and `authenticated` had bro
 The forward-only migration `supabase/migrations/20261110130000_user_profile_column_permissions.sql` now prepares the correction for local replay: separate own-row SELECT/UPDATE policies, no direct INSERT/DELETE/TRUNCATE, and column-specific UPDATE grants for the five fields the app uses. It also adds a database CHECK that keeps emergency notifications enabled. A read-only count on the main project showed no existing user rows violating that emergency flag at audit time.
 
 **The migration is not applied to main.** It must pass local replay, pgTAP and both app builds before the backup-gated hosted deployment.
+
+
+## 9. API rate-limit outage behavior hardened
+
+The current patch updates all eight public write routes that previously logged a `check_rate_limit()` RPC error and continued writing:
+
+- leads
+- reviews
+- questions
+- answers
+- data reports
+- page submissions
+- poll votes
+- question upvotes
+
+Those routes now return HTTP 503 with their existing localized failure message and do not execute the INSERT/UPDATE/DELETE after a limiter error. The analytics endpoint keeps its fire-and-forget contract by silently dropping the event with HTTP 204 when the limiter is unavailable. The donor contact route was already fail-closed.
+
+**Scope limitation:** This only fixes fail-open behavior when the route calls the limiter and it errors. It does not close direct PostgREST writes against permissive public policies, and it does not make the currently public `check_rate_limit()` RPC private or atomic. Those require a separate write-boundary redesign and tests that exercise direct PostgREST requests.

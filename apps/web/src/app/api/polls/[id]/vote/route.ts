@@ -82,7 +82,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   });
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-  } else if (!allowed) {
+    return NextResponse.json({ error: t('polls.voteFailed') }, { status: 503 });
+  }
+  if (!allowed) {
     return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
   }
 
