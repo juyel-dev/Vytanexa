@@ -1,6 +1,8 @@
 -- Critical database contract tests for the main-project migration baseline.
 -- Run only against the disposable local stack via: npm run db:test
 
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
+
 BEGIN;
 SELECT plan(21);
 
