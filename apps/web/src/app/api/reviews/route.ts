@@ -57,7 +57,9 @@ export async function POST(request: NextRequest) {
 
   if (rateLimitError) {
     console.error('rate limit check failed:', rateLimitError.message);
-  } else if (!allowed) {
+    return NextResponse.json({ error: t('reviews.submitFailed') }, { status: 503 });
+  }
+  if (!allowed) {
     const alreadyMsg =
       resolvedType === 'hospital' ? t('reviews.alreadyReviewedHospital') : t('reviews.alreadyReviewedDoctor');
     return NextResponse.json({ error: alreadyMsg }, { status: 429 });
