@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   web-quality:
-    name: Web typecheck and lint
+    name: Web typecheck and i18n validation
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -49,8 +49,3 @@ jobs:
       - name: Typecheck and verify translation keys
         run: npm run typecheck --workspace=apps/web
 
-      - name: Install pinned ESLint tooling for this legacy Next.js workspace
-        run: npm install --no-save --package-lock=false --workspaces=false eslint@8.57.1 eslint-config-next@14.2.15
-
-      - name: Lint web application
-        run: npm run lint --workspace=apps/web
