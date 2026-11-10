@@ -43,8 +43,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (rateLimitError) {
-      console.error('rate limit check failed:', rateLimitError.message);
-    } else if (!allowed) {
+      // Analytics is fire-and-forget: drop the event if the limiter is
+      // unavailable. Never proceed with an unbounded write.
+      console.error('rate limit check failed; analytics event dropped:', rateLimitError.message);
+      return new NextResponse(null, { status: 204 });
+    }
+    if (!allowed) {
       // Still 204, not 429 — analytics must never surface as a
       // user-facing error; we just silently drop the excess.
       return new NextResponse(null, { status: 204 });
