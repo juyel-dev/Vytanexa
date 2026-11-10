@@ -144,3 +144,12 @@ Do not edit already-applied migrations or use `migration repair` until the compl
 7. Apply reviewed forward-only migrations to the existing main project only after backup/restore readiness has been verified.
 
 **No database changes were made during this audit.**
+
+
+## 8. User profile least-privilege correction prepared
+
+The live table-grant inventory confirmed that `anon` and `authenticated` had broad table DML on `public.users`, including column-level effective privileges for `phone`, `deleted_at` and `is_guest_converted`. The profile UI itself updates only name/email/language/default location, and the notification preferences route updates `notification_prefs`.
+
+The forward-only migration `supabase/migrations/20261110130000_user_profile_column_permissions.sql` now prepares the correction for local replay: separate own-row SELECT/UPDATE policies, no direct INSERT/DELETE/TRUNCATE, and column-specific UPDATE grants for the five fields the app uses. It also adds a database CHECK that keeps emergency notifications enabled. A read-only count on the main project showed no existing user rows violating that emergency flag at audit time.
+
+**The migration is not applied to main.** It must pass local replay, pgTAP and both app builds before the backup-gated hosted deployment.
