@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(38);
+SELECT plan(39);
 
 SELECT ok(
   EXISTS (
@@ -282,6 +282,16 @@ SELECT ok(
 SELECT ok(
   NOT has_table_privilege('authenticated', 'public.users', 'TRUNCATE'),
   'authenticated users cannot truncate profile rows'
+);
+
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.users'::regclass
+      AND conname = 'users_emergency_notifications_always_on'
+  ),
+  'database enforces emergency notifications as always enabled'
 );
 
 SELECT * FROM finish();
