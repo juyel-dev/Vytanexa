@@ -1,0 +1,146 @@
+# Main Supabase Project — Security Boundary Audit
+
+**Audit date:** 2026-11-10  
+**Environment:** Existing Vytanexa Supabase project `lfrvzdhonsnemdfmxthw`  
+**Mode:** Read-only review of live catalog/advisors and the GitHub `main` source tree  
+**Changes made to Supabase:** None
+
+> Findings below are evidence from the inspected live database and repository source. They are not a substitute for a full penetration test. Potential abuse paths are labelled as such.
+
+## 1. Critical functional defect — donor phone RPC references a missing column
+
+The live function `public.get_donor_phone(uuid)` is a `SECURITY DEFINER` SQL function and contains this predicate:
+
+```sql
+AND is_active = true
+AND deleted_at IS NULL
+AND consent_contact = true
+```
+
+The live `public.blood_donors` table has columns `id, name, phone, blood_group, location_id, last_donated_at, consent_contact, created_at, updated_at, deleted_at, user_id, verification_status`. It does **not** have `is_active`.
+
+A read-only call with a non-existent UUID was executed to force function planning. PostgreSQL returned:
+
+```
+ERROR: 42703: column "is_active" does not exist
+CONTEXT: SQL function "get_donor_phone" during startup
+```
+
+Therefore the current donor contact route can fail before it can return a phone number. The route is `apps/web/src/app/api/blood-donors/[id]/contact/route.ts`.
+
+**Required correction:** Replace the stale predicate with the actual lifecycle model, at minimum requiring `verification_status = 'verified'`, `deleted_at IS NULL`, and `consent_contact = true`. Add explicit caller authentication and a database-side per-user guard as defense in depth. Keep the API IP rate limit, but do not rely on it as the only protection because the RPC itself is callable by authenticated clients. Confirm the intended desktop response contract: the route's `?format=json` branch does return the phone in JSON, despite the older comment saying the number never appears in JSON.
+
+This is a code/schema mismatch confirmed by a database error, not a hypothetical risk.
+
+## 2. Public table writes bypass application route checks
+
+The following live policies are granted to role `public` (therefore both anonymous and authenticated API roles where table privileges permit) and allow direct inserts:
+
+| Table | Live INSERT policy |
+| --- | --- |
+| `leads` | `leads_public_insert`, `WITH CHECK (true)` |
+| `reviews` | `reviews_public_insert`, requires pending status |
+| `questions` | `questions_public_insert`, requires pending status |
+| `answers` | `answers_public_insert`, requires pending status |
+| `poll_votes` | `poll_votes_public_insert`, `WITH CHECK (true)` |
+| `analytics_events` | `analytics_public_insert`, `WITH CHECK (true)` |
+| `data_reports` | `data_reports_public_insert`, `WITH CHECK (true)` |
+| `page_submissions` | `page_submissions_public_insert`, `WITH CHECK (true)` |
+| `question_upvotes` | `upvotes_public_insert`, `WITH CHECK (true)` |
+
+The same tables currently grant `anon` and `authenticated` broad table-level privileges including INSERT, UPDATE and DELETE (and, for the listed tables, REFERENCES/TRIGGER/TRUNCATE). RLS policies still constrain which rows can be touched, but a direct PostgREST request can skip the Next.js route altogether.
+
+Examples of route-level controls that a direct PostgREST insert does not execute:
+
+- `apps/web/src/app/api/leads/route.ts`: Zod validation and rate limiting.
+- `apps/web/src/app/api/reviews/route.ts`: honeypot, Zod validation and rate limiting.
+- `apps/web/src/app/api/questions/route.ts` and `answers/route.ts`: validation, feature checks and rate limiting.
+- `apps/web/src/app/api/polls/[id]/vote/route.ts`: poll expiry, option-to-poll relationship checks and rate limiting.
+- `apps/web/src/app/api/page-submissions/route.ts`: validation and rate limiting.
+- `apps/web/src/app/api/data-reports/route.ts`: validation and rate limiting.
+- `apps/web/src/app/api/analytics/route.ts`: payload-size cap and rate limiting.
+
+**Required correction:** Establish a deliberate write boundary. Either move these writes behind trusted server-side operations with narrow database privileges, or make each exposed database operation independently enforce all required validation, ownership, feature-state, deduplication and rate limits. Then revoke direct table write privileges and overly permissive insert policies where the chosen architecture permits it. Do not revoke privileges before application callers have been migrated; that would break the current endpoints.
+
+The web server's current Supabase client deliberately uses the anon key plus the user's cookie session. The web app does not have a service-role client. The admin app has a separate `server-only` service-role module. Any future write-boundary change must preserve this least-privilege separation rather than casually copying the service-role key into browser-facing code.
+
+## 3. Rate-limit controls are exposed and several routes fail open
+
+Live `public.check_rate_limit(text, integer, interval)`:
+
+- is `SECURITY DEFINER`;
+- fixes `search_path = public`;
+- is executable by `PUBLIC`, `anon`, and `authenticated`;
+- accepts a caller-chosen key, maximum count, and time window;
+- performs count-then-insert rather than an atomic counter operation.
+
+The live body currently also performs probabilistic retention cleanup. The table `rate_limit_events` has RLS enabled with no policies, but `anon` and `authenticated` still have broad table grants; direct table access is blocked by RLS, while the SECURITY DEFINER RPC can write rows.
+
+Several API routes log a rate-limit RPC error and continue with the write instead of failing closed. Confirmed examples include leads, reviews, questions, answers, analytics, data reports, page submissions, polls and question upvotes. The donor contact route is different: it returns 503 on rate-limit error.
+
+**Required correction:** Replace the caller-controlled public RPC with a trusted rate-limit boundary and atomic update semantics. Until that is ready, rate-limited routes should not silently accept writes after a limiter error. A temporary fail-closed route change is useful defense in depth, but does not close the direct-PostgREST bypass on its own.
+
+## 4. Push subscription endpoints need an authorization and outbound-target boundary
+
+Live function ACLs show both `register_push_subscription` and `unregister_push_subscription` executable by `anon` and `authenticated`.
+
+- Registration accepts any URL beginning with `https://`; there is no push-service hostname allowlist in the function or the Next.js route's Zod schema.
+- Registration upserts by endpoint and assigns the current `auth.uid()` (NULL for anonymous users).
+- Unregistration deletes by endpoint only; it does not prove ownership of that subscription.
+- `apps/admin/src/lib/web-push.ts` reads stored endpoints and calls `webpush.sendNotification` for each endpoint. No application-level endpoint-host allowlist is present in that sender.
+
+This presents a **potential outbound request/SSRF surface**: an attacker who can register a crafted HTTPS endpoint may cause the admin sender to make an outbound request to it. Actual exploitability also depends on the `web-push` library's URL handling, network egress rules and DNS behavior; those have not yet been independently penetration-tested.
+
+**Required correction:** Validate endpoints against the set of legitimate push-service origins, reject IP literals and private/reserved destinations after DNS resolution, handle DNS rebinding/redirect behavior, and revalidate immediately before sending. Require an ownership proof or authenticated ownership condition for unsubscribe/reassignment. The public RPCs should not remain generally callable unless their narrow capability contract is intentional and safe.
+
+## 5. User profile row policy is broader than the application form
+
+The live `public.users` policy `users_own_read_write` is `FOR ALL` with `auth.uid() = id`. `anon` and `authenticated` have broad table-level DML grants.
+
+The profile PATCH route intentionally updates only `name`, `email`, `preferred_language`, and `default_location_id`. However the direct database permission model also makes other own-row fields reachable, including `phone`, `is_guest_converted`, `notification_prefs`, and `deleted_at`, subject to the same own-row policy.
+
+**Required correction:** Replace broad `FOR ALL` with explicit SELECT and UPDATE permissions, and use column-level UPDATE grants or a narrow profile RPC for only the fields the user may edit. Keep verified phone changes and account lifecycle fields server-controlled.
+
+## 6. Database functions and policy review inventory
+
+The live Security Advisor reports:
+
+- 4 RLS-enabled tables with no policies: `audit_logs`, `push_subscriptions`, `rate_limit_events`, `subscriptions`. These may be intentional service-role-only tables; document and test the expected access rather than adding permissive policies.
+- 4 SECURITY DEFINER functions executable by `anon`: `check_rate_limit`, `get_trending_searches`, `register_push_subscription`, `unregister_push_subscription`.
+- 9 SECURITY DEFINER functions executable by `authenticated`. Review individually; do not blanket-revoke functions that the app legitimately needs.
+- Leaked-password protection is disabled.
+- `pg_trgm` and `unaccent` are installed in `public`; evaluate a controlled extension-schema migration separately because search functions may depend on their current placement.
+
+The live views `public_blood_donors`, `location_paths`, and `public_entity_tiers` currently have `security_invoker=true`.
+
+## 7. Migration history reconciliation — observed source/effect status
+
+The live ledger records versions and names, not the original SQL body. The following is the current evidence map, not a claim that the ledger contains source checksums.
+
+| Repository SQL | Live state | Assessment |
+| --- | --- | --- |
+| `0017_fix_rate_limit_security_definer.sql` | No matching live ledger entry; a later live `rate_limit_events_retention` function has SECURITY DEFINER | The final effect exists in the current function, but this file's separate historical application is not evidenced. |
+| `0018_rate_limit_events_retention.sql` | Live entry `rate_limit_events_retention`; current function body includes SECURITY DEFINER and probabilistic 7-day cleanup | Strong source/effect match; record exact source blob and live version in the migration manifest. |
+| `0019_blood_donors_register_and_list_rpc.sql` | Live entry `blood_donors_register_and_list_rpc`; both RPC definitions and grants were inspected | Source/effect match observed. |
+| `0020_delete_my_account_rpc.sql` | Live entry `delete_my_account_rpc`; function definition and grants were inspected | Source/effect match observed. |
+| `0021_push_subscriptions.sql` | Live entry `0021_push_subscriptions`; table and RPC objects exist | Applied live. The file's opening comment incorrectly still says it is not yet applied; do not alter applied SQL history merely to fix its comment. |
+
+Missing from the repository but present in the live ledger:
+
+- `0017_blood_donors_login_gate`: current donor insert policy requires consent and `user_id = auth.uid()`; registration RPC also requires an authenticated user. Recover exact SQL if possible.
+- `0018_fix_blood_donors_view_security_invoker`: current `public_blood_donors` view has `security_invoker=true`; recover exact SQL if possible.
+- `0019_fix_donor_insert_policy_perf`: the current donor insert policy uses a scalar subquery for `auth.uid()`; this is consistent with the performance fix intent, but exact historical SQL is not recovered.
+
+Do not edit already-applied migrations or use `migration repair` until the complete historical manifest is reviewed.
+
+## 8. Implementation order
+
+1. Fix the donor phone RPC contract and test the donor contact API end to end.
+2. Design the public-write boundary and enumerate every route/table pair before changing grants.
+3. Replace the public rate-limit RPC with a trusted, atomic implementation; then change every route to fail closed.
+4. Secure push registration, unregistration and outbound delivery.
+5. Narrow user profile column permissions.
+6. Add DB integration tests for both direct PostgREST and Next.js API paths.
+7. Apply reviewed forward-only migrations to the existing main project only after backup/restore readiness has been verified.
+
+**No database changes were made during this audit.**
