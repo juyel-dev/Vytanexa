@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(21);
+SELECT plan(38);
 
 SELECT ok(
   EXISTS (
@@ -177,6 +177,111 @@ SELECT throws_ok(
   '42501',
   'authentication_required',
   'unauthenticated direct donor phone RPC calls are rejected'
+);
+
+
+SELECT ok(
+  NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'users'
+      AND policyname = 'users_own_read_write'
+  ),
+  'legacy FOR ALL user profile policy is removed'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'users'
+      AND policyname = 'users_own_select'
+      AND cmd = 'SELECT'
+      AND roles @> ARRAY['authenticated'::name]
+  ),
+  'authenticated users have an own-row SELECT policy'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'users'
+      AND policyname = 'users_own_profile_update'
+      AND cmd = 'UPDATE'
+      AND roles @> ARRAY['authenticated'::name]
+  ),
+  'authenticated users have an own-row UPDATE policy'
+);
+
+SELECT ok(
+  has_table_privilege('authenticated', 'public.users', 'SELECT'),
+  'authenticated users retain profile SELECT'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.users', 'SELECT'),
+  'anonymous users cannot read profile rows'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.users', 'UPDATE'),
+  'authenticated users have no table-level UPDATE privilege'
+);
+
+SELECT ok(
+  has_column_privilege('authenticated', 'public.users', 'name', 'UPDATE'),
+  'authenticated users can update profile name'
+);
+
+SELECT ok(
+  has_column_privilege('authenticated', 'public.users', 'email', 'UPDATE'),
+  'authenticated users can update profile email'
+);
+
+SELECT ok(
+  has_column_privilege('authenticated', 'public.users', 'preferred_language', 'UPDATE'),
+  'authenticated users can update preferred language'
+);
+
+SELECT ok(
+  has_column_privilege('authenticated', 'public.users', 'default_location_id', 'UPDATE'),
+  'authenticated users can update default location'
+);
+
+SELECT ok(
+  has_column_privilege('authenticated', 'public.users', 'notification_prefs', 'UPDATE'),
+  'authenticated users can update notification preferences'
+);
+
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.users', 'phone', 'UPDATE'),
+  'authenticated users cannot self-edit verified phone'
+);
+
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.users', 'deleted_at', 'UPDATE'),
+  'authenticated users cannot self-edit account deletion state'
+);
+
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.users', 'is_guest_converted', 'UPDATE'),
+  'authenticated users cannot self-edit guest-conversion state'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.users', 'INSERT'),
+  'authenticated users cannot insert profile rows directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.users', 'DELETE'),
+  'authenticated users cannot delete profile rows directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.users', 'TRUNCATE'),
+  'authenticated users cannot truncate profile rows'
 );
 
 SELECT * FROM finish();
