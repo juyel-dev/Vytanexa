@@ -4,6 +4,13 @@
 -- Users cannot self-edit verified phone, guest-conversion state or lifecycle
 -- fields such as deleted_at.
 
+ALTER TABLE public.users
+  ADD CONSTRAINT users_emergency_notifications_always_on
+  CHECK (
+    notification_prefs ? 'emergency'
+    AND notification_prefs->>'emergency' = 'true'
+  );
+
 DROP POLICY IF EXISTS users_own_read_write ON public.users;
 
 CREATE POLICY users_own_select
