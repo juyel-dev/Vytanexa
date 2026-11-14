@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(45);
+SELECT plan(65);
 
 SELECT ok(
   EXISTS (
@@ -66,13 +66,13 @@ SELECT ok(
 );
 
 SELECT ok(
-  NOT has_schema_privilege('anon', 'private', 'USAGE'),
-  'anon cannot use the private schema'
+  has_schema_privilege('anon', 'private', 'USAGE'),
+  'anon can reach only explicitly granted helpers in the non-exposed private schema'
 );
 
 SELECT ok(
-  NOT has_schema_privilege('authenticated', 'private', 'USAGE'),
-  'authenticated cannot use the private schema'
+  has_schema_privilege('authenticated', 'private', 'USAGE'),
+  'authenticated can reach only explicitly granted helpers in the non-exposed private schema'
 );
 
 SELECT ok(
@@ -191,6 +191,168 @@ SELECT ok(
   ),
   'anonymous users cannot register donors without an account'
 );
+
+-- Question upvotes are now available only through a narrow atomic RPC.
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.question_upvotes', 'SELECT'),
+  'anonymous users cannot read raw question upvote rows or device keys'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.question_upvotes', 'INSERT'),
+  'anonymous users cannot insert question upvotes directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.question_upvotes', 'UPDATE'),
+  'anonymous users cannot update question upvotes directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.question_upvotes', 'DELETE'),
+  'anonymous users cannot delete question upvotes directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.question_upvotes', 'SELECT'),
+  'authenticated users cannot read raw question upvote rows or device keys'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.question_upvotes', 'INSERT'),
+  'authenticated users cannot insert question upvotes directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.question_upvotes', 'UPDATE'),
+  'authenticated users cannot update question upvotes directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.question_upvotes', 'DELETE'),
+  'authenticated users cannot delete question upvotes directly'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'anon',
+    'public.toggle_question_upvote(uuid,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous users can toggle their vote through the guarded public RPC'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'public.toggle_question_upvote(uuid,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated users can toggle their vote through the guarded public RPC'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'anon',
+    'private.toggle_question_upvote_impl(uuid,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous wrapper callers can execute the one granted private upvote implementation'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'private.toggle_question_upvote_impl(uuid,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated wrapper callers can execute the one granted private upvote implementation'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.question_upvotes', 'INSERT'),
+  'service_role retains table INSERT for trusted server-side maintenance'
+);
+
+SELECT ok(
+  NOT (
+    SELECT prosecdef
+    FROM pg_proc
+    WHERE oid = 'public.toggle_question_upvote(uuid,text)'::regprocedure
+  ),
+  'public upvote wrapper is SECURITY INVOKER, not SECURITY DEFINER'
+);
+
+SELECT ok(
+  (
+    SELECT prosecdef
+    FROM pg_proc
+    WHERE oid = 'private.toggle_question_upvote_impl(uuid,text)'::regprocedure
+  ),
+  'private upvote implementation is SECURITY DEFINER for the trigger-maintained counter'
+);
+
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'true'::jsonb, true)
+WHERE id = 1;
+
+INSERT INTO public.questions (id, title, status)
+VALUES (
+  '00000000-0000-0000-0000-000000000091',
+  'pgTAP question upvote RPC fixture',
+  'approved'::public.moderation_status
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.toggle_question_upvote(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    '00000000-0000-0000-0000-000000000092'
+  ),
+  '{"upvoted": true}'::jsonb,
+  'anonymous caller can create a question upvote through the RPC'
+);
+RESET ROLE;
+
+SELECT is(
+  (SELECT upvote_count FROM public.questions
+   WHERE id = '00000000-0000-0000-0000-000000000091'::uuid),
+  1,
+  'upvote trigger increments the denormalized question count'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.toggle_question_upvote(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    '00000000-0000-0000-0000-000000000092'
+  ),
+  '{"upvoted": false}'::jsonb,
+  'the same device can remove its vote through the RPC'
+);
+RESET ROLE;
+
+SELECT is(
+  (SELECT upvote_count FROM public.questions
+   WHERE id = '00000000-0000-0000-0000-000000000091'::uuid),
+  0,
+  'upvote trigger decrements the denormalized question count after unvoting'
+);
+
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'false'::jsonb, true)
+WHERE id = 1;
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.toggle_question_upvote(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    '00000000-0000-0000-0000-000000000092'
+  ),
+  '{"error": "feature_disabled"}'::jsonb,
+  'the database RPC rejects upvotes when community Q&A is disabled'
+);
+RESET ROLE;
 
 SELECT ok(
   (SELECT prosecdef FROM pg_proc

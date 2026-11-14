@@ -5,78 +5,109 @@ import { z } from 'zod';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getT } from '@vytanexa/i18n/server';
 
+type ToggleUpvoteRpc = {
+  rpc: (
+    name: 'toggle_question_upvote',
+    args: { p_question_id: string; p_voter_key: string }
+  ) => Promise<{
+    data: unknown;
+    error: { code?: string; message: string } | null;
+  }>;
+};
+
 /**
- * POST /api/questions/[id]/upvote — VYTANEXA-BLUEPRINT.md § S14
- * "upvote count (⬆, tap to vote — one vote per device via localStorage
- * id)". `voter_key` is the client's persisted device ID
- * (`lib/device-id.ts`); `question_upvotes`'s `UNIQUE(question_id,
- * voter_key)` constraint (DATABASE-SCHEMA.md § 4.3) is the actual
- * dedup enforcement — this route just surfaces a clean toggle API over
- * it rather than leaking a raw unique-constraint-violation error to
- * the client. Un-voting (tap again) deletes the row; the
- * `recalc_question_counts()` trigger keeps `questions.upvote_count`
- * in sync either way, so this route never writes that counter itself.
+ * POST /api/questions/[id]/upvote — device-level toggle.
+ *
+ * The localStorage UUID is an intentionally lightweight dedup key, not an
+ * authenticated identity (see lib/device-id.ts). The database RPC performs
+ * the toggle atomically, enforces the feature flag and approved-question
+ * checks, atomically rate-limits the device key, and keeps raw device keys
+ * hidden from public SELECT access. The HTTP route separately applies the
+ * browser request's client-IP bucket; the RPC must not infer client IP from
+ * its own server-to-server request headers.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const t = await getT('validation');
-  // Malformed JSON used to throw -> unhandled 500; a non-UUID id used to
-  // reach Postgres and fail as a 500 instead of a clean 404.
+
   if (!z.string().uuid().safeParse(params.id).success) {
     return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 404 });
   }
+
   const parsed = z
-    .object({ voterKey: z.string().trim().min(1, t('generic.incompleteData')).max(100) })
+    .object({ voterKey: z.string().uuid(t('generic.incompleteData')) })
     .safeParse(await request.json().catch(() => null));
+
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') },
+      { status: 400 }
+    );
   }
-  const { voterKey } = parsed.data;
 
   const supabase = createClient();
 
-  // Whole module is gated by `community_qa` (spec § S14).
+  // Keep the existing feature check for a localized early response. The
+  // database repeats this check so direct RPC callers cannot bypass it.
   if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
     return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
   }
+
+  // This handler still has the original browser request context. Pass its
+  // edge-derived IP into the route-level limiter; the subsequent Supabase
+  // RPC is server-to-server and would otherwise see a shared Vercel egress IP.
   const ip = getClientIp(request);
-  const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-    p_key: `question_upvote:${ip}:${params.id}`,
-    p_max_count: 20,
-    p_window: '1 hour',
+  if (ip !== 'unknown') {
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_key: `question_upvote:${ip}:${params.id}`,
+      p_max_count: 20,
+      p_window: '1 hour',
+    });
+
+    if (rateLimitError || allowed == null) {
+      console.error('question upvote IP rate limit check failed:', rateLimitError?.message);
+      return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 503 });
+    }
+
+    if (!allowed) {
+      return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
+    }
+  }
+
+  // Database types are generated from the hosted schema; this migration is
+  // still a source-only candidate until the hosted DDL gate is cleared.
+  const upvoteClient = supabase as unknown as ToggleUpvoteRpc;
+  const { data, error } = await upvoteClient.rpc('toggle_question_upvote', {
+    p_question_id: params.id,
+    p_voter_key: parsed.data.voterKey,
   });
-  if (rateLimitError) {
-    console.error('rate limit check failed:', rateLimitError.message);
+
+  if (error) {
+    console.error('question upvote RPC failed:', error.code, error.message);
     return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 503 });
   }
-  if (!allowed) {
+
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    console.error('question upvote RPC returned an invalid response');
+    return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 503 });
+  }
+
+  const result = data as { error?: unknown; upvoted?: unknown };
+
+  if (result.error === 'rate_limited') {
     return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
   }
 
-  const { data: existing } = await supabase
-    .from('question_upvotes')
-    .select('id')
-    .eq('question_id', params.id)
-    .eq('voter_key', voterKey)
-    .maybeSingle();
-
-  if (existing) {
-    const { error } = await supabase.from('question_upvotes').delete().eq('id', existing.id);
-    if (error) {
-      console.error('upvote delete failed:', error.message);
-      return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
-    }
-    return NextResponse.json({ upvoted: false });
+  if (result.error === 'feature_disabled') {
+    return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
   }
 
-  const { error } = await supabase
-    .from('question_upvotes')
-    .insert({ question_id: params.id, voter_key: voterKey });
-  // 23505 = the same device voted in a concurrent request (double tap):
-  // the vote exists, so report it as upvoted instead of a false error.
-  if (error && error.code === '23505') return NextResponse.json({ upvoted: true });
-  if (error) {
-    console.error('upvote insert failed:', error.message);
-    return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 500 });
+  if (result.error === 'question_unavailable') {
+    return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 404 });
   }
-  return NextResponse.json({ upvoted: true });
+
+  if (result.error === 'invalid_voter_key' || typeof result.upvoted !== 'boolean') {
+    return NextResponse.json({ error: t('generic.validationFailed') }, { status: 400 });
+  }
+
+  return NextResponse.json({ upvoted: result.upvoted });
 }

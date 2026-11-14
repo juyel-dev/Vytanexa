@@ -63,7 +63,15 @@ The normal user route already calls register_blood_donor(), which checks identit
 
 PR #8 is merged at f1e14c5b37fbdfa5b7994c9accda8bbb07f2748d. Its migration drops the direct INSERT policy and revokes INSERT from PUBLIC, anon and authenticated, retaining authenticated RPC execution and service-role table access. Local replay, 45 pgTAP assertions and database lint passed. No hosted SQL has been applied.
 
-### 4.2 Q&A upvote toggle is not a valid current access contract
+### 4.2 Q&A upvote toggle — atomic RPC candidate
+
+The prior live mismatch was confirmed: direct SELECT and INSERT were public, but no DELETE policy existed, so the unvote branch was expected to fail. The SELECT policy also exposed each raw voter_key.
+
+A forward source migration now moves the operation to `public.toggle_question_upvote()`, a SECURITY INVOKER wrapper that calls a fixed SECURITY DEFINER implementation in the non-exposed `private` schema. The implementation repeats the community feature gate, verifies approved/non-deleted questions, validates the device UUID, serializes concurrent toggles, applies fixed IP/device rate buckets, and relies on the existing trigger for the counter update. Direct table SELECT/INSERT/UPDATE/DELETE is revoked from anon/authenticated/PUBLIC.
+
+The route no longer selects or writes the table directly. The device key is still intentionally a bearer-style dedup token, not authenticated identity, consistent with the product spec's device-level engagement model.
+
+**Candidate migration:** `20261114150000_atomic_question_upvote_rpc.sql` on the feature branch. It is not applied to the hosted database. Local pgTAP must prove both add and remove work as anon and the counter trigger increments/decrements. Before deployment, verify the hosted Data API exposed-schema list excludes `private`.
 
 The live policy inventory exposes question_upvotes SELECT and INSERT, but no DELETE. The API route attempts DELETE when a device toggles an existing vote off. That branch is expected to fail under the live RLS policy. The public SELECT policy also reveals voter_key, which should not be treated as public data.
 
@@ -108,7 +116,7 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 | Analytics | Allowlisted event types and entity types; metadata is an object with a strict byte/field limit; ignore/reject arbitrary user identity; rate limit; telemetry failure must not block the primary user flow. |
 | Data reports | Entity type/id valid; reason allowlisted; detail length bounded; status always open; resolver fields always NULL; reporter IP derived from request context; rate limit. |
 | Page submissions | Page exists and is published; block index belongs to the page; payload shape and byte size bounded; submitted phone validated; IP is server-derived; reject writes to deleted/unpublished pages. |
-| Question upvotes | Replace SELECT-then-DELETE/INSERT race with one atomic toggle; hide raw voter keys; verify question is eligible; fixed IP+voter rate limit; direct table SELECT/INSERT/UPDATE/DELETE unavailable to anon/authenticated. |
+| Question upvotes | Candidate atomic RPC is now implemented in source: validates an approved question and feature flag, serializes the device toggle, applies fixed IP/device rate buckets, hides raw voter keys, and removes direct anon/authenticated table DML. Local replay/pgTAP/lint and route typecheck are pending. |
 | Blood donors | Keep register_blood_donor() as the sole authenticated registration path; apply PR #8 migration only after the hosted DDL gate is cleared. |
 
 ## 7. Rollout sequence and release gates
@@ -131,3 +139,12 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 - No Vercel environment variables or deployment-protection settings were changed.
 - No service-role key was added to the public web project.
 - PR #8 is a repository migration only until the backup/restore and staging gates are cleared.
+
+
+## 9. Current implementation status — question upvotes
+
+The feature branch `fix/atomic-question-upvote-rpc` adds `20261114150000_atomic_question_upvote_rpc.sql`, extends pgTAP to assert no direct upvote table privileges, verifies the public wrapper is SECURITY INVOKER and the private implementation is SECURITY DEFINER, and tests add/remove plus the count trigger under the anon role.
+
+The web route now validates a device UUID and calls the RPC. It no longer reads raw rows or attempts a direct DELETE/INSERT. This is not yet merged or applied to the hosted database.
+
+Before hosted deployment, verify that the Supabase API settings do not expose the `private` schema. The repository's local Supabase config exposes only `public` and `graphql_public`.
