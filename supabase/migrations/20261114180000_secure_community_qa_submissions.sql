@@ -59,6 +59,12 @@ BEGIN
     RETURN pg_catalog.jsonb_build_object('error', 'invalid_author_name');
   END IF;
 
+  -- Never expose a submitted display name on an anonymous question. Admin
+  -- moderation can still use other private context such as author_phone.
+  IF v_is_anonymous THEN
+    v_author_name := NULL;
+  END IF;
+
   IF NOT v_is_anonymous AND v_author_name IS NULL THEN
     RETURN pg_catalog.jsonb_build_object('error', 'author_name_required');
   END IF;
