@@ -1262,12 +1262,12 @@ SELECT is(
 
 SELECT is(
   (
-    SELECT reviewer_name
+    SELECT review_text
     FROM public.get_my_reviews()
     LIMIT 1
   ),
-  'Account Review Owner',
-  'own-review history returns the caller own review content'
+  'This authenticated review belongs to the account owner.',
+  'own-review history returns the caller own review content without reviewer identity fields'
 );
 
 SELECT pg_catalog.set_config(
