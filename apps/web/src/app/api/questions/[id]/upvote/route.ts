@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getClientIp } from '@/lib/get-client-ip';
 import { z } from 'zod';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getT } from '@vytanexa/i18n/server';
@@ -20,8 +21,10 @@ type ToggleUpvoteRpc = {
  * The localStorage UUID is an intentionally lightweight dedup key, not an
  * authenticated identity (see lib/device-id.ts). The database RPC performs
  * the toggle atomically, enforces the feature flag and approved-question
- * checks, rate-limits independently of this HTTP route, and keeps raw device
- * keys hidden from public SELECT access.
+ * checks, atomically rate-limits the device key, and keeps raw device keys
+ * hidden from public SELECT access. The HTTP route separately applies the
+ * browser request's client-IP bucket; the RPC must not infer client IP from
+ * its own server-to-server request headers.
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const t = await getT('validation');
@@ -47,6 +50,27 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   // database repeats this check so direct RPC callers cannot bypass it.
   if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
     return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
+  }
+
+  // This handler still has the original browser request context. Pass its
+  // edge-derived IP into the route-level limiter; the subsequent Supabase
+  // RPC is server-to-server and would otherwise see a shared Vercel egress IP.
+  const ip = getClientIp(request);
+  if (ip !== 'unknown') {
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_key: `question_upvote:${ip}:${params.id}`,
+      p_max_count: 20,
+      p_window: '1 hour',
+    });
+
+    if (rateLimitError || allowed == null) {
+      console.error('question upvote IP rate limit check failed:', rateLimitError?.message);
+      return NextResponse.json({ error: t('generic.somethingWrong') }, { status: 503 });
+    }
+
+    if (!allowed) {
+      return NextResponse.json({ error: t('generic.rateLimited') }, { status: 429 });
+    }
   }
 
   // Database types are generated from the hosted schema; this migration is
