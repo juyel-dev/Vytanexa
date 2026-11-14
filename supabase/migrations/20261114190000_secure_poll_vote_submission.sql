@@ -45,9 +45,18 @@ BEGIN
     WHERE p.id = p_poll_id
       AND p.is_active = true
       AND p.deleted_at IS NULL
-      AND (p.expires_at IS NULL OR p.expires_at > pg_catalog.now())
   ) THEN
     RETURN pg_catalog.jsonb_build_object('error', 'poll_unavailable');
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.polls AS p
+    WHERE p.id = p_poll_id
+      AND p.expires_at IS NOT NULL
+      AND p.expires_at <= pg_catalog.now()
+  ) THEN
+    RETURN pg_catalog.jsonb_build_object('error', 'poll_expired');
   END IF;
 
   IF NOT EXISTS (
