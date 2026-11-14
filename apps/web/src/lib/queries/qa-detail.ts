@@ -10,7 +10,7 @@ export async function getQuestionById(supabase: SupabaseClient<Database>, id: st
   if (!UUID_RE.test(id)) return null;
   const { data, error } = await supabase
     .from('questions')
-    .select('*, categories(name_translations)')
+    .select('id, title, body, category_id, is_anonymous, author_name, upvote_count, answer_count, created_at, categories(name_translations)')
     .eq('id', id)
     .eq('status', 'approved')
     .single();
