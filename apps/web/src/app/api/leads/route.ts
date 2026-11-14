@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
   // server-to-server request headers.
   if (ip !== 'unknown') {
     const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-      p_key: `patient_lead_ip:${ip}`,
+      p_key: `patient_lead_ip:${createHash('sha256').update(ip).digest('hex')}`,
       p_max_count: 20,
       p_window: '1 hour',
     });
