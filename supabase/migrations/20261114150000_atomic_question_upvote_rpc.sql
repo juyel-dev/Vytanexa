@@ -9,6 +9,8 @@
 -- The API-facing wrapper is SECURITY INVOKER. The implementation lives in
 -- the non-exposed private schema and is SECURITY DEFINER so the count trigger
 -- can update questions.upvote_count despite direct table DML being revoked.
+-- Per-IP throttling remains in the Next.js route because that is the layer
+-- receiving the browser request; this RPC adds an atomic per-device limit.
 
 CREATE OR REPLACE FUNCTION private.toggle_question_upvote_impl(
   p_question_id uuid,
@@ -21,9 +23,6 @@ SET search_path = pg_catalog
 AS $function$
 DECLARE
   v_voter_key text := pg_catalog.lower(pg_catalog.btrim(p_voter_key));
-  v_headers jsonb;
-  v_forwarded_for text;
-  v_ip_bucket text;
   v_device_bucket text;
   v_count bigint;
   v_existing_id uuid;
@@ -55,60 +54,19 @@ BEGIN
     RETURN pg_catalog.jsonb_build_object('error', 'question_unavailable');
   END IF;
 
-  -- Supabase/PostgREST supplies request.headers. Use the first forwarded IP
-  -- only as an additional abuse bucket; the device UUID remains the stable
-  -- fallback for local/test environments where no request headers exist.
-  v_headers := NULLIF(pg_catalog.current_setting('request.headers', true), '')::jsonb;
-  v_forwarded_for := NULLIF(
-    pg_catalog.btrim(
-      pg_catalog.split_part(
-        COALESCE(v_headers ->> 'x-forwarded-for', ''),
-        ',',
-        1
-      )
-    ),
-    ''
-  );
-
-  IF v_forwarded_for IS NOT NULL THEN
-    BEGIN
-      PERFORM v_forwarded_for::inet;
-      v_ip_bucket :=
-        'question_upvote_ip:' ||
-        pg_catalog.md5(p_question_id::text || ':' || v_forwarded_for);
-    EXCEPTION WHEN invalid_text_representation THEN
-      v_ip_bucket := NULL;
-    END;
-  END IF;
-
+  -- The Next.js route applies the request-IP bucket using the browser request's
+  -- trusted edge headers. This RPC runs on a separate server-to-server
+  -- connection, so its request.headers would identify the Vercel egress IP
+  -- shared by all callers. Keep the database-side atomic fallback per device.
   v_device_bucket :=
     'question_upvote_device:' ||
     pg_catalog.md5(p_question_id::text || ':' || v_voter_key);
 
-  -- Acquire advisory locks in a stable order so a single IP using multiple
-  -- device IDs cannot race the IP counter, and concurrent calls for one
-  -- device cannot both observe the same state.
-  IF v_ip_bucket IS NOT NULL THEN
-    IF v_ip_bucket < v_device_bucket THEN
-      PERFORM pg_catalog.pg_advisory_xact_lock(
-        pg_catalog.hashtextextended(v_ip_bucket, 0)
-      );
-      PERFORM pg_catalog.pg_advisory_xact_lock(
-        pg_catalog.hashtextextended(v_device_bucket, 0)
-      );
-    ELSE
-      PERFORM pg_catalog.pg_advisory_xact_lock(
-        pg_catalog.hashtextextended(v_device_bucket, 0)
-      );
-      PERFORM pg_catalog.pg_advisory_xact_lock(
-        pg_catalog.hashtextextended(v_ip_bucket, 0)
-      );
-    END IF;
-  ELSE
-    PERFORM pg_catalog.pg_advisory_xact_lock(
-      pg_catalog.hashtextextended(v_device_bucket, 0)
-    );
-  END IF;
+  -- Serialize requests for the same device/question pair so concurrent calls
+  -- cannot both pass the rate counter or race the toggle.
+  PERFORM pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(v_device_bucket, 0)
+  );
 
   SELECT pg_catalog.count(*)
     INTO v_count
@@ -120,23 +78,8 @@ BEGIN
     RETURN pg_catalog.jsonb_build_object('error', 'rate_limited');
   END IF;
 
-  IF v_ip_bucket IS NOT NULL THEN
-    SELECT pg_catalog.count(*)
-      INTO v_count
-    FROM public.rate_limit_events AS events
-    WHERE events.limit_key = v_ip_bucket
-      AND events.created_at > pg_catalog.now() - interval '1 hour';
-
-    IF v_count >= 20 THEN
-      RETURN pg_catalog.jsonb_build_object('error', 'rate_limited');
-    END IF;
-  END IF;
-
   INSERT INTO public.rate_limit_events (limit_key)
-  SELECT v_device_bucket
-  UNION ALL
-  SELECT v_ip_bucket
-  WHERE v_ip_bucket IS NOT NULL;
+  VALUES (v_device_bucket);
 
   DELETE FROM public.question_upvotes AS upvotes
   WHERE upvotes.question_id = p_question_id
