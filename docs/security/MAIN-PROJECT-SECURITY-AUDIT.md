@@ -245,3 +245,22 @@ The new source migration `20261114160000_secure_patient_lead_submission.sql`:
 The Route Handler now applies a separate per-IP limit using the original browser request, then calls the RPC. It does not use the Supabase server-to-server request headers as the browser's IP.
 
 The migration and route are repository candidates only. Local replay/pgTAP/DB lint and both app typechecks must pass before any hosted change. No hosted SQL has been applied.
+
+
+## 15. Review submission and reviewer privacy hardening (candidate)
+
+A read-only live catalog check confirmed that the public review SELECT grant was table-wide even though `reviewer_phone` is explicitly private in the source schema. The table also contains `user_id`, `moderated_by`, and `moderated_at`, which are not needed to render public review cards. Public RLS restricted rows to approved reviews and the caller's own rows, but RLS alone did not hide those columns from callers who could see a row.
+
+The candidate migration `supabase/migrations/20261114170000_secure_review_submission_and_reads.sql`:
+- adds `public.submit_review()`, a SECURITY INVOKER wrapper around private validation/write logic;
+- validates doctor/hospital existence and verified/non-deleted status, reviewer name, integer rating 1–5, and review text length;
+- derives authenticated `user_id` from `auth.uid()`, sets all moderation fields to safe defaults, and does not accept phone or status from the caller;
+- removes direct client INSERT/UPDATE/DELETE;
+- replaces table-wide SELECT with column grants for the public review-card fields and status filter, withholding reviewer phone, user id and moderation metadata;
+- adds `public.get_my_reviews()`, an authenticated SECURITY INVOKER wrapper around a private SECURITY DEFINER query that uses `auth.uid()` internally and does not return user ids.
+
+The app route preserves the honeypot, applies a hashed per-IP/entity limit from the original browser request, and calls the guarded RPC. The account review page now uses the own-review RPC rather than selecting/filtering the private user_id column.
+
+**Known residual limitation:** the RPC remains callable by anon to preserve guest reviews. The database has a 3-per-24-hour per-entity key based on a hash of the guest display name, but guests can vary the name to bypass that fallback when calling the RPC directly. The normal Next.js route applies a hashed IP limiter, but a direct PostgREST RPC caller skips that route-level check. This is not a complete anonymous anti-spam boundary; before production, choose a CAPTCHA/short-lived server-attestation or IP-aware edge-function design. Do not describe the guest name bucket as a strong identity limit.
+
+The migration is source-only. Clean local replay, pgTAP, DB lint, both app typechecks, and Preview checks are required before merge. No hosted SQL has been applied.

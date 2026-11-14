@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(96);
+SELECT plan(143);
 
 SELECT ok(
   EXISTS (
@@ -849,6 +849,440 @@ SELECT is(
   ),
   '{"error": "invalid_message"}'::jsonb,
   'database rejects messages longer than 200 characters'
+);
+RESET ROLE;
+
+-- Public review reads and writes are restricted to safe contracts.
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.reviews', 'INSERT'),
+  'anonymous callers cannot insert reviews directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.reviews', 'INSERT'),
+  'authenticated callers cannot insert reviews directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.reviews', 'UPDATE'),
+  'anonymous callers cannot update reviews directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.reviews', 'UPDATE'),
+  'authenticated callers cannot update reviews directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.reviews', 'DELETE'),
+  'anonymous callers cannot delete reviews directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.reviews', 'DELETE'),
+  'authenticated callers cannot delete reviews directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.reviews', 'SELECT'),
+  'anonymous role has no table-wide SELECT privilege on reviews'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.reviews', 'SELECT'),
+  'authenticated role has no table-wide SELECT privilege on reviews'
+);
+
+SELECT ok(
+  has_column_privilege('anon', 'public.reviews', 'reviewer_name', 'SELECT'),
+  'anonymous users can read the public reviewer display name'
+);
+
+SELECT ok(
+  has_column_privilege('anon', 'public.reviews', 'status', 'SELECT'),
+  'anonymous users can filter approved reviews by moderation status'
+);
+
+SELECT ok(
+  has_column_privilege('authenticated', 'public.reviews', 'status', 'SELECT'),
+  'authenticated users can filter public and own reviews by moderation status'
+);
+
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.reviews', 'reviewer_phone', 'SELECT'),
+  'anonymous users cannot read private reviewer phone numbers'
+);
+
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.reviews', 'reviewer_phone', 'SELECT'),
+  'authenticated users cannot read private reviewer phone numbers'
+);
+
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.reviews', 'user_id', 'SELECT'),
+  'anonymous users cannot read reviewer account identifiers'
+);
+
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.reviews', 'user_id', 'SELECT'),
+  'authenticated users cannot read other reviewers account identifiers'
+);
+
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.reviews', 'moderated_by', 'SELECT'),
+  'anonymous users cannot read moderation actor identifiers'
+);
+
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.reviews', 'moderated_at', 'SELECT'),
+  'authenticated users cannot read internal moderation timestamps'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.reviews', 'INSERT'),
+  'service_role retains review INSERT for admin and trusted server workflows'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'anon',
+    'public.submit_review(public.entity_type,uuid,text,integer,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous users can submit reviews through the guarded RPC'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'public.submit_review(public.entity_type,uuid,text,integer,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated users can submit reviews through the guarded RPC'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'anon',
+    'private.submit_review_impl(public.entity_type,uuid,text,integer,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous wrapper callers can execute the one granted private review implementation'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'private.submit_review_impl(public.entity_type,uuid,text,integer,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated wrapper callers can execute the one granted private review implementation'
+);
+
+SELECT ok(
+  NOT (
+    SELECT prosecdef FROM pg_proc
+    WHERE oid = 'public.submit_review(public.entity_type,uuid,text,integer,text)'::regprocedure
+  ),
+  'public review submission wrapper is SECURITY INVOKER'
+);
+
+SELECT ok(
+  (
+    SELECT prosecdef FROM pg_proc
+    WHERE oid = 'private.submit_review_impl(public.entity_type,uuid,text,integer,text)'::regprocedure
+  ),
+  'private review submission implementation is SECURITY DEFINER'
+);
+
+SELECT ok(
+  has_function_privilege('authenticated', 'public.get_my_reviews()'::regprocedure, 'EXECUTE'),
+  'authenticated users can call their own-review history RPC'
+);
+
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.get_my_reviews()'::regprocedure, 'EXECUTE'),
+  'anonymous users cannot call the own-review history RPC'
+);
+
+SELECT ok(
+  has_function_privilege('authenticated', 'private.list_my_reviews_impl()'::regprocedure, 'EXECUTE'),
+  'authenticated wrapper callers can execute the private own-review lookup'
+);
+
+SELECT ok(
+  NOT has_function_privilege('anon', 'private.list_my_reviews_impl()'::regprocedure, 'EXECUTE'),
+  'anonymous users cannot execute the private own-review lookup'
+);
+
+SELECT ok(
+  NOT (
+    SELECT prosecdef FROM pg_proc
+    WHERE oid = 'public.get_my_reviews()'::regprocedure
+  ),
+  'public own-review wrapper is SECURITY INVOKER'
+);
+
+SELECT ok(
+  (
+    SELECT prosecdef FROM pg_proc
+    WHERE oid = 'private.list_my_reviews_impl()'::regprocedure
+  ),
+  'private own-review lookup is SECURITY DEFINER'
+);
+
+-- A verified hospital fixture exercises the polymorphic entity branch.
+INSERT INTO public.hospitals (
+  id,
+  slug,
+  name_translations,
+  type,
+  location_id,
+  address_line,
+  phone,
+  verification_status
+)
+VALUES (
+  '00000000-0000-0000-0000-000000000109',
+  'pgtap-review-hospital',
+  '{"en":"Review test hospital"}'::jsonb,
+  'hospital'::public.hospital_type,
+  '00000000-0000-0000-0000-000000000102'::uuid,
+  '3 Review Test Road',
+  '9876543216',
+  'verified'::public.verification_status
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    '  Review Test Guest  ',
+    5,
+    '  This is a useful review of the service.  '
+  ),
+  '{"success": true}'::jsonb,
+  'anonymous caller can submit a valid doctor review through the RPC'
+);
+RESET ROLE;
+
+SELECT ok(
+  (
+    SELECT reviewer_phone IS NULL
+       AND user_id IS NULL
+       AND admin_reply IS NULL
+       AND moderated_by IS NULL
+       AND moderated_at IS NULL
+       AND status = 'pending'::public.moderation_status
+    FROM public.reviews
+    WHERE entity_type = 'doctor'::public.entity_type
+      AND entity_id = '00000000-0000-0000-0000-000000000103'::uuid
+    LIMIT 1
+  ),
+  'guest review fields are database-controlled and start pending'
+);
+
+SELECT is(
+  (
+    SELECT reviewer_name
+    FROM public.reviews
+    WHERE entity_type = 'doctor'::public.entity_type
+      AND entity_id = '00000000-0000-0000-0000-000000000103'::uuid
+    LIMIT 1
+  ),
+  'Review Test Guest',
+  'database trims reviewer display names'
+);
+
+SELECT is(
+  (
+    SELECT review_text
+    FROM public.reviews
+    WHERE entity_type = 'doctor'::public.entity_type
+      AND entity_id = '00000000-0000-0000-0000-000000000103'::uuid
+    LIMIT 1
+  ),
+  'This is a useful review of the service.',
+  'database trims review text before storing it'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Review Test Guest',
+    4,
+    'A second useful review of this service.'
+  ),
+  '{"success": true}'::jsonb,
+  'second review by the same guest name for one entity is allowed'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Review Test Guest',
+    3,
+    'A third useful review of this service.'
+  ),
+  '{"success": true}'::jsonb,
+  'third review by the same guest name for one entity is allowed'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Review Test Guest',
+    2,
+    'A fourth useful review of this service.'
+  ),
+  '{"error": "rate_limited"}'::jsonb,
+  'fourth review by the same guest name for one entity is rate limited'
+);
+SELECT is(
+  public.submit_review(
+    'hospital'::public.entity_type,
+    '00000000-0000-0000-0000-000000000109'::uuid,
+    'Hospital Review Guest',
+    5,
+    'A helpful review of this hospital service.'
+  ),
+  '{"success": true}'::jsonb,
+  'anonymous caller can submit a valid hospital review through the RPC'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000199'::uuid,
+    'Review Test Guest',
+    5,
+    'This is a useful review of the service.'
+  ),
+  '{"error": "entity_unavailable"}'::jsonb,
+  'reviews cannot be submitted for a missing entity'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000107'::uuid,
+    'Review Test Guest',
+    5,
+    'This is a useful review of the service.'
+  ),
+  '{"error": "entity_unavailable"}'::jsonb,
+  'reviews cannot be submitted for an unverified doctor'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Invalid Rating Guest',
+    0,
+    'This is a useful review of the service.'
+  ),
+  '{"error": "invalid_rating"}'::jsonb,
+  'database rejects review ratings outside one to five'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'A',
+    5,
+    'This is a useful review of the service.'
+  ),
+  '{"error": "invalid_name"}'::jsonb,
+  'database rejects reviewer names shorter than two characters'
+);
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Short Review Guest',
+    5,
+    'Too short review'
+  ),
+  '{"error": "invalid_review_text"}'::jsonb,
+  'database rejects review text shorter than twenty characters'
+);
+RESET ROLE;
+
+-- Authenticated review submission derives its identity from auth.uid(),
+-- and own-review history never accepts a caller-chosen user id.
+INSERT INTO auth.users (
+  id,
+  aud,
+  role,
+  email,
+  created_at,
+  updated_at,
+  is_sso_user,
+  is_anonymous
+)
+VALUES (
+  '00000000-0000-0000-0000-000000000151',
+  'authenticated',
+  'authenticated',
+  'pgtap-review-owner@example.test',
+  pg_catalog.now(),
+  pg_catalog.now(),
+  false,
+  false
+);
+
+SET LOCAL ROLE authenticated;
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000151',
+  true
+);
+
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Account Review Owner',
+    5,
+    'This authenticated review belongs to the account owner.'
+  ),
+  '{"success": true}'::jsonb,
+  'authenticated users can submit a review through the guarded RPC'
+);
+
+SELECT is(
+  (
+    SELECT pg_catalog.count(*)::integer
+    FROM public.get_my_reviews()
+  ),
+  1,
+  'own-review history returns the authenticated caller review'
+);
+
+SELECT is(
+  (
+    SELECT review_text
+    FROM public.get_my_reviews()
+    LIMIT 1
+  ),
+  'This authenticated review belongs to the account owner.',
+  'own-review history returns the caller own review content without reviewer identity fields'
+);
+
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000152',
+  true
+);
+
+SELECT is(
+  (
+    SELECT pg_catalog.count(*)::integer
+    FROM public.get_my_reviews()
+  ),
+  0,
+  'own-review history never returns another account review'
 );
 RESET ROLE;
 

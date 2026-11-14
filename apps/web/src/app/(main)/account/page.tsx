@@ -34,7 +34,7 @@ export default async function AccountPage() {
     getFavorites(supabase, userId),
     getLeadsHistory(supabase, userId),
     getMyQuestions(supabase, userId),
-    getMyReviews(supabase, userId),
+    getMyReviews(supabase),
   ]);
 
   return (

@@ -94,19 +94,34 @@ export async function getMyQuestions(supabase: SupabaseClient<Database>, userId:
 }
 
 /**
- * My Reviews — VYTANEXA-BLUEPRINT.md § S17 "⭐ আমার রিভিউ". Uses
- * `reviews_own_read` (migration 0014). Entity name isn't joinable
- * generically (polymorphic entity_type/entity_id like favorites
- * above) — resolved per-row in the page component rather than here,
- * to keep this query simple for the common case (most users have few
- * reviews, so N+1-ish resolution here is cheap in practice).
+ * My Reviews — VYTANEXA-BLUEPRINT.md § S17 "⭐ আমার রিভিউ". Uses the
+ * get_my_reviews() RPC, which filters by auth.uid() inside the database
+ * and returns only safe display/history fields. Entity names are
+ * resolved separately because entity_type/entity_id is polymorphic.
  */
-export async function getMyReviews(supabase: SupabaseClient<Database>, userId: string) {
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('id, entity_type, entity_id, rating, review_text, status, admin_reply, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+type MyReviewRow = {
+  id: string;
+  entity_type: 'doctor' | 'hospital';
+  entity_id: string;
+  rating: number;
+  review_text: string;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_reply: string | null;
+  created_at: string;
+};
+
+type MyReviewsRpcClient = {
+  rpc: (name: 'get_my_reviews') => Promise<{
+    data: MyReviewRow[] | null;
+    error: { message: string } | null;
+  }>;
+};
+
+export async function getMyReviews(supabase: SupabaseClient<Database>) {
+  // The RPC filters by auth.uid() inside PostgreSQL and intentionally does
+  // not grant SELECT on the private user_id column to Data API roles.
+  const myReviewsClient = supabase as unknown as MyReviewsRpcClient;
+  const { data, error } = await myReviewsClient.rpc('get_my_reviews');
 
   // Throw: an error must not render as an empty list / "0" count.
   if (error) throw new Error(`getMyReviews failed: ${error.message}`);

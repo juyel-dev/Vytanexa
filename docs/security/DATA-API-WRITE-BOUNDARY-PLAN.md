@@ -157,3 +157,18 @@ The feature branch `fix/secure-patient-lead-submission` adds `20261114160000_sec
 The database implementation independently validates the doctor, optional chamber, patient name/phone, preferred-time allowlist and message length. It derives `user_id` from the caller's auth context, writes fixed source/status values, and applies an atomic 3-per-phone/per-doctor/24-hour rate limit with a hashed phone key. Direct anon/authenticated table DML is revoked; authenticated SELECT for own-lead history remains.
 
 The candidate adds pgTAP coverage for the permission boundary, wrapper/helper security modes, a valid guest submission, server-derived columns, doctor/chamber validation, preferred-time/phone/message rejection and the 3/day quota. It is not yet merged or applied to the hosted database.
+
+
+## 11. Current implementation status — review submission and privacy
+
+The branch `fix/secure-review-submission-and-privacy` adds `20261114170000_secure_review_submission_and_reads.sql`.
+
+- The public route calls a guarded `submit_review()` RPC, preserving the honeypot, Zod validation, legacy doctor_id compatibility, and hashed per-IP/entity limiter.
+- The database validates the doctor/hospital entity is verified and not deleted, reviewer name, 1–5 rating, and 20–500 character review text. It fixes status to pending, derives `user_id` from `auth.uid()`, and sets reviewer phone/moderation fields to NULL.
+- Direct anon/authenticated table DML is revoked on reviews.
+- Public table reads are limited to safe review-card fields. Reviewer phone, user ID, moderation actor and moderation timestamps are not granted to Data API roles.
+- My Reviews now calls `get_my_reviews()`, which filters by `auth.uid()` and returns safe history fields without exposing user IDs.
+
+**Guest anti-spam limitation:** guests can call the public RPC directly and vary their display name to avoid the database's hashed-name fallback. The regular HTTP route still applies per-IP rate limiting, but that route can be bypassed by direct RPC callers. This must be closed with a CAPTCHA/short-lived server attestation or an IP-aware edge boundary before treating review abuse controls as production complete.
+
+The pgTAP suite now checks role/column grants, wrapper/helper security modes, doctor/hospital validation, pending defaults, guest quotas, authenticated submission, and own-review isolation. Current plan is 143 assertions. These changes are not yet merged or applied to the hosted database.
