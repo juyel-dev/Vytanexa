@@ -1,4 +1,15 @@
 import { createHash } from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { getClientIp } from '@/lib/get-client-ip';
+import {
+  queryQuestionList,
+  getDoctorAnsweredQuestionIds,
+  type QAListParams,
+} from '@/lib/queries/qa-list';
+import { isFeatureEnabled } from '@/lib/feature-flags';
+import { questionSchema } from '@/lib/validations/questions';
+import { getT } from '@vytanexa/i18n/server';
 
 type SubmitQuestionRpc = {
   rpc: (
@@ -17,17 +28,38 @@ type SubmitQuestionRpc = {
   }>;
 };
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getClientIp } from '@/lib/get-client-ip';
-import {
-  queryQuestionList,
-  getDoctorAnsweredQuestionIds,
-  type QAListParams,
-} from '@/lib/queries/qa-list';
-import { isFeatureEnabled } from '@/lib/feature-flags';
-import { questionSchema } from '@/lib/validations/questions';
-import { getT } from '@vytanexa/i18n/server';
+/** GET /api/questions — paginated Q&A list continuation. */
+export async function GET(request: NextRequest) {
+  const supabase = createClient();
+
+  if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
+    return NextResponse.json({ questions: [], count: 0, hasMore: false }, { status: 404 });
+  }
+
+  const sp = request.nextUrl.searchParams;
+  const params: QAListParams = {
+    filter: (['answered', 'unanswered'] as const).find((f) => f === sp.get('filter')) ?? 'all',
+    sort: sp.get('sort') === 'upvoted' ? 'upvoted' : 'newest',
+    page: sp.get('page') ? Number(sp.get('page')) : 0,
+  };
+
+  const { data, error, count, pageSize } = await queryQuestionList(supabase, params);
+
+  if (error) {
+    console.error('questions list query failed:', error.message);
+    return NextResponse.json({ error: 'questions_failed' }, { status: 500 });
+  }
+
+  const doctorAnsweredIds = [
+    ...(await getDoctorAnsweredQuestionIds(
+      supabase,
+      data.map((question) => question.id)
+    )),
+  ];
+  const hasMore = ((params.page ?? 0) + 1) * pageSize < count;
+
+  return NextResponse.json({ questions: data, count, hasMore, doctorAnsweredIds });
+}
 
 /**
  * POST /api/questions — moderated public question submission.
