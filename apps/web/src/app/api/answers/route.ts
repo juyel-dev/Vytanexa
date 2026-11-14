@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getClientIp } from '@/lib/get-client-ip';
@@ -5,34 +6,36 @@ import { answerSchema } from '@/lib/validations/answers';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { getT } from '@vytanexa/i18n/server';
 
+type SubmitAnswerRpc = {
+  rpc: (
+    name: 'submit_answer',
+    args: {
+      p_question_id: string;
+      p_body: string;
+      p_author_name: string | null;
+    }
+  ) => Promise<{
+    data: unknown;
+    error: { code?: string; message: string } | null;
+  }>;
+};
+
 /**
- * POST /api/answers — VYTANEXA-BLUEPRINT.md § S14 "উত্তর দিন input at
- * bottom (requires sign-in — soft-gate)."
+ * POST /api/answers — moderated community answer submission.
  *
- * Real auth (phone+OTP / Google via Supabase Auth) is S22 scope, not
- * built yet — so this route currently accepts guest submissions
- * (matching what `answers_public_insert` RLS actually allows:
- * `WITH CHECK (status = 'pending')`, no auth requirement at the DB
- * layer). The "soft-gate" UI behavior (prompting sign-in before
- * showing the answer form) is deferred to S22 alongside real auth —
- * gating in the UI without a real auth system behind it would just be
- * a fake wall, not the actual feature. `doctor_id` is always left
- * null here: doctor-authored answers only ever come from an admin/
- * doctor-portal mechanism not yet built (spec's own "flagged as scope
- * decision for Admin Panel" note), never from this public route.
+ * Doctor-authored answers cannot be created through this public route.
+ * The database verifies the target question is approved, repeats the Q&A
+ * feature gate and validation, derives user_id from auth.uid(), and fixes
+ * doctor_id=NULL/status=pending.
  */
 export async function POST(request: NextRequest) {
   const t = await getT('validation');
   const supabase = createClient();
 
-  // Spec § S14: the ENTIRE module sits behind `community_qa`. The pages and
-  // /api/questions honored it, but this write endpoint stayed open when
-  // the admin turned Q&A off.
   if (!(await isFeatureEnabled(supabase, 'community_qa'))) {
     return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
   }
 
-  // Malformed JSON used to throw -> unhandled 500.
   const body = await request.json().catch(() => null);
   const parsed = answerSchema(t).safeParse({
     question_id: body?.question_id,
@@ -40,41 +43,68 @@ export async function POST(request: NextRequest) {
     author_name: body?.author_name,
   });
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? t('generic.validationFailed') },
+      { status: 400 }
+    );
   }
-  const { question_id, body: answerBody, author_name } = parsed.data;
 
   const ip = getClientIp(request);
-
+  const ipHash = createHash('sha256').update(ip).digest('hex');
   const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-    p_key: `answer_submit:${ip}`,
+    p_key: `answer_submit_ip:${ipHash}`,
     p_max_count: 10,
     p_window: '24 hours',
   });
 
-  if (rateLimitError) {
-    console.error('rate limit check failed:', rateLimitError.message);
+  if (rateLimitError || allowed == null) {
+    console.error('answer IP rate limit failed:', rateLimitError?.message);
     return NextResponse.json({ error: t('answers.submitFailed') }, { status: 503 });
   }
+
   if (!allowed) {
-    return NextResponse.json(
-      { error: t('answers.dailyLimitReached') },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: t('answers.dailyLimitReached') }, { status: 429 });
   }
 
-  const { error } = await supabase.from('answers').insert({
-    question_id,
-    body: answerBody.trim(),
-    author_name: author_name?.trim() || null,
-    doctor_id: null,
-    status: 'pending',
+  const answerClient = supabase as unknown as SubmitAnswerRpc;
+  const { data, error } = await answerClient.rpc('submit_answer', {
+    p_question_id: parsed.data.question_id,
+    p_body: parsed.data.body,
+    p_author_name: parsed.data.author_name?.trim() || null,
   });
 
   if (error) {
-    console.error('answer insert failed:', error.message);
-    return NextResponse.json({ error: t('answers.submitFailed') }, { status: 500 });
+    console.error('answer submission RPC failed:', error.code, error.message);
+    return NextResponse.json({ error: t('answers.submitFailed') }, { status: 503 });
   }
 
-  return NextResponse.json({ success: true });
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    console.error('answer submission RPC returned an invalid response');
+    return NextResponse.json({ error: t('answers.submitFailed') }, { status: 503 });
+  }
+
+  const result = data as { success?: unknown; error?: unknown };
+
+  if (result.success === true) {
+    return NextResponse.json({ success: true });
+  }
+
+  if (result.error === 'rate_limited') {
+    return NextResponse.json({ error: t('answers.dailyLimitReached') }, { status: 429 });
+  }
+
+  if (result.error === 'feature_disabled') {
+    return NextResponse.json({ error: t('questions.featureDisabled') }, { status: 404 });
+  }
+
+  if (result.error === 'question_unavailable') {
+    return NextResponse.json({ error: t('answers.invalidQuestionId') }, { status: 404 });
+  }
+
+  if (result.error === 'invalid_body' || result.error === 'invalid_author_name') {
+    return NextResponse.json({ error: t('generic.validationFailed') }, { status: 400 });
+  }
+
+  console.error('answer submission rejected:', result.error);
+  return NextResponse.json({ error: t('answers.submitFailed') }, { status: 503 });
 }
