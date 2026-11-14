@@ -1477,7 +1477,7 @@ SELECT is(
     'Optional question details',
     '00000000-0000-0000-0000-000000000101'::uuid,
     true,
-    NULL,
+    'Anonymous Private Name',
     NULL
   ),
   '{"success": true}'::jsonb,
