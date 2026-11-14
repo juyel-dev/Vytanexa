@@ -227,3 +227,21 @@ The candidate implementation:
 The API route now calls the RPC rather than selecting and mutating the table directly. It retains a route-level IP rate limit from the original browser request, while the database RPC has an atomic per-device limit. This split is intentional: the RPC's own request headers identify the Vercel server-to-server egress IP, which is shared by many users. Device-level dedup remains an intentional engagement safeguard, not proof of a unique human identity; a user can still clear local storage or use another browser.
 
 The migration is a repository candidate only. It must pass clean local replay, pgTAP, DB lint and both app typechecks. The hosted project must also be confirmed to expose only `public` and `graphql_public` (not `private`) before deployment. No hosted SQL has been applied.
+
+
+## 14. Patient lead submission moved behind a guarded database RPC (candidate)
+
+The previous live `leads_public_insert` policy allowed any anonymous/authenticated PostgREST caller to insert patient names and phone numbers directly. This bypassed the Next.js Zod schema and route-level rate limit, and allowed callers to choose sensitive lifecycle fields if table grants permitted them.
+
+The new source migration `20261114160000_secure_patient_lead_submission.sql`:
+- adds a SECURITY INVOKER public wrapper around a private SECURITY DEFINER implementation;
+- verifies the doctor is verified and not deleted;
+- verifies a selected chamber belongs to that doctor and is active/non-deleted;
+- repeats the name, Indian mobile, preferred-time allowlist and message-length validations in PostgreSQL;
+- derives `user_id` from `auth.uid()` and fixes source/status in the database;
+- enforces an atomic 3-per-phone/per-doctor/24-hour limit using a hashed rate key and transaction advisory lock; and
+- drops the direct INSERT policy, revokes all client DML, and restores SELECT only to authenticated users for own-lead history.
+
+The Route Handler now applies a separate per-IP limit using the original browser request, then calls the RPC. It does not use the Supabase server-to-server request headers as the browser's IP.
+
+The migration and route are repository candidates only. Local replay/pgTAP/DB lint and both app typechecks must pass before any hosted change. No hosted SQL has been applied.
