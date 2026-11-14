@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(65);
+SELECT plan(96);
 
 SELECT ok(
   EXISTS (
@@ -493,6 +493,364 @@ SELECT ok(
   ),
   'database enforces emergency notifications as always enabled'
 );
+
+-- Patient leads are writable only through the validated RPC.
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.leads', 'INSERT'),
+  'anonymous callers cannot insert patient leads directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.leads', 'INSERT'),
+  'authenticated callers cannot insert patient leads directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.leads', 'SELECT'),
+  'anonymous callers cannot read patient lead rows'
+);
+
+SELECT ok(
+  has_table_privilege('authenticated', 'public.leads', 'SELECT'),
+  'authenticated users retain table SELECT for own-lead history'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.leads', 'UPDATE'),
+  'anonymous callers cannot update patient leads directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.leads', 'UPDATE'),
+  'authenticated callers cannot update patient leads directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.leads', 'DELETE'),
+  'anonymous callers cannot delete patient leads directly'
+);
+
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.leads', 'DELETE'),
+  'authenticated callers cannot delete patient leads directly'
+);
+
+SELECT ok(
+  has_table_privilege('service_role', 'public.leads', 'INSERT'),
+  'trusted service_role retains lead INSERT for admin workflows'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'anon',
+    'public.submit_patient_lead(uuid,uuid,text,text,text,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous callers can submit leads through the guarded public RPC'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'public.submit_patient_lead(uuid,uuid,text,text,text,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated callers can submit leads through the guarded public RPC'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'anon',
+    'private.submit_patient_lead_impl(uuid,uuid,text,text,text,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'anonymous wrapper callers can execute the one granted private lead implementation'
+);
+
+SELECT ok(
+  has_function_privilege(
+    'authenticated',
+    'private.submit_patient_lead_impl(uuid,uuid,text,text,text,text)'::regprocedure,
+    'EXECUTE'
+  ),
+  'authenticated wrapper callers can execute the one granted private lead implementation'
+);
+
+SELECT ok(
+  NOT (
+    SELECT prosecdef
+    FROM pg_proc
+    WHERE oid = 'public.submit_patient_lead(uuid,uuid,text,text,text,text)'::regprocedure
+  ),
+  'public patient lead wrapper is SECURITY INVOKER'
+);
+
+SELECT ok(
+  (
+    SELECT prosecdef
+    FROM pg_proc
+    WHERE oid = 'private.submit_patient_lead_impl(uuid,uuid,text,text,text,text)'::regprocedure
+  ),
+  'private patient lead implementation is SECURITY DEFINER'
+);
+
+-- Minimal, isolated fixtures for valid/invalid doctor and chamber checks.
+INSERT INTO public.categories (id, slug, name_translations)
+VALUES (
+  '00000000-0000-0000-0000-000000000101',
+  'pgtap-lead-category',
+  '{"en":"Lead test category"}'::jsonb
+);
+
+INSERT INTO public.locations (id, type, slug, name_translations)
+VALUES (
+  '00000000-0000-0000-0000-000000000102',
+  'state'::public.location_type,
+  'pgtap-lead-state',
+  '{"en":"Lead test state"}'::jsonb
+);
+
+INSERT INTO public.doctors (id, slug, category_id, name_translations, verification_status)
+VALUES
+(
+  '00000000-0000-0000-0000-000000000103',
+  'pgtap-lead-doctor',
+  '00000000-0000-0000-0000-000000000101',
+  '{"en":"Verified lead test doctor"}'::jsonb,
+  'verified'::public.verification_status
+),
+(
+  '00000000-0000-0000-0000-000000000105',
+  'pgtap-other-lead-doctor',
+  '00000000-0000-0000-0000-000000000101',
+  '{"en":"Other verified lead test doctor"}'::jsonb,
+  'verified'::public.verification_status
+),
+(
+  '00000000-0000-0000-0000-000000000107',
+  'pgtap-pending-lead-doctor',
+  '00000000-0000-0000-0000-000000000101',
+  '{"en":"Pending lead test doctor"}'::jsonb,
+  'pending'::public.verification_status
+);
+
+INSERT INTO public.chambers (
+  id, doctor_id, chamber_name, location_id, address_line, phone
+)
+VALUES
+(
+  '00000000-0000-0000-0000-000000000104',
+  '00000000-0000-0000-0000-000000000103',
+  'Lead test chamber',
+  '00000000-0000-0000-0000-000000000102',
+  '1 Test Road',
+  '9876543210'
+),
+(
+  '00000000-0000-0000-0000-000000000106',
+  '00000000-0000-0000-0000-000000000105',
+  'Other doctor chamber',
+  '00000000-0000-0000-0000-000000000102',
+  '2 Test Road',
+  '9876543211'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    '00000000-0000-0000-0000-000000000104'::uuid,
+    '  Lead Test Patient  ',
+    ' 9876543210 ',
+    'morning',
+    '  Test request  '
+  ),
+  '{"success": true}'::jsonb,
+  'anonymous caller can submit a valid patient lead through the RPC'
+);
+RESET ROLE;
+
+SELECT ok(
+  (
+    SELECT user_id IS NULL
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  'guest lead records do not accept a caller-supplied user identity'
+);
+
+SELECT is(
+  (
+    SELECT patient_name
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  'Lead Test Patient',
+  'database trims the patient name before storing it'
+);
+
+SELECT is(
+  (
+    SELECT patient_phone
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  '9876543210',
+  'database trims and normalizes the patient phone before storing it'
+);
+
+SELECT is(
+  (
+    SELECT source
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  'profile_page',
+  'lead source is assigned by the database, not by the caller'
+);
+
+SELECT is(
+  (
+    SELECT status::text
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  'new',
+  'lead moderation status is assigned by the database'
+);
+
+SELECT is(
+  (
+    SELECT chamber_id
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  '00000000-0000-0000-0000-000000000104'::uuid,
+  'lead records the selected chamber belonging to the requested doctor'
+);
+
+SELECT is(
+  (
+    SELECT preferred_time
+    FROM public.leads
+    WHERE doctor_id = '00000000-0000-0000-0000-000000000103'::uuid
+      AND patient_phone = '9876543210'
+    LIMIT 1
+  ),
+  'morning',
+  'lead stores one of the four permitted preferred-time values'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    '00000000-0000-0000-0000-000000000104'::uuid,
+    'Lead Test Patient',
+    '9876543210',
+    'morning',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'second request for the same phone and doctor is allowed within the daily quota'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    '00000000-0000-0000-0000-000000000104'::uuid,
+    'Lead Test Patient',
+    '9876543210',
+    'evening',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'third request for the same phone and doctor is allowed within the daily quota'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    '00000000-0000-0000-0000-000000000104'::uuid,
+    'Lead Test Patient',
+    '9876543210',
+    'any',
+    NULL
+  ),
+  '{"error": "rate_limited"}'::jsonb,
+  'fourth request for the same phone and doctor is rate limited'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    '00000000-0000-0000-0000-000000000106'::uuid,
+    'Lead Test Patient',
+    '9876543212',
+    'any',
+    NULL
+  ),
+  '{"error": "invalid_chamber"}'::jsonb,
+  'a chamber belonging to another doctor cannot be selected'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000107'::uuid,
+    NULL,
+    'Lead Test Patient',
+    '9876543213',
+    'any',
+    NULL
+  ),
+  '{"error": "doctor_unavailable"}'::jsonb,
+  'unverified doctors cannot receive appointment leads'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    NULL,
+    'Lead Test Patient',
+    '9876543214',
+    'night',
+    NULL
+  ),
+  '{"error": "invalid_preferred_time"}'::jsonb,
+  'database rejects values outside the preferred-time allowlist'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    NULL,
+    'Lead Test Patient',
+    '1234567890',
+    'any',
+    NULL
+  ),
+  '{"error": "invalid_phone"}'::jsonb,
+  'database rejects malformed patient phone numbers'
+);
+SELECT is(
+  public.submit_patient_lead(
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    NULL,
+    'Lead Test Patient',
+    '9876543215',
+    'any',
+    pg_catalog.repeat('x', 201)
+  ),
+  '{"error": "invalid_message"}'::jsonb,
+  'database rejects messages longer than 200 characters'
+);
+RESET ROLE;
 
 SELECT * FROM finish();
 ROLLBACK;

@@ -108,7 +108,7 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 
 | Operation | Required database invariants before direct DML can be revoked |
 |---|---|
-| Leads | Valid, non-deleted doctor; chamber belongs to doctor if supplied; bounded name/message/phone and allowed preferred-time/source values; user_id=auth.uid() or NULL for guest; fixed per-IP plus phone/doctor rate buckets. |
+| Leads | New source RPC `submit_patient_lead()` validates a verified/non-deleted doctor, selected chamber ownership and active status, name/phone/preferred-time/message, derives user_id/source/status server-side, and enforces an atomic hashed phone+doctor 3/day limit. Direct client DML is revoked while authenticated own-lead SELECT remains. Local replay/pgTAP/typecheck pending. |
 | Reviews | Entity type and entity existence match; rating 1–5; review text 20–500 chars; always pending; caller cannot set moderation fields; user identity derived from JWT; bounded phone/entity rate limit. |
 | Questions | Feature flag enabled; bounded title/body; category valid/active; always pending; anonymous fields normalized; user identity derived from JWT; rate limit. |
 | Answers | Feature flag enabled; target question exists, is visible and not deleted; bounded body; always pending; doctor identity must never be caller-asserted without verified-doctor authorization; rate limit. |
@@ -123,7 +123,7 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 
 1. Keep current PR #8 migration in source only. It is merged and locally tested, but do not apply it to the hosted database until backup/restore readiness is confirmed.
 2. Implement and test the upvote RPC. Hide question_upvotes rows, prevent direct DML, preserve the public question counter, and add concurrent-toggle tests.
-3. Implement one public submission RPC at a time, starting with the lowest-risk operation. Keep existing API route response contracts stable.
+3. Continue with one public submission RPC at a time, starting with reviews after leads and upvotes. Keep existing API route response contracts stable.
 4. Add negative-path tests: anon/authenticated direct INSERT/UPDATE/DELETE fail; SELECT only works where explicitly intended; approved RPC accepts valid data and rejects invalid data; spoofed status/user/IP values are ignored; rate limits are atomic under concurrent calls.
 5. Audit every admin write route separately for active-admin authorization before service-role writes.
 6. Narrow table grants after all current readers/writers and generated clients have been inventoried. Do not issue blanket revokes.
@@ -148,3 +148,12 @@ The feature branch `fix/atomic-question-upvote-rpc` adds `20261114150000_atomic_
 The web route now validates a device UUID and calls the RPC. It no longer reads raw rows or attempts a direct DELETE/INSERT. This is not yet merged or applied to the hosted database.
 
 Before hosted deployment, verify that the Supabase API settings do not expose the `private` schema. The repository's local Supabase config exposes only `public` and `graphql_public`.
+
+
+## 10. Current implementation status — patient lead submission
+
+The feature branch `fix/secure-patient-lead-submission` adds `20261114160000_secure_patient_lead_submission.sql`. The public Route Handler now validates the request, applies an IP limit from the original browser request, and invokes the guarded RPC; it no longer writes to `leads` directly.
+
+The database implementation independently validates the doctor, optional chamber, patient name/phone, preferred-time allowlist and message length. It derives `user_id` from the caller's auth context, writes fixed source/status values, and applies an atomic 3-per-phone/per-doctor/24-hour rate limit with a hashed phone key. Direct anon/authenticated table DML is revoked; authenticated SELECT for own-lead history remains.
+
+The candidate adds pgTAP coverage for the permission boundary, wrapper/helper security modes, a valid guest submission, server-derived columns, doctor/chamber validation, preferred-time/phone/message rejection and the 3/day quota. It is not yet merged or applied to the hosted database.

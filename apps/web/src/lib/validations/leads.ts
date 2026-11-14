@@ -20,7 +20,7 @@ export function leadSchema(t: Translator) {
     chamber_id: z.string().uuid().nullable().optional(),
     patient_name: z.string().trim().min(2, t('name.min')).max(80, t('name.max')),
     patient_phone: z.string().trim().regex(/^[6-9]\d{9}$/, t('phone.invalid')),
-    preferred_time: z.string().max(30).nullable().optional(),
+    preferred_time: z.enum(['any', 'morning', 'afternoon', 'evening']).nullable().optional(),
     message: z.string().max(200, t('leads.messageMax')).nullable().optional(),
   });
 }
