@@ -33,7 +33,7 @@ export default async function AccountPage() {
   const [{ doctors, hospitals }, history, questions, reviews] = await Promise.all([
     getFavorites(supabase, userId),
     getLeadsHistory(supabase, userId),
-    getMyQuestions(supabase, userId),
+    getMyQuestions(supabase),
     getMyReviews(supabase),
   ]);
 
