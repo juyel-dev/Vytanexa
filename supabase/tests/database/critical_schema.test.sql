@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(139);
+SELECT plan(143);
 
 SELECT ok(
   EXISTS (
@@ -1206,6 +1206,83 @@ SELECT is(
   ),
   '{"error": "invalid_review_text"}'::jsonb,
   'database rejects review text shorter than twenty characters'
+);
+RESET ROLE;
+
+-- Authenticated review submission derives its identity from auth.uid(),
+-- and own-review history never accepts a caller-chosen user id.
+INSERT INTO auth.users (
+  id,
+  aud,
+  role,
+  email,
+  created_at,
+  updated_at,
+  is_sso_user,
+  is_anonymous
+)
+VALUES (
+  '00000000-0000-0000-0000-000000000151',
+  'authenticated',
+  'authenticated',
+  'pgtap-review-owner@example.test',
+  pg_catalog.now(),
+  pg_catalog.now(),
+  false,
+  false
+);
+
+SET LOCAL ROLE authenticated;
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000151',
+  true
+);
+
+SELECT is(
+  public.submit_review(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'Account Review Owner',
+    5,
+    'This authenticated review belongs to the account owner.'
+  ),
+  '{"success": true}'::jsonb,
+  'authenticated users can submit a review through the guarded RPC'
+);
+
+SELECT is(
+  (
+    SELECT pg_catalog.count(*)::integer
+    FROM public.get_my_reviews()
+  ),
+  1,
+  'own-review history returns the authenticated caller review'
+);
+
+SELECT is(
+  (
+    SELECT reviewer_name
+    FROM public.get_my_reviews()
+    LIMIT 1
+  ),
+  'Account Review Owner',
+  'own-review history returns the caller own review content'
+);
+
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000152',
+  true
+);
+
+SELECT is(
+  (
+    SELECT pg_catalog.count(*)::integer
+    FROM public.get_my_reviews()
+  ),
+  0,
+  'own-review history never returns another account review'
 );
 RESET ROLE;
 
