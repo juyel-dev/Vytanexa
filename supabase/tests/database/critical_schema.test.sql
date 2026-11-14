@@ -1285,6 +1285,7 @@ SELECT is(
   'own-review history never returns another account review'
 );
 RESET ROLE;
+SELECT pg_catalog.set_config('request.jwt.claim.sub', '', true);
 
 -- Secure community questions: only the public RPC writes, and author
 -- phone/account/lifecycle metadata is not readable through PostgREST.
@@ -1744,6 +1745,7 @@ SELECT is(
   'own-question RPC never returns another account question'
 );
 RESET ROLE;
+SELECT pg_catalog.set_config('request.jwt.claim.sub', '', true);
 
 UPDATE public.app_settings
 SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'false'::jsonb, true)
