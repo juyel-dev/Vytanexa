@@ -94,12 +94,10 @@ export async function getMyQuestions(supabase: SupabaseClient<Database>, userId:
 }
 
 /**
- * My Reviews — VYTANEXA-BLUEPRINT.md § S17 "⭐ আমার রিভিউ". Uses
- * `reviews_own_read` (migration 0014). Entity name isn't joinable
- * generically (polymorphic entity_type/entity_id like favorites
- * above) — resolved per-row in the page component rather than here,
- * to keep this query simple for the common case (most users have few
- * reviews, so N+1-ish resolution here is cheap in practice).
+ * My Reviews — VYTANEXA-BLUEPRINT.md § S17 "⭐ আমার রিভিউ". Uses the
+ * get_my_reviews() RPC, which filters by auth.uid() inside the database
+ * and returns only safe display/history fields. Entity names are
+ * resolved separately because entity_type/entity_id is polymorphic.
  */
 type MyReviewRow = {
   id: string;
