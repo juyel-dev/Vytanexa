@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(64);
+SELECT plan(65);
 
 SELECT ok(
   EXISTS (
@@ -292,6 +292,10 @@ SELECT ok(
   'private upvote implementation is SECURITY DEFINER for the trigger-maintained counter'
 );
 
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'true'::jsonb, true)
+WHERE id = 1;
+
 INSERT INTO public.questions (id, title, status)
 VALUES (
   '00000000-0000-0000-0000-000000000091',
@@ -334,6 +338,21 @@ SELECT is(
   0,
   'upvote trigger decrements the denormalized question count after unvoting'
 );
+
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'false'::jsonb, true)
+WHERE id = 1;
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.toggle_question_upvote(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    '00000000-0000-0000-0000-000000000092'
+  ),
+  '{"error": "feature_disabled"}'::jsonb,
+  'the database RPC rejects upvotes when community Q&A is disabled'
+);
+RESET ROLE;
 
 SELECT ok(
   (SELECT prosecdef FROM pg_proc
