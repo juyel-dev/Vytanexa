@@ -27,7 +27,7 @@ export default async function MyQuestionsPage() {
 
   const t = await getT('account');
   const tQa = await getT('qa');
-  const questions = await getMyQuestions(supabase, currentUser.authUser.id);
+  const questions = await getMyQuestions(supabase);
 
   return (
     <>
