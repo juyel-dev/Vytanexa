@@ -275,12 +275,12 @@ The new source migration `supabase/migrations/20261114180000_secure_community_qa
 - repeats the `community_qa` feature flag in PostgreSQL;
 - validates question title/body, active category, optional author phone and name, and answer body/name;
 - requires an answer's parent question to be approved and not deleted;
-- derives `user_id` using `auth.uid()`, fixes new records to pending, and prevents public answers from setting `doctor_id`;
+- derives `user_id` using `auth.uid()`, fixes new records to pending, prevents public answers from setting `doctor_id`, and forces `author_name=NULL` whenever a question is marked anonymous;
 - revokes direct client DML from Questions and Answers;
 - grants only safe public display columns to anon/authenticated, hiding Questions author_phone/user_id/deleted_at and Answers user_id; and
 - adds `get_my_questions()` so account history uses `auth.uid()` without selecting/filtering the private user_id column.
 
-The public Question Detail query now selects explicit safe columns rather than `*`. Both submission routes retain Zod validation and hashed route-level IP buckets, then invoke the guarded RPC. The own-question account queries use the new RPC.
+The public Question Detail query now selects explicit safe columns rather than `*`. Both submission routes retain Zod validation and hashed route-level IP buckets, then invoke the guarded RPC. The own-question account queries use the new RPC. When `is_anonymous=true`, the database forces the public `author_name` field to NULL even if a direct caller supplied a value. A read-only live count found 4 question rows total and zero anonymous rows with a populated author name, author phone or user id, so no existing production row required backfill.
 
 **Known residual limitation:** guest direct-RPC callers can vary display names or content to avoid the database's fallback name/content bucket. The normal Next.js route enforces per-IP limits, but direct PostgREST RPC requests bypass that HTTP route limiter. Before treating anonymous Q&A abuse controls as production complete, use CAPTCHA/short-lived server attestation or an IP-aware edge boundary.
 
