@@ -209,3 +209,20 @@ The live `question_upvotes` policies currently permit public SELECT and INSERT, 
 However, `apps/web/src/app/api/questions/[id]/upvote/route.ts` implements a toggle: when an existing row is found it calls `.delete()`. Therefore, the unvote branch conflicts with the current live RLS policy and is expected to be rejected by PostgreSQL. This is a source/live behavior mismatch; a successful user-facing unvote has not been demonstrated.
 
 The original `packages/database/migrations/0004_engagement.sql` contains an older `FOR ALL` policy, while the current live catalog has the narrower SELECT and INSERT policies. Do not assume the historical source file matches the live ACL/policy state. The upvote contract needs a dedicated fix and an integration test before changing its permissions.
+
+
+## 13. Q&A upvote toggle moved behind an atomic RPC (candidate)
+
+The new source migration `20261114150000_atomic_question_upvote_rpc.sql` replaces the direct SELECT/INSERT/DELETE flow with `public.toggle_question_upvote()`, a SECURITY INVOKER wrapper around a SECURITY DEFINER implementation in the non-exposed `private` schema.
+
+The candidate implementation:
+- repeats the `community_qa` feature check and requires an approved, non-deleted question;
+- validates the per-device key as a UUID;
+- serializes toggles for the IP/device buckets with transaction-scoped advisory locks;
+- enforces fixed 20-per-hour per-question IP/device buckets in `rate_limit_events`;
+- adds/removes the matching row in one transaction, allowing the existing count trigger to update `questions.upvote_count`; and
+- revokes direct SELECT/INSERT/UPDATE/DELETE on `question_upvotes` from PUBLIC, anon and authenticated, so raw device keys are no longer readable from PostgREST.
+
+The API route now calls the RPC rather than selecting and mutating the table directly. Device-level dedup remains an intentional engagement safeguard, not proof of a unique human identity; a user can still clear local storage or use another browser.
+
+The migration is a repository candidate only. It must pass clean local replay, pgTAP, DB lint and both app typechecks. The hosted project must also be confirmed to expose only `public` and `graphql_public` (not `private`) before deployment. No hosted SQL has been applied.
