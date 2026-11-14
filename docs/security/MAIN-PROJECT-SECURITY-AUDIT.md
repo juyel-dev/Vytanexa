@@ -211,7 +211,7 @@ However, `apps/web/src/app/api/questions/[id]/upvote/route.ts` implements a togg
 The original `packages/database/migrations/0004_engagement.sql` contains an older `FOR ALL` policy, while the current live catalog has the narrower SELECT and INSERT policies. Do not assume the historical source file matches the live ACL/policy state. The upvote contract needs a dedicated fix and an integration test before changing its permissions.
 
 
-## 13. Q&A upvote toggle moved behind an atomic RPC (candidate)
+## 13. Q&A upvote toggle moved behind an atomic RPC (PR #10 merged; hosted migration pending)
 
 The new source migration `20261114150000_atomic_question_upvote_rpc.sql` replaces the direct SELECT/INSERT/DELETE flow with `public.toggle_question_upvote()`, a SECURITY INVOKER wrapper around a SECURITY DEFINER implementation in the non-exposed `private` schema.
 
@@ -226,10 +226,10 @@ The candidate implementation:
 
 The API route now calls the RPC rather than selecting and mutating the table directly. It retains a route-level IP rate limit from the original browser request, while the database RPC has an atomic per-device limit. This split is intentional: the RPC's own request headers identify the Vercel server-to-server egress IP, which is shared by many users. Device-level dedup remains an intentional engagement safeguard, not proof of a unique human identity; a user can still clear local storage or use another browser.
 
-The migration is a repository candidate only. It must pass clean local replay, pgTAP, DB lint and both app typechecks. The hosted project must also be confirmed to expose only `public` and `graphql_public` (not `private`) before deployment. No hosted SQL has been applied.
+The migration is merged in `main` through PR #10. Clean local replay, 65 pgTAP assertions, DB lint and both app typechecks passed. The hosted project must also be confirmed to expose only `public` and `graphql_public` (not `private`) before deployment. No hosted SQL has been applied.
 
 
-## 14. Patient lead submission moved behind a guarded database RPC (candidate)
+## 14. Patient lead submission moved behind a guarded database RPC (PR #11 merged; hosted migration pending)
 
 The previous live `leads_public_insert` policy allowed any anonymous/authenticated PostgREST caller to insert patient names and phone numbers directly. This bypassed the Next.js Zod schema and route-level rate limit, and allowed callers to choose sensitive lifecycle fields if table grants permitted them.
 
@@ -244,10 +244,10 @@ The new source migration `20261114160000_secure_patient_lead_submission.sql`:
 
 The Route Handler now applies a separate per-IP limit using the original browser request, then calls the RPC. It does not use the Supabase server-to-server request headers as the browser's IP.
 
-The migration and route are repository candidates only. Local replay/pgTAP/DB lint and both app typechecks must pass before any hosted change. No hosted SQL has been applied.
+The migration and route are merged in `main` through PR #11. Clean local replay, 96 pgTAP assertions, DB lint, both app typechecks and Preview checks passed. No hosted SQL has been applied.
 
 
-## 15. Review submission and reviewer privacy hardening (candidate)
+## 15. Review submission and reviewer privacy hardening (PR #12 merged; hosted migration pending)
 
 A read-only live catalog check confirmed that the public review SELECT grant was table-wide even though `reviewer_phone` is explicitly private in the source schema. The table also contains `user_id`, `moderated_by`, and `moderated_at`, which are not needed to render public review cards. Public RLS restricted rows to approved reviews and the caller's own rows, but RLS alone did not hide those columns from callers who could see a row.
 
@@ -263,4 +263,25 @@ The app route preserves the honeypot, applies a hashed per-IP/entity limit from 
 
 **Known residual limitation:** the RPC remains callable by anon to preserve guest reviews. The database has a 3-per-24-hour per-entity key based on a hash of the guest display name, but guests can vary the name to bypass that fallback when calling the RPC directly. The normal Next.js route applies a hashed IP limiter, but a direct PostgREST RPC caller skips that route-level check. This is not a complete anonymous anti-spam boundary; before production, choose a CAPTCHA/short-lived server-attestation or IP-aware edge-function design. Do not describe the guest name bucket as a strong identity limit.
 
-The migration is source-only. Clean local replay, pgTAP, DB lint, both app typechecks, and Preview checks are required before merge. No hosted SQL has been applied.
+The migration and route are merged in `main` through PR #12. Clean local replay, 143 pgTAP assertions, DB lint, both app typechecks and Preview checks passed. No hosted SQL has been applied.
+
+
+## 16. Community Q&A submission and author privacy hardening (source candidate)
+
+The live Questions and Answers INSERT policies allow any public caller to insert a row with `status='pending'`. Those policies do not enforce `community_qa`, route validation, active category checks, approved parent-question checks, or database-derived author identity. The public Questions detail query also used `SELECT *`, which exposed private `author_phone` and `user_id` columns from approved question rows.
+
+The new source migration `supabase/migrations/20261114180000_secure_community_qa_submissions.sql`:
+- adds `submit_question()` and `submit_answer()` SECURITY INVOKER wrappers around private SECURITY DEFINER implementations;
+- repeats the `community_qa` feature flag in PostgreSQL;
+- validates question title/body, active category, optional author phone and name, and answer body/name;
+- requires an answer's parent question to be approved and not deleted;
+- derives `user_id` using `auth.uid()`, fixes new records to pending, and prevents public answers from setting `doctor_id`;
+- revokes direct client DML from Questions and Answers;
+- grants only safe public display columns to anon/authenticated, hiding Questions author_phone/user_id/deleted_at and Answers user_id; and
+- adds `get_my_questions()` so account history uses `auth.uid()` without selecting/filtering the private user_id column.
+
+The public Question Detail query now selects explicit safe columns rather than `*`. Both submission routes retain Zod validation and hashed route-level IP buckets, then invoke the guarded RPC. The own-question account queries use the new RPC.
+
+**Known residual limitation:** guest direct-RPC callers can vary display names or content to avoid the database's fallback name/content bucket. The normal Next.js route enforces per-IP limits, but direct PostgREST RPC requests bypass that HTTP route limiter. Before treating anonymous Q&A abuse controls as production complete, use CAPTCHA/short-lived server attestation or an IP-aware edge boundary.
+
+This is a source branch candidate pending local replay, pgTAP, DB lint and web/admin typecheck. No hosted SQL has been applied.
