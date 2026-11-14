@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(143);
+SELECT plan(211);
 
 SELECT ok(
   EXISTS (
@@ -1283,6 +1283,511 @@ SELECT is(
   ),
   0,
   'own-review history never returns another account review'
+);
+RESET ROLE;
+SELECT pg_catalog.set_config('request.jwt.claim.sub', '', true);
+
+-- Secure community questions: only the public RPC writes, and author
+-- phone/account/lifecycle metadata is not readable through PostgREST.
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.questions', 'INSERT'),
+  'anonymous callers cannot insert questions directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.questions', 'INSERT'),
+  'authenticated callers cannot insert questions directly'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.questions', 'UPDATE'),
+  'anonymous callers cannot update questions directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.questions', 'UPDATE'),
+  'authenticated callers cannot update questions directly'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.questions', 'DELETE'),
+  'anonymous callers cannot delete questions directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.questions', 'DELETE'),
+  'authenticated callers cannot delete questions directly'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.questions', 'SELECT'),
+  'anonymous role has no table-wide SELECT on questions'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.questions', 'SELECT'),
+  'authenticated role has no table-wide SELECT on questions'
+);
+SELECT ok(
+  has_column_privilege('anon', 'public.questions', 'title', 'SELECT'),
+  'anonymous users can read public question titles'
+);
+SELECT ok(
+  has_column_privilege('authenticated', 'public.questions', 'author_name', 'SELECT'),
+  'authenticated users can read the public author display name'
+);
+SELECT ok(
+  has_column_privilege('anon', 'public.questions', 'status', 'SELECT'),
+  'anonymous users can filter approved questions by moderation status'
+);
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.questions', 'author_phone', 'SELECT'),
+  'anonymous users cannot read private question author phone numbers'
+);
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.questions', 'author_phone', 'SELECT'),
+  'authenticated users cannot read private question author phone numbers'
+);
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.questions', 'user_id', 'SELECT'),
+  'anonymous users cannot read question account identifiers'
+);
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.questions', 'user_id', 'SELECT'),
+  'authenticated users cannot read question account identifiers'
+);
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.questions', 'deleted_at', 'SELECT'),
+  'anonymous users cannot read question soft-delete metadata'
+);
+SELECT ok(
+  has_table_privilege('service_role', 'public.questions', 'INSERT'),
+  'service_role retains question INSERT for admin workflows'
+);
+SELECT ok(
+  has_function_privilege('anon', 'public.submit_question(text,text,uuid,boolean,text,text)'::regprocedure, 'EXECUTE'),
+  'anonymous users can submit questions through the guarded RPC'
+);
+SELECT ok(
+  has_function_privilege('authenticated', 'public.submit_question(text,text,uuid,boolean,text,text)'::regprocedure, 'EXECUTE'),
+  'authenticated users can submit questions through the guarded RPC'
+);
+SELECT ok(
+  has_function_privilege('anon', 'private.submit_question_impl(text,text,uuid,boolean,text,text)'::regprocedure, 'EXECUTE'),
+  'anonymous wrapper callers can execute the private question implementation'
+);
+SELECT ok(
+  NOT (SELECT prosecdef FROM pg_proc WHERE oid = 'public.submit_question(text,text,uuid,boolean,text,text)'::regprocedure),
+  'public question wrapper is SECURITY INVOKER'
+);
+SELECT ok(
+  (SELECT prosecdef FROM pg_proc WHERE oid = 'private.submit_question_impl(text,text,uuid,boolean,text,text)'::regprocedure),
+  'private question implementation is SECURITY DEFINER'
+);
+SELECT ok(
+  has_function_privilege('authenticated', 'public.get_my_questions()'::regprocedure, 'EXECUTE'),
+  'authenticated users can call their own-question history RPC'
+);
+SELECT ok(
+  NOT has_function_privilege('anon', 'public.get_my_questions()'::regprocedure, 'EXECUTE'),
+  'anonymous users cannot call own-question history RPC'
+);
+SELECT ok(
+  has_function_privilege('authenticated', 'private.list_my_questions_impl()'::regprocedure, 'EXECUTE'),
+  'authenticated wrapper callers can execute private own-question lookup'
+);
+SELECT ok(
+  NOT has_function_privilege('anon', 'private.list_my_questions_impl()'::regprocedure, 'EXECUTE'),
+  'anonymous users cannot execute private own-question lookup'
+);
+SELECT ok(
+  NOT (SELECT prosecdef FROM pg_proc WHERE oid = 'public.get_my_questions()'::regprocedure),
+  'public own-question wrapper is SECURITY INVOKER'
+);
+SELECT ok(
+  (SELECT prosecdef FROM pg_proc WHERE oid = 'private.list_my_questions_impl()'::regprocedure),
+  'private own-question lookup is SECURITY DEFINER'
+);
+
+-- Answers likewise expose only public display fields and accept writes via RPC.
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.answers', 'INSERT'),
+  'anonymous callers cannot insert answers directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.answers', 'INSERT'),
+  'authenticated callers cannot insert answers directly'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.answers', 'UPDATE'),
+  'anonymous callers cannot update answers directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.answers', 'DELETE'),
+  'authenticated callers cannot delete answers directly'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.answers', 'SELECT'),
+  'anonymous role has no table-wide SELECT on answers'
+);
+SELECT ok(
+  has_column_privilege('anon', 'public.answers', 'body', 'SELECT'),
+  'anonymous users can read approved answer content'
+);
+SELECT ok(
+  has_column_privilege('authenticated', 'public.answers', 'doctor_id', 'SELECT'),
+  'authenticated users can read the verified-doctor answer marker'
+);
+SELECT ok(
+  NOT has_column_privilege('anon', 'public.answers', 'user_id', 'SELECT'),
+  'anonymous users cannot read answer account identifiers'
+);
+SELECT ok(
+  NOT has_column_privilege('authenticated', 'public.answers', 'user_id', 'SELECT'),
+  'authenticated users cannot read answer account identifiers'
+);
+SELECT ok(
+  has_table_privilege('service_role', 'public.answers', 'INSERT'),
+  'service_role retains answer INSERT for trusted admin workflows'
+);
+SELECT ok(
+  has_function_privilege('anon', 'public.submit_answer(uuid,text,text)'::regprocedure, 'EXECUTE'),
+  'anonymous users can submit answers through the guarded RPC'
+);
+SELECT ok(
+  has_function_privilege('authenticated', 'public.submit_answer(uuid,text,text)'::regprocedure, 'EXECUTE'),
+  'authenticated users can submit answers through the guarded RPC'
+);
+SELECT ok(
+  has_function_privilege('anon', 'private.submit_answer_impl(uuid,text,text)'::regprocedure, 'EXECUTE'),
+  'anonymous wrapper callers can execute the private answer implementation'
+);
+SELECT ok(
+  NOT (SELECT prosecdef FROM pg_proc WHERE oid = 'public.submit_answer(uuid,text,text)'::regprocedure),
+  'public answer wrapper is SECURITY INVOKER'
+);
+SELECT ok(
+  (SELECT prosecdef FROM pg_proc WHERE oid = 'private.submit_answer_impl(uuid,text,text)'::regprocedure),
+  'private answer implementation is SECURITY DEFINER'
+);
+
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'true'::jsonb, true)
+WHERE id = 1;
+
+-- Category 101 was created by the lead test fixture and is active. Question
+-- 091 was created as an approved question by the upvote test fixture.
+INSERT INTO public.questions (id, title, status, category_id)
+VALUES (
+  '00000000-0000-0000-0000-000000000171',
+  'Pending question must not accept public answers',
+  'pending'::public.moderation_status,
+  '00000000-0000-0000-0000-000000000101'::uuid
+);
+
+INSERT INTO public.categories (id, slug, name_translations, is_active)
+VALUES (
+  '00000000-0000-0000-0000-000000000175',
+  'pgtap-inactive-qa-category',
+  '{"en":"Inactive QA category"}'::jsonb,
+  false
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_question(
+    'A test question with valid length',
+    'Optional question details',
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    true,
+    'Anonymous Private Name',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'anonymous caller can submit a valid question through the guarded RPC'
+);
+RESET ROLE;
+
+SELECT is(
+  (
+    SELECT status::text
+    FROM public.questions
+    WHERE title = 'A test question with valid length'
+    LIMIT 1
+  ),
+  'pending',
+  'database forces new public questions to pending'
+);
+SELECT ok(
+  (
+    SELECT user_id IS NULL AND author_phone IS NULL AND is_anonymous = true
+    FROM public.questions
+    WHERE title = 'A test question with valid length'
+    LIMIT 1
+  ),
+  'guest question identity and private phone fields are database-controlled'
+);
+SELECT is(
+  (
+    SELECT author_name
+    FROM public.questions
+    WHERE title = 'A test question with valid length'
+    LIMIT 1
+  ),
+  NULL::text,
+  'anonymous question submission stores no public author name'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_question(
+    'Short',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    true,
+    NULL,
+    NULL
+  ),
+  '{"error": "invalid_title"}'::jsonb,
+  'database rejects question titles shorter than ten characters'
+);
+SELECT is(
+  public.submit_question(
+    'A valid title but inactive category',
+    NULL,
+    '00000000-0000-0000-0000-000000000175'::uuid,
+    true,
+    NULL,
+    NULL
+  ),
+  '{"error": "invalid_category"}'::jsonb,
+  'database rejects inactive Q&A categories'
+);
+SELECT is(
+  public.submit_question(
+    'A valid title but no required author',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    NULL,
+    NULL
+  ),
+  '{"error": "author_name_required"}'::jsonb,
+  'non-anonymous guest questions require an author display name'
+);
+SELECT is(
+  public.submit_question(
+    'A valid title with a malformed private phone',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    true,
+    NULL,
+    'bad-phone'
+  ),
+  '{"error": "invalid_author_phone"}'::jsonb,
+  'database validates optional private question author phone'
+);
+
+-- Same guest display-name bucket: five/day allowed, sixth denied.
+SELECT is(
+  public.submit_question(
+    'Rate test question number two',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'QA Rate Guest',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'first question for a guest actor is accepted'
+);
+SELECT is(
+  public.submit_question(
+    'Rate test question number three',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'QA Rate Guest',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'second question for a guest actor is accepted'
+);
+SELECT is(
+  public.submit_question(
+    'Rate test question number four',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'QA Rate Guest',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'third question for a guest actor is accepted'
+);
+SELECT is(
+  public.submit_question(
+    'Rate test question number five',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'QA Rate Guest',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'fourth question for a guest actor is accepted'
+);
+SELECT is(
+  public.submit_question(
+    'Rate test question number six',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'QA Rate Guest',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'fifth question for a guest actor is accepted'
+);
+SELECT is(
+  public.submit_question(
+    'Rate test question number seven',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'QA Rate Guest',
+    NULL
+  ),
+  '{"error": "rate_limited"}'::jsonb,
+  'sixth question for one guest actor is rate limited'
+);
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_answer(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    '  This is a useful community answer.  ',
+    'Guest Answerer'
+  ),
+  '{"success": true}'::jsonb,
+  'anonymous caller can answer an approved question through the guarded RPC'
+);
+RESET ROLE;
+
+SELECT ok(
+  (
+    SELECT doctor_id IS NULL
+       AND user_id IS NULL
+       AND status = 'pending'::public.moderation_status
+    FROM public.answers
+    WHERE question_id = '00000000-0000-0000-0000-000000000091'::uuid
+    LIMIT 1
+  ),
+  'guest answer is pending and cannot claim verified-doctor or account identity'
+);
+SELECT is(
+  (
+    SELECT body
+    FROM public.answers
+    WHERE question_id = '00000000-0000-0000-0000-000000000091'::uuid
+    LIMIT 1
+  ),
+  'This is a useful community answer.',
+  'database trims the answer body'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_answer(
+    '00000000-0000-0000-0000-000000000171'::uuid,
+    'This answer targets a pending question.',
+    'Guest Answerer'
+  ),
+  '{"error": "question_unavailable"}'::jsonb,
+  'answers cannot target pending or hidden questions'
+);
+SELECT is(
+  public.submit_answer(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    'bad',
+    'Guest Answerer'
+  ),
+  '{"error": "invalid_body"}'::jsonb,
+  'database rejects answer bodies shorter than five characters'
+);
+RESET ROLE;
+
+-- Authenticated question and answer submission derive user_id from auth.uid().
+SET LOCAL ROLE authenticated;
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000151',
+  true
+);
+SELECT is(
+  public.submit_question(
+    'Authenticated account question',
+    'Question submitted from an account.',
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    false,
+    'Account QA Owner',
+    NULL
+  ),
+  '{"success": true}'::jsonb,
+  'authenticated users can submit a question through the guarded RPC'
+);
+SELECT is(
+  (
+    SELECT pg_catalog.count(*)::integer
+    FROM public.get_my_questions()
+  ),
+  1,
+  'own-question RPC returns the authenticated caller question'
+);
+SELECT is(
+  public.submit_answer(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    'This answer was submitted by an authenticated account.',
+    'Account QA Owner'
+  ),
+  '{"success": true}'::jsonb,
+  'authenticated users can submit an answer through the guarded RPC'
+);
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000152',
+  true
+);
+SELECT is(
+  (
+    SELECT pg_catalog.count(*)::integer
+    FROM public.get_my_questions()
+  ),
+  0,
+  'own-question RPC never returns another account question'
+);
+RESET ROLE;
+SELECT pg_catalog.set_config('request.jwt.claim.sub', '', true);
+
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{community_qa}', 'false'::jsonb, true)
+WHERE id = 1;
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_question(
+    'Question when Q&A feature is disabled',
+    NULL,
+    '00000000-0000-0000-0000-000000000101'::uuid,
+    true,
+    NULL,
+    NULL
+  ),
+  '{"error": "feature_disabled"}'::jsonb,
+  'database rejects question submission when Q&A feature is disabled'
+);
+SELECT is(
+  public.submit_answer(
+    '00000000-0000-0000-0000-000000000091'::uuid,
+    'Answer when Q&A feature is disabled.',
+    'Guest Answerer'
+  ),
+  '{"error": "feature_disabled"}'::jsonb,
+  'database rejects answer submission when Q&A feature is disabled'
 );
 RESET ROLE;
 

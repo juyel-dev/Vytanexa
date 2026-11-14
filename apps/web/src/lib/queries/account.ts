@@ -81,12 +81,27 @@ export async function getLeadsHistory(supabase: SupabaseClient<Database>, userId
  * own pending/rejected questions too, not just approved ones — the
  * one meaningful difference from the public `/community/qa` list.
  */
-export async function getMyQuestions(supabase: SupabaseClient<Database>, userId: string) {
-  const { data, error } = await supabase
-    .from('questions')
-    .select('id, title, status, answer_count, upvote_count, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+type MyQuestionRow = {
+  id: string;
+  title: string;
+  status: 'pending' | 'approved' | 'rejected';
+  answer_count: number;
+  upvote_count: number;
+  created_at: string;
+};
+
+type MyQuestionsRpcClient = {
+  rpc: (name: 'get_my_questions') => Promise<{
+    data: MyQuestionRow[] | null;
+    error: { message: string } | null;
+  }>;
+};
+
+export async function getMyQuestions(supabase: SupabaseClient<Database>) {
+  // The private RPC scopes rows by auth.uid(); no caller-selected user_id
+  // filter or user_id column grant is required.
+  const myQuestionsClient = supabase as unknown as MyQuestionsRpcClient;
+  const { data, error } = await myQuestionsClient.rpc('get_my_questions');
 
   // Throw: an error must not render as an empty list / "0" count.
   if (error) throw new Error(`getMyQuestions failed: ${error.message}`);

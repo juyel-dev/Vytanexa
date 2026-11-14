@@ -108,15 +108,15 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 
 | Operation | Required database invariants before direct DML can be revoked |
 |---|---|
-| Leads | New source RPC `submit_patient_lead()` validates a verified/non-deleted doctor, selected chamber ownership and active status, name/phone/preferred-time/message, derives user_id/source/status server-side, and enforces an atomic hashed phone+doctor 3/day limit. Direct client DML is revoked while authenticated own-lead SELECT remains. Local replay/pgTAP/typecheck pending. |
-| Reviews | Entity type and entity existence match; rating 1–5; review text 20–500 chars; always pending; caller cannot set moderation fields; user identity derived from JWT; bounded phone/entity rate limit. |
-| Questions | Feature flag enabled; bounded title/body; category valid/active; always pending; anonymous fields normalized; user identity derived from JWT; rate limit. |
-| Answers | Feature flag enabled; target question exists, is visible and not deleted; bounded body; always pending; doctor identity must never be caller-asserted without verified-doctor authorization; rate limit. |
+| Leads | PR #11 merged: `submit_patient_lead()` validates a verified doctor, selected chamber ownership, name/phone/preferred time/message, derives user_id/source/status, and enforces an atomic hashed phone+doctor 3/day limit. Direct client DML is revoked; authenticated own-lead SELECT remains. Clean replay/96 pgTAP tests/DB lint/typechecks passed. |
+| Reviews | PR #12 merged: `submit_review()` validates verified doctor/hospital, name, rating and text; derives user_id, fixes pending moderation fields, revokes direct DML and limits public reads to safe columns. `get_my_reviews()` scopes account history by auth.uid(). Guest direct-RPC name rotation remains a documented anti-spam gap. |
+| Questions | Candidate `submit_question()` checks feature flag, active category and content bounds, derives `user_id`, forces pending status, and clears public author_name for anonymous rows. Direct DML is revoked; safe SELECT grants hide author_phone/user_id/deleted_at; My Questions uses `get_my_questions()`. Local replay/211 pgTAP/typecheck pending. |
+| Answers | Candidate `submit_answer()` checks feature flag and approved/non-deleted parent question, bounds body/name, derives `user_id`, sets doctor_id NULL and pending status, and removes direct DML. Public SELECT grants hide user_id. Local replay/211 pgTAP/typecheck pending. |
 | Poll votes | Poll active, not deleted and not expired; option belongs to supplied poll; one vote per poll/voter key; voter key length/format bounded; IP/voter rate limit inside the operation. |
 | Analytics | Allowlisted event types and entity types; metadata is an object with a strict byte/field limit; ignore/reject arbitrary user identity; rate limit; telemetry failure must not block the primary user flow. |
 | Data reports | Entity type/id valid; reason allowlisted; detail length bounded; status always open; resolver fields always NULL; reporter IP derived from request context; rate limit. |
 | Page submissions | Page exists and is published; block index belongs to the page; payload shape and byte size bounded; submitted phone validated; IP is server-derived; reject writes to deleted/unpublished pages. |
-| Question upvotes | Candidate atomic RPC is now implemented in source: validates an approved question and feature flag, serializes the device toggle, applies fixed IP/device rate buckets, hides raw voter keys, and removes direct anon/authenticated table DML. Local replay/pgTAP/lint and route typecheck are pending. |
+| Question upvotes | PR #10 merged: atomic RPC validates approved question/feature flag, serializes device toggles, applies a per-device database quota plus route-level IP limit, hides raw voter keys, and removes direct table DML. Clean replay/65 pgTAP tests/DB lint/typechecks passed. |
 | Blood donors | Keep register_blood_donor() as the sole authenticated registration path; apply PR #8 migration only after the hosted DDL gate is cleared. |
 
 ## 7. Rollout sequence and release gates
@@ -172,3 +172,18 @@ The branch `fix/secure-review-submission-and-privacy` adds `20261114170000_secur
 **Guest anti-spam limitation:** guests can call the public RPC directly and vary their display name to avoid the database's hashed-name fallback. The regular HTTP route still applies per-IP rate limiting, but that route can be bypassed by direct RPC callers. This must be closed with a CAPTCHA/short-lived server attestation or an IP-aware edge boundary before treating review abuse controls as production complete.
 
 The pgTAP suite now checks role/column grants, wrapper/helper security modes, doctor/hospital validation, pending defaults, guest quotas, authenticated submission, and own-review isolation. Current plan is 143 assertions. These changes are not yet merged or applied to the hosted database.
+
+
+## 12. Current implementation status — community Questions and Answers
+
+The feature branch `fix/secure-community-qa-submissions` adds `20261114180000_secure_community_qa_submissions.sql`.
+
+- `submit_question()` checks the Q&A feature flag, title/body/author fields, active category and rate limits; derives `user_id` from `auth.uid()`; and forces pending status.
+- `submit_answer()` checks the feature flag, approved/non-deleted parent question and answer text; derives `user_id`; and forces `doctor_id=NULL` plus pending status for public answers.
+- Direct client DML is revoked on Questions and Answers. Column-level grants preserve public display queries while hiding Questions author_phone/user_id/deleted_at and Answers user_id.
+- The public Question Detail query no longer uses `SELECT *`; account own-question history uses `get_my_questions()` instead of selecting/filtering user_id.
+- Route-level hashed IP limits remain, with atomic database actor/name/content quotas as a secondary guard.
+
+**Guest anti-spam limitation:** a caller invoking the public RPC directly can vary author name/content to bypass the database fallback bucket. The normal Next.js routes apply IP limits, but direct PostgREST calls bypass those route-level limits. A CAPTCHA/short-lived server attestation or IP-aware edge boundary is still required for production-grade guest abuse protection.
+
+The migration and routes are source candidates only. The current pgTAP plan is 211 assertions. Clean local replay, pgTAP, DB lint, both app typechecks and Preview checks are pending. No hosted SQL has been applied.
