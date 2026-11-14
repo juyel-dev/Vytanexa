@@ -1,15 +1,4 @@
 import { createHash } from 'crypto';
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getClientIp } from '@/lib/get-client-ip';
-import {
-  queryQuestionList,
-  getDoctorAnsweredQuestionIds,
-  type QAListParams,
-} from '@/lib/queries/qa-list';
-import { isFeatureEnabled } from '@/lib/feature-flags';
-import { questionSchema } from '@/lib/validations/questions';
-import { getT } from '@vytanexa/i18n/server';
 
 type SubmitQuestionRpc = {
   rpc: (
