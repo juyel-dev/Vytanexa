@@ -218,11 +218,12 @@ The new source migration `20261114150000_atomic_question_upvote_rpc.sql` replace
 The candidate implementation:
 - repeats the `community_qa` feature check and requires an approved, non-deleted question;
 - validates the per-device key as a UUID;
-- serializes toggles for the IP/device buckets with transaction-scoped advisory locks;
-- enforces fixed 20-per-hour per-question IP/device buckets in `rate_limit_events`;
+- serializes toggles for the device bucket with a transaction-scoped advisory lock;
+- enforces a fixed 20-per-hour per-question device bucket in `rate_limit_events`; and
+- keeps the per-IP bucket in the Next.js Route Handler, where the original browser request's client IP is available. The RPC itself is a separate server-to-server call and must not use its Vercel egress IP as the client key;
 - adds/removes the matching row in one transaction, allowing the existing count trigger to update `questions.upvote_count`; and
 - revokes direct SELECT/INSERT/UPDATE/DELETE on `question_upvotes` from PUBLIC, anon and authenticated, so raw device keys are no longer readable from PostgREST.
 
-The API route now calls the RPC rather than selecting and mutating the table directly. Device-level dedup remains an intentional engagement safeguard, not proof of a unique human identity; a user can still clear local storage or use another browser.
+The API route now calls the RPC rather than selecting and mutating the table directly. It retains a route-level IP rate limit from the original browser request, while the database RPC has an atomic per-device limit. This split is intentional: the RPC's own request headers identify the Vercel server-to-server egress IP, which is shared by many users. Device-level dedup remains an intentional engagement safeguard, not proof of a unique human identity; a user can still clear local storage or use another browser.
 
 The migration is a repository candidate only. It must pass clean local replay, pgTAP, DB lint and both app typechecks. The hosted project must also be confirmed to expose only `public` and `graphql_public` (not `private`) before deployment. No hosted SQL has been applied.
