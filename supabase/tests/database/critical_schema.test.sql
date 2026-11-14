@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(207);
+SELECT plan(211);
 
 SELECT ok(
   EXISTS (
@@ -1384,6 +1384,22 @@ SELECT ok(
 SELECT ok(
   NOT has_function_privilege('anon', 'public.get_my_questions()'::regprocedure, 'EXECUTE'),
   'anonymous users cannot call own-question history RPC'
+);
+SELECT ok(
+  has_function_privilege('authenticated', 'private.list_my_questions_impl()'::regprocedure, 'EXECUTE'),
+  'authenticated wrapper callers can execute private own-question lookup'
+);
+SELECT ok(
+  NOT has_function_privilege('anon', 'private.list_my_questions_impl()'::regprocedure, 'EXECUTE'),
+  'anonymous users cannot execute private own-question lookup'
+);
+SELECT ok(
+  NOT (SELECT prosecdef FROM pg_proc WHERE oid = 'public.get_my_questions()'::regprocedure),
+  'public own-question wrapper is SECURITY INVOKER'
+);
+SELECT ok(
+  (SELECT prosecdef FROM pg_proc WHERE oid = 'private.list_my_questions_impl()'::regprocedure),
+  'private own-question lookup is SECURITY DEFINER'
 );
 
 -- Answers likewise expose only public display fields and accept writes via RPC.
