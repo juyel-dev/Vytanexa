@@ -109,7 +109,6 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 | Operation | Required database invariants before direct DML can be revoked |
 |---|---|
 | Leads | New source RPC `submit_patient_lead()` validates a verified/non-deleted doctor, selected chamber ownership and active status, name/phone/preferred-time/message, derives user_id/source/status server-side, and enforces an atomic hashed phone+doctor 3/day limit. Direct client DML is revoked while authenticated own-lead SELECT remains. Local replay/pgTAP/typecheck pending. |
-| Leads (original requirement) | Valid, non-deleted doctor; chamber belongs to doctor if supplied; bounded name/message/phone and allowed preferred-time/source values; user_id=auth.uid() or NULL for guest; fixed per-IP plus phone/doctor rate buckets. |
 | Reviews | Entity type and entity existence match; rating 1–5; review text 20–500 chars; always pending; caller cannot set moderation fields; user identity derived from JWT; bounded phone/entity rate limit. |
 | Questions | Feature flag enabled; bounded title/body; category valid/active; always pending; anonymous fields normalized; user identity derived from JWT; rate limit. |
 | Answers | Feature flag enabled; target question exists, is visible and not deleted; bounded body; always pending; doctor identity must never be caller-asserted without verified-doctor authorization; rate limit. |
@@ -124,7 +123,7 @@ A SECURITY DEFINER helper is privileged code. Set search_path = '', schema-quali
 
 1. Keep current PR #8 migration in source only. It is merged and locally tested, but do not apply it to the hosted database until backup/restore readiness is confirmed.
 2. Implement and test the upvote RPC. Hide question_upvotes rows, prevent direct DML, preserve the public question counter, and add concurrent-toggle tests.
-3. Implement one public submission RPC at a time, starting with the lowest-risk operation. Keep existing API route response contracts stable.
+3. Continue with one public submission RPC at a time, starting with reviews after leads and upvotes. Keep existing API route response contracts stable.
 4. Add negative-path tests: anon/authenticated direct INSERT/UPDATE/DELETE fail; SELECT only works where explicitly intended; approved RPC accepts valid data and rejects invalid data; spoofed status/user/IP values are ignored; rate limits are atomic under concurrent calls.
 5. Audit every admin write route separately for active-admin authorization before service-role writes.
 6. Narrow table grants after all current readers/writers and generated clients have been inventoried. Do not issue blanket revokes.
