@@ -22,7 +22,7 @@ export default async function MyReviewsPage() {
 
   const t = await getT('account');
   const tReviews = await getT('reviews');
-  const reviews = await getMyReviews(supabase, currentUser.authUser.id);
+  const reviews = await getMyReviews(supabase);
   const entityNames = await resolveReviewEntityNames(supabase, reviews);
 
   return (
