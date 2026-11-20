@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(233);
+SELECT plan(234);
 
 SELECT ok(
   EXISTS (
@@ -1975,6 +1975,16 @@ SELECT is(
   ),
   '{"error": "invalid_reason"}'::jsonb,
   'database rejects unapproved report reason values'
+);
+SELECT is(
+  public.submit_data_report(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000107'::uuid,
+    'wrong_phone',
+    NULL
+  ),
+  '{"error": "invalid_target"}'::jsonb,
+  'reports cannot reveal the existence of unverified doctors'
 );
 RESET ROLE;
 
