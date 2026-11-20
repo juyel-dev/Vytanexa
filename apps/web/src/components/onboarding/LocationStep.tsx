@@ -37,6 +37,7 @@ export function LocationStep() {
         </span>
         <div
           role="progressbar"
+          aria-label={t('title')}
           aria-valuemin={0}
           aria-valuemax={2}
           aria-valuenow={1}
@@ -67,13 +68,8 @@ export function LocationStep() {
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 transition group-hover:bg-brand-50 group-hover:text-brand-600">
           {hasLocation ? <Check className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
-            {hasLocation ? t('choose') : t('selectStateDistrict')}
-          </span>
-          <span className="mt-1 block break-words text-[15px] font-semibold text-neutral-900">
-            {selectedLocation ?? t('selectStateDistrict')}
-          </span>
+        <span className="min-w-0 flex-1 break-words text-[15px] font-semibold text-neutral-900">
+          {selectedLocation ?? t('selectStateDistrict')}
         </span>
         <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-brand-600">
           {t('choose')}
