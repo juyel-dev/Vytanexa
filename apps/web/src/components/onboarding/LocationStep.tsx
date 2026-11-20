@@ -62,7 +62,8 @@ export function LocationStep() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        aria-haspopup="dialog"
+        aria-expanded={pickerOpen}
+        aria-controls="onboarding-location-picker"
         className="group mt-8 flex min-h-[76px] w-full items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:border-brand-300 hover:shadow-md active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 transition group-hover:bg-brand-50 group-hover:text-brand-600">
@@ -95,7 +96,7 @@ export function LocationStep() {
         </button>
       </div>
 
-      <LocationPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
+      <div id="onboarding-location-picker"><LocationPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} /></div>
     </main>
   );
 }
