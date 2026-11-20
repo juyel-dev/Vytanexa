@@ -28,15 +28,7 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
       if (isInteracting.current) return;
       if (document.hidden) return;
       const next = (indexRef.current + 1) % ads.length;
-      // BUGFIX (2026-09): scrollIntoView() without an explicit `block`
-      // defaults to block: 'center', which walks every scrollable
-      // ancestor — including the page itself — and vertically re-centers
-      // the slide in the viewport on every auto-advance tick. Combined
-      // with `html { scroll-behavior: smooth }` this made the whole page
-      // smoothly jump back up to the banner every ~4.5s. Scrolling the
-      // slider's own container directly avoids touching page scroll.
-      // indexRef (not state) drives the interval so the timer isn't
-      // recreated on every slide change (no drift/double-speed).
+      // Scroll the slider itself so auto-advance never moves the page.
       const container = scrollRef.current;
       const child = container?.children[next] as HTMLElement | undefined;
       if (container && child) {
@@ -51,9 +43,21 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
-    const index = Math.round(el.scrollLeft / el.clientWidth);
-    indexRef.current = index;
-    setActiveIndex(index);
+
+    // Slides are narrower than the viewport for the peek preview, so
+    // determine the active slide by its distance from the snap position.
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    Array.from(el.children).forEach((child, index) => {
+      const distance = Math.abs((child as HTMLElement).offsetLeft - el.scrollLeft);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    indexRef.current = nearestIndex;
+    setActiveIndex(nearestIndex);
   };
 
   const handleAdClick = (adId: string) => {
@@ -77,7 +81,7 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
         onPointerUp={() => (isInteracting.current = false)}
         onMouseEnter={() => (isInteracting.current = true)}
         onMouseLeave={() => (isInteracting.current = false)}
-        className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
+        className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto pr-[12%] [scrollbar-width:none]"
       >
         {ads.map((ad) => (
           <a
@@ -86,13 +90,13 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
             target="_blank"
             rel="noopener noreferrer sponsored"
             onClick={() => handleAdClick(ad.id)}
-            className="relative aspect-[2/1] w-full shrink-0 snap-start"
+            className="relative aspect-[3/1] w-[88%] shrink-0 snap-start"
           >
             <Image
               src={ad.image_url}
               alt={ad.sponsor_name}
               fill
-              sizes="100vw"
+              sizes="88vw"
               className="object-cover"
               priority
             />
