@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
 /**
- * Bottom Sheet — shared modal pattern referenced throughout
- * VYTANEXA-BLUEPRINT.md (S02 § 2.2 Variant E, S03 Location Picker,
- * S07 Review/Appointment sheets, S12 Emergency FAB condensed sheets,
- * and more). Built once here as infrastructure rather than
- * re-implemented per screen.
- *
- * Backdrop tap or Escape closes it (matches spec: "Bottom sheet close
- * — does NOT go back" in S02 § 8, i.e. it's a UI-state close, not a
- * route navigation).
+ * Responsive modal surface shared by location and emergency flows.
+ * It remains a bottom sheet on phones and becomes a centered dialog
+ * on larger screens without changing the content or adding a dependency.
  */
 export function BottomSheet({
   open,
@@ -25,57 +20,86 @@ export function BottomSheet({
   title?: string;
   children: React.ReactNode;
 }) {
+  const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    // overflow:hidden alone doesn't stop background touch-scroll on iOS
-    // Safari — lock via position:fixed + saved offset, restore on close.
+
     const scrollY = window.scrollY;
     const body = document.body;
-    const prevPosition = body.style.position;
-    const prevTop = body.style.top;
-    const prevOverflow = body.style.overflow;
+    const previousPosition = body.style.position;
+    const previousTop = body.style.top;
+    const previousOverflow = body.style.overflow;
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
     body.style.position = 'fixed';
     body.style.top = `-${scrollY}px`;
     body.style.overflow = 'hidden';
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      body.style.position = prevPosition;
-      body.style.top = prevTop;
-      body.style.overflow = prevOverflow;
-      window.scrollTo(0, scrollY);
+    panelRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+      }
     };
-  }, [open, onClose]);
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      body.style.position = previousPosition;
+      body.style.top = previousTop;
+      body.style.overflow = previousOverflow;
+      window.scrollTo(0, scrollY);
+      previouslyFocused?.focus();
+    };
+  }, [open]);
 
   if (!open || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-sheet flex items-end">
-      <div
-        className="absolute inset-0 bg-neutral-900/40"
+    <div className="fixed inset-0 z-sheet flex items-end justify-center md:items-center md:p-6">
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={title ? `Close ${title}` : 'Close dialog'}
+        className="absolute inset-0 cursor-default bg-neutral-950/45 backdrop-blur-[2px]"
         onClick={onClose}
-        aria-hidden="true"
       />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
-        className="relative z-10 flex max-h-[85vh] w-full flex-col rounded-t-2xl bg-white shadow-lg animate-slide-up"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : 'Dialog'}
+        tabIndex={-1}
+        className="relative z-10 flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl animate-slide-up md:max-h-[min(80dvh,44rem)] md:w-full md:max-w-[32rem] md:rounded-2xl"
       >
-        <div className="flex justify-center pt-2">
-          <span className="h-1 w-10 rounded-full bg-neutral-300" />
-        </div>
-        {title && (
-          <div className="border-b border-neutral-100 px-4 py-3">
-            <h2 className="text-center text-[16px] font-semibold text-neutral-900">
+        <div className="relative flex shrink-0 items-center justify-center border-b border-neutral-100 px-12 py-4 md:py-5">
+          <span className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-neutral-300 md:hidden" />
+          {title && (
+            <h2 id={titleId} className="text-center text-[16px] font-semibold text-neutral-900">
               {title}
             </h2>
-          </div>
-        )}
-        <div className="overflow-y-auto px-4 py-3">{children}</div>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={title ? `Close ${title}` : 'Close dialog'}
+            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 md:right-4"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 md:px-6 md:py-5">
+          {children}
+        </div>
       </div>
     </div>,
     document.body
