@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, MapPin, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useLocationStore } from '@/stores/location-store';
@@ -136,8 +135,17 @@ export function LocationPickerSheet({
 
   const stepLabel = t(`step.${step}`);
 
+  if (!open) return null;
+
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('sheetTitle')}>
+    <section aria-label={t('sheetTitle')} className="mt-3 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
+        <h2 className="text-[14px] font-semibold text-neutral-900">{t('sheetTitle')}</h2>
+        <button type="button" onClick={onClose} aria-label={tc('close')} className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div className="max-h-[min(19rem,38dvh)] overflow-y-auto overscroll-contain px-3 py-3">
       {step !== 'state' && (
         <button
           type="button"
@@ -219,6 +227,7 @@ export function LocationPickerSheet({
           {t('skipUseDistrictOnly')}
         </button>
       )}
-    </BottomSheet>
+      </div>
+    </section>
   );
 }
