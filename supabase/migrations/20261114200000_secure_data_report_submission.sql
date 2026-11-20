@@ -28,30 +28,29 @@ BEGIN
     RETURN pg_catalog.jsonb_build_object('error', 'invalid_detail');
   END IF;
 
-  IF NOT CASE p_entity_type
-    WHEN 'doctor' THEN EXISTS (
+  IF NOT (
+    (p_entity_type = 'doctor' AND EXISTS (
       SELECT 1 FROM public.doctors d
       WHERE d.id = p_entity_id AND d.deleted_at IS NULL
-    )
-    WHEN 'hospital' THEN EXISTS (
+    ))
+    OR (p_entity_type = 'hospital' AND EXISTS (
       SELECT 1 FROM public.hospitals h
       WHERE h.id = p_entity_id AND h.deleted_at IS NULL
-    )
-    WHEN 'article' THEN EXISTS (
+    ))
+    OR (p_entity_type = 'article' AND EXISTS (
       SELECT 1 FROM public.articles a
       WHERE a.id = p_entity_id AND a.is_published = true AND a.deleted_at IS NULL
-    )
-    WHEN 'question' THEN EXISTS (
+    ))
+    OR (p_entity_type = 'question' AND EXISTS (
       SELECT 1 FROM public.questions q
       WHERE q.id = p_entity_id AND q.status = 'approved' AND q.deleted_at IS NULL
-    )
-    WHEN 'poll' THEN EXISTS (
+    ))
+    OR (p_entity_type = 'poll' AND EXISTS (
       SELECT 1 FROM public.polls p
       WHERE p.id = p_entity_id AND p.is_active = true AND p.deleted_at IS NULL
         AND (p.expires_at IS NULL OR p.expires_at > pg_catalog.now())
-    )
-    ELSE false
-  END THEN
+    ))
+  ) THEN
     RETURN pg_catalog.jsonb_build_object('error', 'invalid_target');
   END IF;
 
