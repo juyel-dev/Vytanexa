@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(225);
+SELECT plan(234);
 
 SELECT ok(
   EXISTS (
@@ -1921,6 +1921,70 @@ SELECT is(
   ),
   '{"error": "feature_disabled"}'::jsonb,
   'database rejects votes when polls feature is disabled'
+);
+RESET ROLE;
+
+-- Secure data correction reports: only the guarded RPC can create rows.
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.data_reports', 'INSERT'),
+  'anonymous callers cannot insert data reports directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.data_reports', 'INSERT'),
+  'authenticated callers cannot insert data reports directly'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.data_reports', 'UPDATE'),
+  'anonymous callers cannot alter moderation state on data reports'
+);
+SELECT ok(
+  has_function_privilege('anon', 'public.submit_data_report(public.entity_type, uuid, text, text)', 'EXECUTE'),
+  'anonymous callers can submit reports through the guarded RPC'
+);
+SELECT ok(
+  NOT (SELECT prosecdef FROM pg_proc WHERE oid = 'public.submit_data_report(public.entity_type, uuid, text, text)'::regprocedure),
+  'public data report wrapper is SECURITY INVOKER'
+);
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_data_report(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'wrong_phone',
+    'The listed phone number is outdated.'
+  ),
+  '{"success": true}'::jsonb,
+  'valid report for an existing doctor is accepted'
+);
+SELECT is(
+  public.submit_data_report(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000199'::uuid,
+    'wrong_phone',
+    NULL
+  ),
+  '{"error": "invalid_target"}'::jsonb,
+  'reports cannot target a missing doctor'
+);
+SELECT is(
+  public.submit_data_report(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000103'::uuid,
+    'set_admin' ,
+    NULL
+  ),
+  '{"error": "invalid_reason"}'::jsonb,
+  'database rejects unapproved report reason values'
+);
+SELECT is(
+  public.submit_data_report(
+    'doctor'::public.entity_type,
+    '00000000-0000-0000-0000-000000000107'::uuid,
+    'wrong_phone',
+    NULL
+  ),
+  '{"error": "invalid_target"}'::jsonb,
+  'reports cannot reveal the existence of unverified doctors'
 );
 RESET ROLE;
 
