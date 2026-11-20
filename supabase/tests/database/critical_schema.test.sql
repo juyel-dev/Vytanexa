@@ -4,7 +4,7 @@
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 BEGIN;
-SELECT plan(211);
+SELECT plan(225);
 
 SELECT ok(
   EXISTS (
@@ -1788,6 +1788,139 @@ SELECT is(
   ),
   '{"error": "feature_disabled"}'::jsonb,
   'database rejects answer submission when Q&A feature is disabled'
+);
+RESET ROLE;
+
+-- Secure poll voting: no public table access, and all vote invariants are
+-- enforced by one atomic RPC. Fixtures are rolled back with this test.
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{polls}', 'true'::jsonb, true)
+WHERE id = 1;
+
+INSERT INTO public.polls (id, question, expires_at, is_active)
+VALUES
+  ('00000000-0000-0000-0000-000000000301', 'Secure poll fixture', NULL, true),
+  ('00000000-0000-0000-0000-000000000302', 'Expired poll fixture', pg_catalog.now() - interval '1 hour', true);
+
+INSERT INTO public.poll_options (id, poll_id, option_text, display_order)
+VALUES
+  ('00000000-0000-0000-0000-000000000311', '00000000-0000-0000-0000-000000000301', 'Option A', 1),
+  ('00000000-0000-0000-0000-000000000312', '00000000-0000-0000-0000-000000000301', 'Option B', 2),
+  ('00000000-0000-0000-0000-000000000321', '00000000-0000-0000-0000-000000000302', 'Expired option', 1);
+
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.poll_votes', 'SELECT'),
+  'anonymous callers cannot read raw poll vote rows'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.poll_votes', 'SELECT'),
+  'authenticated callers cannot read raw poll vote rows'
+);
+SELECT ok(
+  NOT has_table_privilege('anon', 'public.poll_votes', 'INSERT'),
+  'anonymous callers cannot insert poll vote rows directly'
+);
+SELECT ok(
+  NOT has_table_privilege('authenticated', 'public.poll_votes', 'INSERT'),
+  'authenticated callers cannot insert poll vote rows directly'
+);
+SELECT ok(
+  has_function_privilege('anon', 'public.submit_poll_vote(uuid, uuid, text)', 'EXECUTE'),
+  'anonymous callers can use the guarded poll vote RPC'
+);
+SELECT ok(
+  NOT (SELECT prosecdef FROM pg_proc WHERE oid = 'public.submit_poll_vote(uuid, uuid, text)'::regprocedure),
+  'public poll vote wrapper is SECURITY INVOKER'
+);
+
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000301'::uuid,
+    '00000000-0000-0000-0000-000000000311'::uuid,
+    '00000000-0000-0000-0000-000000000401'
+  ),
+  '{"success": true, "options": [{"id": "00000000-0000-0000-0000-000000000311", "vote_count": 1}, {"id": "00000000-0000-0000-0000-000000000312", "vote_count": 0}], "totalVotes": 1}'::jsonb,
+  'guest vote succeeds and returns aggregated counts'
+);
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000301'::uuid,
+    '00000000-0000-0000-0000-000000000312'::uuid,
+    '00000000-0000-0000-0000-000000000401'
+  ),
+  '{"error": "already_voted"}'::jsonb,
+  'guest device cannot vote twice in the same poll'
+);
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000301'::uuid,
+    '00000000-0000-0000-0000-000000000321'::uuid,
+    '00000000-0000-0000-0000-000000000402'
+  ),
+  '{"error": "invalid_option"}'::jsonb,
+  'vote cannot use an option belonging to another poll'
+);
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000302'::uuid,
+    '00000000-0000-0000-0000-000000000321'::uuid,
+    '00000000-0000-0000-0000-000000000403'
+  ),
+  '{"error": "poll_expired"}'::jsonb,
+  'expired polls reject votes in the database'
+);
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000301'::uuid,
+    '00000000-0000-0000-0000-000000000311'::uuid,
+    NULL
+  ),
+  '{"error": "invalid_voter_key"}'::jsonb,
+  'guest votes require a valid UUID device key'
+);
+RESET ROLE;
+
+SET LOCAL ROLE authenticated;
+SELECT pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '00000000-0000-0000-0000-000000000151',
+  true
+);
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000301'::uuid,
+    '00000000-0000-0000-0000-000000000312'::uuid,
+    '00000000-0000-0000-0000-000000000499'
+  ),
+  '{"success": true, "options": [{"id": "00000000-0000-0000-0000-000000000311", "vote_count": 1}, {"id": "00000000-0000-0000-0000-000000000312", "vote_count": 1}], "totalVotes": 2}'::jsonb,
+  'authenticated account can vote using JWT identity'
+);
+RESET ROLE;
+SELECT is(
+  (
+    SELECT voter_key
+    FROM public.poll_votes
+    WHERE poll_id = '00000000-0000-0000-0000-000000000301'::uuid
+      AND option_id = '00000000-0000-0000-0000-000000000312'::uuid
+  ),
+  'user:00000000-0000-0000-0000-000000000151',
+  'authenticated vote stores account identity instead of client device key'
+);
+SELECT pg_catalog.set_config('request.jwt.claim.sub', '', true);
+
+UPDATE public.app_settings
+SET features = pg_catalog.jsonb_set(features, '{polls}', 'false'::jsonb, true)
+WHERE id = 1;
+SET LOCAL ROLE anon;
+SELECT is(
+  public.submit_poll_vote(
+    '00000000-0000-0000-0000-000000000301'::uuid,
+    '00000000-0000-0000-0000-000000000311'::uuid,
+    '00000000-0000-0000-0000-000000000404'
+  ),
+  '{"error": "feature_disabled"}'::jsonb,
+  'database rejects votes when polls feature is disabled'
 );
 RESET ROLE;
 
