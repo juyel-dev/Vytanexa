@@ -86,7 +86,7 @@ export function HeroBannerSliderClient({ ads }: { ads: Ad[] }) {
             target="_blank"
             rel="noopener noreferrer sponsored"
             onClick={() => handleAdClick(ad.id)}
-            className="relative aspect-[2/1] w-full shrink-0 snap-start"
+            className="relative aspect-[3/1] w-full shrink-0 snap-start"
           >
             <Image
               src={ad.image_url}
