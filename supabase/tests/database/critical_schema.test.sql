@@ -1896,6 +1896,7 @@ SELECT is(
   '{"success": true, "options": [{"id": "00000000-0000-0000-0000-000000000311", "vote_count": 1}, {"id": "00000000-0000-0000-0000-000000000312", "vote_count": 1}], "totalVotes": 2}'::jsonb,
   'authenticated account can vote using JWT identity'
 );
+RESET ROLE;
 SELECT is(
   (
     SELECT voter_key
@@ -1906,7 +1907,6 @@ SELECT is(
   'user:00000000-0000-0000-0000-000000000151',
   'authenticated vote stores account identity instead of client device key'
 );
-RESET ROLE;
 SELECT pg_catalog.set_config('request.jwt.claim.sub', '', true);
 
 UPDATE public.app_settings
