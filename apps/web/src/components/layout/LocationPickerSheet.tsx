@@ -184,7 +184,7 @@ export function LocationPickerSheet({
 
         {!loading && !failed && filtered.length === 0 && (
           <p className="py-8 text-center text-[13px] text-neutral-500">
-            {search ? t('noSubDivisionsYet') : step === 'state' ? t('noStatesYet') : t('noSubDivisionsYet')}
+            {search ? t('noSearchResults') : step === 'state' ? t('noStatesYet') : t('noSubDivisionsYet')}
           </p>
         )}
 
