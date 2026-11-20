@@ -30,7 +30,7 @@ export function LocationStep() {
   const selectedLocation = hasLocation ? `${stateName} · ${districtName}` : null;
 
   return (
-    <main className="flex min-h-dvh flex-col bg-white px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-[32rem] flex-col bg-white px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-10">
       <div className="flex items-center gap-3">
         <span className="shrink-0 text-[13px] font-semibold tabular-nums text-brand-600">
           {format.number(1)}/{format.number(2)}
