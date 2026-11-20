@@ -4,16 +4,14 @@ import { useEffect } from 'react';
 import { useOnboardingStore } from '@/stores/onboarding-store';
 
 /**
- * Splash — VYTANEXA-BLUEPRINT.md § S03 "SCREEN 1 — SPLASH"
- * 2s brand-600 full-bleed screen, then auto-advances. On a resumed
- * onboarding session (app was killed mid-flow) this step is skipped
- * entirely since the store's persisted step already moved past it.
+ * Lightweight brand splash. Advances directly to the single introduction
+ * screen; the intro itself uses CSS-only animations and no remote assets.
  */
 export function SplashStep() {
   const setStep = useOnboardingStore((s) => s.setStep);
 
   useEffect(() => {
-    const timer = setTimeout(() => setStep('language'), 2000);
+    const timer = setTimeout(() => setStep('slides'), 2000);
     return () => clearTimeout(timer);
   }, [setStep]);
 
