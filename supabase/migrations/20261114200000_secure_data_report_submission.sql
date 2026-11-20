@@ -31,11 +31,15 @@ BEGIN
   IF NOT (
     (p_entity_type = 'doctor' AND EXISTS (
       SELECT 1 FROM public.doctors d
-      WHERE d.id = p_entity_id AND d.deleted_at IS NULL
+      WHERE d.id = p_entity_id
+        AND d.verification_status = 'verified'
+        AND d.deleted_at IS NULL
     ))
     OR (p_entity_type = 'hospital' AND EXISTS (
       SELECT 1 FROM public.hospitals h
-      WHERE h.id = p_entity_id AND h.deleted_at IS NULL
+      WHERE h.id = p_entity_id
+        AND h.verification_status = 'verified'
+        AND h.deleted_at IS NULL
     ))
     OR (p_entity_type = 'article' AND EXISTS (
       SELECT 1 FROM public.articles a
