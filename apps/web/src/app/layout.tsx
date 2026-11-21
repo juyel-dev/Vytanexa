@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+
+const BRAND_ICON_VERSION = '20261121';
 import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from 'next/font/google';
 import { getMessages } from 'next-intl/server';
 import { PwaProvider } from '@/components/pwa/PwaProvider';
@@ -52,7 +54,23 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: 'Vytanexa',
     appleWebApp: { capable: true, title: 'Vytanexa', statusBarStyle: 'default' },
     formatDetection: { telephone: false },
-    icons: { icon: faviconUrl ?? '/brand/vytanexa-symbol.svg' },
+    icons: {
+      icon: [
+        ...(faviconUrl ? [faviconUrl] : []),
+        {
+          url: `/favicon.ico?v=${BRAND_ICON_VERSION}`,
+          sizes: '16x16 24x24 32x32 48x48',
+          type: 'image/x-icon',
+        },
+        {
+          url: `/icons/icon-192x192.png?v=${BRAND_ICON_VERSION}`,
+          sizes: '192x192',
+          type: 'image/png',
+        },
+      ],
+      shortcut: `/favicon.ico?v=${BRAND_ICON_VERSION}`,
+      apple: `/apple-icon.png?v=${BRAND_ICON_VERSION}`,
+    },
   };
 }
 

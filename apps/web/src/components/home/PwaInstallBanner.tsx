@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useT } from '@vytanexa/i18n/client';
 import { useUiStore } from '@/stores/ui-store';
@@ -81,9 +82,13 @@ export function PwaInstallBanner() {
     <section className="mx-4 mb-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-lg">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white">
-            V
-          </div>
+          <Image
+            src="/icons/icon-192x192.png?v=20261121"
+            alt=""
+            width={24}
+            height={24}
+            className="h-6 w-6 rounded-md object-cover"
+          />
           <p className="text-[14px] font-semibold text-neutral-900">
             {showSteps ? tp('iosTitle') : t('title')}
           </p>

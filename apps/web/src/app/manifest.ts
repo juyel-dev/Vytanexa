@@ -1,4 +1,7 @@
 import type { MetadataRoute } from 'next';
+
+const BRAND_ICON_VERSION = '20261121';
+const iconUrl = (path: string) => `${path}?v=${BRAND_ICON_VERSION}`;
 import { cookies } from 'next/headers';
 import { getT } from '@vytanexa/i18n/server';
 
@@ -37,16 +40,16 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: '#1756C8',
     categories: ['health', 'medical', 'lifestyle'],
     icons: [
-      { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/icons/icon-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: iconUrl('/icons/icon-192x192.png'), sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: iconUrl('/icons/icon-512x512.png'), sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: iconUrl('/icons/icon-maskable-512x512.png'), sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     // Long-press the installed icon: straight to the most urgent tasks.
     shortcuts: [
-      { name: tEm('pageTitle'), url: '/emergency?source=shortcut', icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }] },
-      { name: tNav('doctors'), url: '/doctors?source=shortcut', icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }] },
-      { name: tNav('hospitals'), url: '/hospitals?source=shortcut', icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }] },
-      { name: tNav('search'), url: '/search?source=shortcut', icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }] },
+      { name: tEm('pageTitle'), url: '/emergency?source=shortcut', icons: [{ src: iconUrl('/icons/icon-192x192.png'), sizes: '192x192', type: 'image/png' }] },
+      { name: tNav('doctors'), url: '/doctors?source=shortcut', icons: [{ src: iconUrl('/icons/icon-192x192.png'), sizes: '192x192', type: 'image/png' }] },
+      { name: tNav('hospitals'), url: '/hospitals?source=shortcut', icons: [{ src: iconUrl('/icons/icon-192x192.png'), sizes: '192x192', type: 'image/png' }] },
+      { name: tNav('search'), url: '/search?source=shortcut', icons: [{ src: iconUrl('/icons/icon-192x192.png'), sizes: '192x192', type: 'image/png' }] },
     ],
     prefer_related_applications: false,
   };
