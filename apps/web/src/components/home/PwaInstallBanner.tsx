@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useT } from '@vytanexa/i18n/client';
 import { useUiStore } from '@/stores/ui-store';
 import { isIos, isStandalone } from '@/lib/pwa';
+import { brandIcon } from '@/lib/brand-assets';
 
 const DISMISS_KEY = 'vytanexa_pwa_banner_dismissed';
 const VISITS_KEY = 'vytanexa_visit_count';
@@ -83,7 +84,7 @@ export function PwaInstallBanner() {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <Image
-            src="/icons/icon-192x192.png?v=20261121"
+            src={brandIcon('/icons/icon-192x192.png')}
             alt=""
             width={24}
             height={24}

@@ -13,6 +13,7 @@
     "build:web": "npm run build --workspace=apps/web",
     "build:admin": "npm run build --workspace=apps/admin",
     "lint": "npm run lint --workspaces --if-present",
+    "check:brand-assets": "node scripts/verify-brand-assets.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:start": "npx --yes supabase@3.1.0 start",
     "db:reset:local": "npx --yes supabase@3.1.0 db reset --local",

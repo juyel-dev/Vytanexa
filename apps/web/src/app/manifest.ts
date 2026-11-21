@@ -1,9 +1,7 @@
 import type { MetadataRoute } from 'next';
-
-const BRAND_ICON_VERSION = '20261121';
-const iconUrl = (path: string) => `${path}?v=${BRAND_ICON_VERSION}`;
 import { cookies } from 'next/headers';
 import { getT } from '@vytanexa/i18n/server';
+import { brandIcon as iconUrl } from '@/lib/brand-assets';
 
 /**
  * PWA Manifest — VYTANEXA-BLUEPRINT.md § S22.
