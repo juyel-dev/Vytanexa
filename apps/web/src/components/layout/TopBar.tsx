@@ -23,9 +23,13 @@ export function TopBarHome() {
         {logoUrl ? (
           <Image src={logoUrl} alt="Vytanexa" width={28} height={28} className="h-7 w-7 rounded-md object-contain" />
         ) : (
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white">
-            V
-          </div>
+          <Image
+            src="/brand/vytanexa-symbol.svg"
+            alt="Vytanexa"
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
+          />
         )}
         <span className="font-sans text-lg font-bold text-brand-600">Vytanexa</span>
       </div>

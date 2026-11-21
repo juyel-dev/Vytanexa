@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect } from 'react';
 import { useOnboardingStore } from '@/stores/onboarding-store';
 
@@ -19,9 +20,16 @@ export function SplashStep() {
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-brand-600 px-6">
       <div
         aria-hidden="true"
-        className="flex h-20 w-20 animate-scale-in items-center justify-center rounded-3xl bg-white text-3xl font-extrabold tracking-tight text-brand-600 shadow-lg shadow-brand-950/10"
+        className="flex h-20 w-20 animate-scale-in items-center justify-center rounded-3xl bg-white shadow-lg shadow-brand-950/10"
       >
-        V
+        <Image
+          src="/brand/vytanexa-symbol.svg"
+          alt=""
+          width={64}
+          height={64}
+          priority
+          className="h-16 w-16 object-contain"
+        />
       </div>
       <h1 className="mt-5 animate-fade-in text-[30px] font-bold tracking-tight text-white">
         Vytanexa

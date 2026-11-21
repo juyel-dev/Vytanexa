@@ -35,14 +35,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  // TODO.md Phase 8.1: God Mode's Theme Editor (logo/favicon half —
-  // the color-picker half was cut, confirmed dead) writes
-  // app_settings.favicon_url; this is the read side that was missing
-  // entirely before, the reason that feature did nothing on the live
-  // site. Falls back to the static app/icon.svg file convention when
-  // no custom favicon is set (i.e. today, for everyone, until an
-  // admin actually sets one) by omitting `icons` rather than pointing
-  // it at a hardcoded default.
+  // Preserve the admin-configurable favicon override while ensuring
+  // every deployment has the canonical Vytanexa mark as its default.
   const [settings, tCommon, tSeo] = await Promise.all([
     getPublicAppSettings(),
     getT('common'),
@@ -58,7 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: 'Vytanexa',
     appleWebApp: { capable: true, title: 'Vytanexa', statusBarStyle: 'default' },
     formatDetection: { telephone: false },
-    ...(faviconUrl ? { icons: { icon: faviconUrl } } : {}),
+    icons: { icon: faviconUrl ?? '/brand/vytanexa-symbol.svg' },
   };
 }
 
