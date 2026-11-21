@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { isValidLocale, defaultLocale, localeConfig } from '@/i18n/config';
 import { getPublicAppSettings } from '@/lib/app-settings';
 import { getT } from '@vytanexa/i18n/server';
+import { brandIcon } from '@/lib/brand-assets';
 
 // Self-hosted via next/font (no external Google Fonts network request
 // at runtime — S22 performance budget). Exposed as CSS variables so
@@ -52,7 +53,24 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: 'Vytanexa',
     appleWebApp: { capable: true, title: 'Vytanexa', statusBarStyle: 'default' },
     formatDetection: { telephone: false },
-    icons: { icon: faviconUrl ?? '/brand/vytanexa-symbol.svg' },
+    // An admin-configured favicon is an override: when set it is the only
+    // browser icon, as before. Otherwise ship the full brand set (ICO for
+    // legacy/tab strips, SVG for modern browsers, 192px PNG for Chrome, and
+    // an opaque 180px apple-touch-icon for iOS). Explicit entries are required:
+    // in Next 14 any `icons` config suppresses the file-based app/icon.svg and
+    // app/apple-icon.png links, so they are declared here with a cache-bust
+    // version.
+    icons: faviconUrl
+      ? { icon: faviconUrl, shortcut: faviconUrl, apple: brandIcon('/apple-icon.png') }
+      : {
+          icon: [
+            { url: brandIcon('/favicon.ico'), sizes: '16x16 32x32 48x48 64x64', type: 'image/x-icon' },
+            { url: brandIcon('/icon.svg'), sizes: 'any', type: 'image/svg+xml' },
+            { url: brandIcon('/icons/icon-192x192.png'), sizes: '192x192', type: 'image/png' },
+          ],
+          shortcut: brandIcon('/favicon.ico'),
+          apple: { url: brandIcon('/apple-icon.png'), sizes: '180x180', type: 'image/png' },
+        },
   };
 }
 

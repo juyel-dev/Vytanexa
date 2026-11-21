@@ -233,7 +233,9 @@ self.addEventListener('push', (event) => {
       await self.registration.showNotification(title, {
         body: payload.body ?? '',
         icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-192x192.png',
+        // Android masks this to a single colour: it must be a transparent
+        // white silhouette, not the full-colour tile.
+        badge: '/icons/badge-96x96.png',
         // Same tag replaces the previous notification instead of stacking.
         tag: payload.tag ?? payload.type ?? 'vytanexa',
         data: { url: payload.url || '/notifications' },
