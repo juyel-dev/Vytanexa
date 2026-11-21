@@ -11,6 +11,9 @@ import { writeAudit } from '@/lib/audit';
  * multiple pending rows... critical for a solo operator facing a
  * backlog after a busy day; approving one-by-one doesn't scale."
  * Mirrors api/admin/doctors/bulk/route.ts's exact shape.
+ *
+ * The audit row stores the before-state (status per review) so a mistaken
+ * bulk action can be reverted from the audit log.
  */
 const schema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(100),
@@ -24,8 +27,12 @@ export async function POST(request: Request) {
   const { ids, action } = parsed.data;
   const supabase = createServiceRoleClient();
 
-  const { data: existing } = await supabase.from('reviews').select('id').in('id', ids);
-  const found = new Set((existing ?? []).map((r) => r.id));
+  const { data: existing } = await supabase
+    .from('reviews')
+    .select('id, status, moderated_at')
+    .in('id', ids);
+  const rows = existing ?? [];
+  const found = new Set(rows.map((r) => r.id));
   const missing = ids.filter((id) => !found.has(id));
   if (missing.length) {
     return NextResponse.json({ error: 'কিছু রিভিউ আর বিদ্যমান নেই — রিফ্রেশ করুন' }, { status: 400 });
@@ -39,7 +46,10 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'বাল্ক অ্যাকশন করা যায়নি: ' + error.message }, { status: 500 });
 
-  await writeAudit(supabase, session.id, 'update', 'review_bulk', null, { after: { ids, action } });
+  await writeAudit(supabase, session.id, 'update', 'review_bulk', null, {
+    before: rows.map((r) => ({ id: r.id, status: r.status, moderated_at: r.moderated_at })),
+    after: { ids, action },
+  });
 
   return NextResponse.json({ ok: true, updated: ids.length });
 }

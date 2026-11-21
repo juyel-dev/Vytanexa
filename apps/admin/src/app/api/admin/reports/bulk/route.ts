@@ -18,8 +18,12 @@ export async function POST(request: Request) {
   const { ids, action } = parsed.data;
   const supabase = createServiceRoleClient();
 
-  const { data: existing } = await supabase.from('data_reports').select('id').in('id', ids);
-  const found = new Set((existing ?? []).map((r) => r.id));
+  const { data: existing } = await supabase
+    .from('data_reports')
+    .select('id, status, resolved_by, resolved_at')
+    .in('id', ids);
+  const rows = existing ?? [];
+  const found = new Set(rows.map((r) => r.id));
   if (ids.some((id) => !found.has(id))) {
     return NextResponse.json({ error: 'কিছু রিপোর্ট আর বিদ্যমান নেই — রিফ্রেশ করুন' }, { status: 400 });
   }
@@ -30,6 +34,14 @@ export async function POST(request: Request) {
     .in('id', ids);
   if (error) return NextResponse.json({ error: 'বাল্ক অ্যাকশন করা যায়নি' }, { status: 500 });
 
-  await writeAudit(supabase, session.id, 'update', 'data_report_bulk', null, { after: { ids, action } });
+  await writeAudit(supabase, session.id, 'update', 'data_report_bulk', null, {
+    before: rows.map((r) => ({
+      id: r.id,
+      status: r.status,
+      resolved_by: r.resolved_by,
+      resolved_at: r.resolved_at,
+    })),
+    after: { ids, action },
+  });
   return NextResponse.json({ ok: true, updated: ids.length });
 }
