@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, ChevronRight, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useT } from '@vytanexa/i18n/client';
 import { useLocalizedField } from '@/lib/i18n-client';
 import { useLocationStore } from '@/stores/location-store';
@@ -13,17 +12,9 @@ type LocationRow = { id: string; slug: string; name_translations: Json };
 type Step = 'state' | 'district' | 'sub_district';
 
 /**
- * Location Picker Sheet — VYTANEXA-BLUEPRINT.md § S03 "LOCATION SETUP"
- * + § S02 § 2.4. Cascading State → District → Sub-district selection
- * against the live `locations` self-referencing table.
- *
- * GPS auto-detection (spec's "🎯 আমার অবস্থান স্বয়ংক্রিয়ভাবে সনাক্ত
- * করুন" option) is deliberately deferred — reverse-geocoding a lat/lng
- * to one of our admin-created location rows needs either a mapping API
- * or a custom geo-matching function, which is a substantial feature on
- * its own rather than something to stub with fake behavior. Manual
- * selection (this component) is fully functional and is the spec's
- * required fallback path regardless, so nothing is blocked by this.
+ * Cascading State → District → Sub-district picker backed by the
+ * locations table. GPS reverse-geocoding remains intentionally separate;
+ * manual selection is the reliable fallback and works without extra APIs.
  */
 export function LocationPickerSheet({
   open,
@@ -75,8 +66,6 @@ export function LocationPickerSheet({
 
     query.then(({ data, error }) => {
       if (cancelled) return;
-      // A failed query used to fall through to "no states yet" — an outage
-      // reads as "your area isn't supported". Show an error + retry.
       if (error) {
         console.error('LocationPickerSheet query failed:', error.message);
         setFailed(true);
@@ -92,9 +81,22 @@ export function LocationPickerSheet({
     };
   }, [open, step, selectedState, selectedDistrict, retryTick]);
 
-  const filtered = options.filter((o) =>
-    localize(o.name_translations).toLowerCase().includes(search.toLowerCase())
+  const filtered = options.filter((option) =>
+    localize(option.name_translations).toLowerCase().includes(search.trim().toLowerCase())
   );
+
+  const goBack = () => {
+    setSearch('');
+    if (step === 'sub_district') {
+      setSelectedDistrict(null);
+      setStep('district');
+      return;
+    }
+    if (step === 'district') {
+      setSelectedState(null);
+      setStep('state');
+    }
+  };
 
   const selectState = (loc: LocationRow) => {
     setSelectedState(loc);
@@ -104,10 +106,7 @@ export function LocationPickerSheet({
 
   const selectDistrict = (loc: LocationRow) => {
     setSelectedDistrict(loc);
-    // Confirm at district level immediately (sub-district is optional
-    // per spec: "এড়িয়ে যান — শুধু জেলা ব্যবহার করুন") — the user can
-    // still drill further via the next step rather than being forced
-    // through a third step every time.
+    // District is a valid completed location; sub-district is optional.
     setLocation({
       stateId: selectedState!.id,
       districtId: loc.id,
@@ -130,57 +129,77 @@ export function LocationPickerSheet({
       subDistrictName: localize(loc.name_translations),
       stateNameTx: selectedState!.name_translations,
       districtNameTx: selectedDistrict!.name_translations,
-      subDistrictNameTx: loc.name_translations,
     });
     onClose();
   };
 
   const stepLabel = t(`step.${step}`);
 
+  if (!open) return null;
+
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('sheetTitle')}>
-      {(selectedState || selectedDistrict) && (
-        <p className="mb-2 text-[12px] text-neutral-500">
-          {localize(selectedState?.name_translations)}
-          {selectedDistrict && ` › ${localize(selectedDistrict.name_translations)}`}
-        </p>
+    <section aria-label={t('sheetTitle')} className="mt-3 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
+        <h2 className="text-[14px] font-semibold text-neutral-900">{t('sheetTitle')}</h2>
+        <button type="button" onClick={onClose} aria-label={tc('close')} className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div className="max-h-[min(19rem,38dvh)] overflow-y-auto overscroll-contain px-3 py-3">
+      {step !== 'state' && (
+        <button
+          type="button"
+          onClick={goBack}
+          className="mb-3 inline-flex min-h-9 items-center gap-1 rounded-lg pr-2 text-[13px] font-semibold text-brand-600 transition hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          {localize(selectedState!.name_translations)}
+          {step === 'sub_district' && selectedDistrict
+            ? ` · ${localize(selectedDistrict.name_translations)}`
+            : ''}
+        </button>
       )}
 
-      <div className="mb-3 flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-2">
-        <Search className="h-4 w-4 text-neutral-400" />
+      <div className="mb-3 flex items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 transition focus-within:border-brand-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-100">
+        <Search className="h-4 w-4 shrink-0 text-neutral-400" />
         <input
+          type="search"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(event) => setSearch(event.target.value)}
           placeholder={stepLabel}
           aria-label={stepLabel}
-          className="flex-1 bg-transparent text-[14px] outline-none placeholder:text-neutral-400"
+          className="h-11 min-w-0 flex-1 bg-transparent text-[14px] text-neutral-900 outline-none placeholder:text-neutral-400"
         />
       </div>
 
-      {loading && <p className="py-6 text-center text-[13px] text-neutral-400">{tc('loading')}</p>}
+      <div aria-live="polite" aria-busy={loading}>
+        {loading && (
+          <p className="py-8 text-center text-[13px] text-neutral-500">{tc('loading')}</p>
+        )}
 
-      {!loading && failed && (
-        <div className="py-6 text-center">
-          <p className="text-[13px] text-neutral-600">{tc('error')}</p>
-          <button
-            onClick={() => setRetryTick((n) => n + 1)}
-            className="mt-3 h-10 rounded-md border border-neutral-300 px-5 text-[13px] font-semibold text-neutral-700"
-          >
-            {tc('retry')}
-          </button>
-        </div>
-      )}
+        {!loading && failed && (
+          <div className="py-8 text-center">
+            <p className="text-[13px] text-neutral-600">{tc('error')}</p>
+            <button
+              type="button"
+              onClick={() => setRetryTick((tick) => tick + 1)}
+              className="mt-3 min-h-10 rounded-lg border border-neutral-300 px-5 text-[13px] font-semibold text-neutral-700 transition hover:bg-neutral-50"
+            >
+              {tc('retry')}
+            </button>
+          </div>
+        )}
 
-      {!loading && !failed && filtered.length === 0 && (
-        <p className="py-6 text-center text-[13px] text-neutral-400">
-          {step === 'state' ? t('noStatesYet') : t('noSubDivisionsYet')}
-        </p>
-      )}
+        {!loading && !failed && filtered.length === 0 && (
+          <p className="py-8 text-center text-[13px] text-neutral-500">
+            {search ? t('noSearchResults') : step === 'state' ? t('noStatesYet') : t('noSubDivisionsYet')}
+          </p>
+        )}
 
-      {!loading &&
-        filtered.map((loc) => (
+        {!loading && !failed && filtered.map((loc) => (
           <button
             key={loc.id}
+            type="button"
             onClick={() =>
               step === 'state'
                 ? selectState(loc)
@@ -188,24 +207,27 @@ export function LocationPickerSheet({
                   ? selectDistrict(loc)
                   : selectSubDistrict(loc)
             }
-            className="flex w-full items-center justify-between border-b border-neutral-100 py-3 text-left"
+            className="flex min-h-[52px] w-full items-center justify-between gap-3 border-b border-neutral-100 px-2 text-left transition hover:bg-neutral-50 focus-visible:relative focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
           >
-            <span className="flex items-center gap-2 text-[15px] text-neutral-800">
-              <MapPin className="h-4 w-4 text-neutral-400" />
-              {localize(loc.name_translations)}
+            <span className="flex min-w-0 items-center gap-3 py-3 text-[15px] font-medium text-neutral-800">
+              <MapPin className="h-4 w-4 shrink-0 text-neutral-400" />
+              <span className="break-words">{localize(loc.name_translations)}</span>
             </span>
-            <ChevronRight className="h-4 w-4 text-neutral-300" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-neutral-300" />
           </button>
         ))}
+      </div>
 
       {step === 'sub_district' && (
         <button
+          type="button"
           onClick={onClose}
-          className="mt-3 w-full rounded-md border border-neutral-200 py-2.5 text-[13px] font-medium text-neutral-600"
+          className="mt-4 min-h-11 w-full rounded-xl border border-neutral-200 px-4 text-[13px] font-semibold text-neutral-600 transition hover:border-neutral-300 hover:bg-neutral-50"
         >
           {t('skipUseDistrictOnly')}
         </button>
       )}
-    </BottomSheet>
+      </div>
+    </section>
   );
 }
